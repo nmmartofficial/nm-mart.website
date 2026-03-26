@@ -1,83 +1,71 @@
 import { useState } from "react";
-import { Search, Barcode, Loader2, ShoppingBasket, AlertCircle } from "lucide-react";
+import { Search, Barcode, Loader2, ShoppingBasket } from "lucide-react";
 
 const ProductSearch = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
 
-  // आपकी API ID
-  const SHEETDB_URL = "https://sheetdb.io/api/v1/fng3l414zu66d?sheet=Inventory";
+  // Aapki Sabse New API ID
+  const SHEETDB_URL = "https://sheetdb.io/api/v1/n1voj7e2lp0le?sheet=Inventory";
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (query.length < 2) return; 
     setLoading(true);
-    setError(false);
-    
     try {
-      // यह तरीका सबसे बेस्ट है, इसमें स्पेलिंग मैच होने के चांस ज्यादा हैं
+      // Name se search karega aur chote-bade letters (Case) ka farq nahi padega
       const response = await fetch(`${SHEETDB_URL}/search?Name=*${query}*&casesensitive=false`);
       const data = await response.json();
-      
-      if (Array.isArray(data)) {
-        setResults(data);
-      } else {
-        setResults([]);
-      }
-    } catch (err) { 
-      console.error("Search Error:", err);
-      setError(true);
+      setResults(Array.isArray(data) ? data : []);
+    } catch (error) { 
+      console.error("Search Error:", error); 
     }
     setLoading(false);
   };
 
   return (
-    <section className="py-12 bg-[#0A0A0A] rounded-[3rem] border border-white/5 m-4 shadow-2xl overflow-hidden relative">
+    <section className="py-12 bg-white/5 rounded-[3rem] border border-white/10 m-4 shadow-2xl">
       <div className="container mx-auto px-6 text-center">
-        <h3 className="text-2xl font-black mb-6 italic text-[#FFD700] uppercase tracking-widest">NM MART PRICE CHECKER</h3>
+        <h3 className="text-2xl font-black mb-6 italic text-[#FFD700] uppercase tracking-tighter underline decoration-[#FFD700]/30 underline-offset-8">NM MART PRICE CHECKER</h3>
         
-        <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto mb-10 group">
+        <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto mb-10">
           <input 
             type="text" 
-            placeholder="Product ka naam likhein... (ex: 5 star)" 
+            placeholder="Search Products (e.g. 5 star, red hot...)" 
             value={query} 
             onChange={(e) => setQuery(e.target.value)} 
-            className="w-full bg-white/5 border-2 border-white/10 p-6 rounded-2xl outline-none focus:border-[#FFD700] text-xl font-bold text-white transition-all placeholder:opacity-30" 
+            className="w-full bg-white/10 border-2 border-white/10 p-5 rounded-2xl outline-none focus:border-[#FFD700] text-lg font-bold text-white transition-all shadow-inner" 
           />
-          <button type="submit" className="absolute right-4 top-4 bg-[#FFD700] text-black p-3 rounded-xl hover:scale-110 active:scale-95 transition-all shadow-lg shadow-[#FFD700]/20">
-            {loading ? <Loader2 className="animate-spin" size={24}/> : <Search size={24}/>}
+          <button type="submit" className="absolute right-3 top-3 bg-[#FFD700] text-black p-3 rounded-xl hover:scale-105 active:scale-95 transition-all">
+            {loading ? <Loader2 className="animate-spin"/> : <Search size={24}/>}
           </button>
         </form>
 
-        <div className="grid gap-4 max-w-4xl mx-auto min-h-[100px]">
+        <div className="grid gap-4 max-w-4xl mx-auto">
           {results.length > 0 ? results.map((item, index) => (
-            <div key={index} className="bg-white/5 p-6 rounded-3xl border border-white/10 flex flex-wrap justify-between items-center hover:bg-white/10 transition-all transform hover:-translate-y-1">
+            <div key={index} className="bg-white/5 p-5 rounded-2xl border border-white/10 flex flex-wrap justify-between items-center hover:bg-white/10 transition-all transform hover:-translate-y-1">
               <div className="text-left flex items-start gap-4">
-                <div className="bg-[#FFD700]/20 p-4 rounded-2xl text-[#FFD700]"><ShoppingBasket size={28}/></div>
+                <div className="bg-[#FFD700]/20 p-3 rounded-xl text-[#FFD700]"><ShoppingBasket size={24}/></div>
                 <div>
-                  <h4 className="font-black text-xl uppercase text-white tracking-tight">{item.Name || "Unknown Item"}</h4>
-                  <p className="text-xs opacity-40 font-mono text-white flex items-center gap-1 mt-1"><Barcode size={14}/> {item.Barcode || "No Barcode"}</p>
+                  <h4 className="font-black text-lg uppercase text-white">{item.Name}</h4>
+                  <p className="text-[10px] opacity-40 font-mono text-white flex items-center gap-1"><Barcode size={10}/> {item.Barcode}</p>
                 </div>
               </div>
               
-              <div className="flex gap-8 items-center mt-4 sm:mt-0">
+              <div className="flex gap-6 items-center">
                 <div className="text-right">
-                  <p className="text-[10px] opacity-40 font-bold uppercase text-white tracking-widest">MRP</p>
-                  <p className="text-lg font-bold line-through opacity-50 text-red-500 font-mono">₹{item.Mrp}</p>
+                  <p className="text-[10px] opacity-40 font-bold uppercase text-white font-mono">MRP</p>
+                  <p className="text-lg font-bold line-through opacity-50 text-red-400 font-mono">₹{item.Mrp}</p>
                 </div>
-                <div className="text-right bg-[#FFD700] p-3 px-6 rounded-2xl shadow-xl shadow-[#FFD700]/10">
-                  <p className="text-[10px] text-black font-black uppercase text-center">OUR PRICE</p>
-                  <p className="text-3xl font-black text-black italic font-mono leading-none">₹{item.Salerate}</p>
+                <div className="text-right bg-[#FFD700]/10 p-2 px-4 rounded-xl border border-[#FFD700]/20 min-w-[100px]">
+                  <p className="text-[10px] text-[#FFD700] font-bold uppercase font-mono text-center">Price</p>
+                  <p className="text-2xl font-black text-[#FFD700] italic font-mono text-center">₹{item.Salerate}</p>
                 </div>
               </div>
             </div>
-          )) : query.length >= 2 && !loading && (
-            <div className="flex flex-col items-center opacity-30 mt-4">
-              <AlertCircle size={40} className="mb-2"/>
-              <p className="italic text-white">Data nahi mila. Ek baar 'Reload' button dabayein SheetDB par.</p>
-            </div>
+          )) : query.length > 2 && !loading && (
+            <p className="opacity-30 italic text-white text-center">Item nahi mila. Spelling check karein (Jaise: 05 RED)</p>
           )}
         </div>
       </div>
