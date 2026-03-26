@@ -5,6 +5,7 @@ import WelfareCard from "@/components/WelfareCard";
 import Reviews from "@/components/Reviews";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import BackToTop from "@/components/BackToTop";
 
 const Index = () => (
   <div className="min-h-screen flex flex-col">
@@ -15,6 +16,7 @@ const Index = () => (
     <Reviews />
     <Footer />
     <WhatsAppButton />
+    <BackToTop />
   </div>
 );
 

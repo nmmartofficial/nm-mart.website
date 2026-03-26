@@ -34,7 +34,7 @@ const Footer = () => (
           <div className="space-y-3">
             <div className="flex items-start gap-2">
               <MapPin className="w-4 h-4 text-gold shrink-0 mt-0.5" />
-              <span className="text-sm text-primary-foreground/60">Manjhanpur, Uttar Pradesh</span>
+              <span className="text-sm text-primary-foreground/60">Manjhanpur, Kaushambi, UP - 212201</span>
             </div>
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-gold shrink-0" />
@@ -57,7 +57,7 @@ const Footer = () => (
 
     <div className="border-t border-primary-foreground/10 py-4">
       <p className="text-center text-xs text-primary-foreground/40">
-        Powered by NM MART – RETAIL OS v5.0 &nbsp;|&nbsp; © {new Date().getFullYear()} NM Mart. All rights reserved.
+        Powered by NM MART – RETAIL OS v5.0 &nbsp;|&nbsp; NM Mart – Manjhanpur, Kaushambi, UP – 212201 &nbsp;|&nbsp; © {new Date().getFullYear()} NM Mart. All rights reserved.
       </p>
     </div>
   </footer>

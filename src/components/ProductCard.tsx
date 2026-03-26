@@ -2,15 +2,13 @@ import { motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import type { Product } from "@/data/products";
 
-const WHATSAPP_NUMBER = "919999999999"; // Replace with actual number
-
 const ProductCard = ({ product }: { product: Product }) => {
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
-  const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-    `Hi! I'd like to order: ${product.name} (₹${product.price})`
+  const whatsappLink = `https://wa.me/917081154604?text=${encodeURIComponent(
+    `Hi NM Mart! I'd like to buy:\n\n🛒 Product: ${product.name}\n💰 Price: ₹${product.price}\n\nPlease confirm my order. Thank you!`
   )}`;
 
   return (
