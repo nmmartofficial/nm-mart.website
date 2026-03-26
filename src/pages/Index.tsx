@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import ProductGrid from "@/components/ProductGrid";
@@ -6,14 +7,12 @@ import Reviews from "@/components/Reviews";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import BackToTop from "@/components/BackToTop";
-import { useState, useEffect } from "react";
 
 const Index = () => {
+  // --- AAPKI OLD SETTINGS & NEW PRODUCTS ---
+  const SHEETDB_URL = "https://sheetdb.io/api/v1/n1voj7e2lp0le?sheet=Inventory";
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // --- NM MART NEW INVENTORY LINK ---
-  const SHEETDB_URL = "https://sheetdb.io/api/v1/n1voj7e2lp0le?sheet=Inventory";
 
   useEffect(() => {
     fetch(SHEETDB_URL)
@@ -26,26 +25,27 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col animate-in fade-in duration-700">
-      {/* 1. Purana Header (support@nmmart.in ke saath) */}
+    <div className="min-h-screen bg-white font-sans text-blue-900 pb-24">
+      
+      {/* 1. Header (Blue Bar + support@nmmart.in) */}
       <Header />
       
-      {/* 2. Welcome Section */}
+      {/* 2. Hero Section ("Our Products" likha hua) */}
       <Hero />
       
-      {/* 3. Products Section (Ab isme 7000+ items aayenge) */}
+      {/* 3. Product Grid (Ab isme 7000+ items, Search aur Category aayenge) */}
       <ProductGrid products={products} isLoading={loading} />
       
-      {/* 4. Aapka Favorite Welfare Card Section */}
+      {/* 4. Welfare Card (Wahi Puraana Style) */}
       <WelfareCard />
       
-      {/* 5. Customer Reviews */}
+      {/* 5. Reviews */}
       <Reviews />
       
-      {/* 6. Professional Footer */}
+      {/* 6. Footer (Manjhanpur, UP ke saath) */}
       <Footer />
       
-      {/* 7. Floating Buttons */}
+      {/* 7. Floating Buttons (WhatsApp & Back to Top) */}
       <WhatsAppButton />
       <BackToTop />
     </div>
