@@ -112,7 +112,7 @@ const WelfareCard = () => {
                     value={name} 
                     onChange={(e) => setName(e.target.value)} 
                     className="w-full bg-white/10 border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all" 
-                    placeholder="Full Name Likhein" 
+                    placeholder="Your Name" 
                   />
                 </div>
                 <div>
@@ -125,7 +125,7 @@ const WelfareCard = () => {
                     onChange={(e) => setMobile(e.target.value.replace(/\D/g,''))} 
                     maxLength={10} 
                     className="w-full bg-white/10 border border-white/20 p-3 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all" 
-                    placeholder="10 Digits Number" 
+                    placeholder="Mobile Number" 
                   />
                 </div>
                 <button 
