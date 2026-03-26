@@ -6,7 +6,7 @@ const ProductSearch = () => {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // आपकी नई वर्किंग API ID यहाँ डाल दी गई है
+  // आपकी नई वर्किंग API ID यहाँ डाल दी गई  है
   const SHEETDB_URL = "https://sheetdb.io/api/v1/n1voj7e2lp0le?sheet=Inventory";
 
   const handleSearch = async (e: React.FormEvent) => {
