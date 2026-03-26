@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, ShoppingBasket, Loader2, Plus, Minus, ShoppingCart, Send, X } from "lucide-react";
+import { Search, ShoppingCart, Send, X, Plus, Minus, Loader2, Star } from "lucide-react";
 
 const ProductSearch = () => {
   const [allProducts, setAllProducts] = useState<any[]>([]);
@@ -9,21 +9,15 @@ const ProductSearch = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const SHEETDB_URL = "https://sheetdb.io/api/v1/n1voj7e2lp0le?sheet=Inventory";
-  const MY_WHATSAPP_NUMBER = "917081154604"; // आपका नंबर यहाँ सेट कर दिया है
+  const WHATSAPP_NUMBER = "917081154604";
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(SHEETDB_URL);
-        const data = await response.json();
-        if (Array.isArray(data)) setAllProducts(data);
-      } catch (error) { console.error(error); }
+    fetch(SHEETDB_URL).then(res => res.json()).then(data => {
+      if (Array.isArray(data)) setAllProducts(data);
       setLoading(false);
-    };
-    fetchData();
+    });
   }, []);
 
-  // Cart Functions
   const addToCart = (product: any) => {
     const existing = cart.find(item => item.Name === product.Name);
     if (existing) {
@@ -33,45 +27,138 @@ const ProductSearch = () => {
     }
   };
 
-  const updateQty = (name: string, delta: number) => {
-    setCart(cart.map(item => item.Name === name ? { ...item, qty: Math.max(0, item.qty + delta) } : item).filter(i => i.qty > 0));
-  };
-
-  const totalBill = cart.reduce((sum, item) => sum + (Number(item.Salerate) * item.qty), 0);
-
-  const placeOrder = () => {
-    let message = `*NEW ORDER - NM MART*%0A---------------------------%0A`;
-    cart.forEach((item, index) => {
-      message += `${index + 1}. *${item.Name}*%0A   Qty: ${item.qty} | Price: ₹${Number(item.Salerate) * item.qty}%0A`;
-    });
-    message += `---------------------------%0A*TOTAL BILL: ₹${totalBill}*%0A---------------------------%0Aकृपया मेरा आर्डर तैयार रखें।`;
-    window.open(`https://wa.me/${MY_WHATSAPP_NUMBER}?text=${message}`, "_blank");
-  };
-
-  const displayProducts = query.length >= 1 
-    ? allProducts.filter(item => item.Name?.toLowerCase().includes(query.toLowerCase()))
-    : allProducts;
+  const filtered = allProducts.filter(item => 
+    item.Name?.toLowerCase().includes(query.toLowerCase())
+  );
 
   return (
-    <section className="py-12 bg-[#050505] min-h-screen text-white px-4 pb-32">
-      <div className="max-w-4xl mx-auto">
-        
-        <div className="text-center mb-10">
-          <h2 className="text-4xl font-black text-[#FFD700] italic">NM MART</h2>
-          <p className="text-white/40 uppercase tracking-[0.3em] text-xs mt-2 font-bold">Smart Inventory & Ordering</p>
+    <div className="min-h-screen bg-[#f3f4f6] pb-20 font-sans">
+      {/* Search Header */}
+      <div className="bg-white p-6 shadow-sm sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <h1 className="text-2xl font-black text-blue-900">NM Mart</h1>
+          <div className="relative w-full max-w-md">
+            <input 
+              type="text" 
+              placeholder="Search products..." 
+              className="w-full bg-gray-100 border-none p-4 rounded-xl pl-12 focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <Search className="absolute left-4 top-4 text-gray-400" size={20}/>
+          </div>
         </div>
+      </div>
 
-        {/* Search Box */}
-        <div className="relative mb-8 max-w-xl mx-auto">
-          <input 
-            type="text" 
-            placeholder="Search products (e.g. STAR, PAPAD)..." 
-            className="w-full bg-white/5 border-2 border-white/10 p-5 rounded-2xl outline-none focus:border-[#FFD700] text-lg transition-all"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <Search className="absolute right-5 top-5 text-[#FFD700]" size={24}/>
+      {loading ? (
+        <div className="flex justify-center py-20"><Loader2 className="animate-spin text-blue-600" size={40}/></div>
+      ) : (
+        <div className="max-w-7xl mx-auto p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {filtered.map((item, idx) => {
+            const discount = Math.round(((item.Mrp - item.Salerate) / item.Mrp) * 100);
+            return (
+              <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow relative">
+                {/* Discount Tag */}
+                {discount > 0 && (
+                  <span className="absolute top-3 left-3 bg-orange-100 text-orange-600 text-[10px] font-bold px-2 py-1 rounded-md">
+                    -{discount}%
+                  </span>
+                )}
+                <span className="absolute top-3 right-3 bg-green-50 text-green-600 text-[10px] font-bold px-2 py-1 rounded-md">In Stock</span>
+                
+                {/* Product Image Placeholder */}
+                <div className="h-40 bg-gray-50 flex items-center justify-center p-8">
+                   <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 font-bold text-2xl">
+                     {item.Name?.charAt(0)}
+                   </div>
+                </div>
+
+                <div className="p-4 flex-grow flex flex-col">
+                  <h3 className="font-bold text-gray-800 text-sm mb-1 uppercase h-10 overflow-hidden leading-tight">
+                    {item.Name}
+                  </h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl font-black text-blue-900">₹{item.Salerate}</span>
+                    <span className="text-xs text-gray-400 line-through">₹{item.Mrp}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-orange-400 mb-4">
+                    <Star size={12} fill="currentColor"/>
+                    <Star size={12} fill="currentColor"/>
+                    <Star size={12} fill="currentColor"/>
+                    <Star size={12} fill="currentColor"/>
+                    <span className="text-[10px] text-gray-400 ml-1">4.5</span>
+                  </div>
+
+                  <button 
+                    onClick={() => addToCart(item)}
+                    className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors mt-auto"
+                  >
+                    <Send size={14}/> Order on WhatsApp
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
+      )}
 
-        {loading ? (
-          <div className="flex flex-col items-center py-20">
+      {/* Floating Cart Button */}
+      {cart.length > 0 && (
+        <button 
+          onClick={() => setIsCartOpen(true)}
+          className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-2xl flex items-center gap-3 z-50 hover:scale-105 transition-transform"
+        >
+          <ShoppingCart size={24}/>
+          <span className="bg-white text-blue-600 font-bold px-2 rounded-lg">{cart.length}</span>
+        </button>
+      )}
+
+      {/* Cart Drawer */}
+      {isCartOpen && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex justify-end">
+          <div className="bg-white w-full max-w-md h-full shadow-2xl p-6 flex flex-col">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-bold">Shopping Cart</h2>
+              <button onClick={() => setIsCartOpen(false)}><X/></button>
+            </div>
+            
+            <div className="flex-grow overflow-y-auto space-y-4">
+              {cart.map((item, i) => (
+                <div key={i} className="flex justify-between items-center border-b pb-4">
+                  <div>
+                    <p className="font-bold text-sm uppercase">{item.Name}</p>
+                    <p className="text-blue-600 font-bold">₹{item.Salerate}</p>
+                  </div>
+                  <div className="flex items-center gap-3 bg-gray-100 rounded-lg p-2">
+                    <button onClick={() => addToCart({...item, qty: -1})} className="text-gray-500">-</button>
+                    <span className="font-bold text-sm">{item.qty}</span>
+                    <button onClick={() => addToCart(item)} className="text-gray-500">+</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t pt-6 mt-6">
+              <div className="flex justify-between text-xl font-bold mb-6">
+                <span>Total:</span>
+                <span>₹{cart.reduce((s, i) => s + (i.Salerate * i.qty), 0)}</span>
+              </div>
+              <button 
+                onClick={() => {
+                   let msg = `*NEW ORDER FROM NM MART*%0A`;
+                   cart.forEach(i => msg += `- ${i.Name} (x${i.qty})%0A`);
+                   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`);
+                }}
+                className="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold text-lg"
+              >
+                Checkout on WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProductSearch;
