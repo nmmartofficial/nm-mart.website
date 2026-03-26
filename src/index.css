@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,120 +6,44 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 40% 13%;
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    --primary: 221 83% 53%; /* NM Mart Royal Blue */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 142 71% 45%; /* WhatsApp/Success Green */
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 24 95% 53%; /* Discount Orange */
+    --accent-foreground: 210 40% 98%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 40% 13%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 40% 13%;
-
-    --primary: 217 71% 45%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 43 76% 55%;
-    --secondary-foreground: 220 40% 10%;
-
-    --muted: 220 14% 92%;
-    --muted-foreground: 220 10% 46%;
-
-    --accent: 43 76% 55%;
-    --accent-foreground: 220 40% 10%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 13% 88%;
-    --input: 220 13% 88%;
-    --ring: 217 71% 45%;
-
-    --radius: 0.625rem;
-
-    --gold: 43 76% 55%;
-    --gold-light: 43 80% 72%;
-    --gold-dark: 43 70% 40%;
-    --navy: 217 71% 25%;
-    --navy-light: 217 50% 40%;
-    --success: 142 60% 40%;
-    --warning: 0 72% 51%;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 220 30% 8%;
-    --foreground: 210 40% 95%;
-    --card: 220 30% 12%;
-    --card-foreground: 210 40% 95%;
-    --popover: 220 30% 12%;
-    --popover-foreground: 210 40% 95%;
-    --primary: 217 71% 55%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 43 76% 55%;
-    --secondary-foreground: 220 40% 10%;
-    --muted: 220 20% 18%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 43 76% 55%;
-    --accent-foreground: 220 40% 10%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 220 20% 22%;
-    --input: 220 20% 22%;
-    --ring: 217 71% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 214 32% 91%;
+    --radius: 1.5rem; /* ज़्यादा गोल और मॉडर्न कोने */
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-  }
-  h1, h2, h3, h4 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Inter', sans-serif; /* साफ़ और पढ़ने में आसान फोंट */
   }
 }
 
 @layer utilities {
-  .gradient-gold {
-    background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-light)) 50%, hsl(var(--gold)) 100%);
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
-  .gradient-navy {
-    background: linear-gradient(135deg, hsl(var(--navy)) 0%, hsl(var(--primary)) 100%);
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-  .gradient-hero {
-    background: linear-gradient(135deg, hsl(var(--navy)) 0%, hsl(217 71% 35%) 50%, hsl(var(--primary)) 100%);
-  }
-  .text-gold {
-    color: hsl(var(--gold));
-  }
-  .text-navy {
-    color: hsl(var(--navy));
-  }
-  .bg-navy {
-    background-color: hsl(var(--navy));
-  }
-  .shadow-gold {
-    box-shadow: 0 4px 20px -4px hsl(var(--gold) / 0.4);
-  }
-  .shadow-card {
-    box-shadow: 0 1px 3px hsl(var(--foreground) / 0.06), 0 6px 16px hsl(var(--foreground) / 0.04);
+  
+  /* फोल्डर्स के लिए चमकता हुआ इफेक्ट */
+  .folder-shadow {
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
   }
 }
