@@ -9,7 +9,7 @@ const ProductSearch = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const SHEETDB_URL = "https://sheetdb.io/api/v1/n1voj7e2lp0le?sheet=Inventory";
-  const MY_WHATSAPP_NUMBER = "91XXXXXXXXXX"; // यहाँ अपना 10 अंकों का नंबर डालें (91 के साथ)
+  const MY_WHATSAPP_NUMBER = "917081154604"; // यहाँ अपना 10 अंकों का नंबर डालें (91 के साथ)
 
   useEffect(() => {
     const fetchData = async () => {
