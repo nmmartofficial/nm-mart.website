@@ -4,47 +4,26 @@
 
 @layer base {
   body {
-    background-color: #f3f4f6 !important; 
-    color: #1e293b !important;
-    font-family: 'Inter', sans-serif;
+    background-color: #0f172a !important; /* Deep Navy Background */
+    color: #ffffff !important;
   }
 }
 
-/* Category aur Product Cards ko professional look dena */
+/* Category aur Product Cards (Professional Yellow) */
 .bg-white {
-  background-color: #ffffff !important;
+  background-color: #fbbf24 !important; /* Bright Yellow */
   border-radius: 1.5rem !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4) !important;
+  border: 4px solid #f59e0b !important; /* Dark Orange Border */
 }
 
-/* Text Colors */
-h1, h2, h3 {
+/* Cards ke andar ka text dark rahe */
+.bg-white h1, .bg-white h2, .bg-white h3, .bg-white p, .bg-white span {
   color: #0f172a !important;
-}
-
-p, span {
-  color: #475569 !important;
 }
 
 /* Welfare Card Styling */
 .bg-blue-900, .bg-indigo-900 {
-  background-color: #1e3a8a !important;
-  color: #ffffff !important;
-}
-
-/* Input Fields */
-input {
-  background-color: #ffffff !important;
-  border: 2px solid #e2e8f0 !important;
-  color: #1e293b !important;
-}
-
-/* Button animations */
-button {
-  transition: all 0.2s ease-in-out !important;
-}
-
-button:active {
-  transform: scale(0.95) !important;
+  background-color: #0ea5e9 !important;
+  border: 4px solid #ffffff !important;
 }
