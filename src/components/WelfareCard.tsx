@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Star, CheckCircle, User, Wallet, Loader2, RefreshCw, AlertTriangle, Timer, PlusCircle } from "lucide-react";
+import { ShoppingCart, Star, CheckCircle, User, Wallet, Loader2, RefreshCw, AlertTriangle, Timer, PlusCircle, CreditCard } from "lucide-react";
 
 const WelfareCard = () => {
   const [mobile, setMobile] = useState("");
@@ -12,7 +12,7 @@ const WelfareCard = () => {
 
   const SHEETDB_URL = "https://sheetdb.io/api/v1/nkxmymwaz5b7i";
 
-  // Countdown Logic
+  // Countdown Timer
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
@@ -22,111 +22,151 @@ const WelfareCard = () => {
       const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
       const m = Math.floor((diff / 1000 / 60) % 60);
       const s = Math.floor((diff / 1000) % 60);
-      setTimeLeft(`${d}d ${h}h ${m}s`);
+      setTimeLeft(`${d}d ${h}h ${m}m ${s}s`);
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Check if User Exists or Register New
   const handleAuth = async () => {
     if (mobile.length !== 10) { alert("10 अंकों का नंबर डालें"); return; }
     setLoading(true);
 
     try {
-      // 1. Pehle check karein kya number exist karta hai?
       const checkRes = await fetch(`${SHEETDB_URL}/search?Mobile=${mobile}`);
       const checkData = await checkRes.json();
 
       if (checkData && checkData.length > 0) {
-        setUserData(checkData[0]); // Login Successful
+        setUserData(checkData[0]); 
       } else if (!showSignup) {
-        setShowSignup(true); // Number nahi mila, Signup dikhao
+        setShowSignup(true); 
       } else {
-        // 2. Signup Process: Naya entry banayein
-        if (!name) { alert("कृपया अपना पूरा नाम लिखें"); setLoading(false); return; }
+        if (!name) { alert("कृपया अपना नाम लिखें"); setLoading(false); return; }
         
-        const expiry = new Date();
-        expiry.setMonth(expiry.getMonth() + 7); // 7 mahine ki validity
-        const formattedExpiry = expiry.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        // Auto-Generate Card Data
+        const expDate = new Date();
+        expDate.setMonth(expDate.getMonth() + 7);
+        const formattedExp = expDate.toLocaleDateString('hi-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
         const newUser = {
           Name: name,
           Mobile: mobile,
-          Expiry: formattedExpiry,
+          Expiry: formattedExp,
           Usage: "0",
           Profit: "₹0",
           Target: "₹1500",
           MonthlyUsed: "0"
         };
 
-        await fetch(SHEETDB_URL, {
+        const postRes = await fetch(SHEETDB_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ data: [newUser] })
         });
 
-        setUserData(newUser);
-        alert("बधाई हो! आपका NM Mart Welfare Card एक्टिवेट हो गया है।");
+        if (postRes.ok) {
+          setUserData(newUser);
+          alert("बधाई हो! आपका NM Mart कार्ड बन गया है।");
+        }
       }
-    } catch (error) { alert("Error connecting to server!"); }
+    } catch (error) { alert("Server Error! Try again."); }
     setLoading(false);
   };
 
+  const getRemainingProfit = () => {
+    const target = parseInt(userData?.Target?.replace(/\D/g, "") || "1500");
+    const profit = parseInt(userData?.Profit?.replace(/\D/g, "") || "0");
+    return target - profit;
+  };
+
   return (
-    <section className="py-16 gradient-navy text-white min-h-screen">
-      <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl font-black mb-10 italic">NM MART <span className="text-gold">WELFARE</span></h2>
-
-        {!userData ? (
-          /* AUTH BOX (Login + Signup) */
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto bg-white/5 p-10 rounded-[2.5rem] border border-white/10 shadow-2xl backdrop-blur-xl">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-gold">
-              {showSignup ? <PlusCircle size={20}/> : <User size={20}/>}
-              {showSignup ? "NEW CARD REGISTRATION" : "MEMBER LOGIN"}
-            </h3>
-            
-            <div className="space-y-6">
-              <input 
-                type="text" placeholder="Mobile Number" value={mobile} maxLength={10} 
-                onChange={(e)=>setMobile(e.target.value.replace(/\D/g,''))} 
-                className="w-full bg-transparent border-b-2 border-white/20 py-3 outline-none focus:border-gold text-xl font-bold tracking-widest transition-all" 
-              />
-              
-              <AnimatePresence>
-                {showSignup && (
-                  <motion.input 
-                    initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                    type="text" placeholder="Your Full Name" value={name} 
-                    onChange={(e)=>setName(e.target.value)} 
-                    className="w-full bg-transparent border-b-2 border-white/20 py-3 outline-none focus:border-gold text-lg" 
-                  />
-                )}
-              </AnimatePresence>
-
-              <button onClick={handleAuth} disabled={loading} className="w-full bg-gold text-black font-black py-4 rounded-xl uppercase tracking-widest hover:scale-105 transition-all flex justify-center items-center">
-                {loading ? <Loader2 className="animate-spin"/> : (showSignup ? "Activate My Card" : "Enter Dashboard")}
-              </button>
-              
-              {showSignup && (
-                <button onClick={()=>setShowSignup(false)} className="text-[10px] opacity-40 hover:opacity-100 underline">Wait, I already have a card</button>
-              )}
-            </div>
-          </motion.div>
-        ) : (
-          /* DASHBOARD SECTION (Wahi Purana Wala logic jo maine pichle message mein diya tha) */
-          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 text-left">
-              {/* Virtual Card & Stats here */}
-              <div className="bg-red-600/10 border-4 border-red-600 rounded-[3rem] p-8 relative overflow-hidden">
-                  <h3 className="text-2xl font-black italic text-red-500 mb-4 flex items-center gap-2"><AlertTriangle/> SAVE MORE!</h3>
-                  <p className="text-lg">नमस्ते {userData.Name}, आपके कार्ड में अभी ₹{parseInt(userData.Target || 1500) - parseInt(userData.Profit || 0)} की बचत बाकी है।</p>
-                  <div className="mt-6 p-4 bg-red-600 rounded-xl text-center">
-                      <p className="text-[10px] font-bold uppercase text-black/60 mb-1">Time Left This Month:</p>
-                      <p className="text-3xl font-mono font-black text-black">{timeLeft}</p>
-                  </div>
-                  <button onClick={()=>setUserData(null)} className="mt-8 text-[10px] opacity-30 underline">Logout</button>
+    <section className="py-20 gradient-navy text-white min-h-screen">
+      <div className="container mx-auto px-4">
+        
+        <AnimatePresence mode="wait">
+          {!userData ? (
+            /* SIGNUP / LOGIN FORM */
+            <motion.div key="auth" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} className="max-w-md mx-auto bg-white/5 p-10 rounded-[3rem] border border-white/10 shadow-2xl backdrop-blur-xl text-center">
+              <div className="w-20 h-20 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-6 text-gold">
+                <CreditCard size={40}/>
               </div>
-          </div>
-        )}
+              <h2 className="text-2xl font-black mb-2 italic tracking-tighter uppercase">NM MART CLUB</h2>
+              <p className="text-xs opacity-50 mb-8 uppercase tracking-[0.2em]">Register & Track Savings</p>
+              
+              <div className="space-y-6 text-left">
+                <div>
+                  <label className="text-[10px] font-bold opacity-40 uppercase ml-2">Mobile Number</label>
+                  <input type="text" placeholder="91XXXXXXXX" value={mobile} maxLength={10} onChange={(e)=>setMobile(e.target.value.replace(/\D/g,''))} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl focus:border-gold outline-none text-xl font-bold tracking-widest mt-1" />
+                </div>
+                
+                {showSignup && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                    <label className="text-[10px] font-bold opacity-40 uppercase ml-2">Full Name</label>
+                    <input type="text" placeholder="Enter Your Name" value={name} onChange={(e)=>setName(e.target.value)} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl focus:border-gold outline-none text-lg font-bold mt-1" />
+                  </motion.div>
+                )}
+
+                <button onClick={handleAuth} disabled={loading} className="w-full bg-gold text-black font-black py-5 rounded-2xl uppercase shadow-xl shadow-gold/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex justify-center">
+                  {loading ? <Loader2 className="animate-spin"/> : (showSignup ? "Create My Card Now" : "Login to My Card")}
+                </button>
+                
+                {showSignup && (
+                  <p className="text-[10px] text-center opacity-40 mt-4 italic">By creating a card, you agree to NM Mart Welfare Terms.</p>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            /* DIGITAL CARD & DASHBOARD */
+            <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10">
+               {/* Digital Card */}
+               <div className="space-y-6 flex flex-col items-center">
+                  <div className="w-full max-w-sm h-56 rounded-[2.5rem] gradient-gold p-8 text-black shadow-2xl relative overflow-hidden group">
+                     <div className="relative z-10 flex justify-between font-black italic">
+                        <span className="flex items-center gap-2"><ShoppingCart size={20}/> NM MART</span>
+                        <span className="text-[8px] border border-black/30 px-2 py-1 rounded-full">ACTIVE MEMBER</span>
+                     </div>
+                     <div className="mt-10 relative z-10">
+                        <p className="text-[10px] uppercase font-black opacity-40">Card Holder</p>
+                        <p className="text-3xl font-black uppercase truncate leading-none mt-1">{userData.Name}</p>
+                     </div>
+                     <div className="mt-8 flex justify-between items-end relative z-10 border-t border-black/10 pt-4">
+                        <p className="font-mono text-sm tracking-widest">{userData.Mobile}</p>
+                        <p className="text-[10px] font-black uppercase">Exp: {userData.Expiry}</p>
+                     </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+                    <div className="bg-white/5 p-6 rounded-3xl border border-white/10 text-left">
+                      <p className="text-[10px] opacity-40 font-bold mb-1">TOTAL PROFIT</p>
+                      <p className="text-3xl font-black text-gold">₹{userData.Profit}</p>
+                    </div>
+                    <div className="bg-white/5 p-6 rounded-3xl border border-white/10 text-left">
+                      <p className="text-[10px] opacity-40 font-bold mb-1">STORE VISITS</p>
+                      <p className="text-3xl font-black">{userData.Usage}</p>
+                    </div>
+                  </div>
+               </div>
+
+               {/* Urgency Alert */}
+               <div className="bg-red-600/10 border-4 border-red-600 rounded-[3rem] p-10 text-left relative overflow-hidden">
+                  <div className="relative z-10">
+                    <h3 className="text-2xl font-black italic text-red-500 flex items-center gap-2 mb-4"><AlertTriangle/> SAVINGS ALERT!</h3>
+                    <p className="text-lg text-white/90 leading-tight">नमस्ते {userData.Name}, आपके कार्ड में अभी <span className="text-2xl font-black text-white underline decoration-gold">₹{getRemainingProfit()}</span> का फायदा बचा हुआ है।</p>
+                    
+                    <div className="mt-8 bg-red-600 p-6 rounded-2xl shadow-xl">
+                        <p className="text-[10px] font-bold text-black/60 uppercase text-center mb-2 flex items-center justify-center gap-2"><Timer size={14}/> Month Deadline:</p>
+                        <p className="text-4xl font-mono font-black text-black text-center bg-white py-3 rounded-xl">{timeLeft}</p>
+                    </div>
+                    
+                    <div className="mt-10 flex justify-between items-center border-t border-red-600/30 pt-6">
+                        <button onClick={()=>window.location.reload()} className="flex items-center gap-2 text-[10px] font-bold uppercase bg-white/10 px-4 py-2 rounded-full"><RefreshCw size={12}/> Update</button>
+                        <button onClick={()=>setUserData(null)} className="text-[10px] opacity-30 underline">Logout</button>
+                    </div>
+                  </div>
+               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </section>
   );
