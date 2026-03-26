@@ -7,7 +7,7 @@ const ProductSearch = () => {
   const [loading, setLoading] = useState(false);
 
   // आपकी SheetDB API - Inventory वाली शीट के लिए
-  const SHEETDB_URL = "https://sheetdb.io/api/v1/nkxmymwaz5b7i?sheet=Inventory";
+  const SHEETDB_URL = "https://sheetdb.io/api/v1/fng3l414zu66d?sheet=Inventory";
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
