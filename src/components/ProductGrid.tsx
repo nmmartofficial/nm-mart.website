@@ -1,11 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { products, categories } from "@/data/products";
 import ProductCard from "./ProductCard";
 
 const ProductGrid = () => {
   const [active, setActive] = useState<string>("All");
+  const [search, setSearch] = useState("");
 
-  const filtered = active === "All" ? products : products.filter(p => p.category === active);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const query = (e as CustomEvent).detail;
+      setSearch(query);
+      setActive("All");
+    };
+    window.addEventListener("nm-search", handler);
+    return () => window.removeEventListener("nm-search", handler);
+  }, []);
+
+  const filtered = products.filter((p) => {
+    const matchCategory = active === "All" || p.category === active;
+    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
+    return matchCategory && matchSearch;
+  });
 
   return (
     <section id="products" className="py-16 bg-background">
@@ -17,8 +32,8 @@ const ProductGrid = () => {
 
         <div className="flex flex-wrap justify-center gap-2 mb-8">
           {["All", ...categories].map((cat) => (
-            <button key={cat} onClick={() => setActive(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            <button key={cat} onClick={() => { setActive(cat); setSearch(""); }}
+              className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
                 active === cat
                   ? "gradient-gold text-secondary-foreground shadow-gold"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -28,10 +43,20 @@ const ProductGrid = () => {
           ))}
         </div>
 
+        {search && (
+          <div className="text-center mb-4">
+            <span className="text-sm text-muted-foreground">Showing results for "<strong>{search}</strong>"</span>
+            <button onClick={() => setSearch("")} className="ml-2 text-sm text-gold hover:underline">Clear</button>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {filtered.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}
+          {filtered.length === 0 && (
+            <p className="col-span-full text-center text-muted-foreground py-8">No products found.</p>
+          )}
         </div>
       </div>
     </section>
