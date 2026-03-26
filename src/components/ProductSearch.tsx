@@ -6,7 +6,7 @@ const ProductSearch = () => {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // आपकी SheetDB API - Inventory वाली शीट के लिए
+  // आपकी नयी API ID यहाँ अपडेट कर दी गई है
   const SHEETDB_URL = "https://sheetdb.io/api/v1/fng3l414zu66d?sheet=Inventory";
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -52,12 +52,12 @@ const ProductSearch = () => {
               
               <div className="flex gap-6 items-center">
                 <div className="text-right">
-                  <p className="text-[10px] opacity-40 font-bold uppercase text-white font-mono">MRP</p>
-                  <p className="text-lg font-bold line-through opacity-50 text-red-400 font-mono">₹{item.MRP}</p>
+                  <p className="text-[10px] opacity-40 font-bold uppercase text-white font-mono text-center">MRP</p>
+                  <p className="text-lg font-bold line-through opacity-50 text-red-400 font-mono text-center">₹{item.MRP}</p>
                 </div>
-                <div className="text-right bg-[#FFD700]/10 p-2 px-4 rounded-xl border border-[#FFD700]/20">
+                <div className="text-right bg-[#FFD700]/10 p-2 px-4 rounded-xl border border-[#FFD700]/20 min-w-[100px]">
                   <p className="text-[10px] text-[#FFD700] font-bold uppercase font-mono text-center">Price</p>
-                  <p className="text-2xl font-black text-[#FFD700] italic font-mono">₹{item.SaleRate}</p>
+                  <p className="text-2xl font-black text-[#FFD700] italic font-mono text-center">₹{item.SaleRate}</p>
                 </div>
               </div>
             </div>
