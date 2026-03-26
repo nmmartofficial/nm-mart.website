@@ -1,177 +1,147 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, Star, CheckCircle, User, Phone, Calendar, ArrowUpRight, Wallet, Loader2, RefreshCw, LogOut } from "lucide-react";
+import { ShoppingCart, Star, CheckCircle, User, Phone, Wallet, Loader2, RefreshCw, AlertTriangle, Timer, TrendingUp } from "lucide-react";
 
 const WelfareCard = () => {
-  const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState("");
 
-  // Updated SheetDB Link
-  const SHEETDB_URL = "https://sheetdb.io/api/v1/fng3l414zu66d";
+  const SHEETDB_URL = "https://sheetdb.io/api/v1/nkxmymwaz5b7i";
 
-  const getExpiryDate = () => {
-    const d = new Date();
-    const futureDate = new Date(d.getFullYear(), d.getMonth() + 7, 0);
-    return futureDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-  };
+  // Countdown Logic (Mahine ke ant tak)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      const diff = endOfMonth.getTime() - now.getTime();
+      
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / 1000 / 60) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+      setTimeLeft(`${d}d ${h}h ${m}m ${s}s`);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const syncData = async (num: string) => {
+  const handleLogin = async () => {
+    if (mobile.length !== 10) { alert("10 अंकों का नंबर डालें"); return; }
     setLoading(true);
-    try {
-      // Force refresh by adding a timestamp to bypass cache
-      const response = await fetch(`${SHEETDB_URL}/search?Mobile=${num}&_=${new Date().getTime()}`);
-      const data = await response.json();
-      if (data && data.length > 0) {
-        setUserData(data[0]);
-      }
-    } catch (error) {
-      console.error("Sync Error");
-    }
-    setLoading(false);
-  };
-
-  const handleAccessPortal = async () => {
-    if (mobile.length !== 10) {
-      alert("Invalid Mobile Number. Please enter 10 digits.");
-      return;
-    }
-    setLoading(true);
-
     try {
       const response = await fetch(`${SHEETDB_URL}/search?Mobile=${mobile}`);
       const data = await response.json();
-
-      if (data && data.length > 0) {
-        setUserData(data[0]);
-      } else {
-        const expiry = getExpiryDate();
-        const newEntry = { 
-          Name: name || "Premium Member", 
-          Mobile: mobile, 
-          Expiry: expiry, 
-          Usage: "1", 
-          Profit: "₹0" 
-        };
-        
-        await fetch(SHEETDB_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data: [newEntry] })
-        });
-        setUserData(newEntry);
-      }
-    } catch (error) {
-      alert("Portal connection failed.");
-    }
+      if (data && data.length > 0) setUserData(data[0]);
+      else alert("कार्ड रजिस्टर नहीं है। स्टोर पर संपर्क करें।");
+    } catch (error) { alert("सर्वर एरर!"); }
     setLoading(false);
   };
 
+  // Card Profit Calculations
+  const totalSaved = () => parseInt(userData?.Profit?.replace(/\D/g, "") || "0");
+  const cardCost = 599;
+  const netGain = totalSaved() - cardCost;
+  const remainingTarget = () => parseInt(userData?.Target?.replace(/\D/g, "1500")) - totalSaved();
+
   return (
-    <section id="welfare-card" className="py-20 gradient-navy text-white min-h-[70vh] flex items-center">
+    <section className="py-16 gradient-navy text-white min-h-screen">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-black font-display tracking-tighter">
-                NM MART <span className="text-gold italic">PORTAL</span>
-            </h2>
-            <p className="opacity-40 mt-3 text-[10px] tracking-[0.5em] uppercase font-black">Membership Tracking System</p>
-        </div>
+        <h2 className="text-3xl font-black mb-10 italic text-center">NM MART <span className="text-gold">SAVINGS HUB</span></h2>
 
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-start">
-          
-          {/* Elite Card Preview */}
-          <div className="flex flex-col items-center gap-10">
-            <motion.div 
-              whileHover={{ rotateY: 10, scale: 1.05 }}
-              className="w-full max-w-sm h-56 rounded-[2.5rem] gradient-gold p-8 text-secondary-foreground shadow-2xl flex flex-col justify-between relative overflow-hidden"
-            >
-               <div className="relative z-10 flex justify-between items-start">
-                  <div className="flex flex-col items-start">
-                    <span className="font-black text-2xl flex items-center gap-2 italic tracking-tighter"><ShoppingCart size={24}/> NM MART</span>
-                    <span className="text-[9px] font-black opacity-40 tracking-[0.2em] ml-1">WELFARE PREFERRED</span>
-                  </div>
-                  <div className="h-10 w-14 bg-black/5 rounded-xl border border-black/10"></div>
-               </div>
-
-               <div className="relative z-10 text-left">
-                  <p className="text-[8px] font-black opacity-30 uppercase tracking-[0.2em] mb-1">Holder Name</p>
-                  <p className="text-2xl font-black uppercase truncate tracking-tight leading-none">
-                    {userData ? userData.Name : (name || "•••••••• •••••") }
-                  </p>
-               </div>
-
-               <div className="relative z-10 flex justify-between items-end border-t border-black/5 pt-5">
-                  <p className="text-sm font-mono tracking-tighter font-black">{userData ? userData.Mobile : "XXXXX-XXXXX"}</p>
-                  <div className="text-right">
-                    <p className="text-[7px] uppercase font-black opacity-40">Valid Until</p>
-                    <p className="text-[11px] font-black">{userData ? userData.Expiry : "MM / YYYY"}</p>
-                  </div>
-               </div>
-            </motion.div>
+        {!userData ? (
+          <div className="max-w-md mx-auto bg-white/5 p-10 rounded-[2.5rem] border border-white/10 shadow-2xl">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><User className="text-gold"/> MEMBER LOGIN</h3>
+            <input type="text" placeholder="Mobile Number" value={mobile} maxLength={10} onChange={(e)=>setMobile(e.target.value.replace(/\D/g,''))} className="w-full bg-transparent border-b-2 border-white/20 py-3 mb-8 outline-none focus:border-gold text-xl font-bold tracking-widest" />
+            <button onClick={handleLogin} disabled={loading} className="w-full bg-gold text-black font-black py-4 rounded-xl uppercase tracking-widest hover:scale-105 transition-all">
+              {loading ? <Loader2 className="animate-spin mx-auto"/> : "Check My Card Profit"}
+            </button>
+          </div>
+        ) : (
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
             
-            {userData && (
-              <button 
-                onClick={() => syncData(userData.Mobile)}
-                className="flex items-center gap-3 text-gold text-[10px] font-black uppercase tracking-[0.3em] bg-white/5 px-10 py-4 rounded-full border border-gold/20 hover:bg-gold/10 transition-all shadow-xl"
-              >
-                <RefreshCw size={14} className={loading ? "animate-spin" : ""}/>
-                Synchronize Account
-              </button>
-            )}
-          </div>
+            {/* Left: Card & Net Profit */}
+            <div className="space-y-6">
+              <div className="w-full h-56 rounded-[2.5rem] gradient-gold p-8 text-black shadow-2xl relative overflow-hidden group">
+                 <div className="relative z-10 flex justify-between font-black italic">
+                    <span>NM MART WELFARE</span>
+                    <span className="text-[10px] bg-black/10 px-2 py-1 rounded">PREMIUM MEMBER</span>
+                 </div>
+                 <div className="mt-8 relative z-10">
+                    <p className="text-[10px] uppercase font-bold opacity-60">Card Holder</p>
+                    <p className="text-3xl font-black uppercase truncate leading-none">{userData.Name}</p>
+                 </div>
+                 <div className="mt-6 flex justify-between items-end relative z-10 border-t border-black/10 pt-4">
+                    <p className="font-mono text-sm tracking-widest">{userData.Mobile}</p>
+                    <div className="text-right leading-none">
+                        <p className="text-[8px] uppercase font-bold">Total Benefit</p>
+                        <p className="text-lg font-black italic">₹{userData.Profit}</p>
+                    </div>
+                 </div>
+              </div>
 
-          {/* Access & Analytics Dashboard */}
-          <div className="w-full">
-            {!userData ? (
-              <div className="bg-white/5 p-12 rounded-[3.5rem] border border-white/10 backdrop-blur-3xl shadow-2xl text-left">
-                <h3 className="text-xs font-black mb-10 uppercase tracking-[0.4em] text-gold flex items-center gap-3 underline decoration-gold/30 underline-offset-8">
-                  Security Access
-                </h3>
-                <div className="space-y-10">
-                  <input type="text" placeholder="Member Name" value={name} onChange={(e)=>setName(e.target.value)} className="w-full bg-transparent border-b-2 border-white/10 py-4 focus:border-gold outline-none transition-all font-bold placeholder:text-white/10" />
-                  <input type="text" placeholder="Mobile Number" value={mobile} maxLength={10} onChange={(e)=>setMobile(e.target.value.replace(/\D/g,''))} className="w-full bg-transparent border-b-2 border-white/10 py-4 focus:border-gold outline-none transition-all font-bold placeholder:text-white/10" />
-                  <button onClick={handleAccessPortal} disabled={loading} className="w-full bg-gold text-secondary-foreground font-black py-6 rounded-3xl shadow-2xl hover:brightness-110 transition-all uppercase text-[10px] tracking-[0.5em] flex justify-center items-center">
-                    {loading ? <Loader2 className="animate-spin" /> : "Verify & Access"}
-                  </button>
+              {/* Net Gain Calculator */}
+              <div className="bg-white/5 p-6 rounded-3xl border border-white/10 text-left">
+                <div className="flex justify-between items-center mb-4">
+                    <p className="text-xs font-bold opacity-50 uppercase tracking-widest">Card Value Status</p>
+                    <TrendingUp className="text-green-400" size={18}/>
+                </div>
+                <div className="flex justify-between text-sm mb-1">
+                    <span>Card Investment:</span>
+                    <span className="font-bold">₹{cardCost}</span>
+                </div>
+                <div className="flex justify-between text-sm mb-3">
+                    <span>Total Profit Earned:</span>
+                    <span className="text-gold font-bold">₹{totalSaved()}</span>
+                </div>
+                <div className="pt-3 border-t border-white/10 flex justify-between items-center">
+                    <span className="text-xs uppercase font-bold">Net Returns:</span>
+                    <span className={`text-xl font-black ${netGain >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {netGain >= 0 ? `+₹${netGain}` : `-₹${Math.abs(netGain)}`}
+                    </span>
                 </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-8">
-                {/* Analytics Block 1 */}
-                <motion.div initial={{y: 20, opacity:0}} animate={{y:0, opacity:1}} className="bg-white/5 p-10 rounded-[3rem] border border-white/10 text-left relative overflow-hidden">
-                  <ArrowUpRight className="absolute top-6 right-6 opacity-5" size={40}/>
-                  <p className="text-[9px] opacity-40 font-black uppercase tracking-[0.3em] mb-4 text-blue-400">Total Visits</p>
-                  <p className="text-6xl font-black tracking-tighter">{userData.Usage || "0"}</p>
-                </motion.div>
+            </div>
 
-                {/* Analytics Block 2 */}
-                <motion.div initial={{y: 20, opacity:0}} animate={{y:0, opacity:1}} transition={{delay:0.1}} className="bg-white/5 p-10 rounded-[3rem] border border-white/10 text-left relative overflow-hidden">
-                  <Wallet className="absolute top-6 right-6 opacity-5" size={40}/>
-                  <p className="text-[9px] opacity-40 font-black uppercase tracking-[0.3em] mb-4 text-gold">Total Profit</p>
-                  <p className="text-6xl font-black text-gold tracking-tighter">{userData.Profit || "₹0"}</p>
-                </motion.div>
+            {/* Right: Urgent Warning & Remaining Balance */}
+            <motion.div 
+                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                className="bg-red-600/10 border-4 border-red-600 rounded-[3rem] p-8 text-left relative overflow-hidden"
+            >
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 text-red-500 mb-6">
+                        <AlertTriangle size={28} className="animate-pulse"/>
+                        <h3 className="text-2xl font-black italic uppercase leading-none">Hurry! Save More</h3>
+                    </div>
+                    <p className="text-lg mb-4">
+                        नमस्ते <b>{userData.Name}</b>, आपके कार्ड में अभी भी <span className="text-2xl font-black text-white underline decoration-gold">₹{remainingTarget()}</span> का प्रॉफिट बैलेंस बचा है।
+                    </p>
+                    
+                    <div className="bg-red-600 p-4 rounded-2xl mb-6 shadow-xl">
+                        <p className="text-[10px] font-bold uppercase text-black/60 text-center flex items-center justify-center gap-2 mb-2">
+                            <Timer size={14}/> Monthly Deadline:
+                        </p>
+                        <p className="text-3xl font-mono font-black text-black text-center bg-white py-2 rounded-lg">
+                            {timeLeft}
+                        </p>
+                    </div>
 
-                {/* Account Summary */}
-                <div className="col-span-2 bg-white/5 p-10 rounded-[3rem] border border-white/10 flex items-center justify-between">
-                   <div className="flex items-center gap-6 text-left">
-                      <div className="w-16 h-16 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-400 border border-green-500/20 shadow-xl shadow-green-500/5">
-                        <CheckCircle size={32}/>
-                      </div>
-                      <div>
-                        <p className="font-black text-[10px] uppercase tracking-[0.3em] text-green-400">Membership Validated</p>
-                        <p className="text-sm font-bold opacity-60 mt-1">Expiring on {userData.Expiry}</p>
-                      </div>
-                   </div>
-                   <button onClick={()=>setUserData(null)} className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.4em] opacity-30 hover:opacity-100 transition-all border border-white/10 px-6 py-3 rounded-2xl">
-                     <LogOut size={14}/> Exit
-                   </button>
+                    <p className="text-xs opacity-70 italic mb-8">
+                        *यह फायदा केवल NM Mart के रजिस्टर्ड कार्ड होल्डर्स के लिए है। इस महीने की लिमिट खत्म होने से पहले खरीदारी करें!
+                    </p>
+
+                    <div className="flex justify-between items-center">
+                        <button onClick={() => window.location.reload()} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-white/10 px-4 py-2 rounded-full border border-white/10 hover:bg-white/20 transition-all">
+                            <RefreshCw size={12}/> Update Stats
+                        </button>
+                        <button onClick={()=>setUserData(null)} className="text-[10px] opacity-30 underline">Logout</button>
+                    </div>
                 </div>
-              </div>
-            )}
-          </div>
+                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-red-600/20 blur-[60px] rounded-full"></div>
+            </motion.div>
 
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );
