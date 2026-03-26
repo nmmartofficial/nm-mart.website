@@ -1,49 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
-
-    --primary: 221 83% 53%; /* NM Mart Royal Blue */
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 142 71% 45%; /* WhatsApp/Success Green */
-    --secondary-foreground: 210 40% 98%;
-
-    --accent: 24 95% 53%; /* Discount Orange */
-    --accent-foreground: 210 40% 98%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --border: 214 32% 91%;
-    --radius: 1.5rem; /* ज़्यादा गोल और मॉडर्न कोने */
-  }
-}
-
-@layer base {
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif; /* साफ़ और पढ़ने में आसान फोंट */
+    @apply bg-[#f8f9fa] text-[#1A365D] antialiased;
   }
 }
 
-@layer utilities {
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  /* फोल्डर्स के लिए चमकता हुआ इफेक्ट */
-  .folder-shadow {
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-  }
+/* Card ka rang safed rahega taaki wo chamke */
+.bg-white {
+  background-color: #ffffff !important;
+}
+
+/* Text ko dark blue karne ke liye */
+h1, h2, h3, p, span {
+  color: #1A365D !important;
+}
+
+/* Welfare card ke andar ka text white rahe isliye */
+.text-white, .text-white * {
+  color: #ffffff !important;
 }
