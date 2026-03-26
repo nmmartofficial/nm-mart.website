@@ -6,18 +6,26 @@ const ProductSearch = () => {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // आपकी नई वर्किंग API ID यहाँ डाल दी गई  है
+  // Aapki confirm working API ID
   const SHEETDB_URL = "https://sheetdb.io/api/v1/n1voj7e2lp0le?sheet=Inventory";
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (query.length < 2) return; 
     setLoading(true);
+    
     try {
-      // Smart Search: Chhota/Bada letter aur aadha naam bhi dhund lega
-      const response = await fetch(`${SHEETDB_URL}/search?Name=*${query}*&casesensitive=false`);
+      // Ismein 'cache: no-store' joda gaya hai taaki naya data hi aaye
+      const response = await fetch(`${SHEETDB_URL}/search?Name=*${query}*&casesensitive=false`, {
+        cache: 'no-store'
+      });
       const data = await response.json();
-      setResults(Array.isArray(data) ? data : []);
+      
+      if (Array.isArray(data)) {
+        setResults(data);
+      } else {
+        setResults([]);
+      }
     } catch (error) { 
       console.error("Search Error:", error); 
     }
@@ -34,7 +42,7 @@ const ProductSearch = () => {
         <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto mb-10">
           <input 
             type="text" 
-            placeholder="Search Product (Jaise: 5 star, red hot...)" 
+            placeholder="Item ka naam (Jaise: 5 star)" 
             value={query} 
             onChange={(e) => setQuery(e.target.value)} 
             className="w-full bg-white/10 border-2 border-white/10 p-5 rounded-2xl outline-none focus:border-[#FFD700] text-lg font-bold text-white transition-all" 
@@ -46,7 +54,7 @@ const ProductSearch = () => {
 
         <div className="grid gap-4 max-w-4xl mx-auto">
           {results.length > 0 ? results.map((item, index) => (
-            <div key={index} className="bg-white/5 p-5 rounded-2xl border border-white/10 flex flex-wrap justify-between items-center hover:bg-white/10 transition-colors">
+            <div key={index} className="bg-white/5 p-5 rounded-2xl border border-white/10 flex flex-wrap justify-between items-center hover:bg-white/10 transition-colors shadow-lg">
               <div className="text-left flex items-start gap-4">
                 <div className="bg-[#FFD700]/20 p-3 rounded-xl text-[#FFD700]">
                   <ShoppingBasket size={24}/>
@@ -71,7 +79,7 @@ const ProductSearch = () => {
               </div>
             </div>
           )) : query.length > 2 && !loading && (
-            <p className="opacity-30 italic text-white text-center">Nahi mila! Sahi spelling check karein.</p>
+            <p className="opacity-30 italic text-white text-center py-10">"{query}" nahi mila. Sahi naam likhein (e.g. 5 STAR).</p>
           )}
         </div>
       </div>
