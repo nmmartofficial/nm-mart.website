@@ -156,6 +156,7 @@ export default function App() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [remoteBanner, setRemoteBanner] = useState({ text: 'Welcome to NM MART', img: '' });
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -169,25 +170,29 @@ export default function App() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showLoyalty, setShowLoyalty] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
-
   const countdown = useCountdown();
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
 
-  // Fetch CSV
+  // Fetch CSV (Products & Banner)
   useEffect(() => {
     // 1. प्रोडक्ट्स लोड करना
-    fetch(CSV_URL).then(r => r.text()).then(t => { setAllProducts(parseCSV(t)); setLoading(false); });
+    fetch(CSV_URL).then(r => r.text()).then(t => { 
+      setAllProducts(parseCSV(t)); 
+      setLoading(false); 
+    });
 
-    // 2. बैनर लोड करना (एक्सेल से)
+    // 2. बैनर लोड करना
     fetch(BANNER_API).then(r => r.text()).then(t => {
       const rows = t.split('\n');
       if(rows[1]) {
         const cols = rows[1].split(','); 
-        setRemoteBanner({ text: (cols[0] || '').trim(), img: (cols[1] || '').trim() });
+        setRemoteBanner({ 
+          text: (cols[0] || '').trim() || 'Welcome to NM MART', 
+          img: (cols[1] || '').trim() 
+        });
       }
-    });
+    }).catch(err => console.log("Banner fetch error", err));
   }, []);
-
   // Back to top visibility
   useEffect(() => {
     const handler = () => setShowBackToTop(window.scrollY > 400);
