@@ -651,10 +651,8 @@ export default function App() {
                       alt="UPI QR Code" className="mx-auto w-40 h-40 rounded-lg"
                     />
                     <p className="text-xs text-muted-foreground font-mono">{UPI_ID}</p>
-                    <div className="flex gap-2 justify-center">
-                    </div>
-                    {/* ✅ UPI के लिए बटन */}
-                      </button>
+                    {/* ✅ असली UPI ऑर्डर बटन */}
+                    <button
                       onClick={placeOrder}
                       className="w-full mt-6 gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
                     >
@@ -662,8 +660,16 @@ export default function App() {
                     </button>
                   </div>
                 )}
-                {/* ✅ COD के लिए बटन */}
+
+                {/* ✅ असली COD ऑर्डर बटन */}
                 {payMethod === "cod" && (
+                  <button
+                    onClick={placeOrder}
+                    className="w-full mt-2 gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
+                  >
+                    <Send size={18} /> Confirm Order (COD)
+                  </button>
+                )}
                   <button
                     onClick={placeOrder}
                     className="w-full mt-2 gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
