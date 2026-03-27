@@ -232,9 +232,27 @@ export default function App() {
                       {product.saleRate > 0 ? 'In Stock' : 'Limited'}
                     </div>
                     <div className="h-28 flex items-center justify-center p-4 bg-muted/30">
-                      <div className="w-14 h-14 rounded-full gradient-navy flex items-center justify-center text-primary-foreground font-black text-xl">
-                        {product.name.charAt(0)}
-                      </div>
+                      {product.barcode ? (
+                        <img
+                          src={`https://images.upcitemdb.com/upc/${product.barcode}/0.jpg`}
+                          alt={product.name}
+                          className="max-h-full max-w-full object-contain"
+                          onError={(e: any) => {
+                            e.currentTarget.style.display = 'none';
+                            const p = e.currentTarget.parentElement;
+                            if (p && !p.querySelector('.fallback-icon')) {
+                              const d = document.createElement('div');
+                              d.className = 'fallback-icon w-14 h-14 rounded-full gradient-navy flex items-center justify-center text-primary-foreground font-black text-xl';
+                              d.textContent = product.name.charAt(0);
+                              p.appendChild(d);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full gradient-navy flex items-center justify-center text-primary-foreground font-black text-xl">
+                          {product.name.charAt(0)}
+                        </div>
+                      )}
                     </div>
                     <div className="p-4 flex-grow flex flex-col">
                       <p className="text-[8px] text-accent font-black uppercase mb-1">{product.subCat || product.mainCat}</p>
@@ -358,7 +376,15 @@ export default function App() {
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {cart.map(item => (
                   <div key={item.id} className="bg-muted/50 rounded-2xl p-4 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl gradient-navy flex items-center justify-center text-primary-foreground font-black text-sm flex-shrink-0">{item.name.charAt(0)}</div>
+                    <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
+                      {item.barcode ? (
+                        <img src={`https://images.upcitemdb.com/upc/${item.barcode}/0.jpg`} alt={item.name} className="w-full h-full object-contain bg-muted/30"
+                          onError={(e: any) => { e.currentTarget.outerHTML = `<div class="w-10 h-10 rounded-xl gradient-navy flex items-center justify-center text-primary-foreground font-black text-sm">${item.name.charAt(0)}</div>`; }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl gradient-navy flex items-center justify-center text-primary-foreground font-black text-sm">{item.name.charAt(0)}</div>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-foreground text-xs uppercase truncate">{item.name}</h4>
                       <p className="text-sm font-black text-primary">₹{item.saleRate * item.qty}</p>
