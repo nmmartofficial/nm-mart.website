@@ -652,7 +652,7 @@ export default function App() {
                     />
                     <p className="text-xs text-muted-foreground font-mono">{UPI_ID}</p>
                     <div className="flex gap-2 justify-center">
-</div>
+                    </div>
                     {/* ✅ UPI के लिए बटन */}
                     <button
                       onClick={placeOrder}
@@ -662,7 +662,6 @@ export default function App() {
                     </button>
                   </div>
                 )}
-
                 {/* ✅ COD के लिए बटन */}
                 {payMethod === "cod" && (
                   <button
