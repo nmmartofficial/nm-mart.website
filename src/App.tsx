@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShoppingCart, Search, X, Plus, Minus, History, ShoppingBag, User, LogOut, RefreshCw, 
-  Flame, Banknote, Smartphone, CheckCircle2, Truck, ExternalLink, Mic, Clock, MapPin, FileText, Share2
+  Flame, Banknote, Smartphone, CheckCircle2, Truck, ExternalLink, Mic, Clock, MapPin, FileText, Share2, Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// --- 🛠️ CONFIG (NM MART SETTINGS) ---
+// --- NM MART CONFIG ---
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRp0eoVJhdbJUOEYETTbNJYWeK3U1b_V1NKQORwpPgSZBwY60P8kmxNEblHxjslaBujpChwynkJ9zfg/pub?output=csv";
 const WHATSAPP_NUMBER = "917081154604";
 const UPI_ID = "paytmqr5fwdiq@ptys"; 
@@ -17,11 +17,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('shop'); 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('DEALS'); // 50% Deals First
   const [payMethod, setPayMethod] = useState<'COD' | 'UPI' | null>(null);
-  const [addressType, setAddressType] = useState<'Home' | 'Office'>('Home');
   
-  // 🔐 LOGIN & MULTI-ADDRESS
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('NM_MART_LOGGED_IN') === 'true');
   const [customer, setCustomer] = useState(() => {
     const saved = localStorage.getItem('NM_MART_USER_DATA');
@@ -39,240 +37,211 @@ export default function App() {
     }
   }, [isLoggedIn, customer.phone, activeTab]);
 
-  const categories = ['All', ...new Set(allProducts.map(p => p.category))];
+  const categories = ['DEALS', ...new Set(allProducts.map(p => p.category))];
   const dealProducts = allProducts.filter(p => p.mrp > 0 && ((p.mrp - p.saleRate) / p.mrp) * 100 >= 50);
   const totalBill = cart.reduce((s, i) => s + i.saleRate * (i.qty || 0), 0);
   const upiLink = `upi://pay?pa=${UPI_ID}&pn=NMMART&am=${totalBill}&cu=INR`;
 
-  // 🎤 VOICE SEARCH LOGIC
-  const startVoiceSearch = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return alert("Browser support nahi karta!");
-    const rec = new SpeechRecognition();
-    rec.onresult = (e: any) => setSearchTerm(e.results[0][0].transcript);
-    rec.start();
-  };
-
-  const handleLogin = () => {
-    if(!customer.name || customer.phone.length < 10 || !customer.homeAddr) return alert("Poora Detail Bhariye!");
-    setIsLoggedIn(true);
-    localStorage.setItem('NM_MART_LOGGED_IN', 'true');
-    localStorage.setItem('NM_MART_USER_DATA', JSON.stringify(customer));
-    setActiveTab('shop');
-  };
-
   const handleOrderProcess = () => {
-    if(!payMethod) return alert("Payment Method चुनें!");
     const orderID = `NM-${Math.floor(1000 + Math.random() * 9000)}`;
     const itemsSummary = cart.map(i => `${i.name} (x${i.qty})`).join(', ');
-    const finalAddress = addressType === 'Home' ? customer.homeAddr : customer.officeAddr;
-    
     const orderData = { 
         id: orderID, date: new Date().toLocaleString('en-IN'), ...customer, 
-        items: itemsSummary, total: totalBill, method: payMethod, status: 'Pending', address: finalAddress 
+        items: itemsSummary, total: totalBill, method: payMethod, status: 'Packed' // Professional Status
     };
     
     const masterDB = JSON.parse(localStorage.getItem('NM_MART_MASTER_DB') || '[]');
     localStorage.setItem('NM_MART_MASTER_DB', JSON.stringify([orderData, ...masterDB]));
     
-    const waMsg = `*NM MART - BILL REPORT*\n--------------------\nID: ${orderID}\nPay: ${payMethod}\nTotal: ₹${totalBill}\nItems: ${itemsSummary}\nAddr: ${finalAddress}\n--------------------\nNM MART Manjhanpur`;
+    // WhatsApp Report (Auto-Bill Style)
+    const waMsg = `*NM MART - NEW ORDER*\n--------------------\nID: ${orderID}\nCustomer: ${customer.name}\nTotal: ₹${totalBill}\nStatus: ${orderData.status}\nItems: ${itemsSummary}\nAddress: ${customer.homeAddr}\n--------------------\nNM MART Manjhanpur`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMsg)}`, '_blank');
-    
-    setCart([]); setIsCartOpen(false); setPayMethod(null); setActiveTab('history');
+    setCart([]); setIsCartOpen(false); setActiveTab('history');
   };
 
-  if (loading) return <div className="h-screen flex flex-col items-center justify-center font-black text-blue-900 bg-white italic uppercase tracking-widest p-10 text-center animate-pulse">NM MART LOADING... <br/><span className="text-[8px] text-amber-500 mt-2">Checking Manjhanpur Inventory</span></div>;
+  const shareProduct = (p: any) => {
+    const msg = `Dekho NM MART par ye deal! \n${p.name} sirf ₹${p.saleRate} mein! \nAbhi order karein: [Site Link Here]`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
+  if (loading) return <div className="h-screen flex items-center justify-center font-black text-blue-950 uppercase italic tracking-widest p-10 text-center bg-white shadow-inner">NM MART... <br/>Sabse Sasta Sabse Achha</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 pb-28 font-sans">
       
-      {/* 🚀 HEADER (Professional Branding) */}
-      <header className="bg-blue-950 text-white p-3 sticky top-0 z-50 flex justify-between items-center border-b-4 border-amber-400 shadow-xl">
-        <div onClick={() => setActiveTab('shop')} className="cursor-pointer">
+      {/* 🚀 BRAND HEADER */}
+      <header className="bg-blue-950 text-white p-4 sticky top-0 z-50 flex justify-between items-center border-b-4 border-amber-400 shadow-2xl">
+        <div>
             <h1 className="text-xl font-black italic tracking-tighter leading-none">NM MART</h1>
-            <span className="text-[7px] font-bold text-amber-400 uppercase">Manjhanpur Digital</span>
+            <span className="text-[7px] font-bold text-amber-400 uppercase tracking-widest">Manjhanpur Pro Store</span>
         </div>
-        <div className="flex items-center gap-3">
-            {isLoggedIn && <button onClick={() => { localStorage.removeItem('NM_MART_LOGGED_IN'); setIsLoggedIn(false); }} className="text-red-400"><LogOut size={16}/></button>}
-            <button onClick={() => setIsCartOpen(true)} className="bg-white text-blue-950 p-2 rounded-full relative shadow-md">
-              <ShoppingCart size={18}/>
-              {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] font-bold px-1 rounded-full">{cart.length}</span>}
+        <div className="flex items-center gap-4">
+            <button onClick={() => setIsCartOpen(true)} className="relative bg-white text-blue-950 p-2.5 rounded-2xl shadow-lg active:scale-90 transition-all">
+              <ShoppingCart size={20}/>
+              {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ring-2 ring-white animate-bounce">{cart.length}</span>}
             </button>
         </div>
       </header>
 
-      {/* ⏱️ FLASH SALE BAR */}
-      <div className="bg-amber-400 text-blue-950 px-4 py-1.5 flex justify-between items-center font-black text-[9px] uppercase tracking-wider">
-        <span className="flex items-center gap-1"><Clock size={12}/> Flash Sale Live!</span>
-        <span>Ends in: 01:59:59</span>
-      </div>
+      {/* ⏱️ FLASH SALE BAR (Only on Home/Deals) */}
+      {selectedCategory === 'DEALS' && (
+        <div className="bg-red-600 text-white py-1.5 px-4 flex justify-between items-center text-[9px] font-black uppercase italic tracking-wider">
+           <span className="flex items-center gap-1 animate-pulse"><Clock size={12}/> Flash Sale Live!</span>
+           <span>Ending In: 01:29:59</span>
+        </div>
+      )}
 
-      <main className="max-w-4xl mx-auto px-4 mt-4">
-        
-        {/* 🔐 LOGIN / ADDRESS TAB */}
-        {activeTab === 'login' && (
-            <div className="max-w-md mx-auto mt-4 bg-white p-6 rounded-[2rem] shadow-xl border-t-8 border-blue-950">
-                <h2 className="text-lg font-black text-blue-950 uppercase italic text-center mb-6 underline decoration-amber-400">Join NM MART</h2>
-                <div className="space-y-4">
-                    <input type="text" placeholder="Apna Name" className="w-full p-4 bg-slate-100 rounded-2xl font-bold border-none outline-none focus:ring-2 ring-blue-950" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})}/>
-                    <input type="tel" placeholder="Mobile Number" className="w-full p-4 bg-slate-100 rounded-2xl font-bold border-none outline-none focus:ring-2 ring-blue-950" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})}/>
-                    <div className="p-4 bg-blue-50 rounded-2xl border-2 border-blue-100">
-                        <label className="text-[9px] font-black uppercase text-blue-900 block mb-2 flex items-center gap-1"><MapPin size={10}/> Home Address</label>
-                        <textarea placeholder="Ghar Ka Pata" className="w-full bg-transparent font-bold text-xs outline-none" value={customer.homeAddr} onChange={e => setCustomer({...customer, homeAddr: e.target.value})}/>
-                    </div>
-                    <div className="p-4 bg-slate-50 rounded-2xl border-2 border-slate-100">
-                        <label className="text-[9px] font-black uppercase text-slate-500 block mb-2 flex items-center gap-1"><ShoppingBag size={10}/> Shop/Office Address (Optional)</label>
-                        <textarea placeholder="Dukan Ka Pata" className="w-full bg-transparent font-bold text-xs outline-none" value={customer.officeAddr} onChange={e => setCustomer({...customer, officeAddr: e.target.value})}/>
-                    </div>
-                    <button onClick={handleLogin} className="w-full bg-blue-950 text-white py-4 rounded-[2rem] font-black uppercase text-xs shadow-lg active:scale-95 transition-all">Start Shopping</button>
-                </div>
-            </div>
-        )}
-
-        {/* 🛍️ SHOP TAB (Categories, Voice Search, Deals) */}
+      <main className="p-4 max-w-xl mx-auto mt-2">
         {activeTab === 'shop' && (
           <>
-            <div className="relative mb-4 flex gap-2">
+            {/* 🔍 SEARCH & VOICE */}
+            <div className="flex gap-2 mb-6">
                 <div className="relative flex-1">
-                    <input type="text" placeholder="Bolkar ya Likhkar dhundhein..." className="w-full p-4 pl-12 rounded-2xl shadow-sm border-2 border-slate-100 font-bold outline-none" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}/>
+                    <input type="text" placeholder="Maggi, Soap, Rice..." className="w-full p-4 pl-12 rounded-[1.5rem] border-2 border-slate-100 font-bold outline-none shadow-sm focus:border-blue-950 transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}/>
                     <Search className="absolute left-4 top-4 text-slate-300" size={20}/>
                 </div>
-                <button onClick={startVoiceSearch} className="bg-blue-950 text-white p-4 rounded-2xl shadow-lg animate-pulse"><Mic size={20}/></button>
+                <button onClick={() => alert("Voice Search Active (NM Mart)")} className="bg-blue-950 text-white p-4 rounded-2xl shadow-xl active:scale-95"><Mic size={22}/></button>
             </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
+            {/* 📑 CATEGORY TABS (DEALS FRONT PAR) */}
+            <div className="flex gap-2 mb-8 overflow-x-auto pb-2 no-scrollbar">
                 {categories.map(cat => (
-                    <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase whitespace-nowrap transition-all shadow-sm ${selectedCategory === cat ? 'bg-blue-950 text-white scale-105' : 'bg-white text-slate-400 border border-slate-100'}`}>{cat}</button>
+                    <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase transition-all shadow-md whitespace-nowrap ${selectedCategory === cat ? 'bg-blue-950 text-white scale-105 ring-2 ring-amber-400' : 'bg-white text-slate-400 border border-slate-100'}`}>
+                      {cat === 'DEALS' ? '🔥 50% Dhamaka' : cat}
+                    </button>
                 ))}
             </div>
 
-            {/* 🔥 50% DEALS SECTION */}
-            {searchTerm === '' && selectedCategory === 'All' && dealProducts.length > 0 && (
-                <div className="mb-6 bg-red-50 p-4 rounded-3xl border-2 border-red-100 shadow-inner overflow-hidden relative">
-                    <div className="absolute top-0 right-0 bg-red-600 text-white px-3 py-1 rounded-bl-2xl font-black text-[8px] animate-bounce">DHAMAKA</div>
-                    <h2 className="text-[10px] font-black text-red-700 uppercase italic mb-3 flex items-center gap-1"> <Flame size={16}/> NM MART 50% OFF DEALS</h2>
-                    <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-                        {dealProducts.map(p => (
-                            <div key={`deal-${p.id}`} className="bg-white p-3 rounded-2xl border border-red-50 w-36 flex-shrink-0 text-center shadow-md relative">
-                                <img src={`https://images.upcitemdb.com/upc/${p.barcode}/0.jpg`} className="h-16 mx-auto object-contain" onError={(e: any) => e.target.src = `https://loremflickr.com/150/150/${encodeURIComponent(p.name)}`}/>
-                                <p className="text-[8px] font-black mt-2 h-6 overflow-hidden uppercase leading-tight">{p.name}</p>
-                                <p className="text-blue-950 font-black text-xs mt-1">₹{p.saleRate} <span className="text-[7px] text-slate-400 line-through">₹{p.mrp}</span></p>
-                                <button onClick={() => { if(!isLoggedIn) { setActiveTab('login'); return; } setCart([...cart, {...p, qty: 1}]) }} className="w-full bg-red-600 text-white py-1.5 mt-2 rounded-lg text-[8px] font-black uppercase shadow-md active:scale-95 transition-all italic">Hurry Up!</button>
-                            </div>
-                        ))}
+            {/* 📦 PRODUCT DISPLAY */}
+            <div className="grid grid-cols-2 gap-4">
+                {(selectedCategory === 'DEALS' ? dealProducts : allProducts.filter(p => p.category === selectedCategory))
+                  .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
+                    <div key={p.id} className={`bg-white p-4 rounded-[2.5rem] border-2 shadow-sm flex flex-col items-center relative transition-transform hover:scale-[1.02] ${selectedCategory === 'DEALS' ? 'border-red-50' : 'border-slate-50'}`}>
+                        {selectedCategory === 'DEALS' && <div className="absolute top-4 right-4 bg-red-600 text-white px-2 py-0.5 text-[7px] font-black uppercase rounded-full">50% OFF</div>}
+                        
+                        <img src={`https://images.upcitemdb.com/upc/${p.barcode}/0.jpg`} className="h-24 object-contain mb-3" onError={(e: any) => e.target.src = "https://placehold.co/150x150?text=NM+MART"}/>
+                        
+                        <div className="flex gap-1 mb-1"> {[1,2,3,4,5].map(s => <Star key={s} size={8} className="fill-amber-400 text-amber-400"/>)} </div>
+                        
+                        <h3 className="text-[10px] font-black uppercase text-center h-8 leading-tight text-slate-700">{p.name}</h3>
+                        <p className="font-black text-blue-950 text-lg mt-1 italic">₹{p.saleRate} {p.mrp > p.saleRate && <span className="text-[9px] text-slate-400 line-through ml-1">₹{p.mrp}</span>}</p>
+                        
+                        <div className="flex w-full gap-2 mt-3">
+                            <button onClick={() => {if(!isLoggedIn){setActiveTab('login'); return;} setCart([...cart, {...p, qty: 1}])}} className={`flex-1 py-3 rounded-2xl text-[9px] font-black uppercase shadow-lg active:scale-95 transition-all ${selectedCategory === 'DEALS' ? 'bg-red-600 text-white italic' : 'bg-blue-950 text-white'}`}>ADD</button>
+                            <button onClick={() => shareProduct(p)} className="bg-slate-100 p-3 rounded-2xl text-slate-400"><Share2 size={14}/></button>
+                        </div>
                     </div>
-                </div>
-            )}
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-              {allProducts.filter(p => (selectedCategory === 'All' || p.category === selectedCategory) && p.name.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
-                  <div key={p.id} className="bg-white p-3 rounded-3xl border-2 border-slate-50 flex flex-col items-center shadow-sm hover:shadow-md transition-all">
-                    <img src={`https://images.upcitemdb.com/upc/${p.barcode}/0.jpg`} className="h-16 object-contain" onError={(e: any) => e.target.src = "https://placehold.co/100x100?text=NM+MART"}/>
-                    <h3 className="text-[8px] font-black uppercase text-center h-8 mt-2 text-slate-700 leading-tight">{p.name}</h3>
-                    <p className="text-[7px] font-bold text-slate-400 uppercase">{p.unit}</p>
-                    <p className="font-black text-blue-950 text-xs mt-1 italic">₹{p.saleRate}</p>
-                    <button onClick={() => { if(!isLoggedIn) { setActiveTab('login'); return; } setCart([...cart, {...p, qty: 1}]) }} className="w-full bg-blue-950 text-white py-2 mt-2 rounded-xl text-[8px] font-black uppercase shadow-md active:scale-95 transition-all">Add</button>
-                  </div>
-              ))}
+                ))}
             </div>
           </>
         )}
 
-        {/* 📜 HISTORY TAB (Loyalty, Tracking, Re-Order) */}
-        {activeTab === 'history' && (
-            <div className="max-w-md mx-auto mt-2 px-2 pb-10">
-                <div className="bg-gradient-to-r from-blue-950 to-blue-800 p-5 rounded-3xl mb-6 text-white shadow-xl relative overflow-hidden">
-                    <div className="absolute -right-4 -top-4 bg-amber-400 w-20 h-20 rounded-full blur-2xl opacity-20"></div>
-                    <p className="text-[10px] font-black italic uppercase tracking-widest text-amber-400">NM MART Rewards</p>
-                    <h2 className="text-xl font-black">Loyalty Points: {foundOrders.length * 10}</h2>
-                    <p className="text-[8px] mt-1 text-blue-200">Har 5th order par ₹50 Discount!</p>
+        {/* 🔐 LOGIN TAB */}
+        {activeTab === 'login' && (
+            <div className="max-w-md mx-auto bg-white p-8 rounded-[3rem] shadow-2xl border-t-8 border-blue-950 mt-10">
+                <h2 className="text-center font-black italic text-blue-950 mb-6 uppercase tracking-widest text-lg underline decoration-amber-400 underline-offset-8">Welcome to NM MART</h2>
+                <div className="space-y-4">
+                    <input type="text" placeholder="Your Full Name" className="w-full p-4 bg-slate-50 rounded-2xl font-bold border-2 border-slate-100 outline-none focus:border-blue-950" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})}/>
+                    <input type="tel" placeholder="Mobile Number" className="w-full p-4 bg-slate-50 rounded-2xl font-bold border-2 border-slate-100 outline-none focus:border-blue-950" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})}/>
+                    <div className="p-4 bg-blue-50 rounded-2xl border-2 border-blue-100">
+                        <label className="text-[8px] font-black uppercase text-blue-900 block mb-2 flex items-center gap-1"><MapPin size={10}/> Primary Address (Home)</label>
+                        <textarea placeholder="Poora Pata Manjhanpur" className="w-full bg-transparent font-bold text-xs outline-none" value={customer.homeAddr} onChange={e => setCustomer({...customer, homeAddr: e.target.value})}/>
+                    </div>
+                    <button onClick={() => {localStorage.setItem('NM_MART_LOGGED_IN', 'true'); localStorage.setItem('NM_MART_USER_DATA', JSON.stringify(customer)); setIsLoggedIn(true); setActiveTab('shop');}} className="w-full bg-blue-950 text-white py-5 rounded-3xl font-black uppercase shadow-2xl tracking-widest text-xs active:scale-95 transition-all">Start Shopping</button>
                 </div>
-                
-                <h2 className="text-lg font-black text-blue-950 mb-4 uppercase italic flex items-center gap-2 underline decoration-amber-400"> <History size={20}/> Old Orders</h2>
+            </div>
+        )}
+
+        {/* 📜 HISTORY & STATUS TAB */}
+        {activeTab === 'history' && (
+            <div className="space-y-6 pb-20">
+                <div className="bg-gradient-to-r from-blue-950 to-blue-800 p-6 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
+                    <p className="text-[10px] uppercase font-bold text-amber-400 italic mb-1">Loyalty Rewards</p>
+                    <h2 className="text-2xl font-black italic tracking-tighter">₹{foundOrders.length * 10} Wallet Balance</h2>
+                    <p className="text-[8px] mt-2 opacity-70 uppercase tracking-widest">Next Discount at 5 Orders</p>
+                    <div className="absolute -right-4 -bottom-4 bg-amber-400 w-24 h-24 rounded-full blur-3xl opacity-20"></div>
+                </div>
+
+                <h2 className="text-sm font-black text-blue-950 uppercase italic flex items-center gap-2 mb-4"> <History size={20}/> Recent Orders & Status</h2>
                 {foundOrders.length > 0 ? foundOrders.map(o => (
-                    <div key={o.id} className="bg-white p-4 rounded-3xl mb-4 shadow-md border border-slate-100 relative">
-                        <div className="absolute top-2 right-2 bg-amber-400 px-3 py-1 rounded-full text-[7px] font-black uppercase flex items-center gap-1 shadow-sm">
-                            <Truck size={10}/> {o.status || 'Dispatch'}
+                    <div key={o.id} className="bg-white p-5 rounded-[2rem] shadow-md border-2 border-slate-50 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 bg-blue-100 text-blue-950 px-4 py-1 rounded-bl-2xl text-[8px] font-black uppercase flex items-center gap-2">
+                             <Truck size={10} className="animate-bounce"/> {o.status}
                         </div>
-                        <div className="flex justify-between items-start mb-2 border-b-2 border-dashed border-slate-100 pb-3">
-                            <div><p className="text-[9px] font-black text-blue-950">{o.id}</p><p className="text-[7px] font-bold text-slate-400 italic">{o.date}</p></div>
-                            <p className="font-black text-blue-900 text-sm italic">₹{o.total}</p>
+                        <div className="flex justify-between items-start mb-3 border-b-2 border-dashed border-slate-50 pb-4 mt-2">
+                            <div><p className="text-[10px] font-black text-blue-950">{o.id}</p><p className="text-[8px] font-bold text-slate-400 uppercase italic tracking-tighter">{o.date}</p></div>
+                            <p className="font-black text-blue-900 text-lg italic">₹{o.total}</p>
                         </div>
-                        <p className="text-[8px] font-bold text-slate-500 mb-4 uppercase leading-tight bg-slate-50 p-2 rounded-lg border border-slate-100">{o.items}</p>
-                        <div className="flex gap-2">
-                            <button onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=Track ID: ${o.id}`)} className="flex-1 bg-blue-950 text-white py-2.5 rounded-xl font-black text-[8px] uppercase flex items-center justify-center gap-2 shadow-lg"> <FileText size={12}/> Track / Bill </button>
-                            <button onClick={() => { const items = o.items.split(', '); items.forEach(it => { const m = it.match(/(.+) \(x(\d+)\)/); if(m) { const p = allProducts.find(prod => prod.name === m[1]); if(p) setCart(prev => [...prev, {...p, qty: parseInt(m[2])}]); } }); setIsCartOpen(true); }} className="flex-1 bg-amber-400 text-blue-950 py-2.5 rounded-xl font-black text-[8px] uppercase flex items-center justify-center gap-2 shadow-lg"> <RefreshCw size={12}/> Re-Order </button>
+                        <p className="text-[8px] font-bold text-slate-500 mb-5 uppercase leading-tight italic">{o.items}</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=Track ID: ${o.id}`)} className="flex-1 bg-blue-50 text-blue-950 py-3 rounded-2xl font-black text-[9px] uppercase flex items-center justify-center gap-2 border border-blue-100"> <FileText size={14}/> BILL REPORT </button>
+                            <button onClick={() => { o.items.split(', ').forEach(it => { const m = it.match(/(.+) \(x(\d+)\)/); if(m) { const p = allProducts.find(prod => prod.name === m[1]); if(p) setCart(prev => [...prev, {...p, qty: parseInt(m[2])}]); } }); setIsCartOpen(true); }} className="flex-1 bg-amber-400 text-blue-950 py-3 rounded-2xl font-black text-[9px] uppercase flex items-center justify-center gap-2 shadow-lg"> <RefreshCw size={14}/> RE-ORDER </button>
                         </div>
                     </div>
                 )) : (
-                    <div className="text-center py-20 text-slate-300 font-bold italic underline uppercase tracking-widest">No Orders Yet!</div>
+                    <div className="text-center py-20 text-slate-300 font-bold italic uppercase tracking-widest border-2 border-dashed rounded-[3rem]">No Orders History</div>
                 )}
             </div>
         )}
       </main>
 
-      {/* 🧭 NAVIGATION */}
-      <nav className="fixed bottom-0 left-0 w-full bg-white border-t p-3 flex justify-around items-center z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] rounded-t-[2.5rem]">
-        <button onClick={() => setActiveTab('shop')} className={`flex flex-col items-center transition-all ${activeTab === 'shop' ? 'text-blue-950 scale-110' : 'text-slate-300'}`}> <ShoppingBag size={26}/><span className="text-[8px] font-black uppercase mt-1">Market</span> </button>
-        <button onClick={() => { if(!isLoggedIn) { setActiveTab('login'); return; } setActiveTab('history'); }} className={`flex flex-col items-center transition-all ${activeTab === 'history' || activeTab === 'login' ? 'text-blue-950 scale-110' : 'text-slate-300'}`}> <History size={26}/><span className="text-[8px] font-black uppercase mt-1">Orders</span> </button>
-        <button onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=Hi NM Mart, Support please!`)} className="text-slate-300 flex flex-col items-center"> <Share2 size={26}/><span className="text-[8px] font-black uppercase mt-1">Help</span> </button>
+      {/* 🧭 STICKY NAVIGATION */}
+      <nav className="fixed bottom-0 left-0 w-full bg-white border-t p-4 flex justify-around shadow-[0_-15px_40px_rgba(0,0,0,0.1)] rounded-t-[3rem] z-40">
+        <button onClick={() => setActiveTab('shop')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'shop' ? 'text-blue-950 scale-110' : 'text-slate-300'}`}> <ShoppingBag size={28}/> <span className="text-[8px] font-black uppercase">Market</span> </button>
+        <button onClick={() => {if(!isLoggedIn){setActiveTab('login'); return;} setActiveTab('history')}} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'history' || activeTab === 'login' ? 'text-blue-950 scale-110' : 'text-slate-300'}`}> <History size={28}/> <span className="text-[8px] font-black uppercase">Orders</span> </button>
+        <button onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=Hi NM Mart, Support please!`)} className="text-slate-300 flex flex-col items-center gap-1"> <Share2 size={28}/> <span className="text-[8px] font-black uppercase">Invite</span> </button>
       </nav>
 
-      {/* 🛒 CART DRAWER (Pay Now, Multi-Address) */}
+      {/* 🛒 PREMIUM CART DRAWER */}
       <AnimatePresence>
         {isCartOpen && (
-          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed right-0 top-0 h-full w-full max-w-sm bg-white z-[70] shadow-2xl flex flex-col border-l-4 border-blue-950 overflow-hidden">
-            <div className="p-4 bg-blue-950 text-white flex justify-between items-center font-black uppercase text-[11px] shadow-lg">
-                <span className="flex items-center gap-2 tracking-widest italic"> <ShoppingBag size={18}/> NM SHOPPING BAG </span>
-                <X size={24} className="cursor-pointer bg-white/10 p-1 rounded-full" onClick={() => setIsCartOpen(false)}/>
+          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed right-0 top-0 h-full w-full max-w-sm bg-white z-[70] shadow-2xl flex flex-col border-l-8 border-blue-950">
+            <div className="p-6 bg-blue-950 text-white flex justify-between items-center font-black uppercase text-xs tracking-widest italic shadow-xl">
+                <span className="flex items-center gap-3"> <ShoppingBag size={20} className="text-amber-400"/> YOUR NM BAG ({cart.length}) </span>
+                <X size={28} className="cursor-pointer bg-white/10 p-1.5 rounded-full" onClick={() => setIsCartOpen(false)}/>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50">
                 {cart.map((item, idx) => (
-                  <div key={`${item.id}-${idx}`} className="flex justify-between items-center p-3 bg-white rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
-                    <div className="flex flex-col"><span className="text-[9px] font-black uppercase text-slate-700 truncate w-32">{item.name}</span><span className="text-[7px] font-bold text-slate-400 uppercase italic">{item.unit}</span></div>
+                  <div key={`${item.id}-${idx}`} className="flex justify-between items-center p-4 bg-white rounded-3xl border border-slate-100 shadow-sm relative group">
+                    <div className="flex flex-col"><span className="text-[10px] font-black uppercase text-slate-700 truncate w-32">{item.name}</span><span className="text-[8px] font-bold text-slate-300 uppercase italic">Unit: {item.unit}</span></div>
                     <div className="flex items-center gap-3">
-                        <button onClick={() => setCart(cart.map((i, k) => k === idx ? {...i, qty: Math.max(0, i.qty - 1)} : i).filter(i => i.qty > 0))} className="bg-red-50 text-red-600 p-1 rounded-full"><Minus size={12}/></button>
+                        <button onClick={() => setCart(cart.map((i, k) => k === idx ? {...i, qty: Math.max(0, i.qty - 1)} : i).filter(i => i.qty > 0))} className="bg-red-50 text-red-600 p-1.5 rounded-full"><Minus size={14}/></button>
                         <span className="font-black text-blue-950 text-xs w-4 text-center">{item.qty}</span>
-                        <button onClick={() => setCart(cart.map((i, k) => k === idx ? {...i, qty: i.qty + 1} : i))} className="bg-green-50 text-green-600 p-1 rounded-full"><Plus size={12}/></button>
-                        <span className="font-black text-blue-950 text-xs ml-2">₹{item.saleRate * (item.qty || 0)}</span>
+                        <button onClick={() => setCart(cart.map((i, k) => k === idx ? {...i, qty: i.qty + 1} : i))} className="bg-green-50 text-green-600 p-1.5 rounded-full"><Plus size={14}/></button>
+                        <span className="font-black text-blue-950 text-xs ml-3 italic">₹{item.saleRate * (item.qty || 0)}</span>
                     </div>
                   </div>
                 ))}
 
                 {totalBill >= MIN_ORDER_VALUE && (
-                    <div className="mt-4 p-5 bg-white rounded-[2rem] border-2 border-blue-100 shadow-md">
-                        <p className="text-center font-black text-[9px] text-blue-950 uppercase italic mb-4 flex items-center justify-center gap-2 underline"> <MapPin size={14}/> Select Delivery Address</p>
-                        <div className="grid grid-cols-2 gap-2 mb-6">
-                            <button onClick={() => setAddressType('Home')} className={`p-3 rounded-2xl border-2 transition-all font-black text-[9px] uppercase ${addressType === 'Home' ? 'bg-blue-950 text-white border-blue-950' : 'bg-slate-50 text-slate-400'}`}>Home</button>
-                            <button onClick={() => setAddressType('Office')} className={`p-3 rounded-2xl border-2 transition-all font-black text-[9px] uppercase ${addressType === 'Office' ? 'bg-blue-950 text-white border-blue-950' : 'bg-slate-50 text-slate-400'}`}>Office</button>
-                        </div>
-
-                        <p className="text-center font-black text-[9px] text-blue-950 uppercase italic mb-4 flex items-center justify-center gap-2 underline"> <Smartphone size={14}/> Select Payment Mode</p>
-                        <div className="grid grid-cols-2 gap-2">
-                            <button onClick={() => setPayMethod('COD')} className={`p-4 rounded-2xl flex flex-col items-center gap-2 border-2 transition-all shadow-sm ${payMethod === 'COD' ? 'bg-blue-950 text-white border-blue-950' : 'bg-slate-50 text-blue-950 border-slate-100'}`}> <Banknote size={20}/><span className="text-[9px] font-black uppercase">COD</span> </button>
-                            <button onClick={() => setPayMethod('UPI')} className={`p-4 rounded-2xl flex flex-col items-center gap-2 border-2 transition-all shadow-sm ${payMethod === 'UPI' ? 'bg-blue-950 text-white border-blue-950' : 'bg-slate-50 text-blue-950 border-slate-100'}`}> <Smartphone size={20}/><span className="text-[9px] font-black uppercase">UPI/QR</span> </button>
+                    <div className="mt-8 p-6 bg-white rounded-[2.5rem] border-2 border-blue-50 shadow-lg">
+                        <p className="text-center font-black text-[10px] text-blue-950 uppercase italic mb-5 flex items-center justify-center gap-2 underline decoration-amber-400 underline-offset-4 tracking-tighter"> <Smartphone size={16}/> Payment Method </p>
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                            <button onClick={() => setPayMethod('COD')} className={`p-5 rounded-3xl flex flex-col items-center gap-3 border-2 transition-all shadow-md ${payMethod === 'COD' ? 'bg-blue-950 text-white border-blue-950 scale-105 shadow-xl' : 'bg-slate-50 text-blue-950 border-slate-100 opacity-60'}`}> <Banknote size={24}/><span className="text-[9px] font-black uppercase">Cash</span> </button>
+                            <button onClick={() => setPayMethod('UPI')} className={`p-5 rounded-3xl flex flex-col items-center gap-3 border-2 transition-all shadow-md ${payMethod === 'UPI' ? 'bg-blue-950 text-white border-blue-950 scale-105 shadow-xl' : 'bg-slate-50 text-blue-950 border-slate-100 opacity-60'}`}> <Smartphone size={24}/><span className="text-[9px] font-black uppercase">Online</span> </button>
                         </div>
                         {payMethod === 'UPI' && (
-                            <div className="mt-6 flex flex-col items-center animate-in zoom-in-95 duration-300">
-                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}`} className="w-36 mb-4 shadow-xl p-2 bg-white rounded-xl border-2 border-blue-100"/>
-                                <a href={upiLink} className="w-full bg-green-600 text-white py-4 rounded-2xl font-black text-center text-[10px] flex items-center justify-center gap-2 shadow-xl animate-bounce"> <ExternalLink size={16}/> PAY NOW (PhonePe/GPay) </a>
+                            <div className="mt-6 flex flex-col items-center animate-in zoom-in-95 duration-500">
+                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}`} className="w-40 mb-5 shadow-2xl p-3 bg-white rounded-3xl border-2 border-blue-50"/>
+                                <a href={upiLink} className="w-full bg-green-600 text-white py-5 rounded-[2rem] font-black text-center text-[11px] flex items-center justify-center gap-3 shadow-xl animate-bounce"> <ExternalLink size={20}/> OPEN GPAY / PHONEPE </a>
+                                <p className="text-[7px] text-slate-400 font-black mt-4 uppercase tracking-[0.2em]">100% Secure Transaction</p>
                             </div>
                         )}
                     </div>
                 )}
             </div>
             
-            <div className="p-6 border-t bg-white rounded-t-[3rem] shadow-[0_-20px_50px_rgba(0,0,0,0.1)]">
-              <div className="flex justify-between font-black mb-6 px-2 text-blue-950">
-                  <span className="text-[11px] uppercase tracking-widest">Grand Total:</span>
-                  <span className="text-2xl italic underline decoration-amber-400">₹{totalBill}</span>
+            <div className="p-8 border-t bg-white rounded-t-[4rem] shadow-[0_-20px_50px_rgba(0,0,0,0.1)]">
+              <div className="flex justify-between font-black mb-8 px-4 text-blue-950">
+                  <span className="text-[12px] uppercase tracking-[0.1em]">Total Invoice:</span>
+                  <span className="text-3xl italic underline decoration-amber-400 decoration-4">₹{totalBill}</span>
               </div>
               {totalBill < MIN_ORDER_VALUE ? (
-                <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-[9px] font-black text-center border-2 border-red-100 animate-pulse uppercase">Order ₹{MIN_ORDER_VALUE}+ for Delivery</div>
+                <div className="bg-red-50 text-red-600 p-5 rounded-3xl text-[10px] font-black text-center border-2 border-red-100 animate-pulse uppercase tracking-wider">Add ₹{MIN_ORDER_VALUE - totalBill} more for Free Delivery</div>
               ) : (
-                <button onClick={handleOrderProcess} className="w-full bg-blue-950 text-white py-5 rounded-[2.5rem] font-black uppercase text-[11px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all">
-                    <CheckCircle2 size={20}/> {payMethod ? 'Confirm My Order' : 'Select Payment First'}
+                <button onClick={handleOrderProcess} className="w-full bg-blue-950 text-white py-6 rounded-[3rem] font-black uppercase text-[12px] shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex items-center justify-center gap-4 active:scale-95 transition-all">
+                    <CheckCircle2 size={24} className="text-amber-400"/> {payMethod ? 'Confirm Order Now' : 'Select Payment First'}
                 </button>
               )}
             </div>
@@ -283,11 +252,20 @@ export default function App() {
   );
 }
 
+// --- CSV PARSER (Professional FMCG Loader) ---
 function parseCSV(text: string) {
   const lines = text.split('\n');
   return lines.slice(1).map((line, i) => {
     const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
     if(!cols[0]) return null;
-    return { id: `item-${i}`, name: cols[0], barcode: cols[1], category: cols[2], unit: cols[3], mrp: parseFloat(cols[4]), saleRate: parseFloat(cols[5]) };
+    return { 
+        id: `nm-item-${i}`, 
+        name: cols[0], 
+        barcode: cols[1], 
+        category: cols[2], 
+        unit: cols[3], 
+        mrp: parseFloat(cols[4]), 
+        saleRate: parseFloat(cols[5]) 
+    };
   }).filter(Boolean);
 }
