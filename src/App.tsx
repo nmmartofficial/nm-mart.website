@@ -672,7 +672,7 @@ export default function App() {
 
   {/* Google Pay Style - Automatic Payment */}
           <motion.a 
-            href={`upi://pay?pa=${UPI_ID}&pn=NM%20MART&am=${cartTotal}&cu=INR`}
+            href={`upi://pay?pa=paytmqr5fwdiq@ptys&pn=NMMART&am=${cartTotal}&cu=INR&mode=02&purpose=00`}
             onClick={() => setPayMethod("upi")}
             whileTap={{ scale: 0.95 }}
             className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-blue-600 bg-blue-50 shadow-inner" : "border-border cursor-pointer"}`}
@@ -685,7 +685,7 @@ export default function App() {
 
  {/* Generic UPI - Automatic Payment */}
           <motion.a 
-            href={`upi://pay?pa=${UPI_ID}&pn=NM%20MART&am=${cartTotal}&cu=INR`}
+            href={`upi://pay?pa=paytmqr5fwdiq@ptys&pn=NMMART&am=${cartTotal}&cu=INR&mode=02&purpose=00`}
             onClick={() => setPayMethod("upi")}
             whileTap={{ scale: 0.95 }}
             className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-primary bg-primary/5 shadow-inner" : "border-border cursor-pointer"}`}
