@@ -4,20 +4,20 @@
 
 @layer base {
   body {
-    /* Aankhon ke sukoon ke liye Gehra Navy Blue */
-    background-color: #0f172a !important; 
-    color: #e2e8f0 !important;
+    /* ताज़ा और साफ़ Sky Blue Background */
+    background-color: #f0f9ff !important; 
+    color: #1e293b !important; /* Dark text for contrast */
     font-family: 'Inter', sans-serif;
   }
 }
 
-/* 1. Category & Product Cards (Soft White) */
+/* 1. Category & Product Cards (Pure White) */
 .bg-white {
   background-color: #ffffff !important;
   border-radius: 1.25rem !important;
-  /* Halka sa shadow taaki card alag dikhe */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  /* Soft Shadow */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e0f2fe !important;
 }
 
 /* 2. Text Colors (Cards ke andar ka text) */
@@ -25,15 +25,16 @@
   color: #1e293b !important; /* Dark Slate Grey */
 }
 
-/* 3. Highlight Color (Sirf Buttons ke liye Pila) */
-.bg-yellow-500, .bg-amber-400 {
-  background-color: #f59e0b !important;
-  color: #0f172a !important;
+/* 3. Highlight Color (Sky Blue Buttons) */
+.bg-sky-500, .bg-blue-600 {
+  background-color: #0ea5e9 !important; /* Bright Sky Blue */
+  color: #ffffff !important;
   font-weight: 800 !important;
 }
 
-/* 4. Welfare Card (Royal Blue) */
+/* 4. Welfare Card (Slightly Richer Blue) */
 .bg-blue-900, .bg-indigo-900 {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
+  background: linear-gradient(135deg, #075985 0%, #0369a1 100%) !important;
   border-radius: 1.5rem !important;
+  color: #ffffff !important;
 }
