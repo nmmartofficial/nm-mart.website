@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  ShoppingCart, Search, X, Plus, Minus, Trash2, MessageCircle, Send,
-  Mic, MicOff, Clock, Star, MapPin, CreditCard, Banknote, QrCode,
-  ChevronRight, LayoutGrid, ArrowUp, Package, Gift, RotateCcw,
-  StarIcon, ChevronDown
-} from "lucide-react";
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Search, ShoppingCart, User, Package, ChevronRight, ChevronLeft, 
+  Plus, Minus, X, Send, Gift, LayoutGrid, MapPin, Phone, Clock, Banknote, QrCode 
+} from 'lucide-react';
 
 /* ─── Types ─── */
 interface Product {
@@ -361,6 +359,8 @@ export default function App() {
                   {categories.map(cat => (
                     <motion.button
             whileTap={{ scale: 0.94 }} // छूने पर हल्का सा दबेगा
+            <motion.button
+            whileTap={{ scale: 0.94 }}
             key={cat}
             onClick={() => { setSelectedCat(cat); setPage(1); }}
             className={`p-4 rounded-2xl shadow-card border flex flex-col items-center gap-2 transition-all group ${
@@ -374,9 +374,7 @@ export default function App() {
             </div>
             <span className="font-bold text-foreground uppercase text-[9px] tracking-tight text-center leading-tight">{cat}</span>
             <span className="text-[8px] text-muted-foreground flex items-center gap-0.5">Open <ChevronRight size={8} /></span>
-          </motion.button>                  ))}
-                </div>
-              </div>
+          </motion.button>      
             )}
 
             {/* Active category header */}
