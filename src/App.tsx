@@ -670,14 +670,18 @@ export default function App() {
     <span className="text-[9px] font-bold uppercase">PhonePe</span>
   </button>
 
-  {/* Google Pay Style */}
-  <button onClick={() => setPayMethod("upi")}
-    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-blue-600 bg-blue-50" : "border-border"}`}>
-    <div className="flex gap-0.5 font-black text-[10px]">
-      <span className="text-blue-500">G</span><span className="text-red-500">P</span><span className="text-yellow-500">a</span><span className="text-green-500">y</span>
-    </div>
-    <span className="text-[9px] font-bold uppercase">Google Pay</span>
-  </button>
+  {/* Google Pay Style - Automatic Payment */}
+          <motion.a 
+            href={`upi://pay?pa=${UPI_ID}&pn=NM%20MART&am=${cartTotal}&cu=INR`}
+            onClick={() => setPayMethod("upi")}
+            whileTap={{ scale: 0.95 }}
+            className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-blue-600 bg-blue-50 shadow-inner" : "border-border cursor-pointer"}`}
+          >
+            <div className="flex gap-0.5 font-black text-[10px]">
+              <span className="text-blue-500">G</span><span className="text-red-500">P</span><span className="text-yellow-500">a</span><span className="text-green-500">y</span>
+            </div>
+            <span className="text-[9px] font-bold uppercase text-blue-700">Pay ₹{cartTotal} Now</span>
+          </motion.a>
 
   {/* Generic UPI */}
   <button onClick={() => setPayMethod("upi")}
