@@ -654,7 +654,7 @@ export default function App() {
                     <div className="flex gap-2 justify-center">
                     </div>
                     {/* ✅ UPI के लिए बटन */}
-                    <button
+                      </button>
                       onClick={placeOrder}
                       className="w-full mt-6 gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
                     >
