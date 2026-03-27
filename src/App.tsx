@@ -6,7 +6,6 @@ import {
   ChevronRight, ChevronLeft, LayoutGrid, ArrowUp, Package, Gift, RotateCcw,
   StarIcon, ChevronDown
 } from "lucide-react";
-
 /* ─── Types ─── */
 interface Product {
   name: string;
