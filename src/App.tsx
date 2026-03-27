@@ -143,8 +143,7 @@ function saveOrder(order: OrderRecord) {
 }
 
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRp0eoVJhdbJUOEYETTbNJYWeK3U1b_V1NKQORwpPgSZBwY60P8kmxNEblHxjslaBujpChwynkJ9zfg/pub?output=csv";
-// https://docs.google.com/spreadsheets/d/10e6molYJIH19uag6ViotpfaLU78CBjIWCf2Bh5ulY-U/edit?gid=1087095370#gid=1087095370
-const BANNER_API = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRp0eoVJhdbJUOEYETTbNJYWeK3U1b_V1NKQORwpPgSZBwY60P8kmxNEblHxjslaBujpChwynkJ9zfg/pub?gid=यहाँ_नंबर_डालें&output=csv";
+const BANNER_API = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRp0eoVJhdbJUOEYETTbNJYWeK3U1b_V1NKQORwpPgSZBwY60P8kmxNEblHxjslaBujpChwynkJ9zfg/pub?gid=1508200676&output=csv";
 const WA_NUMBER = "917081154604";
 const UPI_ID = "paytmqr5fwdiq@ptys";
 const ITEMS_PER_PAGE = 60;
@@ -176,10 +175,17 @@ export default function App() {
 
   // Fetch CSV
   useEffect(() => {
-    fetch(CSV_URL)
-      .then(r => r.text())
-      .then(t => { setAllProducts(parseCSV(t)); setLoading(false); })
-      .catch(() => setLoading(false));
+    // 1. प्रोडक्ट्स लोड करना
+    fetch(CSV_URL).then(r => r.text()).then(t => { setAllProducts(parseCSV(t)); setLoading(false); });
+
+    // 2. बैनर लोड करना (एक्सेल से)
+    fetch(BANNER_API).then(r => r.text()).then(t => {
+      const rows = t.split('\n');
+      if(rows[1]) {
+        const cols = rows[1].split(','); 
+        setRemoteBanner({ text: (cols[0] || '').trim(), img: (cols[1] || '').trim() });
+      }
+    });
   }, []);
 
   // Back to top visibility
@@ -257,7 +263,22 @@ export default function App() {
         <span>⚡ FLASH SALE ENDS IN</span>
         <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded font-mono text-sm">{countdown}</span>
       </div>
-
+{/* ═══ NM MART DYNAMIC BANNER ═══ */}
+      <div className="max-w-7xl mx-auto px-4 mt-2">
+        {remoteBanner.img ? (
+          <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-100 mb-4">
+            <img 
+              src={remoteBanner.img} 
+              className="w-full h-auto max-h-[220px] object-cover hover:scale-[1.01] transition-transform duration-300" 
+              alt="NM Mart Offers" 
+            />
+          </div>
+        ) : (
+          <div className="bg-red-600 text-white text-center py-2.5 rounded-xl font-black uppercase text-[10px] animate-pulse tracking-widest mb-4 shadow-md border-b-4 border-red-800">
+            🔥 {remoteBanner.text || 'Welcome to NM MART'} 🔥
+          </div>
+        )}
+      </div>
       {/* ═══ STICKY HEADER ═══ */}
       <header className="sticky top-0 z-50 gradient-navy text-primary-foreground shadow-lg">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
