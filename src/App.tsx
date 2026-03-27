@@ -229,22 +229,16 @@ export default function App() {
 
   // Place order
   const placeOrder = () => {
-    const order: OrderRecord = {
-      id: "NM" + Date.now().toString(36).toUpperCase(),
-      items: [...cart],
-      total: cartTotal,
-      date: new Date().toLocaleString("en-IN"),
-      status: "Pending"
-    };
-    saveOrder(order);
+    if (cartTotal < MIN_ORDER) return alert(`कम से कम ₹${MIN_ORDER} का ऑर्डर होना चाहिए!`);
+    const orderId = "NM" + Date.now().toString(36).toUpperCase();
+    const orderRecord: OrderRecord = { id: orderId, items: [...cart], total: cartTotal, date: new Date().toLocaleString("en-IN"), status: "Pending" };
+    saveOrder(orderRecord);
     addLoyaltyPoints(10);
-    const msg = cart.map(c => `${c.name} x${c.qty} = ₹${c.saleRate * c.qty}`).join("\n");
-    const payLabel = payMethod === "cod" ? "Cash on Delivery" : `UPI (${UPI_ID})`;
-    const text = `🛒 *NM MART ORDER*\n━━━━━━━━━━━━━━\nOrder ID: ${order.id}\n\n${msg}\n\n💰 Total: ₹${cartTotal}\n💳 Payment: ${payLabel}\n━━━━━━━━━━━━━━\nThank you!`;
+    const msg = cart.map(c => `• ${c.name} (x${c.qty}) = ₹${c.saleRate * c.qty}`).join("\n");
+    const payLabel = payMethod === "cod" ? "💸 COD (CASH)" : "💳 PAID via UPI";
+    const text = `🛒 *NM MART ORDER*\n━━━━━━━━━━━━━━\nID: ${orderId}\n\n${msg}\n\n💰 *Total: ₹${cartTotal}*\n💳 *Payment: ${payLabel}*\n━━━━━━━━━━━━━━\n_Sent via NM MART_`;
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`);
-    setCart([]);
-    setCheckoutOpen(false);
-    setCartOpen(false);
+    setCart([]); setCheckoutOpen(false); setCartOpen(false);
   };
 
   const reorder = (order: OrderRecord) => {
