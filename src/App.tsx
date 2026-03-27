@@ -683,12 +683,16 @@ export default function App() {
             <span className="text-[9px] font-bold uppercase text-blue-700">Pay ₹{cartTotal} Now</span>
           </motion.a>
 
-  {/* Generic UPI */}
-  <button onClick={() => setPayMethod("upi")}
-    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-primary bg-primary/5" : "border-border"}`}>
-    <QrCode size={20} className={payMethod === "upi" ? "text-primary" : "text-muted-foreground"} />
-    <span className="text-[9px] font-bold uppercase">Other UPI</span>
-  </button>
+ {/* Generic UPI - Automatic Payment */}
+          <motion.a 
+            href={`upi://pay?pa=${UPI_ID}&pn=NM%20MART&am=${cartTotal}&cu=INR`}
+            onClick={() => setPayMethod("upi")}
+            whileTap={{ scale: 0.95 }}
+            className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-primary bg-primary/5 shadow-inner" : "border-border cursor-pointer"}`}
+          >
+            <QrCode size={20} className={payMethod === "upi" ? "text-primary" : "text-muted-foreground"} />
+            <span className="text-[9px] font-bold uppercase text-primary">Pay with Any App</span>
+          </motion.a>
 </div>
                 {payMethod === "upi" ? (
                   <div className="bg-muted rounded-xl p-4 mb-2 text-center space-y-3 border-2 border-dashed border-primary/20">
