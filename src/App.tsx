@@ -744,27 +744,79 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* ═══ LOYALTY MODAL ═══ */}
+      {/* ═══ 3D WELFARE CARD MODAL ═══ */}
       <AnimatePresence>
         {showLoyalty && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-foreground/50 z-50" onClick={() => setShowLoyalty(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] z-50"
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/70 backdrop-blur-md z-[60]" 
+              onClick={() => setShowLoyalty(false)} 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.7, rotateX: 30 }} 
+              animate={{ opacity: 1, scale: 1, rotateX: 0 }} 
+              exit={{ opacity: 0, scale: 0.7, rotateX: 30 }}
+              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[400px] z-[70] transition-all"
+              style={{ perspective: "1200px" }}
             >
-              <div className="gradient-navy rounded-3xl p-6 text-primary-foreground shadow-2xl text-center relative overflow-hidden">
-                <Gift size={32} className="text-secondary mx-auto mb-3" />
-                <h3 className="font-black text-lg">Loyalty Points</h3>
-                <p className="text-4xl font-black text-secondary my-4">{getLoyaltyPoints()}</p>
-                <p className="text-xs opacity-70">Points Earned at NM Mart</p>
-                <button onClick={() => setShowLoyalty(false)} className="mt-6 bg-white/10 px-6 py-2 rounded-xl text-sm font-bold">Close</button>
+              {/* Card Container with 3D Shadow */}
+              <div className="relative bg-gradient-to-br from-yellow-300 via-orange-500 to-red-600 rounded-[30px] p-[3px] shadow-[0_25px_60px_-15px_rgba(234,88,12,0.5)]">
+                
+                <div className="bg-[#121212] rounded-[28px] p-7 text-white relative overflow-hidden">
+                  {/* Glass Highlight */}
+                  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
+
+                  {/* Header */}
+                  <div className="flex justify-between items-start mb-12">
+                    <div>
+                      <h2 className="text-2xl font-black italic tracking-tighter text-yellow-400 leading-none">WELFARE CARD</h2>
+                      <p className="text-[9px] uppercase tracking-[0.3em] opacity-50 mt-1 font-bold">NM MART PREMIUM ACCESS</p>
+                    </div>
+                    <div className="w-12 h-9 bg-gradient-to-r from-yellow-600 to-yellow-200 rounded-lg flex items-center justify-center shadow-inner">
+                      <div className="w-8 h-6 border-2 border-black/10 rounded-sm"></div>
+                    </div>
+                  </div>
+
+                  {/* Price Info */}
+                  <div className="mb-10">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-5xl font-black text-white italic">₹599</span>
+                      <span className="text-[10px] opacity-40 uppercase font-bold tracking-widest">Buy Price</span>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
+                        <p className="text-[8px] uppercase opacity-40 mb-1">Total Limit</p>
+                        <p className="text-lg font-black text-green-400 italic">₹1500</p>
+                      </div>
+                      <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
+                        <p className="text-[8px] uppercase opacity-40 mb-1">Validity</p>
+                        <p className="text-lg font-black text-yellow-400 italic">6 MONTHS</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Bar */}
+                  <div className="flex justify-between items-center pt-6 border-t border-white/5">
+                    <div className="text-[10px] font-mono tracking-widest opacity-30">#NM-MART-2026</div>
+                    <div className="bg-white text-black px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-tighter animate-bounce shadow-xl">
+                      Save ₹900 Total
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {/* Close Button Below Card */}
+              <button 
+                onClick={() => setShowLoyalty(false)}
+                className="mt-8 w-full py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs transition-all backdrop-blur-sm border border-white/10"
+              >
+                × CLOSE PREVIEW ×
+              </button>
             </motion.div>
           </>
         )}
       </AnimatePresence>
-
       {/* ═══ FEEDBACK MODAL ═══ */}
       <AnimatePresence>
         {showFeedback && (
