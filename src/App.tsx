@@ -307,7 +307,7 @@ export default function App() {
             <div className="space-y-3">
               <p className="flex items-center gap-3 text-sm font-bold"><MapPin size={16} className="text-gold"/> Naya Nagar Dhata Road, Manjhanpur, UP</p>
               <p className="flex items-center gap-3 text-sm font-bold"><Mail size={16} className="text-gold"/> support@nmmart.in</p>
-              <p className="flex items-center gap-3 text-sm font-bold"><Clock size={16} className="text-gold"/> Daily 9 AM – 9 PM</p>
+              <p className="flex items-center gap-3 text-sm font-bold"><Clock size={16} className="text-gold"/> Daily 8 AM – 10 PM</p>
             </div>
           </div>
           <div className="flex flex-col gap-3">
