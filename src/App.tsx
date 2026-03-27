@@ -652,9 +652,34 @@ export default function App() {
                     />
                     <p className="text-xs text-muted-foreground font-mono">{UPI_ID}</p>
                     <div className="flex gap-2 justify-center">
-                      <span className="bg-card px-3 py-1.5 rounded-lg text-xs font-bold border border-border">GPay</span>
-                      <span className="bg-card px-3 py-1.5 rounded-lg text-xs font-bold border border-border">PhonePe</span>
-                      <span className="bg-card px-3 py-1.5 rounded-lg text-xs font-bold border border-border">Paytm</span>
+</div>
+                    {/* ✅ UPI के लिए बटन */}
+                    <button
+                      onClick={placeOrder}
+                      className="w-full mt-6 gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
+                    >
+                      <Send size={18} /> Confirm & Order on WhatsApp
+                    </button>
+                  </div>
+                )}
+
+                {/* ✅ COD के लिए बटन */}
+                {payMethod === "cod" && (
+                  <button
+                    onClick={placeOrder}
+                    className="w-full mt-2 gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
+                  >
+                    <Send size={18} /> Confirm Order (COD)
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
                     </div>
                   </div>
                 )}
