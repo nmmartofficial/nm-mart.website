@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, ShoppingCart, User, Package, ChevronRight, ChevronLeft, 
-  Plus, Minus, X, Send, Gift, LayoutGrid, MapPin, Phone, Clock, Banknote, QrCode 
-} from 'lucide-react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ShoppingCart, Search, X, Plus, Minus, Trash2, MessageCircle, Send,
+  Mic, MicOff, Clock, Star, MapPin, CreditCard, Banknote, QrCode,
+  ChevronRight, ChevronLeft, LayoutGrid, ArrowUp, Package, Gift, RotateCcw,
+  StarIcon, ChevronDown
+} from "lucide-react";
 
 /* ─── Types ─── */
 interface Product {
