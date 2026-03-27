@@ -1,34 +1,34 @@
-import React from 'react';
+import { ShoppingCart, Mail } from "lucide-react";
 
 const Header = () => {
   return (
-    <header className="w-full z-50 sticky top-0 shadow-2xl">
-      {/* Top Premium Bar */}
-      <div className="bg-[#020617] text-slate-400 py-2 px-6 flex justify-between items-center text-[10px] font-bold uppercase tracking-[0.2em] border-b border-slate-800">
-        <span>Quality You Can Trust</span>
-        <span className="italic">Manjhanpur, UP</span>
+    <header className="flex flex-col w-full z-50 sticky top-0 shadow-lg">
+      {/* Top Thin Bar - Soft Slate Grey */}
+      <div className="bg-[#f8fafc] text-slate-500 py-2.5 px-6 flex justify-between items-center text-[10px] font-medium uppercase tracking-widest border-b border-sky-100">
+        <span className="flex items-center gap-2"><Mail size={12}/> support@nmmart.in</span>
+        <span>Manjhanpur, UP</span>
       </div>
 
-      {/* Main Header - Deep Navy & Gold */}
-      <div className="bg-[#0f172a] p-5 flex justify-between items-center border-b-2 border-amber-500/50">
-        <div className="flex flex-col">
-          <h1 className="text-3xl font-black text-white leading-none italic uppercase tracking-tighter">
-            NM <span className="text-amber-500">MART</span>
-          </h1>
-          <p className="text-[9px] font-bold text-slate-500 tracking-[0.3em] uppercase mt-1">
-            Shop More, Save More
-          </p>
+      {/* Main Header - Pearl White to Sky Blue Gradient */}
+      <div className="bg-gradient-to-r from-white via-[#f0f9ff] to-[#e0f2fe]/95 backdrop-blur-md p-5 flex justify-between items-center border-b-2 border-sky-200">
+        <div className="flex items-center gap-4">
+          {/* Logo Icon with Sky Blue Background */}
+          <div className="bg-[#0ea5e9] p-3 rounded-2xl shadow-[0_0_15px_rgba(14,165,233,0.3)]">
+            <ShoppingCart className="text-white" size={26} />
+          </div>
+          
+          <div className="flex flex-col">
+            <h1 className="text-3xl font-black text-[#1e293b] leading-none italic uppercase tracking-tighter">
+              NM <span className="text-[#0ea5e9]">MART</span>
+            </h1>
+            <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase mt-1">
+              Shop More, Save More
+            </p>
+          </div>
         </div>
 
-        {/* Navigation Links (Hidden on small screens for safety) */}
-        <nav className="hidden md:flex gap-8 text-xs font-black uppercase tracking-widest text-white/80">
-          <a href="#" className="hover:text-amber-500 transition-colors">Home</a>
-          <a href="#" className="hover:text-amber-500 transition-colors">Offers</a>
-          <a href="#" className="hover:text-amber-500 transition-colors">Products</a>
-        </nav>
-
-        {/* Contact Button */}
-        <button className="bg-amber-500 text-[#0f172a] px-6 py-2.5 rounded-full font-black text-[10px] uppercase shadow-lg hover:bg-white hover:scale-105 transition-all">
+        {/* Action Button */}
+        <button className="bg-[#0ea5e9] text-white px-7 py-3 rounded-full font-black text-[11px] uppercase shadow-lg hover:bg-[#0369a1] hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
            Contact Us
         </button>
       </div>
