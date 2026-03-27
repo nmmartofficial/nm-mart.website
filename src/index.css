@@ -1,40 +1,30 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @layer base {
   body {
-    /* ताज़ा और साफ़ Sky Blue Background */
-    background-color: #f0f9ff !important; 
-    color: #1e293b !important; /* Dark text for contrast */
-    font-family: 'Inter', sans-serif;
+    /* हल्का आसमानी बैकग्राउंड जो आंखों को सुकून दे */
+    background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+    min-height: 100vh;
   }
 }
 
-/* 1. Category & Product Cards (Pure White) */
-.bg-white {
-  background-color: #ffffff !important;
-  border-radius: 1.25rem !important;
-  /* Soft Shadow */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-  border: 1px solid #e0f2fe !important;
+/* Login Card को प्रीमियम बनाने के लिए */
+.login-card {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(10px) !important; /* शीशे जैसा अहसास */
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 2rem !important;
+  box-shadow: 0 20px 40px rgba(14, 165, 233, 0.1) !important;
 }
 
-/* 2. Text Colors (Cards ke andar ka text) */
-.bg-white h1, .bg-white h2, .bg-white h3, .bg-white p, .bg-white span {
-  color: #1e293b !important; /* Dark Slate Grey */
+/* Input Field (Phone Number वाला डब्बा) */
+input {
+  background: #f8fafc !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 1rem !important;
+  color: #0369a1 !important;
+  font-weight: bold !important;
 }
 
-/* 3. Highlight Color (Sky Blue Buttons) */
-.bg-sky-500, .bg-blue-600 {
-  background-color: #0ea5e9 !important; /* Bright Sky Blue */
-  color: #ffffff !important;
-  font-weight: 800 !important;
-}
-
-/* 4. Welfare Card (Slightly Richer Blue) */
-.bg-blue-900, .bg-indigo-900 {
-  background: linear-gradient(135deg, #075985 0%, #0369a1 100%) !important;
-  border-radius: 1.5rem !important;
-  color: #ffffff !important;
+input:focus {
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.2) !important;
 }
