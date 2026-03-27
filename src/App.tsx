@@ -663,12 +663,16 @@ export default function App() {
     <span className="text-[9px] font-bold uppercase">Cash/COD</span>
   </button>
 
-  {/* PhonePe Style */}
-  <button onClick={() => setPayMethod("upi")}
-    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-purple-600 bg-purple-50" : "border-border"}`}>
-    <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold">P</div>
-    <span className="text-[9px] font-bold uppercase">PhonePe</span>
-  </button>
+  {/* PhonePe Style - Automatic Payment */}
+          <motion.a 
+            href={`upi://pay?pa=paytmqr5fwdiq@ptys&pn=NMMART&am=${cartTotal}&cu=INR&mode=02&purpose=00`}
+            onClick={() => setPayMethod("upi")}
+            whileTap={{ scale: 0.95 }}
+            className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-purple-600 bg-purple-50 shadow-inner" : "border-border cursor-pointer"}`}
+          >
+            <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">P</div>
+            <span className="text-[9px] font-bold uppercase text-purple-700">Pay via PhonePe</span>
+          </motion.a>
 
   {/* Google Pay Style - Automatic Payment */}
           <motion.a 
