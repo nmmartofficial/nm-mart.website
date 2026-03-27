@@ -359,18 +359,22 @@ export default function App() {
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {categories.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => { setSelectedCat(cat); setPage(1); }}
-                      className="bg-card p-4 rounded-2xl shadow-card border border-border flex flex-col items-center gap-2 hover:border-primary hover:shadow-md transition-all active:scale-95 group"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        <LayoutGrid size={16} />
-                      </div>
-                      <span className="font-bold text-foreground uppercase text-[9px] tracking-tight text-center leading-tight">{cat}</span>
-                      <span className="text-[8px] text-muted-foreground flex items-center gap-0.5">Open <ChevronRight size={8} /></span>
-                    </button>
-                  ))}
+                    <motion.button
+            whileTap={{ scale: 0.94 }} // छूने पर हल्का सा दबेगा
+            key={cat}
+            onClick={() => { setSelectedCat(cat); setPage(1); }}
+            className={`p-4 rounded-2xl shadow-card border flex flex-col items-center gap-2 transition-all group ${
+              selectedCat === cat ? "border-primary bg-primary/5 shadow-inner" : "bg-card border-border"
+            }`}
+          >
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+              selectedCat === cat ? "bg-primary text-white" : "bg-muted group-hover:bg-primary group-hover:text-white"
+            }`}>
+              <LayoutGrid size={16} />
+            </div>
+            <span className="font-bold text-foreground uppercase text-[9px] tracking-tight text-center leading-tight">{cat}</span>
+            <span className="text-[8px] text-muted-foreground flex items-center gap-0.5">Open <ChevronRight size={8} /></span>
+          </motion.button>                  ))}
                 </div>
               </div>
             )}
