@@ -357,8 +357,7 @@ export default function App() {
                   <LayoutGrid size={16} /> Browse Categories
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {categories.map(cat => (
-              {categories.map((cat) => (
+          {categories.map((cat) => (
             <motion.button
               whileTap={{ scale: 0.94 }}
               key={cat}
@@ -376,6 +375,7 @@ export default function App() {
               <span className="text-[8px] text-muted-foreground flex items-center gap-0.5">Open <ChevronRight size={8} /></span>
             </motion.button>
           ))}
+        </div>
 
             {/* Active category header */}
             {(selectedCat || query) && (
