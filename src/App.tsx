@@ -143,6 +143,8 @@ function saveOrder(order: OrderRecord) {
 }
 
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRp0eoVJhdbJUOEYETTbNJYWeK3U1b_V1NKQORwpPgSZBwY60P8kmxNEblHxjslaBujpChwynkJ9zfg/pub?output=csv";
+// https://docs.google.com/spreadsheets/d/10e6molYJIH19uag6ViotpfaLU78CBjIWCf2Bh5ulY-U/edit?gid=1087095370#gid=1087095370
+const BANNER_API = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRp0eoVJhdbJUOEYETTbNJYWeK3U1b_V1NKQORwpPgSZBwY60P8kmxNEblHxjslaBujpChwynkJ9zfg/pub?gid=यहाँ_नंबर_डालें&output=csv";
 const WA_NUMBER = "917081154604";
 const UPI_ID = "paytmqr5fwdiq@ptys";
 const ITEMS_PER_PAGE = 60;
