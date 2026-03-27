@@ -169,6 +169,12 @@ export default function App() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showLoyalty, setShowLoyalty] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  
+  // --- NM MART USER LOGIN & HISTORY SYSTEM ---
+  const [userName, setUserName] = useState(localStorage.getItem("nm_user_name") || "");
+  const [userPhone, setUserPhone] = useState(localStorage.getItem("nm_user_phone") || "");
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("nm_user_phone"));
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const countdown = useCountdown();
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
 
