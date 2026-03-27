@@ -291,7 +291,7 @@ export default function App() {
             <ShoppingCart size={28} className="text-secondary" />
             <div>
               <h1 className="text-lg font-black italic leading-none">NM MART</h1>
-              <p className="text-[9px] uppercase tracking-widest text-secondary opacity-80">Manjhanpur's Pro Store</p>
+              <p className="text-[9px] uppercase tracking-widest text-secondary opacity-80">Shop More Save More</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
