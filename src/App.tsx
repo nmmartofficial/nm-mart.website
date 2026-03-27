@@ -350,33 +350,34 @@ export default function App() {
               </div>
             )}
 
-            {/* Category Grid (when no search and no category selected) */}
+           {/* Category Grid (when no search and no category selected) */}
             {!selectedCat && !query && categories.length > 0 && (
               <div className="mb-10">
                 <h3 className="font-bold text-primary text-sm uppercase mb-4 flex items-center gap-2">
                   <LayoutGrid size={16} /> Browse Categories
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {categories.map((cat) => (
-            <motion.button
-              whileTap={{ scale: 0.94 }}
-              key={cat}
-              onClick={() => { setSelectedCat(cat); setPage(1); }}
-              className={`p-4 rounded-2xl shadow-card border flex flex-col items-center gap-2 transition-all group ${
-                selectedCat === cat ? "border-primary bg-primary/5 shadow-inner" : "bg-card border-border"
-              }`}
-            >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-                selectedCat === cat ? "bg-primary text-white" : "bg-muted group-hover:bg-primary group-hover:text-white"
-              }`}>
-                <LayoutGrid size={16} />
+                  {categories.map((cat) => (
+                    <motion.button
+                      whileTap={{ scale: 0.94 }}
+                      key={cat}
+                      onClick={() => { setSelectedCat(cat); setPage(1); }}
+                      className={`p-4 rounded-2xl shadow-card border flex flex-col items-center gap-2 transition-all group ${
+                        selectedCat === cat ? "border-primary bg-primary/5 shadow-inner" : "bg-card border-border"
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                        selectedCat === cat ? "bg-primary text-white" : "bg-muted group-hover:bg-primary group-hover:text-white"
+                      }`}>
+                        <LayoutGrid size={16} />
+                      </div>
+                      <span className="font-bold text-foreground uppercase text-[9px] tracking-tight text-center leading-tight">{cat}</span>
+                      <span className="text-[8px] text-muted-foreground flex items-center gap-0.5">Open <ChevronRight size={8} /></span>
+                    </motion.button>
+                  ))}
+                </div>
               </div>
-              <span className="font-bold text-foreground uppercase text-[9px] tracking-tight text-center leading-tight">{cat}</span>
-              <span className="text-[8px] text-muted-foreground flex items-center gap-0.5">Open <ChevronRight size={8} /></span>
-            </motion.button>
-          ))}
-        </div>
-
+            )}
             {/* Active category header */}
             {(selectedCat || query) && (
               <div className="flex items-center justify-between mb-6">
