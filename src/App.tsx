@@ -611,7 +611,6 @@ export default function App() {
                   <button onClick={() => setCheckoutOpen(false)} className="p-2 hover:bg-muted rounded-lg"><X size={18} /></button>
                 </div>
 
-                {/* Order Summary */}
                 <div className="bg-muted rounded-xl p-4 mb-6 text-sm space-y-2">
                   {cart.map((c, i) => (
                     <div key={i} className="flex justify-between">
@@ -624,76 +623,40 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Payment Method */}
-                <h3 className="font-bold text-sm mb-3 text-foreground">Payment Method</h3>
+                <h3 className="font-bold text-sm mb-3 text-foreground uppercase tracking-wider">Payment Method</h3>
                 <div className="grid grid-cols-2 gap-3 mb-6">
                   <button
                     onClick={() => setPayMethod("cod")}
                     className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "cod" ? "border-primary bg-primary/5" : "border-border"}`}
                   >
                     <Banknote size={24} className={payMethod === "cod" ? "text-primary" : "text-muted-foreground"} />
-                    <span className="text-xs font-bold">Cash on Delivery</span>
+                    <span className="text-[10px] font-bold uppercase">Cash on Delivery</span>
                   </button>
                   <button
                     onClick={() => setPayMethod("upi")}
                     className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-primary bg-primary/5" : "border-border"}`}
                   >
                     <QrCode size={24} className={payMethod === "upi" ? "text-primary" : "text-muted-foreground"} />
-                    <span className="text-xs font-bold">UPI Payment</span>
+                    <span className="text-[10px] font-bold uppercase">UPI Payment</span>
                   </button>
                 </div>
 
-                {/* UPI QR */}
-                {payMethod === "upi" && (
-                  <div className="bg-muted rounded-xl p-4 mb-6 text-center space-y-3">
+                {payMethod === "upi" ? (
+                  <div className="bg-muted rounded-xl p-4 mb-2 text-center space-y-3 border-2 border-dashed border-primary/20">
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${UPI_ID}&pn=NM%20MART&am=${cartTotal}&cu=INR`}
-                      alt="UPI QR Code" className="mx-auto w-40 h-40 rounded-lg"
+                      alt="UPI QR Code" className="mx-auto w-40 h-40 rounded-lg shadow-md border-4 border-white"
                     />
-                    <p className="text-xs text-muted-foreground font-mono">{UPI_ID}</p>
-                    {/* ✅ असली UPI ऑर्डर बटन */}
-                    <button
-                      onClick={placeOrder}
-                      className="w-full mt-6 gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
-                    >
+                    <p className="text-[10px] text-muted-foreground font-mono font-bold">{UPI_ID}</p>
+                    <button onClick={placeOrder} className="w-full mt-2 gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2">
                       <Send size={18} /> Confirm & Order on WhatsApp
                     </button>
                   </div>
-                )}
-
-                {/* ✅ असली COD ऑर्डर बटन */}
-                {payMethod === "cod" && (
-                  <button
-                    onClick={placeOrder}
-                    className="w-full mt-2 gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
-                  >
+                ) : (
+                  <button onClick={placeOrder} className="w-full gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2">
                     <Send size={18} /> Confirm Order (COD)
                   </button>
                 )}
-                  <button
-                    onClick={placeOrder}
-                    className="w-full mt-2 gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all"
-                  >
-                    <Send size={18} /> Confirm Order (COD)
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-                    </div>
-                  </div>
-                )}
-
-                <button onClick={placeOrder}
-                  className="w-full gradient-navy text-primary-foreground py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-                >
-                  <Send size={16} /> Place Order via WhatsApp
-                </button>
               </div>
             </motion.div>
           </>
@@ -717,14 +680,14 @@ export default function App() {
                 {getOrderHistory().length === 0 ? (
                   <p className="text-center py-10 text-muted-foreground">No orders yet</p>
                 ) : getOrderHistory().map((o, i) => (
-                  <div key={i} className="bg-muted rounded-xl p-4 mb-3 space-y-2">
+                  <div key={i} className="bg-muted rounded-xl p-4 mb-3 space-y-2 text-foreground">
                     <div className="flex justify-between text-xs">
-                      <span className="font-bold text-foreground">{o.id}</span>
-                      <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold ${o.status === "Pending" ? "bg-secondary text-accent-foreground" : "bg-success text-primary-foreground"}`}>{o.status}</span>
+                      <span className="font-bold uppercase">{o.id}</span>
+                      <span className="bg-secondary px-2 py-0.5 rounded text-[9px] font-bold text-accent-foreground">{o.status}</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground">{o.date}</p>
-                    <p className="font-black text-foreground">₹{o.total}</p>
-                    <button onClick={() => reorder(o)} className="flex items-center gap-1 text-primary text-xs font-bold hover:underline">
+                    <p className="font-black">₹{o.total}</p>
+                    <button onClick={() => reorder(o)} className="flex items-center gap-1 text-primary text-xs font-bold hover:underline mt-2">
                       <RotateCcw size={12} /> Buy Again
                     </button>
                   </div>
@@ -745,13 +708,11 @@ export default function App() {
               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] z-50"
             >
               <div className="gradient-navy rounded-3xl p-6 text-primary-foreground shadow-2xl text-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-secondary/10 -mr-8 -mt-8" />
                 <Gift size={32} className="text-secondary mx-auto mb-3" />
-                <h3 className="font-black text-lg italic">Golden Card</h3>
+                <h3 className="font-black text-lg">Loyalty Points</h3>
                 <p className="text-4xl font-black text-secondary my-4">{getLoyaltyPoints()}</p>
-                <p className="text-xs text-primary-foreground/70 uppercase tracking-wide">NM Points Earned</p>
-                <p className="text-[10px] text-primary-foreground/50 mt-2">Earn 10 points on every order</p>
-                <button onClick={() => setShowLoyalty(false)} className="mt-4 bg-primary-foreground/10 px-6 py-2 rounded-xl text-sm font-bold hover:bg-primary-foreground/20 transition-colors">Close</button>
+                <p className="text-xs opacity-70">Points Earned at NM Mart</p>
+                <button onClick={() => setShowLoyalty(false)} className="mt-6 bg-white/10 px-6 py-2 rounded-xl text-sm font-bold">Close</button>
               </div>
             </motion.div>
           </>
@@ -770,9 +731,8 @@ export default function App() {
               <h3 className="text-lg font-black text-foreground mb-4">⭐ Rate NM Mart</h3>
               {feedbackSent ? (
                 <div className="text-center py-6">
-                  <p className="text-2xl mb-2">🙏</p>
                   <p className="font-bold text-foreground">Thank you for your feedback!</p>
-                  <button onClick={() => setShowFeedback(false)} className="mt-4 bg-primary text-primary-foreground px-6 py-2 rounded-xl text-sm font-bold">Close</button>
+                  <button onClick={() => setShowFeedback(false)} className="mt-4 bg-primary text-white px-6 py-2 rounded-xl text-sm font-bold">Close</button>
                 </div>
               ) : (
                 <>
@@ -787,7 +747,7 @@ export default function App() {
                     placeholder="Tell us about your experience..."
                     value={feedbackText}
                     onChange={e => setFeedbackText(e.target.value)}
-                    className="w-full bg-muted rounded-xl p-3 text-sm border-none focus:outline-none focus:ring-2 focus:ring-primary resize-none h-24 placeholder:text-muted-foreground"
+                    className="w-full bg-muted rounded-xl p-3 text-sm h-24 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <button
                     onClick={() => {
@@ -795,7 +755,7 @@ export default function App() {
                       window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`);
                       setFeedbackSent(true);
                     }}
-                    className="w-full gradient-amber text-accent-foreground py-3 rounded-xl font-bold mt-3 hover:opacity-90 transition-opacity"
+                    className="w-full gradient-navy text-white py-3 rounded-xl font-bold mt-4"
                   >
                     Submit Feedback
                   </button>
