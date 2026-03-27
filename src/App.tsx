@@ -318,7 +318,7 @@ export default function App() {
             {/* Section Title */}
             {!selectedCat && !query && (
               <div className="text-center mb-8">
-                <h2 className="text-2xl md:text-3xl font-black text-primary italic">🔥 ADHAA DAAM DEALS</h2>
+                <h2 className="text-2xl md:text-3xl font-black text-primary italic">🔥 Daam Aadha, Khushi Zyada</h2>
                 <p className="text-muted-foreground text-sm mt-1">50% or more off — grab before time runs out!</p>
               </div>
             )}
