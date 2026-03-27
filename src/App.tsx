@@ -21,9 +21,9 @@ interface CartItem extends Product {
 }
 
 const CATEGORY_META: Record<string, { label: string; icon: string; color: string }> = {
-  'FMCG': { label: 'Daily Essentials', icon: '🛒', color: 'from-blue-500 to-blue-700' },
+  'FMCG': { label: 'Daily Groceries', icon: '🛒', color: 'from-green-500 to-green-700' },
   'STATIONERY': { label: 'Stationery', icon: '✏️', color: 'from-amber-500 to-orange-600' },
-  'DBSHEET': { label: 'Premium Textiles', icon: '🛏️', color: 'from-purple-500 to-purple-700' },
+  'DBSHEET': { label: 'Household Plastic', icon: '🪑', color: 'from-cyan-500 to-blue-700' },
   'PERSONAL CARE': { label: 'Personal Care', icon: '✨', color: 'from-pink-500 to-rose-600' },
 };
 
@@ -33,7 +33,6 @@ function parseCSV(text: string): Product[] {
   for (let i = 1; i < lines.length; i++) {
     const row = lines[i];
     if (!row.trim()) continue;
-    // Handle CSV with possible quoted fields
     const cols: string[] = [];
     let current = '';
     let inQuotes = false;
@@ -127,7 +126,7 @@ export default function App() {
                 <h1 className="text-2xl font-black italic tracking-tighter leading-none font-display">
                   <span className="text-gold">NM</span> <span className="text-primary-foreground">MART</span>
                 </h1>
-                <p className="text-[9px] font-bold text-primary-foreground/60 tracking-widest uppercase">Shop More, Save More</p>
+                <p className="text-[9px] font-bold text-primary-foreground/60 tracking-widest uppercase">Everything your home needs</p>
               </div>
             </div>
             <button onClick={() => setIsCartOpen(true)} className="relative p-3 bg-white/10 hover:bg-white/20 rounded-2xl border border-white/20 transition-all">
@@ -142,7 +141,7 @@ export default function App() {
       <div className="max-w-2xl mx-auto px-4 -mt-5 relative z-10">
         <div className="relative shadow-card rounded-2xl overflow-hidden">
           <input
-            type="text" placeholder="Search 7000+ items by name or barcode..."
+            type="text" placeholder="Search 7000+ items (Rice, Soap, Bucket)..."
             className="w-full bg-card text-foreground border-none p-5 pl-14 font-bold text-sm focus:ring-2 focus:ring-primary outline-none rounded-2xl"
             value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
           />
@@ -150,47 +149,14 @@ export default function App() {
         </div>
       </div>
 
-      {/* WELFARE CARD */}
-      {!showProducts && (
-        <section className="py-12 px-4">
-          <div className="max-w-4xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-              className="gradient-gold p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden border-4 border-white/30"
-              style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none"/>
-              <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-                <div className="text-primary">
-                  <h2 className="text-3xl font-black italic uppercase mb-4 font-display">NM Mart Welfare Card</h2>
-                  <ul className="space-y-3 text-sm font-bold opacity-90">
-                    <li className="flex items-center gap-2"><ShieldCheck size={18}/> Extra 5% Discount on all orders</li>
-                    <li className="flex items-center gap-2"><ShieldCheck size={18}/> 6-Month Loyalty Rewards</li>
-                    <li className="flex items-center gap-2"><ShieldCheck size={18}/> Priority Support & Delivery</li>
-                  </ul>
-                </div>
-                <motion.div whileHover={{ rotateY: 8, rotateX: -5 }} transition={{ type: 'spring' }}
-                  className="w-64 h-40 bg-white/20 backdrop-blur-md border border-white/40 rounded-3xl p-6 flex flex-col justify-between shadow-inner cursor-pointer">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[10px] font-black text-white/80 uppercase tracking-widest">NM MART Member</span>
-                    <div className="w-10 h-10 bg-white/30 rounded-full animate-pulse"/>
-                  </div>
-                  <p className="text-white font-black text-xl tracking-[0.2em] font-display">**** **** 2026</p>
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      )}
-
       {/* MAIN CONTENT */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {!showProducts ? (
-          /* CATEGORY GRID */
           <div>
             <h2 className="text-2xl font-black text-foreground italic mb-8 text-center font-display">Shop by <span className="text-gold">Category</span></h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
               {categories.map((cat) => {
                 const meta = CATEGORY_META[cat] || { label: cat, icon: '📦', color: 'from-slate-500 to-slate-700' };
-                const count = allProducts.filter(p => p.mainCat === cat).length;
                 return (
                   <motion.button key={cat} whileHover={{ y: -6 }} whileTap={{ scale: 0.97 }}
                     onClick={() => { setSelectedCategory(cat); setPage(1); }}
@@ -199,7 +165,6 @@ export default function App() {
                       {meta.icon}
                     </div>
                     <h3 className="font-black text-foreground text-xs uppercase tracking-tight">{meta.label}</h3>
-                    <p className="text-[10px] text-muted-foreground font-bold mt-1">{count} Items</p>
                     <p className="text-[9px] text-accent font-bold mt-2 flex items-center gap-1 uppercase opacity-0 group-hover:opacity-100 transition-opacity">Browse <ChevronRight size={10}/></p>
                   </motion.button>
                 );
@@ -207,7 +172,6 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* PRODUCTS VIEW */
           <div>
             <div className="flex items-center justify-between mb-6">
               {selectedCategory && !isSearching && (
@@ -225,13 +189,12 @@ export default function App() {
                 return (
                   <motion.div key={product.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                     className="bg-card rounded-2xl shadow-card border border-border overflow-hidden flex flex-col relative group hover:shadow-lg transition-shadow">
-                    {discount >= 20 && (
+                    {discount >= 5 && (
                       <div className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-[9px] font-black px-2 py-0.5 rounded-full z-10">{discount}% OFF</div>
                     )}
-                    <div className={`absolute top-3 right-3 text-[8px] font-black px-2 py-0.5 rounded-full z-10 ${product.saleRate > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {product.saleRate > 0 ? 'In Stock' : 'Limited'}
-                    </div>
-                    <div className="h-28 flex items-center justify-center p-4 bg-muted/30">
+                    
+                    {/* इमेज वाला हिस्सा जो बारकोड से फोटो उठाएगा */}
+                    <div className="h-28 flex items-center justify-center p-4 bg-muted/30 relative">
                       {product.barcode ? (
                         <img
                           src={`https://images.upcitemdb.com/upc/${product.barcode}/0.jpg`}
@@ -243,7 +206,7 @@ export default function App() {
                             if (p && !p.querySelector('.fallback-icon')) {
                               const d = document.createElement('div');
                               d.className = 'fallback-icon w-14 h-14 rounded-full gradient-navy flex items-center justify-center text-primary-foreground font-black text-xl';
-                              d.textContent = product.name.charAt(0);
+                              d.textContent = 'NM';
                               p.appendChild(d);
                             }
                           }}
@@ -254,6 +217,7 @@ export default function App() {
                         </div>
                       )}
                     </div>
+
                     <div className="p-4 flex-grow flex flex-col">
                       <p className="text-[8px] text-accent font-black uppercase mb-1">{product.subCat || product.mainCat}</p>
                       <h3 className="font-bold text-foreground text-[11px] uppercase leading-tight h-8 overflow-hidden mb-2">{product.name}</h3>
@@ -289,32 +253,6 @@ export default function App() {
           </div>
         )}
       </main>
-
-      {/* REVIEWS */}
-      {!showProducts && (
-        <section className="py-16 bg-muted/50">
-          <div className="max-w-5xl mx-auto px-4">
-            <h2 className="text-2xl font-black text-foreground italic mb-8 text-center font-display">Happy <span className="text-gold">Customers</span></h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {[
-                { name: 'Ravi Kumar', text: 'Best rates in Manjhanpur! Delivery is always on time.', loc: 'Manjhanpur' },
-                { name: 'Sunita Devi', text: 'Great variety of products. My family shops here every week.', loc: 'Kaushambi' },
-                { name: 'Amit Singh', text: 'Wholesale rates for retail customers. Highly recommended!', loc: 'Bharwari' },
-              ].map((r, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                  className="bg-card rounded-2xl p-6 shadow-card border border-border">
-                  <div className="flex gap-0.5 mb-3">{[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 fill-accent text-accent"/>)}</div>
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed italic">"{r.text}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full gradient-navy flex items-center justify-center text-primary-foreground text-xs font-bold">{r.name[0]}</div>
-                    <div><p className="text-sm font-bold text-foreground">{r.name}</p><p className="text-xs text-muted-foreground">{r.loc}</p></div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* FOOTER */}
       <footer className="gradient-navy text-primary-foreground py-16 px-6 border-t-4 border-accent">
@@ -379,7 +317,7 @@ export default function App() {
                     <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
                       {item.barcode ? (
                         <img src={`https://images.upcitemdb.com/upc/${item.barcode}/0.jpg`} alt={item.name} className="w-full h-full object-contain bg-muted/30"
-                          onError={(e: any) => { e.currentTarget.outerHTML = `<div class="w-10 h-10 rounded-xl gradient-navy flex items-center justify-center text-primary-foreground font-black text-sm">${item.name.charAt(0)}</div>`; }}
+                          onError={(e: any) => { e.currentTarget.outerHTML = `<div class="w-10 h-10 rounded-xl gradient-navy flex items-center justify-center text-primary-foreground font-black text-sm">NM</div>`; }}
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-xl gradient-navy flex items-center justify-center text-primary-foreground font-black text-sm">{item.name.charAt(0)}</div>
@@ -417,7 +355,7 @@ export default function App() {
 
       {/* WHATSAPP FLOATING */}
       <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 bg-[hsl(142,71%,45%)] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-40 border-4 border-white animate-float">
+        className="fixed bottom-6 right-6 bg-[hsl(142,71%,45%)] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-40 border-4 border-white">
         <Phone size={26} fill="white"/>
       </a>
     </div>
