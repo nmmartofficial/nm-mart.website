@@ -305,7 +305,7 @@ export default function App() {
             <h2 className="text-2xl font-black italic mb-4 font-display"><span className="text-gold">NM</span> MART</h2>
             <p className="text-sm text-primary-foreground/60 leading-relaxed mb-6">Manjhanpur's most trusted departmental store. Quality products at wholesale rates.</p>
             <div className="space-y-3">
-              <p className="flex items-center gap-3 text-sm font-bold"><MapPin size={16} className="text-gold"/> Near B.P. Public School, Manjhanpur, UP</p>
+              <p className="flex items-center gap-3 text-sm font-bold"><MapPin size={16} className="text-gold"/> Naya Nagar Dhata Road, Manjhanpur, UP</p>
               <p className="flex items-center gap-3 text-sm font-bold"><Mail size={16} className="text-gold"/> support@nmmart.in</p>
               <p className="flex items-center gap-3 text-sm font-bold"><Clock size={16} className="text-gold"/> Daily 9 AM – 9 PM</p>
             </div>
