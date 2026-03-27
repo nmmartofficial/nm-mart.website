@@ -509,8 +509,8 @@ export default function App() {
                 <span className="font-black italic">NM MART</span>
               </div>
               <p className="text-xs text-primary-foreground/70 leading-relaxed">
-                Near B.P. Public School, Manjhanpur, Kaushambi, Uttar Pradesh<br />
-                ⏰ Open: 9 AM – 9 PM
+                Naya Nagar Dhata Road, Manjhanpur, Kaushambi, Uttar Pradesh<br />
+                ⏰ Open: 8 AM – 10 PM
               </p>
             </div>
             <div className="flex flex-col gap-2 text-sm">
