@@ -651,24 +651,38 @@ export default function App() {
                   </div>
                 </div>
 
-                <h3 className="font-bold text-sm mb-3 text-foreground uppercase tracking-wider">Payment Method</h3>
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <button
-                    onClick={() => setPayMethod("cod")}
-                    className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "cod" ? "border-primary bg-primary/5" : "border-border"}`}
-                  >
-                    <Banknote size={24} className={payMethod === "cod" ? "text-primary" : "text-muted-foreground"} />
-                    <span className="text-[10px] font-bold uppercase">Cash on Delivery</span>
-                  </button>
-                  <button
-                    onClick={() => setPayMethod("upi")}
-                    className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-primary bg-primary/5" : "border-border"}`}
-                  >
-                    <QrCode size={24} className={payMethod === "upi" ? "text-primary" : "text-muted-foreground"} />
-                    <span className="text-[10px] font-bold uppercase">UPI Payment</span>
-                  </button>
-                </div>
+                <h3 className="font-bold text-sm mb-3 text-foreground uppercase tracking-wider text-center">Payment Method</h3>
+<div className="grid grid-cols-2 gap-3 mb-6">
+  {/* COD */}
+  <button onClick={() => setPayMethod("cod")}
+    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "cod" ? "border-primary bg-primary/5 shadow-inner" : "border-border"}`}>
+    <Banknote size={20} className={payMethod === "cod" ? "text-primary" : "text-muted-foreground"} />
+    <span className="text-[9px] font-bold uppercase">Cash/COD</span>
+  </button>
 
+  {/* PhonePe Style */}
+  <button onClick={() => setPayMethod("upi")}
+    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-purple-600 bg-purple-50" : "border-border"}`}>
+    <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold">P</div>
+    <span className="text-[9px] font-bold uppercase">PhonePe</span>
+  </button>
+
+  {/* Google Pay Style */}
+  <button onClick={() => setPayMethod("upi")}
+    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-blue-600 bg-blue-50" : "border-border"}`}>
+    <div className="flex gap-0.5 font-black text-[10px]">
+      <span className="text-blue-500">G</span><span className="text-red-500">P</span><span className="text-yellow-500">a</span><span className="text-green-500">y</span>
+    </div>
+    <span className="text-[9px] font-bold uppercase">Google Pay</span>
+  </button>
+
+  {/* Generic UPI */}
+  <button onClick={() => setPayMethod("upi")}
+    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-primary bg-primary/5" : "border-border"}`}>
+    <QrCode size={20} className={payMethod === "upi" ? "text-primary" : "text-muted-foreground"} />
+    <span className="text-[9px] font-bold uppercase">Other UPI</span>
+  </button>
+</div>
                 {payMethod === "upi" ? (
                   <div className="bg-muted rounded-xl p-4 mb-2 text-center space-y-3 border-2 border-dashed border-primary/20">
                     <img
