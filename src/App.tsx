@@ -299,11 +299,11 @@ export default function App() {
               <p className="text-[9px] uppercase tracking-widest text-secondary opacity-80">Shop More Save More</p>
             </div>
           </div>
-          {/* --- UPDATED LOGIN SECTION (RIGHT SIDE) --- */}
+       {/* --- UPDATED LOGIN SECTION (RIGHT SIDE) --- */}
           <div className="flex items-center ml-auto">
             {isLoggedIn ? (
-              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20 mr-2 shadow-inner">
-                <div className="w-5 h-5 bg-yellow-400 text-slate-900 rounded-full flex items-center justify-center text-[10px] font-black uppercase">
+              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20 mr-2 shadow-inner backdrop-blur-sm">
+                <div className="w-5 h-5 bg-yellow-400 text-slate-900 rounded-full flex items-center justify-center text-[10px] font-black uppercase shadow-sm">
                   {userName.charAt(0)}
                 </div>
                 <span className="text-[10px] font-bold text-white tracking-tight">{userName}</span>
