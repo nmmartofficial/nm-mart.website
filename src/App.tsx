@@ -887,7 +887,7 @@ export default function App() {
                   <button
                     onClick={() => {
                       const msg = `⭐ NM Mart Feedback\nRating: ${"⭐".repeat(feedbackStars)}\n${feedbackText}`;
-                      window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`);
+                      window.open(`https://wa.me/7081154604}?text=${encodeURIComponent(msg)}`);
                       setFeedbackSent(true);
                     }}
                     className="w-full gradient-navy text-white py-3 rounded-xl font-bold mt-4"
