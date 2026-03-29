@@ -300,7 +300,6 @@ export default function App() {
             </div>
           </div>
        {/* --- UPDATED LOGIN SECTION (RIGHT SIDE) --- */}
-          <div className="{/* --- UPDATED LOGIN SECTION (RIGHT SIDE) --- */}
           <div className="flex items-center ml-auto">
             {isLoggedIn ? (
               <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20 mr-2 shadow-inner backdrop-blur-sm">
@@ -319,6 +318,7 @@ export default function App() {
             )}
           </div>
         </div>
+      </header>
       </header>">
             {isLoggedIn ? (
               <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20 mr-2 shadow-inner backdrop-blur-sm">
