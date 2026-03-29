@@ -14,6 +14,8 @@ import ProductImageDisplay from "@/components/ProductImageDisplay";
 import HeroBanner from "@/components/HeroBanner";
 import DiscountTabs from "@/components/DiscountTabs";
 import WelfareCardBanner from "@/components/WelfareCardBanner";
+import ProfileDashboard from "@/components/ProfileDashboard";
+import AIChatbot from "@/components/AIChatbot";
 
 /* ─── Countdown Hook ─── */
 function useCountdown() {
@@ -81,6 +83,7 @@ export default function Index() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [showProfile, setShowProfile] = useState(false);
 
   const countdown = useCountdown();
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
@@ -155,12 +158,12 @@ export default function Index() {
           
           <div className="flex items-center gap-2">
             {user ? (
-              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
+              <button onClick={() => setShowProfile(true)} className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
                 <div className="w-5 h-5 bg-[hsl(var(--secondary))] text-[hsl(var(--navy))] rounded-full flex items-center justify-center text-[10px] font-black">
                   {(user.email || user.phone || "U").charAt(0).toUpperCase()}
                 </div>
                 <span className="text-[10px] font-bold hidden md:block">{user.email || user.phone}</span>
-              </div>
+              </button>
             ) : (
               <button onClick={() => navigate("/login")}
                 className="text-[10px] font-black bg-white/20 text-white px-4 py-1.5 rounded-full border border-white/30 hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--navy))] transition-all uppercase tracking-wider">
@@ -553,6 +556,12 @@ export default function Index() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Profile Dashboard */}
+      <ProfileDashboard isOpen={showProfile} onClose={() => setShowProfile(false)} />
+
+      {/* AI Chatbot */}
+      <AIChatbot />
     </div>
   );
 }

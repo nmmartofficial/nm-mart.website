@@ -24,12 +24,16 @@ export interface OrderRecord {
 }
 
 // ─── Constants ───
-export const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRp0eoVJhdbJUOEYETTbNJYWeK3U1b_V1NKQORwpPgSZBwY60P8kmxNEblHxjslaBujpChwynkJ9zfg/pub?output=csv";
+export const CSV_URL = "https://docs.google.com/spreadsheets/d/10e6molYJIH19uag6ViotpfaLU78CBjIWCf2Bh5ulY-U/export?format=csv";
 export const WA_NUMBER = "917081154604";
 export const UPI_ID = "paytmqr5fwdiq@ptys";
 export const ITEMS_PER_PAGE = 60;
 export const MIN_ORDER = 500;
 export const LOGO_FALLBACK = "https://nmmart.in/logo.jpeg";
+export const SUPPORT_EMAIL = "support@nmmart.in";
+export const HELPLINE = "+917081154604";
+export const MEMBERSHIP_FEE = 599;
+export const MEMBERSHIP_VALUE = 1500;
 
 // ─── CSV Parser (now includes Image URL from column G) ───
 export function parseCSV(text: string): Product[] {
