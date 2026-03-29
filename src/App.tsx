@@ -299,7 +299,7 @@ export default function App() {
               <p className="text-[9px] uppercase tracking-widest text-secondary opacity-80">Shop More Save More</p>
             </div>
           </div>
-       {/* --- UPDATED LOGIN SECTION (RIGHT SIDE) --- */}
+{/* --- LOGIN SECTION --- */}
           <div className="flex items-center ml-auto">
             {isLoggedIn ? (
               <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20 mr-2 shadow-inner backdrop-blur-sm">
@@ -317,9 +317,7 @@ export default function App() {
               </button>
             )}
           </div>
-        </div>
-      </header>
-      
+          
           <div className="flex items-center gap-3">
             <button onClick={() => setShowOrders(true)} className="relative p-2 hover:bg-primary-foreground/10 rounded-lg transition-colors" title="Order History">
               <Package size={20} />
