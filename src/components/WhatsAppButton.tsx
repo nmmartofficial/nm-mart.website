@@ -13,7 +13,7 @@ const WhatsAppButton = () => {
         // w-11 h-11 और p-0 से ये बटन एकदम छोटा और गोल हो जाएगा
         className="w-11 h-11 bg-[#25D366] rounded-full shadow-lg border border-black/10 flex items-center justify-center hover:scale-110 active:scale-90 transition-all overflow-hidden"
       >
-        {/* असली WhatsApp का छोटा आइकन (Size 24) */}
+        {/* असली WhatsApp का छोटा आइकन (Size 18) */}
         <img 
           src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" 
           alt="WhatsApp" 
