@@ -1,164 +1,101 @@
-import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, Loader2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useRef } from 'react';
+import { MessageCircle, Send, X, ShoppingCart } from 'lucide-react';
 
-type Msg = { role: "user" | "assistant"; content: string };
-
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nm-sahayak`;
-
-const ChatBot = () => {
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", content: "Namaste! 🙏 Main NM Mart Sahayak hoon. Aapko kisi product ki price jaanni hai ya koi help chahiye? Puchiye!" }
+const ChatBot = ({ products = [] }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState([
+    { text: "नमस्ते! 'NM MART' में आपका स्वागत है। 🙏 मैं आपकी कैसे मदद कर सकता हूँ?", isBot: true }
   ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const chatEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    scrollToBottom();
   }, [messages]);
 
-  const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg: Msg = { role: "user", content: input.trim() };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput("");
-    setLoading(true);
+  const handleSend = () => {
+    if (!input.trim()) return;
 
-    try {
-      const resp = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ messages: newMessages }),
-      });
+    const userMsg = { text: input, isBot: false };
+    setMessages(prev => [...prev, userMsg]);
 
-      if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({ error: "Server error" }));
-        setMessages(prev => [...prev, { role: "assistant", content: errData.error || "Kuch gadbad ho gayi, please dobara try karein." }]);
-        setLoading(false);
-        return;
+    setTimeout(() => {
+      const query = input.toLowerCase();
+      const found = products.find(p => query.includes(p.name.toLowerCase()));
+
+      let botReply = "";
+      if (found) {
+        botReply = `जी हाँ, NM Mart पर ${found.name} का रेट ₹${found.price} है। क्या मैं इसे आपके वॉट्सऐप कार्ट में जोड़ दूँ?`;
+      } else if (query.includes("offer") || query.includes("discount") || query.includes("छूट")) {
+        botReply = "अभी हमारे पास Grocery और Dry Fruits पर 50% तक का डिस्काउंट चल रहा है! 🚀";
+      } else if (query.includes("location") || query.includes("kahan") || query.includes("pata")) {
+        botReply = "हमारा स्टोर मंझनपुर, कौशाम्बी (UP) में स्थित है। आप कभी भी आ सकते हैं! 📍";
+      } else {
+        botReply = "क्षमा करें, मुझे इसके बारे में जानकारी नहीं मिली। आप सहायता के लिए 7081154604 पर संपर्क कर सकते हैं।";
       }
 
-      // Streaming SSE
-      const reader = resp.body?.getReader();
-      if (!reader) throw new Error("No reader");
-      const decoder = new TextDecoder();
-      let assistantText = "";
-      let buffer = "";
+      setMessages(prev => [...prev, { text: botReply, isBot: true, product: found }]);
+    }, 800);
 
-      // Add empty assistant message
-      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        let newlineIdx: number;
-        while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
-          let line = buffer.slice(0, newlineIdx);
-          buffer = buffer.slice(newlineIdx + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantText += content;
-              setMessages(prev => {
-                const copy = [...prev];
-                copy[copy.length - 1] = { role: "assistant", content: assistantText };
-                return copy;
-              });
-            }
-          } catch { /* partial */ }
-        }
-      }
-    } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "Aap fikar na karein, network issue lag rahi hai. Thodi der mein phir try karein! 🙏" }]);
-    }
-    setLoading(false);
+    setInput('');
   };
 
   return (
-    <>
-      {/* FAB */}
-      <AnimatePresence>
-        {!open && (
-          <motion.button
-            initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-            onClick={() => setOpen(true)}
-            className="fixed bottom-20 right-5 z-50 gradient-orange text-white p-4 rounded-full shadow-xl hover:scale-110 transition-transform animate-pulse-glow"
-          >
-            <Bot size={26} />
-          </motion.button>
-        )}
-      </AnimatePresence>
+    <div className="fixed bottom-6 right-6 z-50">
+      {/* Floating Button - Premium Orange */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="bg-[#FF8C00] p-4 rounded-full shadow-2xl hover:scale-110 transition animate-bounce text-black"
+      >
+        {isOpen ? <X /> : <MessageCircle size={28} />}
+      </button>
 
-      {/* Chat Window */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.9 }}
-            className="fixed bottom-4 right-4 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-2rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-          >
-            {/* Header */}
-            <div className="gradient-orange text-white px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bot size={20} />
-                <div>
-                  <p className="font-black text-sm">NM Mart Sahayak</p>
-                  <p className="text-[9px] opacity-80">AI Assistant — Hinglish</p>
+      {/* Chat Window - Black & Orange Theme */}
+      {isOpen && (
+        <div className="absolute bottom-20 right-0 w-80 md:w-96 bg-black border border-[#FF8C00]/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[500px]">
+          <div className="bg-[#FF8C00] p-4 flex items-center gap-3">
+            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-[#FF8C00] font-bold text-xs">NM</div>
+            <h3 className="font-bold text-black">NM Mart सहायक</h3>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0a0a0a]">
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
+                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${
+                  msg.isBot ? 'bg-[#1a1a1a] text-gray-200 border border-gray-800' : 'bg-[#FF8C00] text-black font-semibold'
+                }`}>
+                  {msg.text}
+                  {msg.product && (
+                    <button className="mt-3 w-full bg-green-600 text-white p-2 rounded-lg flex items-center justify-center gap-2 text-xs font-bold shadow-lg">
+                      <ShoppingCart size={14}/> Add to Cart
+                    </button>
+                  )}
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} className="p-1.5 hover:bg-white/20 rounded-lg">
-                <X size={18} />
-              </button>
-            </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
 
-            {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
-                    m.role === "user"
-                      ? "gradient-orange text-white rounded-br-sm"
-                      : "bg-secondary text-foreground rounded-bl-sm"
-                  }`}>
-                    {m.content || (loading && i === messages.length - 1 ? "..." : "")}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Input */}
-            <div className="border-t border-border p-3 flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && send()}
-                placeholder="Kuch bhi puchiye..."
-                className="flex-1 bg-secondary rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground"
-              />
-              <button onClick={send} disabled={loading || !input.trim()}
-                className="gradient-orange text-white p-2.5 rounded-xl disabled:opacity-40 hover:opacity-90 transition-opacity">
-                {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+          <div className="p-4 bg-[#111] border-t border-gray-800 flex gap-2">
+            <input 
+              type="text" 
+              placeholder="सामान का रेट पूछें..."
+              className="flex-1 bg-black text-white p-2 rounded-lg border border-gray-700 focus:border-[#FF8C00] outline-none text-sm"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            />
+            <button onClick={handleSend} className="bg-[#FF8C00] p-2 rounded-lg text-black hover:bg-[#e67e00]">
+              <Send size={20} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
