@@ -19,19 +19,33 @@ const Footer = () => (
           </p>
         </div>
 
-        {/* Quick Links - अब इसमें Admin भी है */}
-        <div>
-          <h4 className="font-black text-[#FF8C00] mb-5 text-[11px] tracking-[3px] uppercase italic">Quick Links</h4>
-          <div className="space-y-3">
-            <Link to="/about" className="block text-[12px] text-gray-400 hover:text-white transition-colors uppercase font-bold">About Us</Link>
-            <Link to="/contact" className="block text-[12px] text-gray-400 hover:text-white transition-colors uppercase font-bold">Contact Us</Link>
-            <Link to="/privacy" className="block text-[12px] text-gray-400 hover:text-white transition-colors uppercase font-bold">Privacy Policy</Link>
-            <Link to="/admin" className="flex items-center gap-2 text-[12px] text-[#FF8C00] hover:text-white transition-colors uppercase font-black mt-4">
-              <UserCog size={14} /> Admin Access
-            </Link>
-          </div>
-        </div>
+        {/* Quick Links Section */}
+<div>
+  <h4 className="font-black text-[#FF8C00] mb-4 text-[11px] tracking-[3px] uppercase italic">Quick Links</h4>
+  <div className="flex flex-col gap-3">
+    
+    {/* About Us Link */}
+    <Link to="/about" className="text-[13px] text-gray-400 hover:text-white transition-all hover:translate-x-1 flex items-center gap-2">
+      <span className="w-1 h-1 bg-[#FF8C00] rounded-full"></span> About Us
+    </Link>
+    
+    {/* Contact Us Link */}
+    <Link to="/contact" className="text-[13px] text-gray-400 hover:text-white transition-all hover:translate-x-1 flex items-center gap-2">
+      <span className="w-1 h-1 bg-[#FF8C00] rounded-full"></span> Contact Us
+    </Link>
+    
+    {/* Privacy Policy Link */}
+    <Link to="/privacy" className="text-[13px] text-gray-400 hover:text-white transition-all hover:translate-x-1 flex items-center gap-2">
+      <span className="w-1 h-1 bg-[#FF8C00] rounded-full"></span> Privacy Policy
+    </Link>
 
+    {/* Admin Link (Special Look) */}
+    <Link to="/admin" className="mt-2 text-[11px] text-[#FF8C00] font-black uppercase tracking-widest border border-[#FF8C00]/20 px-3 py-1 rounded-lg hover:bg-[#FF8C00] hover:text-black transition-all text-center w-fit">
+      Admin Panel
+    </Link>
+
+  </div>
+</div>
         {/* Contact - मंझनपुर डिटेल्स */}
         <div>
           <h4 className="font-black text-[#FF8C00] mb-5 text-[11px] tracking-[3px] uppercase italic">Contact</h4>
