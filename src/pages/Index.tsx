@@ -240,41 +240,6 @@ export default function Index() {
                   </div>
                 )}
 
-                {/* Best Sellers */}
-                {bestSellers.length > 0 && (
-                  <div className="mb-12">
-                    <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
-                      <Star size={18} className="text-primary fill-primary" /> Best Sellers from NM Mart
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                      {bestSellers.map((p, idx) => (
-                        <div key={`best-${p.barcode}-${idx}`}
-                          className="bg-card rounded-xl border border-border overflow-hidden flex flex-col cursor-pointer hover:border-primary/50 hover:shadow-glow transition-all"
-                          onClick={() => navigate(`/product/${productSlug(p)}`)}
-                        >
-                          <div className="relative h-28 bg-secondary/30">
-                            <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
-                            <span className="absolute top-1.5 left-1.5 text-[8px] font-black px-2 py-0.5 rounded gradient-orange text-white">
-                              🔥 HOT
-                            </span>
-                          </div>
-                          <div className="p-2.5 flex flex-col flex-1">
-                            <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-base font-black text-primary">₹{p.saleRate}</span>
-                              <span className="text-[9px] text-muted-foreground line-through">₹{p.mrp}</span>
-                            </div>
-                            <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
-                              className="mt-auto pt-2 w-full bg-primary text-primary-foreground py-1.5 rounded-lg text-[8px] font-bold uppercase hover:bg-primary/90 transition-colors">
-                              + Add
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Welfare Card */}
                 <WelfareCardBanner />
               </>
