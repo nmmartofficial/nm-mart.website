@@ -1,60 +1,80 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { ShieldCheck, ShoppingBag, MapPin, Star, Award } from "lucide-react";
 
 const About = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-black text-white font-sans">
+    <div className="min-h-screen flex flex-col bg-black text-white">
       <Header />
-      <main className="flex-1 py-20 px-6">
+      
+      <main className="flex-1 py-16 md:py-24 px-4">
         <div className="max-w-4xl mx-auto">
           
-          {/* Main Card */}
-          <div className="bg-[#111] border border-[#FF8C00]/20 p-10 rounded-[40px] shadow-2xl text-center">
-            <h2 className="text-5xl font-black italic uppercase text-[#FF8C00] mb-6 tracking-tighter">
-              About <span className="text-white font-display">NM Mart</span>
+          {/* Main Title Section */}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter mb-4">
+              About <span className="text-[#FF8C00]">NM Mart</span>
             </h2>
+            <div className="w-24 h-1 bg-[#FF8C00] mx-auto rounded-full"></div>
+            <p className="mt-6 text-gray-500 uppercase tracking-[4px] font-bold text-[10px]">
+              The Ultimate Shopping Destination in Manjhanpur
+            </p>
+          </div>
+
+          {/* Intro Card - Professional English Version */}
+          <div className="bg-[#0a0a0a] border border-white/5 p-8 md:p-12 rounded-[50px] mb-12 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Award size={100} className="text-[#FF8C00]" />
+            </div>
             
-            <div className="w-20 h-1 bg-[#FF8C00] mx-auto mb-10 rounded-full"></div>
-
-            <div className="space-y-8 text-gray-300 leading-relaxed max-w-2xl mx-auto">
-              <p className="text-xl font-bold italic text-white underline decoration-[#FF8C00] underline-offset-8">
-                "मंझनपुर की अपनी बचत वाली दुकान"
+            <p className="text-2xl md:text-3xl font-black italic text-white mb-8 leading-tight">
+              "Your Trusted Local Partner for Quality & Savings."
+            </p>
+            
+            <div className="space-y-6 text-gray-400 text-base md:text-lg leading-relaxed">
+              <p>
+                <strong className="text-white">NM Mart</strong> is the leading modern departmental store in Manjhanpur, dedicated to providing a premium shopping experience to our community at the most affordable prices.
               </p>
-              
-              <p className="text-lg">
-                <span className="text-[#FF8C00] font-bold">NM Mart</span> मंझनपुर का सबसे भरोसेमंद सुपरमार्केट है, जहाँ आपको <span className="text-white font-bold">7000+ से ज्यादा प्रोडक्ट्स</span> एक ही छत के नीचे मिलते हैं।
+              <p>
+                We take pride in offering an extensive collection of over <span className="text-[#FF8C00] font-black text-2xl">7,000+</span> products. From daily essentials and groceries to high-quality cosmetics and our exclusive range of premium dry fruits—we guarantee 100% purity and freshness in everything we sell.
               </p>
-
-              <p className="text-sm uppercase tracking-[2px] font-bold text-gray-500">
-                Quality • Purity • Savings
+              <p>
+                At NM Mart, we believe that everyone deserves access to top-tier brands. By sourcing directly, we ensure that you get the best value for your money every time you walk through our doors.
               </p>
-
-              <div className="pt-6">
-                <div className="inline-block px-12 py-4 bg-[#FF8C00] text-black font-black uppercase italic rounded-2xl shadow-lg hover:bg-white transition-all duration-300">
-                  Shop More, Save More
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* Stats Section */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-10">
-            <div className="p-6 bg-[#111] border border-white/5 rounded-3xl text-center">
-               <p className="text-2xl font-black text-[#FF8C00]">7000+</p>
-               <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Products</p>
+          {/* Features Grid */}
+          <div className="grid sm:grid-cols-3 gap-6">
+            <div className="p-8 bg-white/5 rounded-[40px] border border-white/5 text-center group hover:border-[#FF8C00]/30 transition-all">
+              <ShoppingBag className="text-[#FF8C00] mx-auto mb-4" size={40} />
+              <h3 className="font-black text-sm uppercase tracking-widest text-white italic">7000+ Items</h3>
+              <p className="text-[10px] text-gray-500 mt-2 uppercase font-bold">Grocery to Cosmetics</p>
             </div>
-            <div className="p-6 bg-[#111] border border-white/5 rounded-3xl text-center">
-               <p className="text-2xl font-black text-[#FF8C00]">100%</p>
-               <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Purity</p>
+            
+            <div className="p-8 bg-white/5 rounded-[40px] border border-white/5 text-center group hover:border-[#FF8C00]/30 transition-all">
+              <ShieldCheck className="text-[#FF8C00] mx-auto mb-4" size={40} />
+              <h3 className="font-black text-sm uppercase tracking-widest text-white italic">Guaranteed Purity</h3>
+              <p className="text-[10px] text-gray-500 mt-2 uppercase font-bold">100% Quality Assurance</p>
             </div>
-            <div className="p-6 bg-[#111] border border-white/5 rounded-3xl text-center col-span-2 md:col-span-1">
-               <p className="text-2xl font-black text-[#FF8C00]">Manjhanpur</p>
-               <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Our Home</p>
+
+            <div className="p-8 bg-white/5 rounded-[40px] border border-white/5 text-center group hover:border-[#FF8C00]/30 transition-all">
+              <MapPin className="text-[#FF8C00] mx-auto mb-4" size={40} />
+              <h3 className="font-black text-sm uppercase tracking-widest text-white italic">Local Pride</h3>
+              <p className="text-[10px] text-gray-500 mt-2 uppercase font-bold">Manjhanpur, Kaushambi</p>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="mt-20 text-center">
+            <div className="inline-block px-12 py-5 bg-[#FF8C00] text-black font-black uppercase italic rounded-2xl shadow-[0_15px_40px_rgba(255,140,0,0.3)] hover:scale-105 transition-transform">
+               Shop More, Save More
             </div>
           </div>
 
         </div>
       </main>
+
       <Footer />
     </div>
   );
