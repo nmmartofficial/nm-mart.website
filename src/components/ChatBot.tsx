@@ -6,11 +6,7 @@ const ChatBot = () => {
   const [input, setInput] = useState('');
   const [products, setProducts] = useState([]); 
   const [messages, setMessages] = useState([
-    { 
-      text: "Welcome to NM MART! How can I help you today?\nनमस्ते! NM Mart में आपका स्वागत है। मैं आपकी क्या मदद कर सकता हूँ?", 
-      isBot: true,
-      isHelpMenu: true // यह शुरू में हेल्प बटन दिखाएगा
-    }
+    { text: "NM Mart Helper! 🛒\nनमस्ते! मैं आपकी क्या मदद करूँ?", isBot: true, isHelpMenu: true }
   ]);
   const chatEndRef = useRef(null);
 
@@ -41,19 +37,9 @@ const ChatBot = () => {
   const scrollToBottom = () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   useEffect(() => { scrollToBottom(); }, [messages]);
 
-  // हेल्प बटन क्लिक करने का लॉजिक
   const handleHelpAction = (action) => {
-    let reply = "";
-    if (action === 'location') {
-      reply = "📍 NM Mart is located in Manjhanpur, Kaushambi (UP).\nहमारा स्टोर मंझनपुर, कौशाम्बी (UP) में स्थित है।";
-    } else if (action === 'call') {
-      window.location.href = "tel:7081154604";
-      return;
-    } else if (action === 'delivery') {
-      reply = "🚚 We offer home delivery in Manjhanpur area. Call 7081154604 to order.\nहम मंझनपुर क्षेत्र में होम डिलीवरी देते हैं। ऑर्डर के लिए फोन करें।";
-    } else if (action === 'list') {
-      reply = "Please type the product name (e.g. Sugar) to see the price list.\nरेट देखने के लिए सामान का नाम लिखें (जैसे: Sugar)।";
-    }
+    if (action === 'call') { window.location.href = "tel:7081154604"; return; }
+    let reply = action === 'location' ? "📍 Manjhanpur, Kaushambi." : action === 'delivery' ? "🚚 Home Delivery available." : "Type item name.";
     setMessages(prev => [...prev, { text: reply, isBot: true }]);
   };
 
@@ -62,56 +48,57 @@ const ChatBot = () => {
     setMessages(prev => [...prev, { text: input, isBot: false }]);
     const query = input.toLowerCase();
     setTimeout(() => {
-      const matches = products.filter(p => p.name && p.name.toLowerCase().includes(query)).slice(0, 5);
+      const matches = products.filter(p => p.name && p.name.toLowerCase().includes(query)).slice(0, 4);
       if (matches.length > 0) {
-        setMessages(prev => [...prev, { text: `Found these items:`, isBot: true, options: matches }]);
+        setMessages(prev => [...prev, { text: "Items found:", isBot: true, options: matches }]);
       } else {
-        setMessages(prev => [...prev, { text: "Item not found. Try searching something else.\nसामान नहीं मिला। कुछ और सर्च करें।", isBot: true }]);
+        setMessages(prev => [...prev, { text: "Not found.", isBot: true }]);
       }
-    }, 400);
+    }, 300);
     setInput('');
   };
 
   return (
-    <div className="fixed bottom-24 right-6 z-[9999]">
-      <button onClick={() => setIsOpen(!isOpen)} className="bg-[#FF8C00] p-4 rounded-full shadow-2xl text-black border-2 border-black hover:rotate-12 transition-all">
-        {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
+    <div className="fixed bottom-24 right-4 z-[9999]">
+      <button onClick={() => setIsOpen(!isOpen)} className="bg-[#FF8C00] p-3 rounded-full shadow-lg text-black border border-black active:scale-90 transition-all">
+        {isOpen ? <X size={20} /> : <MessageCircle size={20} />}
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-20 right-0 w-80 md:w-96 bg-[#0a0a0a] border border-[#FF8C00]/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[500px]">
-          <div className="bg-[#FF8C00] p-4 text-center">
-            <h3 className="font-bold text-black text-sm tracking-widest uppercase italic">NM Mart Support</h3>
+        <div className="absolute bottom-14 right-0 w-[280px] md:w-[320px] bg-[#0a0a0a] border border-[#FF8C00]/30 rounded-xl shadow-2xl flex flex-col h-[400px]">
+          <div className="bg-[#FF8C00] py-1.5 px-3 text-center rounded-t-xl">
+            <h3 className="font-bold text-black text-[10px] uppercase tracking-tighter">NM Mart Assistant</h3>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black">
+          <div className="flex-1 overflow-y-auto p-2.5 space-y-3 bg-black scrollbar-hide">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
-                <div className={`max-w-[95%] p-3 rounded-2xl text-[13px] ${
-                  msg.isBot ? 'bg-[#1a1a1a] text-gray-200' : 'bg-[#FF8C00] text-black font-bold'
+                <div className={`max-w-[90%] p-2 rounded-lg text-[10px] leading-tight ${
+                  msg.isBot ? 'bg-[#151515] text-gray-300 border border-white/5' : 'bg-[#FF8C00] text-black font-bold'
                 }`}>
                   <div className="whitespace-pre-line">{msg.text}</div>
                   
-                  {/* --- HELP MENU BUTTONS --- */}
                   {msg.isHelpMenu && (
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <button onClick={() => handleHelpAction('list')} className="flex items-center gap-2 bg-black border border-gray-700 p-2 rounded-lg text-[11px] hover:bg-gray-800"><List size={14} className="text-[#FF8C00]"/> Price List</button>
-                      <button onClick={() => handleHelpAction('location')} className="flex items-center gap-2 bg-black border border-gray-800 p-2 rounded-lg text-[11px] hover:bg-gray-800"><MapPin size={14} className="text-[#FF8C00]"/> Location</button>
-                      <button onClick={() => handleHelpAction('delivery')} className="flex items-center gap-2 bg-black border border-gray-800 p-2 rounded-lg text-[11px] hover:bg-gray-800"><Truck size={14} className="text-[#FF8C00]"/> Delivery</button>
-                      <button onClick={() => handleHelpAction('call')} className="flex items-center gap-2 bg-[#FF8C00] text-black p-2 rounded-lg text-[11px] font-bold"><Phone size={14}/> Call Now</button>
+                    <div className="mt-2 grid grid-cols-2 gap-1">
+                      <button onClick={() => handleHelpAction('location')} className="bg-black border border-gray-800 p-1 rounded text-[9px] flex items-center gap-1"><MapPin size={10} className="text-[#FF8C00]"/> Shop</button>
+                      <button onClick={() => handleHelpAction('call')} className="bg-[#FF8C00] text-black p-1 rounded text-[9px] font-bold flex items-center gap-1"><Phone size={10}/> Call</button>
                     </div>
                   )}
 
-                  {/* Product Cards logic remains same as before */}
                   {msg.options && (
-                    <div className="mt-3 space-y-3">
+                    <div className="mt-2 space-y-1.5">
                       {msg.options.map((prod, idx) => (
-                        <div key={idx} className="bg-black border border-white/10 p-2 rounded-xl flex gap-2">
-                          <img src={prod.img} className="w-12 h-12 rounded object-cover bg-white/5" alt="" />
-                          <div className="flex-1 text-[11px]">
-                            <div className="text-[#FF8C00] font-bold truncate w-32">{prod.name}</div>
-                            <div className="text-white">Sale: ₹{prod.saleRate} <span className="text-gray-500 line-through text-[9px]">₹{prod.mrp}</span></div>
+                        <div key={idx} className="bg-black border border-white/5 p-1 rounded-md flex gap-2 items-center">
+                          <div className="w-8 h-8 bg-white/5 rounded overflow-hidden flex-shrink-0">
+                            {prod.img && <img src={prod.img} className="w-full h-full object-cover" />}
                           </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[#FF8C00] font-bold truncate text-[9px]">{prod.name}</div>
+                            <div className="text-white text-[9px]">₹{prod.saleRate} <span className="text-gray-500 line-through">₹{prod.mrp}</span></div>
+                          </div>
+                          <button onClick={() => setMessages(prev => [...prev, { text: `🛒 ${prod.name} selected!`, isBot: true }])} className="p-1 bg-[#FF8C00] rounded text-black active:bg-white">
+                             <ShoppingCart size={10} />
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -122,9 +109,9 @@ const ChatBot = () => {
             <div ref={chatEndRef} />
           </div>
 
-          <div className="p-3 bg-[#111] border-t border-gray-800 flex gap-2">
-            <input type="text" placeholder="Type here..." className="flex-1 bg-black text-white p-2 rounded-xl border border-gray-800 focus:border-[#FF8C00] outline-none text-sm" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} />
-            <button onClick={handleSend} className="bg-[#FF8C00] p-2 rounded-xl text-black"><Send size={18} /></button>
+          <div className="p-2 bg-[#111] border-t border-gray-900 flex gap-1.5">
+            <input type="text" placeholder="Search..." className="flex-1 bg-black text-white px-2 py-1 rounded-md border border-gray-800 outline-none text-[11px]" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} />
+            <button onClick={handleSend} className="bg-[#FF8C00] p-1.5 rounded-md text-black hover:bg-white"><Send size={14} /></button>
           </div>
         </div>
       )}
