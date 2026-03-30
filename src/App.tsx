@@ -24,7 +24,7 @@ export default function App() {
             <Route path="/" element={<Index />} />
             <Route path="/product/:slug" element={<ProductDetail />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/about" element={<Aboutt />} />
+            <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
