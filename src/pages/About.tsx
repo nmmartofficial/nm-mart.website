@@ -48,7 +48,7 @@ const About = () => {
           <div className="grid sm:grid-cols-3 gap-6">
             <div className="p-8 bg-white/5 rounded-[40px] border border-white/5 text-center group hover:border-[#FF8C00]/30 transition-all">
               <ShoppingBag className="text-[#FF8C00] mx-auto mb-4" size={40} />
-              <h3 className="font-black text-sm uppercase tracking-widest text-white italic">7000+ Items</h3>
+              <h3 className="font-black text-sm uppercase tracking-widest text-white italic">6000+ Items</h3>
               <p className="text-[10px] text-gray-500 mt-2 uppercase font-bold">Grocery to Cosmetics</p>
             </div>
             
