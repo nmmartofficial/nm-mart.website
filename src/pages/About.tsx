@@ -36,7 +36,7 @@ const About = () => {
                 <strong className="text-white">NM Mart</strong> is the leading modern departmental store in Manjhanpur, dedicated to providing a premium shopping experience to our community at the most affordable prices.
               </p>
               <p>
-                We take pride in offering an extensive collection of over <span className="text-[#FF8C00] font-black text-2xl">7,000+</span> products. From daily essentials and groceries to high-quality cosmetics and our exclusive range of premium dry fruits—we guarantee 100% purity and freshness in everything we sell.
+                We take pride in offering an extensive collection of over <span className="text-[#FF8C00] font-black text-2xl">6,000+</span> products. From daily essentials and groceries to high-quality cosmetics and our exclusive range of premium dry fruits—we guarantee 100% purity and freshness in everything we sell.
               </p>
               <p>
                 At NM Mart, we believe that everyone deserves access to top-tier brands. By sourcing directly, we ensure that you get the best value for your money every time you walk through our doors.
