@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Phone, Loader2, ShoppingCart, CreditCard } from "lucide-react";
+import { ArrowLeft, Phone, Loader2, ShoppingCart, CreditCard, Chrome } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,6 +15,19 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignup, setIsSignup] = useState(false);
+
+  // --- 1. Google Login Function (नया जोड़ा गया) ---
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    });
+    if (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   const handlePhoneSubmit = async () => {
     if (phone.length < 10) { setError("Enter valid 10-digit number"); return; }
@@ -34,7 +48,7 @@ const Login = () => {
     const fullPhone = `+91${phone.replace(/^(\+91|91)/, "")}`;
     const { error: err } = await supabase.auth.verifyOtp({ phone: fullPhone, token: otp, type: "sms" });
     if (err) { setError("Invalid OTP. Try again."); }
-    else { navigate("/"); }
+    else { navigate("/profile"); } // प्रोफाइल पर भेजें
     setLoading(false);
   };
 
@@ -42,13 +56,17 @@ const Login = () => {
     if (!email || !password) { setError("Fill all fields"); return; }
     setLoading(true); setError("");
     if (isSignup) {
-      const { error: err } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
+      const { error: err } = await supabase.auth.signUp({ 
+        email, 
+        password, 
+        options: { emailRedirectTo: window.location.origin } 
+      });
       if (err) setError(err.message);
-      else setError("Check your email for verification link!");
+      else toast.success("Check your email for verification link!");
     } else {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err) setError(err.message);
-      else navigate("/");
+      else navigate("/profile");
     }
     setLoading(false);
   };
@@ -75,12 +93,12 @@ const Login = () => {
             <p className="text-muted-foreground text-sm mt-1">Login to track orders & earn loyalty rewards</p>
           </div>
 
-          <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+          <div className="bg-card rounded-2xl border border-border p-6 space-y-4 shadow-xl">
             <div className="flex bg-secondary rounded-xl p-1">
-              <button onClick={() => setMode("phone")} className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${mode === "phone" ? "gradient-orange text-white shadow-sm" : "text-muted-foreground"}`}>
+              <button onClick={() => setMode("phone")} className={`flex-1 py-2.5 rounded-lg text-[10px] font-bold transition-all ${mode === "phone" ? "gradient-orange text-white shadow-sm" : "text-muted-foreground"}`}>
                 📱 Phone
               </button>
-              <button onClick={() => setMode("email")} className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${mode === "email" ? "gradient-orange text-white shadow-sm" : "text-muted-foreground"}`}>
+              <button onClick={() => setMode("email")} className={`flex-1 py-2.5 rounded-lg text-[10px] font-bold transition-all ${mode === "email" ? "gradient-orange text-white shadow-sm" : "text-muted-foreground"}`}>
                 ✉️ Email
               </button>
             </div>
@@ -90,7 +108,7 @@ const Login = () => {
                 <>
                   <div className="relative">
                     <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input type="tel" placeholder="Enter 10-digit mobile number" value={phone}
+                    <input type="tel" placeholder="10-digit mobile number" value={phone}
                       onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                       className="w-full bg-secondary rounded-xl py-4 pl-12 pr-4 font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
                   </div>
@@ -101,15 +119,15 @@ const Login = () => {
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-muted-foreground text-center">OTP sent to +91{phone}</p>
-                  <input type="text" placeholder="Enter 6-digit OTP" value={otp}
+                  <p className="text-xs text-muted-foreground text-center italic">OTP sent to +91{phone}</p>
+                  <input type="text" placeholder="6-digit OTP" value={otp}
                     onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     className="w-full bg-secondary rounded-xl py-4 px-4 font-bold text-foreground text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-primary" />
                   <button onClick={handleOtpVerify} disabled={loading}
                     className="w-full gradient-orange text-white py-4 rounded-xl font-black text-sm uppercase disabled:opacity-50 flex items-center justify-center gap-2">
                     {loading ? <Loader2 size={16} className="animate-spin" /> : "Verify OTP"}
                   </button>
-                  <button onClick={() => setStep("phone")} className="w-full text-xs text-muted-foreground font-bold hover:underline">← Change number</button>
+                  <button onClick={() => setStep("phone")} className="w-full text-[10px] text-muted-foreground font-bold hover:underline">← Change number</button>
                 </>
               )
             ) : (
@@ -122,13 +140,27 @@ const Login = () => {
                   className="w-full gradient-orange text-white py-4 rounded-xl font-black text-sm uppercase disabled:opacity-50 flex items-center justify-center gap-2">
                   {loading ? <Loader2 size={16} className="animate-spin" /> : isSignup ? "Sign Up" : "Login"}
                 </button>
-                <button onClick={() => setIsSignup(!isSignup)} className="w-full text-xs text-muted-foreground font-bold hover:underline text-center">
+                <button onClick={() => setIsSignup(!isSignup)} className="w-full text-[10px] text-muted-foreground font-bold hover:underline text-center uppercase tracking-tighter">
                   {isSignup ? "Already have an account? Login" : "New here? Create account"}
                 </button>
               </>
             )}
 
-            {error && <p className={`text-xs font-bold text-center rounded-lg p-2 ${error.includes("Check your email") ? "text-[hsl(var(--success))] bg-[hsl(var(--success))]/10" : "text-destructive bg-destructive/10"}`}>{error}</p>}
+            {/* --- Google Login Button (नया जोड़ा गया) --- */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border"></span></div>
+              <div className="relative flex justify-center text-[10px] uppercase font-bold bg-card px-2 text-muted-foreground tracking-widest">OR</div>
+            </div>
+
+            <button 
+              onClick={handleGoogleLogin} 
+              disabled={loading}
+              className="w-full bg-white/5 border border-border text-foreground py-4 rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-3 hover:bg-secondary transition-all"
+            >
+              <Chrome size={18} className="text-[#FF8C00]" /> Sign in with Google
+            </button>
+
+            {error && <p className={`text-[10px] font-black text-center rounded-lg p-3 uppercase ${error.includes("Check your email") ? "text-green-500 bg-green-500/10" : "text-destructive bg-destructive/10"}`}>{error}</p>}
           </div>
         </div>
       </div>
