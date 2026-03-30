@@ -98,7 +98,7 @@ const ChatBot = () => {
                           <div className="flex justify-between items-end">
                             <div className="flex flex-col">
                               <span className="text-gray-500 text-[10px] italic">MRP: <del>₹{prod.mrp}</del></span>
-                              <span className="text-white font-black text-[16px] tracking-tight">NM RATE: ₹{prod.saleRate}</span>
+                              <span className="text-white font-black text-[16px] tracking-tight">NM Mart Rate: ₹{prod.saleRate}</span>
                               <span className="text-[9px] text-[#FF8C00]/70 mt-1 uppercase font-bold">{prod.subCat}</span>
                             </div>
                             <button 
