@@ -39,7 +39,7 @@ const ChatBot = () => {
 
   const handleHelpAction = (action) => {
     if (action === 'call') { window.location.href = "tel:7081154604"; return; }
-    let reply = action === 'location' ? "📍 Manjhanpur, Kaushambi." : action === 'delivery' ? "🚚 Home Delivery available." : "Type item name.";
+    let reply = action === 'location' ? "📍 Naya Nagar Dhata Road Manjhanpur, Kaushambi." : action === 'delivery' ? "🚚 Home Delivery available." : "Type item name.";
     setMessages(prev => [...prev, { text: reply, isBot: true }]);
   };
 
