@@ -17,49 +17,47 @@ const DiscountTabs = ({ flat33, flat50, onAddToCart }: Props) => {
 
   return (
     <section className="mb-12">
-      <h2 className="text-xl md:text-2xl font-black text-primary italic mb-4 text-center">🏷️ Discount Collections</h2>
+      <h2 className="text-xl md:text-2xl font-black text-primary mb-4 text-center tracking-tight">
+        🏷️ Discount Collections
+      </h2>
 
       <div className="flex justify-center gap-3 mb-6">
         <button
           onClick={() => setActiveTab("50")}
-          className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm uppercase transition-all ${
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm uppercase transition-all ${
             activeTab === "50"
-              ? "bg-orange-500 text-white shadow-lg scale-105"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              ? "gradient-orange text-white shadow-lg shadow-[hsl(var(--orange))]/20 scale-105"
+              : "bg-secondary text-muted-foreground hover:bg-secondary/80"
           }`}
         >
-          <Zap size={16} /> Flat 50% OFF ({flat50.length})
+          <Zap size={16} /> 50% OFF ({flat50.length})
         </button>
         <button
           onClick={() => setActiveTab("33")}
-          className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm uppercase transition-all ${
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm uppercase transition-all ${
             activeTab === "33"
-              ? "bg-amber-500 text-white shadow-lg scale-105"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              ? "gradient-orange text-white shadow-lg shadow-[hsl(var(--orange))]/20 scale-105"
+              : "bg-secondary text-muted-foreground hover:bg-secondary/80"
           }`}
         >
-          <Flame size={16} /> Flat 33% OFF ({flat33.length})
+          <Flame size={16} /> 33% OFF ({flat33.length})
         </button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {products.map((p, idx) => (
           <div key={`${p.barcode}-${idx}`}
-            className={`bg-card rounded-2xl shadow-card border overflow-hidden flex flex-col cursor-pointer hover:shadow-lg transition-all ${
-              activeTab === "50" ? "border-orange-200 ring-1 ring-orange-100" : "border-amber-200 ring-1 ring-amber-100"
-            }`}
+            className="bg-card rounded-xl border border-border overflow-hidden flex flex-col cursor-pointer hover:border-primary/50 hover:shadow-glow transition-all"
             onClick={() => navigate(`/product/${productSlug(p)}`)}
           >
-            <div className="relative h-28 bg-white">
+            <div className="relative h-28 bg-secondary/50">
               <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
-              <span className={`absolute top-1 right-1 text-[8px] font-black px-2 py-0.5 rounded-md text-white ${
-                activeTab === "50" ? "bg-orange-500" : "bg-amber-500"
-              }`}>
+              <span className="absolute top-1.5 right-1.5 text-[8px] font-black px-2 py-0.5 rounded gradient-orange text-white">
                 -{p.discount}%
               </span>
             </div>
-            <div className="p-2 flex flex-col flex-1">
-              <h3 className="font-bold text-[9px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
+            <div className="p-2.5 flex flex-col flex-1">
+              <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-base font-black text-primary">₹{p.saleRate}</span>
                 <span className="text-[9px] text-muted-foreground line-through">₹{p.mrp}</span>

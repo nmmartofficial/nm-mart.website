@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Phone, Loader2 } from "lucide-react";
+import { ArrowLeft, Phone, Loader2, ShoppingCart, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
@@ -10,8 +10,6 @@ const Login = () => {
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Email fallback (phone login needs Twilio setup in Supabase)
   const [mode, setMode] = useState<"phone" | "email">("phone");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,27 +55,32 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="gradient-navy text-primary-foreground shadow-lg">
+      <header className="bg-black border-b border-border">
         <div className="max-w-7xl mx-auto flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/")} className="p-2 hover:bg-white/10 rounded-lg"><ArrowLeft size={20} /></button>
-          <span className="font-black italic text-lg">NM MART</span>
+          <button onClick={() => navigate("/")} className="p-2 hover:bg-secondary rounded-lg text-foreground"><ArrowLeft size={20} /></button>
+          <div className="flex items-center gap-2">
+            <div className="gradient-orange p-1.5 rounded-lg"><ShoppingCart size={16} className="text-white" /></div>
+            <span className="font-black text-lg tracking-tight text-foreground">NM <span className="text-primary">MART</span></span>
+          </div>
         </div>
       </header>
 
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-black text-primary italic">Welcome to NM Mart</h1>
-            <p className="text-muted-foreground text-sm mt-1">Login to track orders & earn rewards</p>
+            <div className="gradient-orange w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <CreditCard size={28} className="text-white" />
+            </div>
+            <h1 className="text-2xl font-black text-foreground tracking-tight">Welcome to NM Mart</h1>
+            <p className="text-muted-foreground text-sm mt-1">Login to track orders & earn loyalty rewards</p>
           </div>
 
-          <div className="bg-card rounded-3xl shadow-card border border-border p-6 space-y-4">
-            {/* Mode Toggle */}
-            <div className="flex bg-muted rounded-xl p-1">
-              <button onClick={() => setMode("phone")} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${mode === "phone" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>
+          <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <div className="flex bg-secondary rounded-xl p-1">
+              <button onClick={() => setMode("phone")} className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${mode === "phone" ? "gradient-orange text-white shadow-sm" : "text-muted-foreground"}`}>
                 📱 Phone
               </button>
-              <button onClick={() => setMode("email")} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${mode === "email" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>
+              <button onClick={() => setMode("email")} className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${mode === "email" ? "gradient-orange text-white shadow-sm" : "text-muted-foreground"}`}>
                 ✉️ Email
               </button>
             </div>
@@ -87,52 +90,36 @@ const Login = () => {
                 <>
                   <div className="relative">
                     <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      type="tel"
-                      placeholder="Enter 10-digit mobile number"
-                      value={phone}
+                    <input type="tel" placeholder="Enter 10-digit mobile number" value={phone}
                       onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      className="w-full bg-muted rounded-xl py-4 pl-12 pr-4 font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                      className="w-full bg-secondary rounded-xl py-4 pl-12 pr-4 font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
                   </div>
                   <button onClick={handlePhoneSubmit} disabled={loading}
-                    className="w-full gradient-navy text-primary-foreground py-4 rounded-xl font-black text-sm uppercase disabled:opacity-50 flex items-center justify-center gap-2">
+                    className="w-full gradient-orange text-white py-4 rounded-xl font-black text-sm uppercase disabled:opacity-50 flex items-center justify-center gap-2">
                     {loading ? <Loader2 size={16} className="animate-spin" /> : "Send OTP"}
                   </button>
                 </>
               ) : (
                 <>
                   <p className="text-sm text-muted-foreground text-center">OTP sent to +91{phone}</p>
-                  <input
-                    type="text"
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
+                  <input type="text" placeholder="Enter 6-digit OTP" value={otp}
                     onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    className="w-full bg-muted rounded-xl py-4 px-4 font-bold text-foreground text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                    className="w-full bg-secondary rounded-xl py-4 px-4 font-bold text-foreground text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-primary" />
                   <button onClick={handleOtpVerify} disabled={loading}
-                    className="w-full gradient-navy text-primary-foreground py-4 rounded-xl font-black text-sm uppercase disabled:opacity-50 flex items-center justify-center gap-2">
+                    className="w-full gradient-orange text-white py-4 rounded-xl font-black text-sm uppercase disabled:opacity-50 flex items-center justify-center gap-2">
                     {loading ? <Loader2 size={16} className="animate-spin" /> : "Verify OTP"}
                   </button>
-                  <button onClick={() => setStep("phone")} className="w-full text-xs text-muted-foreground font-bold hover:underline">
-                    ← Change number
-                  </button>
+                  <button onClick={() => setStep("phone")} className="w-full text-xs text-muted-foreground font-bold hover:underline">← Change number</button>
                 </>
               )
             ) : (
               <>
-                <input
-                  type="email" placeholder="Email address" value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full bg-muted rounded-xl py-4 px-4 font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <input
-                  type="password" placeholder="Password" value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full bg-muted rounded-xl py-4 px-4 font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+                <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)}
+                  className="w-full bg-secondary rounded-xl py-4 px-4 font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+                <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)}
+                  className="w-full bg-secondary rounded-xl py-4 px-4 font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
                 <button onClick={handleEmailAuth} disabled={loading}
-                  className="w-full gradient-navy text-primary-foreground py-4 rounded-xl font-black text-sm uppercase disabled:opacity-50 flex items-center justify-center gap-2">
+                  className="w-full gradient-orange text-white py-4 rounded-xl font-black text-sm uppercase disabled:opacity-50 flex items-center justify-center gap-2">
                   {loading ? <Loader2 size={16} className="animate-spin" /> : isSignup ? "Sign Up" : "Login"}
                 </button>
                 <button onClick={() => setIsSignup(!isSignup)} className="w-full text-xs text-muted-foreground font-bold hover:underline text-center">
@@ -141,7 +128,7 @@ const Login = () => {
               </>
             )}
 
-            {error && <p className="text-destructive text-xs font-bold text-center bg-destructive/10 rounded-lg p-2">{error}</p>}
+            {error && <p className={`text-xs font-bold text-center rounded-lg p-2 ${error.includes("Check your email") ? "text-[hsl(var(--success))] bg-[hsl(var(--success))]/10" : "text-destructive bg-destructive/10"}`}>{error}</p>}
           </div>
         </div>
       </div>

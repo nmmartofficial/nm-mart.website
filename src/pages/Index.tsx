@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingCart, Search, X, Plus, Minus, Trash2, MessageCircle, Send,
   Mic, MicOff, Clock, Star, MapPin, LayoutGrid, ArrowUp, Package, Gift, RotateCcw,
-  ChevronRight, Banknote, QrCode
+  ChevronRight, Banknote, QrCode, Phone, Instagram, Facebook, Youtube, CreditCard
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
@@ -14,6 +14,7 @@ import ProductImageDisplay from "@/components/ProductImageDisplay";
 import HeroBanner from "@/components/HeroBanner";
 import DiscountTabs from "@/components/DiscountTabs";
 import WelfareCardBanner from "@/components/WelfareCardBanner";
+import ChatBot from "@/components/ChatBot";
 
 /* ─── Countdown Hook ─── */
 function useCountdown() {
@@ -54,14 +55,12 @@ function useVoiceSearch(onResult: (t: string) => void) {
   return { listening, toggle };
 }
 
-/* ─── Star Rating ─── */
-const StarRating = ({ rating = 4 }: { rating?: number }) => (
-  <div className="flex gap-0.5">
-    {Array.from({ length: 5 }, (_, i) => (
-      <Star key={i} size={12} className={i < rating ? "fill-[hsl(var(--secondary))] text-[hsl(var(--secondary))]" : "text-muted-foreground/30"} />
-    ))}
-  </div>
-);
+/* ─── Category Icons ─── */
+const CATEGORY_ICONS: Record<string, string> = {
+  "Grocery": "🥦", "Household": "🏠", "Snacks": "🍿", "Beverages": "🥤",
+  "Personal Care": "🧴", "Dairy": "🥛", "Cleaning": "🧹", "Spices": "🌶️",
+  "Dry Fruits": "🥜", "Baby Care": "👶", "Health": "💊", "Stationery": "📝",
+};
 
 export default function Index() {
   const navigate = useNavigate();
@@ -75,17 +74,12 @@ export default function Index() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [payMethod, setPayMethod] = useState<"cod" | "upi">("cod");
   const [showOrders, setShowOrders] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [feedbackStars, setFeedbackStars] = useState(5);
-  const [feedbackText, setFeedbackText] = useState("");
-  const [feedbackSent, setFeedbackSent] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [user, setUser] = useState<any>(null);
 
   const countdown = useCountdown();
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
 
-  // Auth state
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
@@ -94,14 +88,12 @@ export default function Index() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Back to top
   useEffect(() => {
     const handler = () => setShowBackToTop(window.scrollY > 400);
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  // Filtered products
   const filtered = useMemo(() => {
     let list = selectedCat ? allProducts.filter(p => p.category === selectedCat) : allProducts;
     if (query) {
@@ -114,6 +106,12 @@ export default function Index() {
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paged = useMemo(() => filtered.slice(0, page * ITEMS_PER_PAGE), [filtered, page]);
   const remaining = MIN_ORDER - cartTotal;
+
+  // Best sellers: top 12 products with highest discount
+  const bestSellers = useMemo(() =>
+    [...allProducts].sort((a, b) => b.discount - a.discount).slice(0, 12),
+    [allProducts]
+  );
 
   const placeOrder = () => {
     if (cartTotal < MIN_ORDER) return alert(`Min order ₹${MIN_ORDER}!`);
@@ -136,44 +134,46 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Flash Sale Timer */}
-      <div className="gradient-amber text-accent-foreground text-center py-2 text-xs font-bold tracking-wide flex items-center justify-center gap-2">
+      <div className="gradient-orange text-white text-center py-2.5 text-xs font-bold tracking-wide flex items-center justify-center gap-2">
         <Clock size={14} />
         <span>⚡ FLASH SALE ENDS IN</span>
-        <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded font-mono text-sm">{countdown}</span>
+        <span className="bg-black/30 text-white px-2.5 py-0.5 rounded font-mono text-sm">{countdown}</span>
       </div>
 
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 gradient-navy text-primary-foreground shadow-lg">
+      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md text-foreground shadow-lg border-b border-border">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <ShoppingCart size={28} className="text-[hsl(var(--secondary))]" />
+          <div className="flex items-center gap-2.5">
+            <div className="gradient-orange p-2 rounded-xl">
+              <ShoppingCart size={22} className="text-white" />
+            </div>
             <div>
-              <h1 className="text-lg font-black italic leading-none">NM MART</h1>
-              <p className="text-[9px] uppercase tracking-widest text-[hsl(var(--secondary))]/80">Shop More Save More</p>
+              <h1 className="text-lg font-black tracking-tight leading-none">NM <span className="text-primary">MART</span></h1>
+              <p className="text-[8px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">Shop More Save More</p>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
             {user ? (
-              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
-                <div className="w-5 h-5 bg-[hsl(var(--secondary))] text-[hsl(var(--navy))] rounded-full flex items-center justify-center text-[10px] font-black">
+              <div className="flex items-center gap-2 bg-secondary px-3 py-1.5 rounded-full border border-border">
+                <div className="w-5 h-5 gradient-orange rounded-full flex items-center justify-center text-[10px] font-black text-white">
                   {(user.email || user.phone || "U").charAt(0).toUpperCase()}
                 </div>
-                <span className="text-[10px] font-bold hidden md:block">{user.email || user.phone}</span>
+                <span className="text-[10px] font-bold hidden md:block text-foreground">{user.email || user.phone}</span>
               </div>
             ) : (
               <button onClick={() => navigate("/login")}
-                className="text-[10px] font-black bg-white/20 text-white px-4 py-1.5 rounded-full border border-white/30 hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--navy))] transition-all uppercase tracking-wider">
-                Login
+                className="text-[10px] font-bold bg-secondary text-foreground px-4 py-1.5 rounded-full border border-border hover:bg-primary hover:text-white hover:border-primary transition-all uppercase tracking-wider flex items-center gap-1.5">
+                <CreditCard size={12} /> Loyalty Login
               </button>
             )}
-            <button onClick={() => setShowOrders(true)} className="relative p-2 hover:bg-white/10 rounded-lg" title="Orders">
+            <button onClick={() => setShowOrders(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors" title="Orders">
               <Package size={20} />
             </button>
-            <button onClick={() => setCartOpen(true)} className="relative p-2 hover:bg-white/10 rounded-lg">
+            <button onClick={() => setCartOpen(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors">
               <ShoppingCart size={22} />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[hsl(var(--secondary))] text-accent-foreground text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 gradient-orange text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
@@ -182,22 +182,22 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Hero Banner Carousel */}
+      {/* Hero Banner */}
       <HeroBanner />
 
-      {/* Search Bar */}
-      <div className="max-w-3xl mx-auto px-4 -mt-5 relative z-10">
-        <div className="bg-card rounded-2xl shadow-xl flex items-center overflow-hidden border border-border">
-          <Search size={20} className="ml-4 text-muted-foreground" />
+      {/* Mega Search Bar */}
+      <div className="max-w-3xl mx-auto px-4 -mt-6 relative z-10">
+        <div className="bg-card rounded-2xl shadow-2xl shadow-black/40 flex items-center overflow-hidden border border-border">
+          <Search size={20} className="ml-4 text-primary" />
           <input
             type="text"
             placeholder="Search 7000+ products by name or barcode..."
             value={query}
             onChange={e => { setQuery(e.target.value); setPage(1); }}
-            className="flex-1 px-3 py-4 bg-transparent text-sm font-medium focus:outline-none placeholder:text-muted-foreground"
+            className="flex-1 px-3 py-4 bg-transparent text-sm font-medium focus:outline-none placeholder:text-muted-foreground text-foreground"
           />
           <button onClick={toggleVoice}
-            className={`p-3 mr-1 rounded-xl transition-colors ${listening ? "bg-destructive text-destructive-foreground" : "hover:bg-muted"}`}>
+            className={`p-3 mr-1 rounded-xl transition-colors ${listening ? "bg-destructive text-destructive-foreground" : "hover:bg-secondary text-muted-foreground"}`}>
             {listening ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
         </div>
@@ -208,45 +208,86 @@ export default function Index() {
         {loading ? (
           <div className="py-20 text-center flex flex-col items-center gap-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-            <p className="font-bold text-primary uppercase text-xs tracking-wide">Loading inventory...</p>
+            <p className="font-bold text-primary uppercase text-xs tracking-wide">Loading 7000+ products...</p>
           </div>
         ) : (
           <>
-            {/* Discount Tabs (only on home view) */}
+            {/* Home View: No category/search selected */}
             {!selectedCat && !query && (
-              <DiscountTabs flat33={flat33} flat50={flat50} onAddToCart={addToCart} />
+              <>
+                {/* Today's Mega Savings */}
+                <DiscountTabs flat33={flat33} flat50={flat50} onAddToCart={addToCart} />
+
+                {/* Category Grid */}
+                {categories.length > 0 && (
+                  <div className="mb-12">
+                    <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+                      <LayoutGrid size={18} className="text-primary" /> Browse Categories
+                    </h3>
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                      {categories.map(cat => (
+                        <motion.button whileTap={{ scale: 0.94 }} key={cat}
+                          onClick={() => { setSelectedCat(cat); setPage(1); }}
+                          className="p-4 rounded-xl bg-card border border-border flex flex-col items-center gap-2 transition-all group hover:border-primary/50 hover:shadow-glow">
+                          <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary text-2xl group-hover:bg-primary/20 transition-colors">
+                            {CATEGORY_ICONS[cat] || "📦"}
+                          </div>
+                          <span className="font-bold text-foreground uppercase text-[9px] tracking-tight text-center leading-tight">{cat}</span>
+                          <span className="text-[8px] text-primary flex items-center gap-0.5 font-semibold">Shop <ChevronRight size={8} /></span>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Best Sellers */}
+                {bestSellers.length > 0 && (
+                  <div className="mb-12">
+                    <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+                      <Star size={18} className="text-primary fill-primary" /> Best Sellers from NM Mart
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                      {bestSellers.map((p, idx) => (
+                        <div key={`best-${p.barcode}-${idx}`}
+                          className="bg-card rounded-xl border border-border overflow-hidden flex flex-col cursor-pointer hover:border-primary/50 hover:shadow-glow transition-all"
+                          onClick={() => navigate(`/product/${productSlug(p)}`)}
+                        >
+                          <div className="relative h-28 bg-secondary/30">
+                            <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
+                            <span className="absolute top-1.5 left-1.5 text-[8px] font-black px-2 py-0.5 rounded gradient-orange text-white">
+                              🔥 HOT
+                            </span>
+                          </div>
+                          <div className="p-2.5 flex flex-col flex-1">
+                            <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-base font-black text-primary">₹{p.saleRate}</span>
+                              <span className="text-[9px] text-muted-foreground line-through">₹{p.mrp}</span>
+                            </div>
+                            <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
+                              className="mt-auto pt-2 w-full bg-primary text-primary-foreground py-1.5 rounded-lg text-[8px] font-bold uppercase hover:bg-primary/90 transition-colors">
+                              + Add
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Welfare Card */}
+                <WelfareCardBanner />
+              </>
             )}
 
-            {/* Category Grid */}
-            {!selectedCat && !query && categories.length > 0 && (
-              <div className="mb-10">
-                <h3 className="font-bold text-primary text-sm uppercase mb-4 flex items-center gap-2">
-                  <LayoutGrid size={16} /> Browse Categories
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {categories.map(cat => (
-                    <motion.button whileTap={{ scale: 0.94 }} key={cat}
-                      onClick={() => { setSelectedCat(cat); setPage(1); }}
-                      className="p-4 rounded-2xl shadow-card border bg-card border-border flex flex-col items-center gap-2 transition-all group hover:border-primary">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted group-hover:bg-primary group-hover:text-white transition-colors">
-                        <LayoutGrid size={16} />
-                      </div>
-                      <span className="font-bold text-foreground uppercase text-[9px] tracking-tight text-center leading-tight">{cat}</span>
-                      <span className="text-[8px] text-muted-foreground flex items-center gap-0.5">Open <ChevronRight size={8} /></span>
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Active category/search header */}
+            {/* Active category/search */}
             {(selectedCat || query) && (
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-black text-lg text-primary uppercase italic">
+                <h2 className="font-black text-lg text-foreground uppercase tracking-tight">
                   {query ? `Results for "${query}"` : selectedCat}
                 </h2>
                 <button onClick={() => { setSelectedCat(null); setQuery(""); setPage(1); }}
-                  className="text-[10px] font-bold uppercase text-primary border-b-2 border-primary">← Back</button>
+                  className="text-[10px] font-bold uppercase text-primary border-b-2 border-primary hover:opacity-80">← Back</button>
               </div>
             )}
 
@@ -258,37 +299,36 @@ export default function Index() {
                     <motion.div key={`${p.barcode}-${p.name}-${idx}`}
                       initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: Math.min(idx * 0.02, 0.3) }}
-                      className="bg-card rounded-2xl shadow-card border border-border overflow-hidden group hover:shadow-lg transition-shadow flex flex-col cursor-pointer"
+                      className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
                       onClick={() => navigate(`/product/${productSlug(p)}`)}
                     >
-                      <div className="relative h-32 bg-white">
+                      <div className="relative h-32 bg-secondary/30">
                         <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
                         {p.discount >= 50 && (
-                          <span className="absolute top-2 left-2 gradient-amber text-accent-foreground text-[8px] font-black px-2 py-0.5 rounded-md animate-blink uppercase">
+                          <span className="absolute top-2 left-2 gradient-orange text-white text-[8px] font-black px-2 py-0.5 rounded animate-blink uppercase">
                             50% OFF
                           </span>
                         )}
                         {p.discount > 0 && (
-                          <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                          <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-[9px] font-bold px-1.5 py-0.5 rounded">
                             -{p.discount}%
                           </span>
                         )}
                       </div>
                       <div className="p-3 flex flex-col flex-1">
-                        <h3 className="font-bold text-[10px] text-foreground uppercase leading-tight h-8 overflow-hidden mb-1">{p.name}</h3>
-                        <StarRating />
-                        <div className="flex items-baseline gap-2 mt-2">
+                        <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-8 overflow-hidden mb-1">{p.name}</h3>
+                        <div className="flex items-baseline gap-2 mt-1">
                           <span className="text-lg font-black text-primary">₹{p.saleRate}</span>
                           {p.mrp > p.saleRate && <span className="text-xs text-muted-foreground line-through">₹{p.mrp}</span>}
                         </div>
                         {p.save > 0 && <span className="text-[9px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
                         <div className="flex gap-2 mt-auto pt-3">
                           <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
-                            className="flex-1 bg-primary text-primary-foreground py-2 rounded-xl text-[9px] font-bold uppercase hover:bg-primary/90 transition-colors">
+                            className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg text-[9px] font-bold uppercase hover:bg-primary/90 transition-colors">
                             Add to Cart
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Order: ${p.name} - ₹${p.saleRate}`)}`); }}
-                            className="p-2 bg-[hsl(var(--success))] rounded-xl text-white hover:opacity-90" title="WhatsApp">
+                            className="p-2 bg-[hsl(var(--success))] rounded-lg text-white hover:opacity-90" title="WhatsApp">
                             <MessageCircle size={14} />
                           </button>
                         </div>
@@ -299,7 +339,7 @@ export default function Index() {
                 {page * ITEMS_PER_PAGE < filtered.length && (
                   <div className="text-center mt-8">
                     <button onClick={() => setPage(p => p + 1)}
-                      className="gradient-navy text-primary-foreground px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90">
+                      className="gradient-orange text-white px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
                       Load More ({filtered.length - page * ITEMS_PER_PAGE} remaining)
                     </button>
                   </div>
@@ -312,44 +352,58 @@ export default function Index() {
                 )}
               </>
             )}
-
-            {/* Welfare Card Banner (on home view) */}
-            {!selectedCat && !query && <WelfareCardBanner />}
           </>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="gradient-navy text-primary-foreground mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-10">
-          <div className="grid md:grid-cols-3 gap-8">
+      {/* Professional Footer */}
+      <footer className="bg-black border-t border-border mt-16">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <ShoppingCart size={20} className="text-[hsl(var(--secondary))]" />
-                <span className="font-black italic">NM MART</span>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="gradient-orange p-1.5 rounded-lg">
+                  <ShoppingCart size={16} className="text-white" />
+                </div>
+                <span className="font-black text-lg tracking-tight">NM <span className="text-primary">MART</span></span>
               </div>
-              <p className="text-xs text-primary-foreground/70 leading-relaxed">
-                Naya Nagar Dhata Road, Manjhanpur, Kaushambi, UP<br />⏰ 8 AM – 10 PM
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Manjhanpur's trusted retail store with 7000+ products at wholesale prices. Quality guaranteed.
               </p>
             </div>
-            <div className="flex flex-col gap-2 text-sm">
-              <a href="/about" className="hover:text-[hsl(var(--secondary))] transition-colors">About Us</a>
-              <a href="/contact" className="hover:text-[hsl(var(--secondary))] transition-colors">Contact Us</a>
-              <a href="/privacy" className="hover:text-[hsl(var(--secondary))] transition-colors">Privacy Policy</a>
+            <div>
+              <h4 className="font-bold text-sm text-foreground uppercase mb-3 tracking-wider">Quick Links</h4>
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <a href="/about" className="hover:text-primary transition-colors">About Us</a>
+                <a href="/contact" className="hover:text-primary transition-colors">Contact Us</a>
+                <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
+                <a href="/admin" className="hover:text-primary transition-colors text-muted-foreground/30">Admin</a>
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <a href="https://maps.google.com/?q=Manjhanpur+Kaushambi+UP" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-sm font-bold hover:bg-white/20">
-                <MapPin size={16} /> Store Location
+            <div>
+              <h4 className="font-bold text-sm text-foreground uppercase mb-3 tracking-wider">Contact</h4>
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <p className="flex items-center gap-2"><MapPin size={14} className="text-primary" /> Manjhanpur, Kaushambi, UP</p>
+                <a href="tel:+917081154604" className="flex items-center gap-2 hover:text-primary transition-colors"><Phone size={14} className="text-primary" /> +91 708 115 4604</a>
+                <p className="text-xs">⏰ 8 AM – 10 PM Daily</p>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-foreground uppercase mb-3 tracking-wider">Follow Us</h4>
+              <div className="flex gap-3">
+                <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-[hsl(var(--success))] hover:bg-[hsl(var(--success))] hover:text-white transition-all"><MessageCircle size={18} /></a>
+                <a href="#" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-all"><Instagram size={18} /></a>
+                <a href="#" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all"><Facebook size={18} /></a>
+                <a href="#" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all"><Youtube size={18} /></a>
+              </div>
+              <a href={`https://maps.google.com/?q=Manjhanpur+Kaushambi+UP`} target="_blank" rel="noopener noreferrer"
+                className="mt-4 flex items-center gap-2 bg-secondary px-3 py-2 rounded-lg text-xs font-bold text-muted-foreground hover:text-primary transition-colors">
+                <MapPin size={14} /> View on Google Maps
               </a>
-              <button onClick={() => { setShowFeedback(true); setFeedbackSent(false); }}
-                className="flex items-center gap-2 gradient-amber text-accent-foreground px-4 py-2 rounded-xl text-sm font-bold hover:opacity-90">
-                <Star size={16} /> Rate Our Store
-              </button>
             </div>
           </div>
-          <div className="border-t border-white/10 mt-8 pt-4 text-center text-[10px] text-white/50 uppercase tracking-widest">
-            Powered by NM MART — RETAIL OS v6.0
+          <div className="border-t border-border mt-8 pt-4 text-center text-[10px] text-muted-foreground/50 uppercase tracking-widest">
+            © 2025 NM MART — Retail OS v7.0 | Manjhanpur, UP
           </div>
         </div>
       </footer>
@@ -360,12 +414,15 @@ export default function Index() {
         <MessageCircle size={24} />
       </a>
 
+      {/* AI Chatbot */}
+      <ChatBot />
+
       {/* Back to Top */}
       <AnimatePresence>
         {showBackToTop && (
           <motion.button initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="fixed bottom-6 left-6 z-40 bg-primary text-primary-foreground p-3 rounded-full shadow-lg">
+            className="fixed bottom-6 left-6 z-40 bg-card border border-border text-foreground p-3 rounded-full shadow-lg hover:bg-primary hover:text-white transition-all">
             <ArrowUp size={20} />
           </motion.button>
         )}
@@ -376,13 +433,13 @@ export default function Index() {
         {cartOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-foreground/50 z-50" onClick={() => setCartOpen(false)} />
+              className="fixed inset-0 bg-black/70 z-50" onClick={() => setCartOpen(false)} />
             <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-card z-50 flex flex-col shadow-2xl">
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-card z-50 flex flex-col shadow-2xl border-l border-border">
               <div className="flex items-center justify-between p-4 border-b border-border">
-                <h2 className="font-black text-lg text-foreground flex items-center gap-2"><ShoppingCart size={20} /> Cart ({cartCount})</h2>
-                <button onClick={() => setCartOpen(false)} className="p-2 hover:bg-muted rounded-lg"><X size={20} /></button>
+                <h2 className="font-black text-lg text-foreground flex items-center gap-2"><ShoppingCart size={20} className="text-primary" /> Cart ({cartCount})</h2>
+                <button onClick={() => setCartOpen(false)} className="p-2 hover:bg-secondary rounded-lg"><X size={20} /></button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {cart.length === 0 ? (
@@ -390,8 +447,8 @@ export default function Index() {
                     <ShoppingCart size={40} className="mx-auto mb-3 opacity-30" /><p className="font-bold">Cart is empty</p>
                   </div>
                 ) : cart.map((c, i) => (
-                  <div key={i} className="flex items-center gap-3 bg-muted rounded-xl p-3">
-                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                  <div key={i} className="flex items-center gap-3 bg-secondary rounded-xl p-3">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                       <ProductImageDisplay imageUrl={c.imageUrl} name={c.name} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -409,15 +466,15 @@ export default function Index() {
               </div>
               {cart.length > 0 && (
                 <div className="border-t border-border p-4 space-y-3">
-                  <div className="flex justify-between font-black text-lg"><span>Total</span><span>₹{cartTotal}</span></div>
+                  <div className="flex justify-between font-black text-lg"><span>Total</span><span className="text-primary">₹{cartTotal}</span></div>
                   {remaining > 0 && (
-                    <div className="bg-[hsl(var(--secondary))]/10 border border-[hsl(var(--secondary))]/30 rounded-xl p-3 text-xs text-center font-bold">
+                    <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 text-xs text-center font-bold text-primary">
                       Add ₹{remaining} more (Min. ₹{MIN_ORDER})
                     </div>
                   )}
                   <button disabled={cartTotal < MIN_ORDER}
                     onClick={() => { setCheckoutOpen(true); setCartOpen(false); }}
-                    className="w-full gradient-amber text-accent-foreground py-3 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="w-full gradient-orange text-white py-3 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed">
                     Proceed to Checkout
                   </button>
                 </div>
@@ -432,15 +489,15 @@ export default function Index() {
         {checkoutOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-foreground/50 z-50" onClick={() => setCheckoutOpen(false)} />
+              className="fixed inset-0 bg-black/70 z-50" onClick={() => setCheckoutOpen(false)} />
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[460px] md:max-h-[90vh] bg-card rounded-2xl shadow-2xl z-50 overflow-y-auto">
+              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[460px] md:max-h-[90vh] bg-card rounded-2xl shadow-2xl z-50 overflow-y-auto border border-border">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-black text-foreground">💳 Checkout</h2>
-                  <button onClick={() => setCheckoutOpen(false)} className="p-2 hover:bg-muted rounded-lg"><X size={18} /></button>
+                  <button onClick={() => setCheckoutOpen(false)} className="p-2 hover:bg-secondary rounded-lg"><X size={18} /></button>
                 </div>
-                <div className="bg-muted rounded-xl p-4 mb-6 text-sm space-y-2">
+                <div className="bg-secondary rounded-xl p-4 mb-6 text-sm space-y-2">
                   {cart.map((c, i) => (
                     <div key={i} className="flex justify-between">
                       <span className="text-foreground text-xs truncate flex-1 mr-2">{c.name} x{c.qty}</span>
@@ -448,32 +505,32 @@ export default function Index() {
                     </div>
                   ))}
                   <div className="border-t border-border pt-2 flex justify-between font-black text-lg">
-                    <span>Total</span><span>₹{cartTotal}</span>
+                    <span>Total</span><span className="text-primary">₹{cartTotal}</span>
                   </div>
                 </div>
                 <h3 className="font-bold text-sm mb-3 text-foreground uppercase tracking-wider text-center">Payment Method</h3>
                 <div className="grid grid-cols-2 gap-3 mb-6">
                   <button onClick={() => setPayMethod("cod")}
-                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 ${payMethod === "cod" ? "border-primary bg-primary/5" : "border-border"}`}>
+                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "cod" ? "border-primary bg-primary/10" : "border-border"}`}>
                     <Banknote size={20} className={payMethod === "cod" ? "text-primary" : "text-muted-foreground"} />
                     <span className="text-[9px] font-bold uppercase">Cash/COD</span>
                   </button>
                   <motion.a href={`upi://pay?pa=${UPI_ID}&pn=NMMART&am=${cartTotal}&cu=INR`}
                     onClick={() => setPayMethod("upi")} whileTap={{ scale: 0.95 }}
-                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 ${payMethod === "upi" ? "border-primary bg-primary/5" : "border-border"}`}>
+                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-primary bg-primary/10" : "border-border"}`}>
                     <QrCode size={20} className={payMethod === "upi" ? "text-primary" : "text-muted-foreground"} />
                     <span className="text-[9px] font-bold uppercase">UPI Pay</span>
                   </motion.a>
                 </div>
                 {payMethod === "upi" && (
-                  <div className="bg-muted rounded-xl p-4 mb-4 text-center space-y-3 border-2 border-dashed border-primary/20">
+                  <div className="bg-secondary rounded-xl p-4 mb-4 text-center space-y-3 border-2 border-dashed border-primary/20">
                     <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${UPI_ID}&pn=NM%20MART&am=${cartTotal}&cu=INR`}
-                      alt="UPI QR" className="mx-auto w-40 h-40 rounded-lg shadow-md border-4 border-white" />
+                      alt="UPI QR" className="mx-auto w-40 h-40 rounded-lg shadow-md border-4 border-card" />
                     <p className="text-[10px] text-muted-foreground font-mono font-bold">{UPI_ID}</p>
                   </div>
                 )}
                 <button onClick={placeOrder}
-                  className="w-full gradient-navy text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2">
+                  className="w-full gradient-orange text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2">
                   <Send size={18} /> Confirm Order {payMethod === "cod" ? "(COD)" : "(UPI)"}
                 </button>
               </div>
@@ -487,68 +544,30 @@ export default function Index() {
         {showOrders && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-foreground/50 z-50" onClick={() => setShowOrders(false)} />
+              className="fixed inset-0 bg-black/70 z-50" onClick={() => setShowOrders(false)} />
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[460px] md:max-h-[80vh] bg-card rounded-2xl shadow-2xl z-50 overflow-y-auto">
+              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[460px] md:max-h-[80vh] bg-card rounded-2xl shadow-2xl z-50 overflow-y-auto border border-border">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-black text-foreground">📦 Order History</h2>
-                  <button onClick={() => setShowOrders(false)} className="p-2 hover:bg-muted rounded-lg"><X size={18} /></button>
+                  <button onClick={() => setShowOrders(false)} className="p-2 hover:bg-secondary rounded-lg"><X size={18} /></button>
                 </div>
                 {getOrderHistory().length === 0 ? (
                   <p className="text-center py-10 text-muted-foreground">No orders yet</p>
                 ) : getOrderHistory().map((o, i) => (
-                  <div key={i} className="bg-muted rounded-xl p-4 mb-3 space-y-2">
+                  <div key={i} className="bg-secondary rounded-xl p-4 mb-3 space-y-2">
                     <div className="flex justify-between text-xs">
-                      <span className="font-bold uppercase">{o.id}</span>
-                      <span className="bg-[hsl(var(--secondary))] px-2 py-0.5 rounded text-[9px] font-bold text-accent-foreground">{o.status}</span>
+                      <span className="font-bold uppercase text-foreground">{o.id}</span>
+                      <span className="gradient-orange text-white px-2 py-0.5 rounded text-[9px] font-bold">{o.status}</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground">{o.date}</p>
-                    <p className="font-black">₹{o.total}</p>
+                    <p className="font-black text-primary">₹{o.total}</p>
                     <button onClick={() => reorder(o)} className="flex items-center gap-1 text-primary text-xs font-bold hover:underline">
                       <RotateCcw size={12} /> Buy Again
                     </button>
                   </div>
                 ))}
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Feedback Modal */}
-      <AnimatePresence>
-        {showFeedback && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-foreground/50 z-50" onClick={() => setShowFeedback(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] bg-card rounded-2xl shadow-2xl z-50 p-6">
-              <h3 className="text-lg font-black text-foreground mb-4">⭐ Rate NM Mart</h3>
-              {feedbackSent ? (
-                <div className="text-center py-6">
-                  <p className="font-bold">Thank you!</p>
-                  <button onClick={() => setShowFeedback(false)} className="mt-4 bg-primary text-white px-6 py-2 rounded-xl text-sm font-bold">Close</button>
-                </div>
-              ) : (
-                <>
-                  <div className="flex gap-2 justify-center mb-4">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <button key={s} onClick={() => setFeedbackStars(s)}>
-                        <Star size={28} className={s <= feedbackStars ? "fill-[hsl(var(--secondary))] text-[hsl(var(--secondary))]" : "text-muted-foreground/30"} />
-                      </button>
-                    ))}
-                  </div>
-                  <textarea placeholder="Your experience..." value={feedbackText} onChange={e => setFeedbackText(e.target.value)}
-                    className="w-full bg-muted rounded-xl p-3 text-sm h-24 text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
-                  <button onClick={() => {
-                    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`⭐ Rating: ${"⭐".repeat(feedbackStars)}\n${feedbackText}`)}`);
-                    setFeedbackSent(true);
-                  }} className="w-full gradient-navy text-white py-3 rounded-xl font-bold mt-4">
-                    Submit Feedback
-                  </button>
-                </>
-              )}
             </motion.div>
           </>
         )}
