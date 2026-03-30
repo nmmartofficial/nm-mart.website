@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Phone, Loader2, ShoppingCart, CreditCard, Chrome } from "lucide-react";
+import { Phone, Loader2, Chrome, ArrowLeft } from "lucide-react";
 import { auth, googleProvider } from "../lib/firebase"; 
 import { 
   signInWithPopup, 
   RecaptchaVerifier, 
-  signInWithPhoneNumber,
-  ConfirmationResult 
+  signInWithPhoneNumber 
 } from "firebase/auth";
 import { toast } from "sonner";
 
@@ -16,49 +15,46 @@ const Login = () => {
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [loading, setLoading] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [confirmation, setConfirmation] = useState<any>(null);
 
-  // ReCaptcha सेटअप करने के लिए
+  // ReCaptcha सेटअप
   useEffect(() => {
-    (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'invisible',
-      'callback': () => {
-        console.log("Recaptcha resolved");
-      }
-    });
+    if (!(window as any).recaptchaVerifier) {
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'invisible'
+      });
+    }
   }, []);
 
   const handlePhoneSubmit = async () => {
-    if (phone.length < 10) { 
-      toast.error("कृपया सही 10-अंकों का नंबर डालें"); 
-      return; 
+    if (phone.length < 10) {
+      toast.error("सही मोबाइल नंबर डालें");
+      return;
     }
     setLoading(true);
-    const appVerifier = (window as any).recaptchaVerifier;
-    const formatPhone = "+91" + phone;
-
     try {
-      const result = await signInWithPhoneNumber(auth, formatPhone, appVerifier);
-      setConfirmationResult(result);
+      const verifier = (window as any).recaptchaVerifier;
+      const result = await signInWithPhoneNumber(auth, "+91" + phone, verifier);
+      setConfirmation(result);
       setStep("otp");
-      toast.success("OTP आपके मोबाइल पर भेज दिया गया है!");
-    } catch (error: any) {
-      console.error(error);
-      toast.error("OTP भेजने में फेल: " + error.message);
+      toast.success("OTP भेज दिया गया है!");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("OTP भेजने में फेल! Firebase में Phone ON करें।");
     } finally {
       setLoading(false);
     }
   };
 
   const handleOtpVerify = async () => {
-    if (!otp || !confirmationResult) return;
+    if (!otp || !confirmation) return;
     setLoading(true);
     try {
-      await confirmationResult.confirm(otp);
+      await confirmation.confirm(otp);
       toast.success("लॉगिन सफल!");
       navigate("/profile");
-    } catch (error) {
-      toast.error("गलत OTP, फिर से कोशिश करें");
+    } catch (err) {
+      toast.error("गलत OTP, फिर से चेक करें");
     } finally {
       setLoading(false);
     }
@@ -67,28 +63,27 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      toast.success("Google से लॉगिन सफल!");
+      toast.success("स्वागत है!");
       navigate("/profile");
-    } catch (error) {
+    } catch (err) {
       toast.error("Google लॉगिन फेल हुआ");
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 flex flex-col items-center justify-center">
-      {/* ReCaptcha के लिए यह जरूरी है */}
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
       <div id="recaptcha-container"></div>
-
+      
       <div className="w-full max-w-sm bg-[#1a1a1a] p-8 rounded-[40px] border border-white/5 shadow-2xl">
-        <h1 className="text-2xl font-black text-center mb-8 italic uppercase tracking-tighter">
+        <div className="flex items-center justify-center gap-2 mb-8 uppercase font-black italic text-2xl tracking-tighter">
           NM <span className="text-[#FF8C00]">MART</span>
-        </h1>
-        
+        </div>
+
         <div className="space-y-4">
           {step === "phone" ? (
             <>
               <div className="relative">
-                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
                 <input 
                   type="tel" 
                   placeholder="मोबाइल नंबर" 
@@ -97,11 +92,7 @@ const Login = () => {
                   className="w-full bg-black border border-white/10 p-4 pl-12 rounded-2xl outline-none focus:border-[#FF8C00]" 
                 />
               </div>
-              <button 
-                onClick={handlePhoneSubmit} 
-                disabled={loading} 
-                className="w-full bg-[#FF8C00] text-black py-4 rounded-2xl font-black uppercase tracking-widest disabled:opacity-50"
-              >
+              <button onClick={handlePhoneSubmit} disabled={loading} className="w-full bg-[#FF8C00] text-black py-4 rounded-2xl font-black uppercase">
                 {loading ? <Loader2 className="animate-spin mx-auto" /> : "OTP भेजें"}
               </button>
             </>
@@ -109,35 +100,25 @@ const Login = () => {
             <>
               <input 
                 type="text" 
-                placeholder="6-अंकों का OTP डालें" 
+                placeholder="OTP डालें" 
                 value={otp} 
                 onChange={e => setOtp(e.target.value)}
-                className="w-full bg-black border border-white/10 p-4 rounded-2xl text-center text-xl font-bold tracking-[10px] outline-none focus:border-[#FF8C00]" 
+                className="w-full bg-black border border-white/10 p-4 rounded-2xl text-center text-xl font-bold tracking-widest outline-none focus:border-[#FF8C00]" 
               />
-              <button 
-                onClick={handleOtpVerify} 
-                disabled={loading}
-                className="w-full bg-[#FF8C00] text-black py-4 rounded-2xl font-black uppercase tracking-widest"
-              >
-                {loading ? <Loader2 className="animate-spin mx-auto" /> : "Verify & Login"}
-              </button>
-              <button onClick={() => setStep("phone")} className="w-full text-[10px] text-gray-500 font-bold uppercase hover:underline">
-                नंबर बदलें
+              <button onClick={handleOtpVerify} disabled={loading} className="w-full bg-[#FF8C00] text-black py-4 rounded-2xl font-black uppercase">
+                {loading ? <Loader2 className="animate-spin mx-auto" /> : "लॉगिन करें"}
               </button>
             </>
           )}
 
-          <div className="relative flex items-center py-4">
-            <div className="flex-grow border-t border-white/5"></div>
-            <span className="px-3 text-[9px] text-gray-600 font-black uppercase tracking-[3px]">OR</span>
-            <div className="flex-grow border-t border-white/5"></div>
+          <div className="flex items-center gap-2 py-2">
+            <div className="h-[1px] bg-white/5 flex-1"></div>
+            <span className="text-[10px] text-gray-600 font-bold uppercase">या</span>
+            <div className="h-[1px] bg-white/5 flex-1"></div>
           </div>
 
-          <button 
-            onClick={handleGoogleLogin} 
-            className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 font-black text-[10px] uppercase hover:bg-white/10 transition-all"
-          >
-            <Chrome size={18} className="text-[#FF8C00]" /> Sign in with Google
+          <button onClick={handleGoogleLogin} className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 font-bold text-xs uppercase">
+            <Chrome size={18} className="text-[#FF8C00]" /> Google से लॉगिन
           </button>
         </div>
       </div>
