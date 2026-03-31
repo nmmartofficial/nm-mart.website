@@ -1,16 +1,15 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-// नीचे वाली लाइन में अपनी पुरानी फाइल का सही नाम लिखें (जैसे ProductSearch या Home)
-import ProductSearch from "./ProductSearch"; 
-import Admin from "./pages/Admin";
+import Index from "./pages/Index"; // आपकी फोटो में Index.tsx दिख रही है, यही होम पेज है
+import Admin from "./pages/Admin"; // जो आपने नई फाइल बनाई है
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* 1. ग्राहकों के लिए: nmmart.in पर पुरानी दुकान दिखेगी */}
-        <Route path="/" element={<ProductSearch />} />
-        
-        {/* 2. आपके लिए: nmmart.in/admin पर स्कैनर खुलेगा */}
+        {/* जब कोई nmmart.in खोलेगा, तो Index वाला पेज (दुकान) दिखेगी */}
+        <Route path="/" element={<Index />} />
+
+        {/* जब आप /admin लिखेंगे, तब स्कैनर वाला पेज खुलेगा */}
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </Router>
