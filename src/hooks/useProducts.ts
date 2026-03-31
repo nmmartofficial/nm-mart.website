@@ -18,12 +18,12 @@ export function useProducts() {
   );
 
   const flat33 = useMemo(() => 
-    allProducts.filter(p => p.discount >= 30 && p.discount < 50),
+    allProducts.filter(p => p.discount >= 30 && p.discount <= 35),
     [allProducts]
   );
 
   const flat50 = useMemo(() => 
-    allProducts.filter(p => p.discount >= 50),
+    allProducts.filter(p => p.discount >= 45 && p.discount <= 55),
     [allProducts]
   );
 

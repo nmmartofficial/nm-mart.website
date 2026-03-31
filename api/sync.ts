@@ -15,7 +15,26 @@ export default async function handler(req: any, res: any) {
 
   // POST Method for Data Sync
   if (req.method === 'POST') {
-    return res.status(200).json({ success: true });
+    try {
+      const data = req.body;
+      const items = Array.isArray(data) ? data : [data];
+      
+      // Map 'Discount' from DiscPer if provided, otherwise use 'Discount'
+      const sanitizedData = items.map((item: any) => ({
+        ...item,
+        discount: item.Discount || item.DiscPer || 0
+      }));
+
+      console.log("Data received from NM Mart:", sanitizedData.length, "items");
+
+      return res.status(200).json({ 
+        success: true,
+        message: "Inventory Synced Successfully!",
+        count: sanitizedData.length
+      });
+    } catch (error) {
+      return res.status(400).json({ success: false, error: "Invalid Data" });
+    }
   }
 
   return res.status(405).json({ error: "Method Not Allowed" });
