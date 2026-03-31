@@ -19,29 +19,35 @@ const Admin = () => {
 
   const ADMIN_PASS = "NMMART2026";
   
-  // अब्दुल भाई, अपनी सबसे लेटेस्ट Apps Script URL यहाँ डालियेगा
+  // अब्दुल भाई, अपनी Apps Script URL यहाँ चेक कर लें
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3GCP9pWl1D_qGfjeyu3cUpozhJBCHDth1F7NPVXWC69cQl5C_tDf_nh3ZNEL83HIfMg/exec";
 
-  // --- 1. SMART FETCH (एक्सेल से डेटा उठाना) ---
-  const fetchProductDetails = async (code: string) => {
+  // --- 1. SMART FETCH (JSONP Fix - No CORS Error) ---
+  const fetchProductDetails = (code: string) => {
     if (!code || code.length < 3) return;
+
+    // JSONP तरीका: यह ब्राउज़र की पाबंदी को पार कर लेगा
+    const callbackName = 'nmmart_' + Math.round(100000 * Math.random());
     
-    try {
-      // URL में रैंडम नंबर (t) जोड़ा है ताकि डेटा पुराना न दिखे (Cache Fix)
-      const res = await fetch(`${SCRIPT_URL}?action=getProduct&barcode=${code.trim()}&t=${new Date().getTime()}`);
-      const data = await res.json();
-      
+    (window as any)[callbackName] = (data: any) => {
       if (data && data.name && data.name !== "Product Not Found") {
         setProductName(data.name);
         setMrp(data.mrp || "");
         setSalePrice(data.salePrice || "");
         if (navigator.vibrate) navigator.vibrate(100);
       } else {
-        console.log("No data found for this barcode in Excel.");
+        console.log("No data found for this barcode.");
       }
-    } catch (e) {
-      console.error("Fetch Error:", e);
-    }
+      // सफाई करें
+      delete (window as any)[callbackName];
+      const scriptTag = document.getElementById(callbackName);
+      if (scriptTag) document.body.removeChild(scriptTag);
+    };
+
+    const script = document.createElement('script');
+    script.id = callbackName;
+    script.src = `${SCRIPT_URL}?action=getProduct&barcode=${code.trim()}&callback=${callbackName}`;
+    document.body.appendChild(script);
   };
 
   // --- 2. SCANNER CONTROLS ---
@@ -72,7 +78,7 @@ const Admin = () => {
           () => {}
         );
       } catch (err) {
-        alert("Camera Error: Settings में इजाज़त दें।");
+        alert("Camera Error: Settings में इजाज़त दें।");
         setIsScanning(false);
       }
     }, 300);
@@ -80,7 +86,7 @@ const Admin = () => {
 
   // --- 3. SAVE / UPDATE TO EXCEL ---
   const handleUpdate = async () => {
-    if (!barcode || !productName) return alert("नाम और बारकोड ज़रूरी है!");
+    if (!barcode || !productName) return alert("नाम और बारकोड ज़रूरी है!");
     setLoading(true);
     try {
       await fetch(SCRIPT_URL, {
@@ -128,12 +134,11 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8 font-sans pb-24">
-      
       <div className="max-w-4xl mx-auto flex justify-between items-center mb-10 mt-4">
         <div>
           <h1 className="text-3xl font-black italic tracking-tighter uppercase">NM <span className="text-[#FF8C00]">MART</span></h1>
           <div className="flex items-center gap-2 text-[9px] text-gray-500 font-bold uppercase tracking-[2px]">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Live Excel Connection (7-Column Mode)
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Live Excel Connection
           </div>
         </div>
         <button onClick={() => setIsAuthenticated(false)} className="p-3 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 active:scale-90 transition-all">
@@ -142,7 +147,6 @@ const Admin = () => {
       </div>
 
       <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
         <div className="space-y-6">
           <div className="bg-[#111] p-6 rounded-[35px] border border-white/5 shadow-xl">
             <h3 className="text-[10px] font-black uppercase tracking-[2px] text-gray-400 mb-6 flex items-center gap-2 text-center">
@@ -155,7 +159,7 @@ const Admin = () => {
                 {!isScanning ? (
                   <button onClick={startScanner} className="w-full h-44 border-2 border-dashed border-white/10 rounded-[30px] flex flex-col items-center justify-center gap-3 bg-black/40 hover:bg-[#FF8C00]/5 transition-all group">
                     <ScanBarcode className="text-gray-600 group-hover:text-[#FF8C00]" size={45} />
-                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Tap to Scan Barcode</span>
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest text-center">Tap to Scan Barcode</span>
                   </button>
                 ) : (
                   <div className="relative overflow-hidden rounded-[30px] border-2 border-[#FF8C00]/40">
@@ -187,7 +191,7 @@ const Admin = () => {
                   value={productName} 
                   onChange={(e) => setProductName(e.target.value)} 
                   placeholder="Item Name (Column A)"
-                  className="w-full bg-black border border-white/5 p-5 rounded-2xl outline-none focus:border-[#FF8C00]/40 text-white" 
+                  className="w-full bg-black border border-white/5 p-5 rounded-2xl outline-none focus:border-[#FF8C00]/40 text-white font-bold" 
                 />
 
                 <div className="grid grid-cols-2 gap-4">
@@ -197,7 +201,6 @@ const Admin = () => {
                       type="number" 
                       value={mrp} 
                       onChange={(e) => setMrp(e.target.value)} 
-                      placeholder="₹"
                       className="w-full bg-black border border-white/5 p-5 rounded-2xl outline-none text-white font-bold" 
                     />
                   </div>
@@ -207,8 +210,7 @@ const Admin = () => {
                       type="number" 
                       value={salePrice} 
                       onChange={(e) => setSalePrice(e.target.value)} 
-                      placeholder="₹"
-                      className="w-full bg-black border border-[#FF8C00]/20 p-5 rounded-2xl text-[#FF8C00] font-black outline-none shadow-inner" 
+                      className="w-full bg-black border border-[#FF8C00]/20 p-5 rounded-2xl text-[#FF8C00] font-black outline-none" 
                     />
                   </div>
                 </div>
@@ -238,16 +240,14 @@ const Admin = () => {
               <h2 className="text-2xl font-black italic tracking-tighter">--</h2>
             </div>
           </div>
-
           <div className="bg-[#111] p-8 rounded-[35px] border border-white/5 min-h-[350px] flex flex-col items-center justify-center text-center">
             <Package className="text-white/5 mb-4 animate-bounce" size={80}/>
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">NM Mart Database</h3>
             <p className="text-[10px] text-gray-600 mt-2 italic max-w-[200px]">
-              Type Barcode or Scan to fetch product details from Excel.
+              Ready to fetch from Excel.
             </p>
           </div>
         </div>
-
       </div>
     </div>
   );
