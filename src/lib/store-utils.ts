@@ -2,7 +2,7 @@
 export interface Product {
   name: string;
   mrp: number;
-  saleRate: number;
+  saleRate: number; // This will map to 'Price' from API
   category: string;
   subCategory: string;
   barcode: string;
@@ -24,40 +24,11 @@ export interface OrderRecord {
 }
 
 // ─── Constants ───
-export const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRp0eoVJhdbJUOEYETTbNJYWeK3U1b_V1NKQORwpPgSZBwY60P8kmxNEblHxjslaBujpChwynkJ9zfg/pub?output=csv";
 export const WA_NUMBER = "917081154604";
 export const UPI_ID = "paytmqr5fwdiq@ptys";
 export const ITEMS_PER_PAGE = 60;
 export const MIN_ORDER = 500;
 export const LOGO_FALLBACK = "https://nmmart.in/logo.jpeg";
-
-// ─── CSV Parser (now includes Image URL from column G) ───
-export function parseCSV(text: string): Product[] {
-  const lines = text.split("\n");
-  if (lines.length < 2) return [];
-  return lines.slice(1).map(line => {
-    const cols: string[] = [];
-    let cur = "", inQ = false;
-    for (const ch of line) {
-      if (ch === '"') { inQ = !inQ; continue; }
-      if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ""; continue; }
-      cur += ch;
-    }
-    cols.push(cur.trim());
-    const name = cols[0] || "";
-    const barcode = cols[1] || "";
-    const category = cols[2] || "General";
-    const subCategory = cols[3] || "";
-    const mrp = parseFloat(cols[4]) || 0;
-    const saleRate = parseFloat(cols[5]) || 0;
-    const imageUrl = cols[6] || "";
-    // Priority to 'Discount' column if available in CSV, otherwise calculate
-    const csvDiscount = parseFloat(cols[7]); // Assuming Discount is column H (index 7)
-    const discount = !isNaN(csvDiscount) ? Math.round(csvDiscount) : (mrp > 0 ? Math.round(((mrp - saleRate) / mrp) * 100) : 0);
-    const save = mrp > 0 ? Math.round(mrp - saleRate) : 0;
-    return { name, barcode, category, subCategory, mrp, saleRate, imageUrl, discount, save };
-  }).filter(p => p.name && p.mrp > 0 && p.saleRate > 0);
-}
 
 // ─── Order History ───
 export function getOrderHistory(): OrderRecord[] {

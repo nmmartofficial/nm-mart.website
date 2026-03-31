@@ -1,15 +1,24 @@
 import { useState, useEffect, useMemo } from "react";
-import { Product, parseCSV, CSV_URL } from "@/lib/store-utils";
+import { Product } from "@/lib/store-utils";
 
 export function useProducts() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(CSV_URL)
-      .then(r => r.text())
-      .then(t => { setAllProducts(parseCSV(t)); setLoading(false); })
-      .catch(() => setLoading(false));
+    // Fetch directly from our Sync API
+    fetch("/api/sync")
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAllProducts(data);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setLoading(false);
+      });
   }, []);
 
   const categories = useMemo(() => 
