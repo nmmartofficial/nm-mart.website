@@ -1,189 +1,98 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Search, Calculator, TrendingUp, Users, Loader2 } from "lucide-react";
-import { useProducts } from "@/hooks/useProducts";
-import { getOrderHistory } from "@/lib/store-utils";
+import { useState } from "react";
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell 
+} from 'recharts';
+import { 
+  LayoutDashboard, ShoppingBag, Users, TrendingUp, 
+  Package, CheckCircle, Clock, ChevronRight, Settings 
+} from "lucide-react";
 
-const ADMIN_PIN = "1234";
+// --- डमी डेटा (इसे बाद में Google Sheet से कनेक्ट करेंगे) ---
+const weeklySales = [
+  { day: 'Mon', total: 4200 },
+  { name: 'Tue', total: 3800 },
+  { name: 'Wed', total: 5600 },
+  { name: 'Thu', total: 4900 },
+  { name: 'Fri', total: 7200 },
+  { name: 'Sat', total: 9100 },
+  { name: 'Sun', total: 8500 },
+];
+
+const hotItems = [
+  { name: 'Dry Fruits', value: 45 },
+  { name: 'Cooking Oil', value: 25 },
+  { name: 'Rice & Pulses', value: 20 },
+  { name: 'Snacks', value: 10 },
+];
+
+const COLORS = ['#FF8C00', '#FFA500', '#FFD700', '#CC7000'];
 
 const Admin = () => {
-  const navigate = useNavigate();
-  const { allProducts, loading } = useProducts();
-  const [authenticated, setAuthenticated] = useState(false);
-  const [pin, setPin] = useState("");
-  const [pinError, setPinError] = useState("");
-  const [searchPhone, setSearchPhone] = useState("");
-  const [profitQuery, setProfitQuery] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-
-  const handleLogin = () => {
-    if (pin === ADMIN_PIN) {
-      setAuthenticated(true);
-      setPinError("");
-    } else {
-      setPinError("Invalid PIN. Try again.");
-    }
-  };
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    window.location.reload();
-  };
-
-  // Profit calculator: search products and show MRP vs Sale Rate
-  const profitResults = useMemo(() => {
-    if (!profitQuery) return [];
-    const q = profitQuery.toLowerCase();
-    return allProducts
-      .filter(p => p.name.toLowerCase().includes(q))
-      .slice(0, 20)
-      .map(p => ({
-        ...p,
-        profit: p.mrp - p.saleRate,
-        margin: p.mrp > 0 ? Math.round(((p.mrp - p.saleRate) / p.mrp) * 100) : 0,
-      }));
-  }, [profitQuery, allProducts]);
-
-  const orders = getOrderHistory();
-  const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
-
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-black text-primary tracking-tight">🔐 Admin Access</h1>
-            <p className="text-muted-foreground text-sm mt-1">NM Mart Owner Dashboard</p>
-          </div>
-          <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
-            <input
-              type="password"
-              placeholder="Enter Admin PIN"
-              value={pin}
-              onChange={e => setPin(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleLogin()}
-              className="w-full bg-secondary rounded-xl py-4 px-4 font-bold text-foreground text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            {pinError && <p className="text-destructive text-xs font-bold text-center">{pinError}</p>}
-            <button onClick={handleLogin}
-              className="w-full gradient-orange text-white py-4 rounded-xl font-black text-sm uppercase">
-              Login
-            </button>
-            <button onClick={() => navigate("/")} className="w-full text-xs text-muted-foreground font-bold hover:underline text-center">
-              ← Back to Store
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const [activeTab, setActiveTab] = useState("overview");
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-50 bg-card border-b border-border shadow-lg">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate("/")} className="p-2 hover:bg-secondary rounded-lg"><ArrowLeft size={20} /></button>
-            <span className="font-black text-primary text-lg">🛡️ Admin Dashboard</span>
+    <div className="min-h-screen bg-black text-white p-4 md:p-8">
+      {/* 1. Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+        <div>
+          <h1 className="text-3xl font-black italic tracking-tighter uppercase">
+            NM <span className="text-[#FF8C00]">ADMIN</span>
+          </h1>
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[4px] mt-1">Store Control Center</p>
+        </div>
+        <div className="flex gap-2 bg-[#111] p-1 rounded-2xl border border-white/5">
+          <button className="px-6 py-2 bg-[#FF8C00] text-black rounded-xl font-black text-[10px] uppercase">Dashboard</button>
+          <button className="px-6 py-2 text-gray-500 font-black text-[10px] uppercase hover:text-white">Settings</button>
+        </div>
+      </div>
+
+      {/* 2. Top Analytics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: "Today's Revenue", value: "₹18,450", icon: TrendingUp, color: "text-green-500" },
+          { label: "Pending Orders", value: "12", icon: Clock, color: "text-yellow-500" },
+          { label: "Total Customers", value: "1,240", icon: Users, color: "text-blue-500" },
+          { label: "Stock Alerts", value: "05 Items", icon: Package, color: "text-red-500" },
+        ].map((item, i) => (
+          <div key={i} className="bg-[#1a1a1a] p-6 rounded-[30px] border border-white/5 hover:border-[#FF8C00]/20 transition-all group">
+            <item.icon size={20} className={`${item.color} mb-3`} />
+            <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest">{item.label}</p>
+            <h2 className="text-2xl font-black mt-1 group-hover:scale-105 transition-transform">{item.value}</h2>
           </div>
-          <button onClick={handleRefresh} disabled={refreshing}
-            className="flex items-center gap-2 gradient-orange text-white px-4 py-2 rounded-xl text-xs font-bold uppercase">
-            {refreshing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-            Refresh Data
-          </button>
-        </div>
-      </header>
+        ))}
+      </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: <TrendingUp size={20} />, label: "Total Products", value: loading ? "..." : allProducts.length.toLocaleString() },
-            { icon: <Users size={20} />, label: "Orders (Local)", value: orders.length },
-            { icon: <Calculator size={20} />, label: "Revenue (Local)", value: `₹${totalRevenue.toLocaleString()}` },
-            { icon: <TrendingUp size={20} />, label: "Avg Order", value: orders.length > 0 ? `₹${Math.round(totalRevenue / orders.length)}` : "—" },
-          ].map((s, i) => (
-            <div key={i} className="bg-card border border-border rounded-xl p-4">
-              <div className="flex items-center gap-2 text-primary mb-2">{s.icon}<span className="text-[10px] font-bold uppercase text-muted-foreground">{s.label}</span></div>
-              <p className="text-2xl font-black text-foreground">{s.value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Profit Calculator */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="font-black text-lg text-foreground flex items-center gap-2 mb-4">
-            <Calculator size={20} className="text-primary" /> Profit Calculator
-          </h2>
-          <div className="relative mb-4">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search product to see profit margin..."
-              value={profitQuery}
-              onChange={e => setProfitQuery(e.target.value)}
-              className="w-full bg-secondary rounded-xl py-3 pl-11 pr-4 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground"
-            />
+      {/* 3. Main Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Sales Chart (Takes 2 columns) */}
+        <div className="lg:col-span-2 bg-[#1a1a1a] p-6 rounded-[40px] border border-white/5">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xs font-black uppercase tracking-[2px] text-gray-400">Weekly Sales Analytics</h3>
+            <span className="text-[10px] bg-white/5 px-3 py-1 rounded-full text-gray-400 font-bold uppercase tracking-widest">LIVE</span>
           </div>
-          {profitResults.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-[10px] uppercase text-muted-foreground border-b border-border">
-                    <th className="pb-2 pr-4">Product</th>
-                    <th className="pb-2 pr-4">MRP</th>
-                    <th className="pb-2 pr-4">Sale Rate</th>
-                    <th className="pb-2 pr-4">Profit</th>
-                    <th className="pb-2">Margin</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {profitResults.map((p, i) => (
-                    <tr key={i} className="border-b border-border/50">
-                      <td className="py-2 pr-4 text-xs font-medium text-foreground">{p.name}</td>
-                      <td className="py-2 pr-4 text-muted-foreground">₹{p.mrp}</td>
-                      <td className="py-2 pr-4 font-bold text-primary">₹{p.saleRate}</td>
-                      <td className="py-2 pr-4 font-bold text-[hsl(var(--success))]">₹{p.profit}</td>
-                      <td className="py-2">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${p.margin >= 30 ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" : "bg-primary/20 text-primary"}`}>
-                          {p.margin}%
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weeklySales}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                <XAxis dataKey="day" stroke="#444" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis stroke="#444" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '15px', color: '#fff' }}
+                  cursor={{ fill: 'rgba(255,140,0,0.05)' }}
+                />
+                <Bar dataKey="total" fill="#FF8C00" radius={[10, 10, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {/* Order History */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="font-black text-lg text-foreground flex items-center gap-2 mb-4">
-            <Users size={20} className="text-primary" /> Recent Orders (Local)
-          </h2>
-          {orders.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No orders yet</p>
-          ) : (
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {orders.slice(0, 20).map((o, i) => (
-                <div key={i} className="bg-secondary rounded-xl p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-xs text-foreground">{o.id}</p>
-                    <p className="text-[10px] text-muted-foreground">{o.date} · {o.items.length} items</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-black text-foreground">₹{o.total}</p>
-                    <span className="text-[9px] font-bold uppercase gradient-orange text-white px-2 py-0.5 rounded">{o.status}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
-  );
-};
-
-export default Admin;
+        {/* Top Products Pie (Takes 1 column) */}
+        <div className="bg-[#1a1a1a] p-6 rounded-[40px] border border-white/5 flex flex-col justify-between">
+          <h3 className="text-xs font-black uppercase tracking-[2px] text-gray-400 mb-4">Hot Categories</h3>
+          <div className="h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={hotItems} innerRadius={60} outerRadius={85} paddingAngle={8} dataKey="value">
+                  {hotItems.map((entry, index) => (
+                    <Cell
