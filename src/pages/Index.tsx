@@ -4,17 +4,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingCart, Search, X, Plus, Minus, Trash2, MessageCircle, Send,
   Mic, MicOff, Clock, Star, MapPin, LayoutGrid, ArrowUp, Package, Gift, RotateCcw,
-  ChevronRight, Banknote, QrCode, Phone, Instagram, Facebook, Youtube, CreditCard
+  ChevronRight, Banknote, QrCode, Phone, Instagram, Facebook, Youtube, CreditCard, ExternalLink
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
-import { Product, productSlug, WA_NUMBER, UPI_ID, ITEMS_PER_PAGE, MIN_ORDER, getOrderHistory, saveOrder, addLoyaltyPoints, getLoyaltyPoints, OrderRecord } from "@/lib/store-utils";
+import { Product, productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, getOrderHistory, saveOrder, addLoyaltyPoints, getLoyaltyPoints, OrderRecord } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/ProductImageDisplay";
 import HeroBanner from "@/components/HeroBanner";
 import DiscountTabs from "@/components/DiscountTabs";
 import WelfareCardBanner from "@/components/WelfareCardBanner";
 import ChatBot from "@/components/ChatBot";
+
+const LOGO_URL = "https://i.postimg.cc/9XJ2GS8L/logo.jpg";
+const ITEMS_PER_PAGE = 40;
 
 /* ─── Countdown Hook ─── */
 function useCountdown() {
@@ -57,10 +60,15 @@ function useVoiceSearch(onResult: (t: string) => void) {
 
 /* ─── Category Icons ─── */
 const CATEGORY_ICONS: Record<string, string> = {
-  "Grocery": "🥦", "Household": "🏠", "Snacks": "🍿", "Beverages": "🥤",
-  "Personal Care": "🧴", "Dairy": "🥛", "Cleaning": "🧹", "Spices": "🌶️",
-  "Dry Fruits": "🥜", "Baby Care": "👶", "Health": "💊", "Stationery": "📝",
+  "Daily Essentials": "🛒", "Snacks": "🍿", "Grocery": "🥦", "Household": "🏠",
+  "Beverages": "🥤", "Personal Care": "🧴", "Dairy": "🥛", "Cleaning": "🧹",
+  "Spices": "🌶️", "Dry Fruits": "🥜", "Baby Care": "👶", "Health": "💊",
+  "Stationery": "📝", "FMCG": "📦",
 };
+
+/* ─── Priority categories (shown first) ─── */
+const PRIORITY_CATS = ["Daily Essentials", "Snacks"];
+const HIDDEN_CATS = ["Bedsheets", "bedsheets"];
 
 export default function Index() {
   const navigate = useNavigate();
@@ -69,17 +77,19 @@ export default function Index() {
 
   const [query, setQuery] = useState("");
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [payMethod, setPayMethod] = useState<"cod" | "upi">("cod");
   const [showOrders, setShowOrders] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const countdown = useCountdown();
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
 
+  // Auth state persistence
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
@@ -88,30 +98,55 @@ export default function Index() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Back to top
   useEffect(() => {
     const handler = () => setShowBackToTop(window.scrollY > 400);
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
+  // Infinite scroll with IntersectionObserver
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [selectedCat, query]);
+
+  // Reset visible count on filter change
+  useEffect(() => { setVisibleCount(ITEMS_PER_PAGE); }, [selectedCat, query]);
+
+  // Filter out Bedsheets, sort priority categories first
+  const sortedCategories = useMemo(() => {
+    const filtered = categories.filter(c => !HIDDEN_CATS.includes(c));
+    const priority = filtered.filter(c => PRIORITY_CATS.includes(c));
+    const rest = filtered.filter(c => !PRIORITY_CATS.includes(c));
+    return [...priority, ...rest];
+  }, [categories]);
+
   const filtered = useMemo(() => {
-    let list = selectedCat ? allProducts.filter(p => p.category === selectedCat) : allProducts;
+    let list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category));
+    if (selectedCat) list = list.filter(p => p.category === selectedCat);
     if (query) {
       const q = query.toLowerCase();
-      list = allProducts.filter(p => p.name.toLowerCase().includes(q) || p.barcode.includes(q));
+      list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category) && (p.name.toLowerCase().includes(q) || p.barcode.includes(q)));
     }
     return list;
   }, [allProducts, selectedCat, query]);
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paged = useMemo(() => filtered.slice(0, page * ITEMS_PER_PAGE), [filtered, page]);
-  const remaining = MIN_ORDER - cartTotal;
+  const visibleProducts = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
-  // Best sellers: top 12 products with highest discount
-  const bestSellers = useMemo(() =>
-    [...allProducts].sort((a, b) => b.discount - a.discount).slice(0, 12),
-    [allProducts]
-  );
+  const remaining = MIN_ORDER - cartTotal;
+  const loyaltyPoints = getLoyaltyPoints();
+  const memberId = user ? `NM-MEM-${(user.id || "").slice(0, 4).toUpperCase()}` : null;
 
   const placeOrder = () => {
     if (cartTotal < MIN_ORDER) return alert(`Min order ₹${MIN_ORDER}!`);
@@ -119,9 +154,11 @@ export default function Index() {
     const orderRecord: OrderRecord = { id: orderId, items: [...cart], total: cartTotal, date: new Date().toLocaleString("en-IN"), status: "Pending" };
     saveOrder(orderRecord);
     addLoyaltyPoints(10);
+
     const msg = cart.map(c => `• ${c.name} (x${c.qty}) = ₹${c.saleRate * c.qty}`).join("\n");
     const payLabel = payMethod === "cod" ? "💸 COD" : "💳 UPI";
-    const text = `🛒 *NM MART ORDER*\nID: ${orderId}\n\n${msg}\n\n💰 *Total: ₹${cartTotal}*\n💳 *${payLabel}*`;
+    const memberLine = memberId ? `👤 Member: ${memberId}` : "";
+    const text = `🛒 *NM MART ORDER*\n🆔 Order ID: ${orderId}\n${memberLine}\n\n${msg}\n\n💰 *Total: ₹${cartTotal}*\n${payLabel}\n📍 Delivery: Manjhanpur Area`;
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`);
     clearCart(); setCheckoutOpen(false); setCartOpen(false);
   };
@@ -131,49 +168,67 @@ export default function Index() {
     setShowOrders(false); setCartOpen(true);
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Flash Sale Timer */}
-      <div className="gradient-orange text-white text-center py-2.5 text-xs font-bold tracking-wide flex items-center justify-center gap-2">
+      <div className="gradient-orange text-white text-center py-2 text-xs font-bold tracking-wide flex items-center justify-center gap-2">
         <Clock size={14} />
         <span>⚡ FLASH SALE ENDS IN</span>
         <span className="bg-black/30 text-white px-2.5 py-0.5 rounded font-mono text-sm">{countdown}</span>
       </div>
 
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md text-foreground shadow-lg border-b border-border">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="gradient-orange p-2 rounded-xl">
-              <ShoppingCart size={22} className="text-white" />
+      {/* Sticky Header with Logo & Search */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md shadow-lg border-b border-border">
+        <div className="max-w-7xl mx-auto flex items-center gap-3 px-3 py-2.5">
+          {/* Logo */}
+          <a href="/" className="flex items-center gap-2 shrink-0">
+            <img src={LOGO_URL} alt="NM Mart" className="w-10 h-10 rounded-xl shadow-md" />
+            <div className="hidden sm:block">
+              <h1 className="text-base font-black tracking-tight leading-none">NM <span className="text-primary">MART</span></h1>
+              <p className="text-[7px] uppercase tracking-[0.15em] text-muted-foreground font-semibold">Shop More Save More</p>
             </div>
-            <div>
-              <h1 className="text-lg font-black tracking-tight leading-none">NM <span className="text-primary">MART</span></h1>
-              <p className="text-[8px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">Shop More Save More</p>
-            </div>
+          </a>
+
+          {/* Search Bar - always visible */}
+          <div className="flex-1 flex items-center bg-secondary rounded-xl border border-border overflow-hidden">
+            <Search size={16} className="ml-3 text-primary shrink-0" />
+            <input
+              type="text"
+              placeholder="7000+ products खोजें..."
+              value={query}
+              onChange={e => { setQuery(e.target.value); setSelectedCat(null); }}
+              className="flex-1 px-2 py-2.5 bg-transparent text-sm font-medium focus:outline-none placeholder:text-muted-foreground text-foreground"
+            />
+            <button onClick={toggleVoice}
+              className={`p-2 mr-1 rounded-lg transition-colors ${listening ? "bg-destructive text-destructive-foreground" : "hover:bg-card text-muted-foreground"}`}>
+              {listening ? <MicOff size={16} /> : <Mic size={16} />}
+            </button>
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1.5 shrink-0">
             {user ? (
-              <div className="flex items-center gap-2 bg-secondary px-3 py-1.5 rounded-full border border-border">
-                <div className="w-5 h-5 gradient-orange rounded-full flex items-center justify-center text-[10px] font-black text-white">
-                  {(user.email || user.phone || "U").charAt(0).toUpperCase()}
-                </div>
-                <span className="text-[10px] font-bold hidden md:block text-foreground">{user.email || user.phone}</span>
-              </div>
+              <button onClick={handleLogout} className="text-[9px] font-bold bg-secondary text-foreground px-3 py-2 rounded-lg border border-border hover:border-primary transition-all uppercase">
+                Logout
+              </button>
             ) : (
               <button onClick={() => navigate("/login")}
-                className="text-[10px] font-bold bg-secondary text-foreground px-4 py-1.5 rounded-full border border-border hover:bg-primary hover:text-white hover:border-primary transition-all uppercase tracking-wider flex items-center gap-1.5">
-                <CreditCard size={12} /> Loyalty Login
+                className="text-[9px] font-bold bg-primary text-primary-foreground px-3 py-2 rounded-lg hover:bg-primary/90 transition-all uppercase flex items-center gap-1">
+                <CreditCard size={12} /> Login
               </button>
             )}
             <button onClick={() => setShowOrders(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors" title="Orders">
-              <Package size={20} />
+              <Package size={18} />
             </button>
             <button onClick={() => setCartOpen(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors">
-              <ShoppingCart size={22} />
+              <ShoppingCart size={20} />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 gradient-orange text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 gradient-orange text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
@@ -185,24 +240,6 @@ export default function Index() {
       {/* Hero Banner */}
       <HeroBanner />
 
-      {/* Mega Search Bar */}
-      <div className="max-w-3xl mx-auto px-4 -mt-6 relative z-10">
-        <div className="bg-card rounded-2xl shadow-2xl shadow-black/40 flex items-center overflow-hidden border border-border">
-          <Search size={20} className="ml-4 text-primary" />
-          <input
-            type="text"
-            placeholder="Search 7000+ products by name or barcode..."
-            value={query}
-            onChange={e => { setQuery(e.target.value); setPage(1); }}
-            className="flex-1 px-3 py-4 bg-transparent text-sm font-medium focus:outline-none placeholder:text-muted-foreground text-foreground"
-          />
-          <button onClick={toggleVoice}
-            className={`p-3 mr-1 rounded-xl transition-colors ${listening ? "bg-destructive text-destructive-foreground" : "hover:bg-secondary text-muted-foreground"}`}>
-            {listening ? <MicOff size={18} /> : <Mic size={18} />}
-          </button>
-        </div>
-      </div>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {loading ? (
@@ -212,22 +249,21 @@ export default function Index() {
           </div>
         ) : (
           <>
-            {/* Home View: No category/search selected */}
+            {/* Home View */}
             {!selectedCat && !query && (
               <>
-                {/* Today's Mega Savings */}
                 <DiscountTabs flat33={flat33} flat50={flat50} onAddToCart={addToCart} />
 
                 {/* Category Grid */}
-                {categories.length > 0 && (
+                {sortedCategories.length > 0 && (
                   <div className="mb-12">
                     <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
                       <LayoutGrid size={18} className="text-primary" /> Browse Categories
                     </h3>
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                      {categories.map(cat => (
+                      {sortedCategories.map(cat => (
                         <motion.button whileTap={{ scale: 0.94 }} key={cat}
-                          onClick={() => { setSelectedCat(cat); setPage(1); }}
+                          onClick={() => { setSelectedCat(cat); setQuery(""); }}
                           className="p-4 rounded-xl bg-card border border-border flex flex-col items-center gap-2 transition-all group hover:border-primary/50 hover:shadow-glow">
                           <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary text-2xl group-hover:bg-primary/20 transition-colors">
                             {CATEGORY_ICONS[cat] || "📦"}
@@ -240,79 +276,73 @@ export default function Index() {
                   </div>
                 )}
 
-                {/* Welfare Card */}
                 <WelfareCardBanner />
               </>
             )}
 
-            {/* Active category/search */}
-            {(selectedCat || query) && (
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="font-black text-lg text-foreground uppercase tracking-tight">
-                  {query ? `Results for "${query}"` : selectedCat}
-                </h2>
-                <button onClick={() => { setSelectedCat(null); setQuery(""); setPage(1); }}
-                  className="text-[10px] font-bold uppercase text-primary border-b-2 border-primary hover:opacity-80">← Back</button>
-              </div>
-            )}
-
+            {/* Product Listing */}
             {(selectedCat || query) && (
               <>
-                <p className="text-xs text-muted-foreground mb-4">{filtered.length} products found</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {paged.map((p, idx) => (
-                    <motion.div key={`${p.barcode}-${p.name}-${idx}`}
-                      initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: Math.min(idx * 0.02, 0.3) }}
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-black text-lg text-foreground uppercase tracking-tight">
+                    {query ? `"${query}" के रिजल्ट` : selectedCat}
+                  </h2>
+                  <button onClick={() => { setSelectedCat(null); setQuery(""); }}
+                    className="text-[10px] font-bold uppercase text-primary border-b-2 border-primary hover:opacity-80">← वापस जाएं</button>
+                </div>
+
+                <p className="text-xs text-muted-foreground mb-4">{filtered.length} products मिले</p>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {visibleProducts.map((p, idx) => (
+                    <motion.div key={`${p.barcode}-${idx}`}
+                      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(idx * 0.01, 0.2) }}
                       className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
                       onClick={() => navigate(`/product/${productSlug(p)}`)}
                     >
-                      <div className="relative h-32 bg-secondary/30">
+                      <div className="relative h-28 bg-secondary/30">
                         <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
-                        {p.discount >= 50 && (
-                          <span className="absolute top-2 left-2 gradient-orange text-white text-[8px] font-black px-2 py-0.5 rounded animate-blink uppercase">
-                            50% OFF
-                          </span>
-                        )}
                         {p.discount > 0 && (
                           <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-[9px] font-bold px-1.5 py-0.5 rounded">
                             -{p.discount}%
                           </span>
                         )}
                       </div>
-                      <div className="p-3 flex flex-col flex-1">
-                        <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-8 overflow-hidden mb-1">{p.name}</h3>
+                      <div className="p-2.5 flex flex-col flex-1">
+                        <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
                         <div className="flex items-baseline gap-2 mt-1">
-                          <span className="text-lg font-black text-primary">₹{p.saleRate}</span>
-                          {p.mrp > p.saleRate && <span className="text-xs text-muted-foreground line-through">₹{p.mrp}</span>}
+                          <span className="text-base font-black text-primary">₹{p.saleRate}</span>
+                          {p.mrp > p.saleRate && <span className="text-[10px] text-muted-foreground line-through">₹{p.mrp}</span>}
                         </div>
-                        {p.save > 0 && <span className="text-[9px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
-                        <div className="flex gap-2 mt-auto pt-3">
+                        {p.save > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
+                        <div className="flex gap-1.5 mt-auto pt-2">
                           <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
-                            className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg text-[9px] font-bold uppercase hover:bg-primary/90 transition-colors">
-                            Add to Cart
+                            className="flex-1 bg-primary text-primary-foreground py-1.5 rounded-lg text-[9px] font-bold uppercase hover:bg-primary/90 transition-colors">
+                            Add
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Order: ${p.name} - ₹${p.saleRate}`)}`); }}
-                            className="p-2 bg-[hsl(var(--success))] rounded-lg text-white hover:opacity-90" title="WhatsApp">
-                            <MessageCircle size={14} />
+                            className="p-1.5 bg-[hsl(var(--success))] rounded-lg text-white hover:opacity-90" title="WhatsApp">
+                            <MessageCircle size={12} />
                           </button>
                         </div>
                       </div>
                     </motion.div>
                   ))}
                 </div>
-                {page * ITEMS_PER_PAGE < filtered.length && (
-                  <div className="text-center mt-8">
-                    <button onClick={() => setPage(p => p + 1)}
-                      className="gradient-orange text-white px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
-                      Load More ({filtered.length - page * ITEMS_PER_PAGE} remaining)
-                    </button>
+
+                {/* Infinite scroll trigger */}
+                {visibleCount < filtered.length && (
+                  <div ref={loadMoreRef} className="py-8 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+                    <p className="text-xs text-muted-foreground mt-2">{filtered.length - visibleCount} और products लोड हो रहे हैं...</p>
                   </div>
                 )}
+
                 {filtered.length === 0 && (
                   <div className="text-center py-20 text-muted-foreground">
                     <Package size={48} className="mx-auto mb-4 opacity-30" />
-                    <p className="font-bold">No products found</p>
+                    <p className="font-bold">कोई प्रोडक्ट नहीं मिला</p>
                   </div>
                 )}
               </>
@@ -321,19 +351,17 @@ export default function Index() {
         )}
       </main>
 
-      {/* Professional Footer */}
-      <footer className="bg-black border-t border-border mt-16">
+      {/* Footer */}
+      <footer className="bg-card border-t border-border mt-16">
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="gradient-orange p-1.5 rounded-lg">
-                  <ShoppingCart size={16} className="text-white" />
-                </div>
+                <img src={LOGO_URL} alt="NM Mart" className="w-9 h-9 rounded-lg" />
                 <span className="font-black text-lg tracking-tight">NM <span className="text-primary">MART</span></span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Manjhanpur's trusted retail store with 7000+ products at wholesale prices. Quality guaranteed.
+                मंझनपुर का सबसे भरोसेमंद रिटेल स्टोर। 7000+ प्रोडक्ट्स होलसेल रेट पर। क्वालिटी गारंटीड।
               </p>
             </div>
             <div>
@@ -342,33 +370,36 @@ export default function Index() {
                 <a href="/about" className="hover:text-primary transition-colors">About Us</a>
                 <a href="/contact" className="hover:text-primary transition-colors">Contact Us</a>
                 <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
-                <a href="/admin" className="hover:text-primary transition-colors text-muted-foreground/30">Admin</a>
+                <a href="/admin" className="hover:text-primary transition-colors text-muted-foreground/30 text-xs">Admin</a>
               </div>
             </div>
             <div>
               <h4 className="font-bold text-sm text-foreground uppercase mb-3 tracking-wider">Contact</h4>
               <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                <p className="flex items-center gap-2"><MapPin size={14} className="text-primary" /> Manjhanpur, Kaushambi, UP</p>
+                <p className="flex items-center gap-2"><MapPin size={14} className="text-primary" /> Near B.P. Public School, Manjhanpur, Kaushambi, UP - 212207</p>
                 <a href="tel:+917081154604" className="flex items-center gap-2 hover:text-primary transition-colors"><Phone size={14} className="text-primary" /> +91 708 115 4604</a>
                 <p className="text-xs">⏰ 8 AM – 10 PM Daily</p>
               </div>
             </div>
             <div>
-              <h4 className="font-bold text-sm text-foreground uppercase mb-3 tracking-wider">Follow Us</h4>
-              <div className="flex gap-3">
+              <h4 className="font-bold text-sm text-foreground uppercase mb-3 tracking-wider">Follow & Rate Us</h4>
+              <div className="flex gap-3 mb-4">
                 <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-[hsl(var(--success))] hover:bg-[hsl(var(--success))] hover:text-white transition-all"><MessageCircle size={18} /></a>
                 <a href="#" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-all"><Instagram size={18} /></a>
                 <a href="#" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all"><Facebook size={18} /></a>
-                <a href="#" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all"><Youtube size={18} /></a>
               </div>
-              <a href={`https://maps.google.com/?q=Manjhanpur+Kaushambi+UP`} target="_blank" rel="noopener noreferrer"
-                className="mt-4 flex items-center gap-2 bg-secondary px-3 py-2 rounded-lg text-xs font-bold text-muted-foreground hover:text-primary transition-colors">
-                <MapPin size={14} /> View on Google Maps
+              <a href="https://maps.google.com/?q=Manjhanpur+Kaushambi+UP" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-secondary px-3 py-2 rounded-lg text-xs font-bold text-muted-foreground hover:text-primary transition-colors mb-2">
+                <MapPin size={14} /> Google Maps पर देखें
+              </a>
+              <a href="https://g.page/r/YOUR_PLACE_ID/review" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-2 rounded-lg text-xs font-bold text-primary hover:bg-primary hover:text-primary-foreground transition-all">
+                <Star size={14} /> Rate Our Store ⭐
               </a>
             </div>
           </div>
           <div className="border-t border-border mt-8 pt-4 text-center text-[10px] text-muted-foreground/50 uppercase tracking-widest">
-            © 2025 NM MART — Retail OS v7.0 | Manjhanpur, UP
+            © {new Date().getFullYear()} NM MART — Retail OS v7.0 | Manjhanpur, UP
           </div>
         </div>
       </footer>
@@ -379,7 +410,6 @@ export default function Index() {
         <MessageCircle size={24} />
       </a>
 
-      {/* AI Chatbot */}
       <ChatBot />
 
       {/* Back to Top */}
@@ -409,7 +439,7 @@ export default function Index() {
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {cart.length === 0 ? (
                   <div className="text-center py-16 text-muted-foreground">
-                    <ShoppingCart size={40} className="mx-auto mb-3 opacity-30" /><p className="font-bold">Cart is empty</p>
+                    <ShoppingCart size={40} className="mx-auto mb-3 opacity-30" /><p className="font-bold">Cart खाली है</p>
                   </div>
                 ) : cart.map((c, i) => (
                   <div key={i} className="flex items-center gap-3 bg-secondary rounded-xl p-3">
@@ -434,13 +464,13 @@ export default function Index() {
                   <div className="flex justify-between font-black text-lg"><span>Total</span><span className="text-primary">₹{cartTotal}</span></div>
                   {remaining > 0 && (
                     <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 text-xs text-center font-bold text-primary">
-                      Add ₹{remaining} more (Min. ₹{MIN_ORDER})
+                      ₹{remaining} और जोड़ें (Min. ₹{MIN_ORDER})
                     </div>
                   )}
                   <button disabled={cartTotal < MIN_ORDER}
                     onClick={() => { setCheckoutOpen(true); setCartOpen(false); }}
                     className="w-full gradient-orange text-white py-3 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed">
-                    Proceed to Checkout
+                    Checkout करें
                   </button>
                 </div>
               )}
@@ -462,6 +492,12 @@ export default function Index() {
                   <h2 className="text-xl font-black text-foreground">💳 Checkout</h2>
                   <button onClick={() => setCheckoutOpen(false)} className="p-2 hover:bg-secondary rounded-lg"><X size={18} /></button>
                 </div>
+                {memberId && (
+                  <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 mb-4 text-center">
+                    <p className="text-[9px] text-muted-foreground uppercase font-bold">Member ID</p>
+                    <p className="text-primary font-black">{memberId}</p>
+                  </div>
+                )}
                 <div className="bg-secondary rounded-xl p-4 mb-6 text-sm space-y-2">
                   {cart.map((c, i) => (
                     <div key={i} className="flex justify-between">
@@ -496,7 +532,7 @@ export default function Index() {
                 )}
                 <button onClick={placeOrder}
                   className="w-full gradient-orange text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2">
-                  <Send size={18} /> Confirm Order {payMethod === "cod" ? "(COD)" : "(UPI)"}
+                  <Send size={18} /> WhatsApp पर Order भेजें
                 </button>
               </div>
             </motion.div>
@@ -518,7 +554,7 @@ export default function Index() {
                   <button onClick={() => setShowOrders(false)} className="p-2 hover:bg-secondary rounded-lg"><X size={18} /></button>
                 </div>
                 {getOrderHistory().length === 0 ? (
-                  <p className="text-center py-10 text-muted-foreground">No orders yet</p>
+                  <p className="text-center py-10 text-muted-foreground">अभी तक कोई ऑर्डर नहीं</p>
                 ) : getOrderHistory().map((o, i) => (
                   <div key={i} className="bg-secondary rounded-xl p-4 mb-3 space-y-2">
                     <div className="flex justify-between text-xs">
@@ -528,7 +564,7 @@ export default function Index() {
                     <p className="text-[10px] text-muted-foreground">{o.date}</p>
                     <p className="font-black text-primary">₹{o.total}</p>
                     <button onClick={() => reorder(o)} className="flex items-center gap-1 text-primary text-xs font-bold hover:underline">
-                      <RotateCcw size={12} /> Buy Again
+                      <RotateCcw size={12} /> फिर से ऑर्डर करें
                     </button>
                   </div>
                 ))}
