@@ -1,98 +1,122 @@
 import { useState } from "react";
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell 
-} from 'recharts';
-import { 
   LayoutDashboard, ShoppingBag, Users, TrendingUp, 
-  Package, CheckCircle, Clock, ChevronRight, Settings 
+  Package, Clock, ChevronRight, ArrowUpRight 
 } from "lucide-react";
 
-// --- डमी डेटा (इसे बाद में Google Sheet से कनेक्ट करेंगे) ---
-const weeklySales = [
-  { day: 'Mon', total: 4200 },
-  { name: 'Tue', total: 3800 },
-  { name: 'Wed', total: 5600 },
-  { name: 'Thu', total: 4900 },
-  { name: 'Fri', total: 7200 },
-  { name: 'Sat', total: 9100 },
-  { name: 'Sun', total: 8500 },
-];
-
-const hotItems = [
-  { name: 'Dry Fruits', value: 45 },
-  { name: 'Cooking Oil', value: 25 },
-  { name: 'Rice & Pulses', value: 20 },
-  { name: 'Snacks', value: 10 },
-];
-
-const COLORS = ['#FF8C00', '#FFA500', '#FFD700', '#CC7000'];
-
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+  // डमी डेटा - चार्ट के लिए (बिना लाइब्रेरी वाला जुगाड़)
+  const salesHistory = [
+    { day: 'M', height: '40%' },
+    { day: 'T', height: '30%' },
+    { day: 'W', height: '60%' },
+    { day: 'T', height: '45%' },
+    { day: 'F', height: '80%' },
+    { day: 'S', height: '95%' },
+    { day: 'S', height: '85%' },
+  ];
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8">
-      {/* 1. Header Section */}
+    <div className="min-h-screen bg-black text-white p-4 md:p-8 font-sans">
+      
+      {/* 1. Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
         <div>
           <h1 className="text-3xl font-black italic tracking-tighter uppercase">
             NM <span className="text-[#FF8C00]">ADMIN</span>
           </h1>
-          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[4px] mt-1">Store Control Center</p>
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[4px]">Dukan Control Panel</p>
         </div>
         <div className="flex gap-2 bg-[#111] p-1 rounded-2xl border border-white/5">
           <button className="px-6 py-2 bg-[#FF8C00] text-black rounded-xl font-black text-[10px] uppercase">Dashboard</button>
-          <button className="px-6 py-2 text-gray-500 font-black text-[10px] uppercase hover:text-white">Settings</button>
+          <button className="px-6 py-2 text-gray-500 font-black text-[10px] uppercase">Settings</button>
         </div>
       </div>
 
-      {/* 2. Top Analytics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* 2. Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
-          { label: "Today's Revenue", value: "₹18,450", icon: TrendingUp, color: "text-green-500" },
-          { label: "Pending Orders", value: "12", icon: Clock, color: "text-yellow-500" },
-          { label: "Total Customers", value: "1,240", icon: Users, color: "text-blue-500" },
-          { label: "Stock Alerts", value: "05 Items", icon: Package, color: "text-red-500" },
+          { label: "Today's Sale", value: "₹18,450", color: "text-orange-500" },
+          { label: "New Orders", value: "12", color: "text-white" },
+          { label: "Total Members", value: "1,240", color: "text-white" },
+          { label: "Low Stock", value: "05", color: "text-red-500" },
         ].map((item, i) => (
-          <div key={i} className="bg-[#1a1a1a] p-6 rounded-[30px] border border-white/5 hover:border-[#FF8C00]/20 transition-all group">
-            <item.icon size={20} className={`${item.color} mb-3`} />
-            <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest">{item.label}</p>
-            <h2 className="text-2xl font-black mt-1 group-hover:scale-105 transition-transform">{item.value}</h2>
+          <div key={i} className="bg-[#111] p-5 rounded-[25px] border border-white/5">
+            <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-1">{item.label}</p>
+            <h2 className={`text-xl font-black ${item.color}`}>{item.value}</h2>
           </div>
         ))}
       </div>
 
-      {/* 3. Main Analytics Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Sales Chart (Takes 2 columns) */}
-        <div className="lg:col-span-2 bg-[#1a1a1a] p-6 rounded-[40px] border border-white/5">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xs font-black uppercase tracking-[2px] text-gray-400">Weekly Sales Analytics</h3>
-            <span className="text-[10px] bg-white/5 px-3 py-1 rounded-full text-gray-400 font-bold uppercase tracking-widest">LIVE</span>
-          </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklySales}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                <XAxis dataKey="day" stroke="#444" fontSize={10} tickLine={false} axisLine={false} />
-                <YAxis stroke="#444" fontSize={10} tickLine={false} axisLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '15px', color: '#fff' }}
-                  cursor={{ fill: 'rgba(255,140,0,0.05)' }}
-                />
-                <Bar dataKey="total" fill="#FF8C00" radius={[10, 10, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* 3. Custom Sales Chart (No Library Needed) */}
+        <div className="lg:col-span-2 bg-[#111] p-6 rounded-[35px] border border-white/5">
+          <h3 className="text-[10px] font-black uppercase tracking-[2px] text-gray-400 mb-8">Weekly Sales Analytics</h3>
+          <div className="flex items-end justify-between h-48 gap-2 px-2">
+            {salesHistory.map((item, i) => (
+              <div key={i} className="flex flex-col items-center flex-1 group">
+                <div 
+                  style={{ height: item.height }} 
+                  className="w-full max-w-[30px] bg-[#FF8C00]/20 group-hover:bg-[#FF8C00] rounded-t-lg transition-all duration-500 relative"
+                >
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 text-[9px] font-bold bg-white text-black px-2 py-1 rounded">
+                    {item.height}
+                  </div>
+                </div>
+                <span className="text-[10px] text-gray-600 font-bold mt-4">{item.day}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Top Products Pie (Takes 1 column) */}
-        <div className="bg-[#1a1a1a] p-6 rounded-[40px] border border-white/5 flex flex-col justify-between">
-          <h3 className="text-xs font-black uppercase tracking-[2px] text-gray-400 mb-4">Hot Categories</h3>
-          <div className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={hotItems} innerRadius={60} outerRadius={85} paddingAngle={8} dataKey="value">
-                  {hotItems.map((entry, index) => (
-                    <Cell
+        {/* 4. Top Products List */}
+        <div className="bg-[#111] p-6 rounded-[35px] border border-white/5">
+          <h3 className="text-[10px] font-black uppercase tracking-[2px] text-gray-400 mb-6">Top Selling</h3>
+          <div className="space-y-4">
+            {['Dry Fruits', 'Refined Oil', 'Basmati Rice'].map((prod, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-black rounded-2xl border border-white/5">
+                <span className="text-xs font-bold">{prod}</span>
+                <ArrowUpRight size={14} className="text-[#FF8C00]" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 5. Order Management Table */}
+        <div className="lg:col-span-3 bg-[#111] rounded-[35px] border border-white/5 overflow-hidden">
+          <div className="p-6 border-b border-white/5">
+            <h3 className="text-[10px] font-black uppercase tracking-[2px] text-gray-400">Recent Customer Orders</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-black text-gray-600 text-[9px] font-black uppercase tracking-widest">
+                <tr>
+                  <th className="px-6 py-4">Order ID</th>
+                  <th className="px-6 py-4">Member</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4 text-right">Bill</th>
+                </tr>
+              </thead>
+              <tbody className="text-xs font-medium">
+                {[1, 2, 3].map((order) => (
+                  <tr key={order} className="border-t border-white/5">
+                    <td className="px-6 py-5 font-black italic text-[#FF8C00]">#NMM-{100 + order}</td>
+                    <td className="px-6 py-5">Customer {order}</td>
+                    <td className="px-6 py-5">
+                      <span className="bg-orange-500/10 text-orange-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter">Pending</span>
+                    </td>
+                    <td className="px-6 py-5 text-right font-black">₹{850 * order}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
