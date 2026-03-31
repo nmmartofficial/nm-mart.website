@@ -19,10 +19,11 @@ export default async function handler(req: any, res: any) {
       const data = req.body;
       const items = Array.isArray(data) ? data : [data];
       
-      // Map 'Discount' from DiscPer if provided, otherwise use 'Discount'
+      // Map fields from backend
       const sanitizedData = items.map((item: any) => ({
         ...item,
-        discount: item.Discount || item.DiscPer || 0
+        discount: item.Discount !== undefined ? item.Discount : (item.DiscPer || 0),
+        saleRate: item.Price !== undefined ? item.Price : (item.SaleRate || 0)
       }));
 
       console.log("Data received from NM Mart:", sanitizedData.length, "items");
