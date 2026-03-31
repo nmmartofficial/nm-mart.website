@@ -51,7 +51,9 @@ export function parseCSV(text: string): Product[] {
     const mrp = parseFloat(cols[4]) || 0;
     const saleRate = parseFloat(cols[5]) || 0;
     const imageUrl = cols[6] || "";
-    const discount = mrp > 0 ? Math.round(((mrp - saleRate) / mrp) * 100) : 0;
+    // Priority to 'Discount' column if available in CSV, otherwise calculate
+    const csvDiscount = parseFloat(cols[7]); // Assuming Discount is column H (index 7)
+    const discount = !isNaN(csvDiscount) ? Math.round(csvDiscount) : (mrp > 0 ? Math.round(((mrp - saleRate) / mrp) * 100) : 0);
     const save = mrp > 0 ? Math.round(mrp - saleRate) : 0;
     return { name, barcode, category, subCategory, mrp, saleRate, imageUrl, discount, save };
   }).filter(p => p.name && p.mrp > 0 && p.saleRate > 0);
