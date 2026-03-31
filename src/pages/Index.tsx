@@ -314,6 +314,11 @@ export default function Index() {
                         <div className="flex items-baseline gap-2 mt-1">
                           <span className="text-base font-black text-primary">₹{p.saleRate}</span>
                           {p.mrp > p.saleRate && <span className="text-[10px] text-muted-foreground line-through">₹{p.mrp}</span>}
+                          {p.discount > 0 && (
+                            <span className="text-[10px] font-bold text-destructive ml-auto">
+                              {p.discount}% OFF
+                            </span>
+                          )}
                         </div>
                         {p.save > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
                         <div className="flex gap-1.5 mt-auto pt-2">

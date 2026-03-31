@@ -19,6 +19,7 @@ const Admin = () => {
   const [productName, setProductName] = useState("");
   const [mrp, setMrp] = useState("");
   const [salePrice, setSalePrice] = useState("");
+  const [discount, setDiscount] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingProduct, setFetchingProduct] = useState(false);
@@ -60,6 +61,7 @@ const Admin = () => {
         setProductName(data.name);
         setMrp(data.mrp || "");
         setSalePrice(data.salePrice || "");
+        setDiscount(data.discount || "");
         if (navigator.vibrate) navigator.vibrate(100);
         toast.success(`Found: ${data.name}`);
       } else {
@@ -149,11 +151,12 @@ const Admin = () => {
           barcode, 
           name: productName, 
           mrp, 
-          salePrice 
+          salePrice,
+          discount 
         }),
       });
       toast.success("Inventory Sync Successful!");
-      setBarcode(""); setProductName(""); setMrp(""); setSalePrice("");
+      setBarcode(""); setProductName(""); setMrp(""); setSalePrice(""); setDiscount("");
     } catch (err) { toast.error("Cloud Sync Failed!"); }
     setLoading(false);
   };
@@ -361,6 +364,17 @@ const Admin = () => {
                           className="w-full bg-black border border-[#FF8C00]/20 p-6 rounded-2xl text-[#FF8C00] font-black outline-none focus:ring-4 ring-[#FF8C00]/5 transition-all" 
                         />
                       </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[9px] text-gray-500 font-black uppercase px-4 tracking-widest">Discount % (DiscPer)</label>
+                      <input 
+                        type="number" 
+                        value={discount} 
+                        onChange={(e) => setDiscount(e.target.value)} 
+                        placeholder="e.g. 50"
+                        className="w-full bg-black border border-white/5 p-6 rounded-2xl outline-none focus:border-[#FF8C00]/40 text-white font-bold transition-all" 
+                      />
                     </div>
 
                     <button 
