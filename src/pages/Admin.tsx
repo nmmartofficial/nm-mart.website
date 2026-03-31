@@ -19,15 +19,15 @@ const Admin = () => {
 
   const ADMIN_PASS = "NMMART2026";
   
-  // अब्दुल भाई, अपनी Apps Script URL यहाँ चेक कर लें
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3GCP9pWl1D_qGfjeyu3cUpozhJBCHDth1F7NPVXWC69cQl5C_tDf_nh3ZNEL83HIfMg/exec";
+  // अब्दुल भाई, आपकी नई वाली URL यहाँ सेट कर दी है
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqz2SMeKUmcyM8A6zXhSuRY6wloFk23SXTaYugHji4a_fl3iCeSeXh1_iAbcdT1IVotQ/exec";
 
-  // --- 1. SMART FETCH (JSONP Fix - No CORS Error) ---
+  // --- 1. SMART FETCH (Inventory Sheet Fix) ---
   const fetchProductDetails = (code: string) => {
     if (!code || code.length < 3) return;
 
-    // JSONP तरीका: यह ब्राउज़र की पाबंदी को पार कर लेगा
-    const callbackName = 'nmmart_' + Math.round(100000 * Math.random());
+    // JSONP तरीका: यह ब्राउज़र की सिक्योरिटी (CORS) को बाईपास कर देगा
+    const callbackName = 'nmmart_callback_' + Math.round(100000 * Math.random());
     
     (window as any)[callbackName] = (data: any) => {
       if (data && data.name && data.name !== "Product Not Found") {
@@ -36,7 +36,7 @@ const Admin = () => {
         setSalePrice(data.salePrice || "");
         if (navigator.vibrate) navigator.vibrate(100);
       } else {
-        console.log("No data found for this barcode.");
+        console.log("Excel में यह बारकोड नहीं मिला।");
       }
       // सफाई करें
       delete (window as any)[callbackName];
@@ -78,7 +78,7 @@ const Admin = () => {
           () => {}
         );
       } catch (err) {
-        alert("Camera Error: Settings में इजाज़त दें।");
+        alert("Camera Error: Settings में Camera Allow करें।");
         setIsScanning(false);
       }
     }, 300);
@@ -86,7 +86,7 @@ const Admin = () => {
 
   // --- 3. SAVE / UPDATE TO EXCEL ---
   const handleUpdate = async () => {
-    if (!barcode || !productName) return alert("नाम और बारकोड ज़रूरी है!");
+    if (!barcode || !productName) return alert("नाम और बारकोड ज़रूरी है!");
     setLoading(true);
     try {
       await fetch(SCRIPT_URL, {
@@ -100,7 +100,7 @@ const Admin = () => {
           salePrice 
         }),
       });
-      alert("NM Mart: Excel Updated!");
+      alert("NM Mart: Excel Updated Successfully!");
       setBarcode(""); setProductName(""); setMrp(""); setSalePrice("");
     } catch (err) { 
       alert("Network Error!"); 
@@ -110,7 +110,7 @@ const Admin = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6 text-white font-sans">
+      <div className="min-h-screen bg-black flex items-center justify-center p-6 text-white">
         <div className="w-full max-w-md bg-[#111] p-10 rounded-[40px] border border-white/5 text-center shadow-2xl">
           <Lock className="text-[#FF8C00] mx-auto mb-6" size={32} />
           <h2 className="text-2xl font-black italic mb-8 text-[#FF8C00] tracking-tighter uppercase">NM CONTROL</h2>
@@ -118,7 +118,7 @@ const Admin = () => {
             type="password" 
             value={password} 
             onChange={(e) => setPassword(e.target.value)} 
-            placeholder="PIN"
+            placeholder="Admin PIN"
             className="w-full bg-black border border-white/10 p-5 rounded-2xl text-center outline-none focus:border-[#FF8C00] mb-4 text-white" 
           />
           <button 
@@ -134,11 +134,12 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8 font-sans pb-24">
+      
       <div className="max-w-4xl mx-auto flex justify-between items-center mb-10 mt-4">
         <div>
           <h1 className="text-3xl font-black italic tracking-tighter uppercase">NM <span className="text-[#FF8C00]">MART</span></h1>
           <div className="flex items-center gap-2 text-[9px] text-gray-500 font-bold uppercase tracking-[2px]">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Live Excel Connection
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Live Excel (Inventory Tab)
           </div>
         </div>
         <button onClick={() => setIsAuthenticated(false)} className="p-3 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 active:scale-90 transition-all">
@@ -147,6 +148,7 @@ const Admin = () => {
       </div>
 
       <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
         <div className="space-y-6">
           <div className="bg-[#111] p-6 rounded-[35px] border border-white/5 shadow-xl">
             <h3 className="text-[10px] font-black uppercase tracking-[2px] text-gray-400 mb-6 flex items-center gap-2 text-center">
@@ -218,9 +220,9 @@ const Admin = () => {
                 <button 
                   onClick={handleUpdate} 
                   disabled={loading} 
-                  className="w-full bg-[#FF8C00] text-black font-black py-6 rounded-[25px] uppercase text-xs tracking-widest active:scale-95 transition-all"
+                  className="w-full bg-[#FF8C00] text-black font-black py-6 rounded-[25px] uppercase text-xs tracking-widest active:scale-95 transition-all mt-2 shadow-xl shadow-[#FF8C00]/10"
                 >
-                  {loading ? "SAVING..." : "Update Inventory"}
+                  {loading ? "SAVING TO EXCEL..." : "Update Inventory"}
                 </button>
               </div>
             </div>
@@ -232,22 +234,24 @@ const Admin = () => {
             <div className="bg-[#111] p-6 rounded-[30px] border border-white/5">
               <TrendingUp className="text-green-500 mb-2" size={20}/>
               <p className="text-[9px] text-gray-500 font-black uppercase mb-1 tracking-widest">Revenue</p>
-              <h2 className="text-2xl font-black italic tracking-tighter">₹ LIVE</h2>
+              <h2 className="text-2xl font-black italic tracking-tighter text-white">₹ LIVE</h2>
             </div>
             <div className="bg-[#111] p-6 rounded-[30px] border border-white/5">
               <AlertCircle className="text-red-500 mb-2" size={20}/>
               <p className="text-[9px] text-gray-500 font-black uppercase mb-1 tracking-widest">Low Stock</p>
-              <h2 className="text-2xl font-black italic tracking-tighter">--</h2>
+              <h2 className="text-2xl font-black italic tracking-tighter text-white">--</h2>
             </div>
           </div>
+
           <div className="bg-[#111] p-8 rounded-[35px] border border-white/5 min-h-[350px] flex flex-col items-center justify-center text-center">
             <Package className="text-white/5 mb-4 animate-bounce" size={80}/>
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">NM Mart Database</h3>
             <p className="text-[10px] text-gray-600 mt-2 italic max-w-[200px]">
-              Ready to fetch from Excel.
+              Type Barcode or Scan to fetch data from your Inventory sheet.
             </p>
           </div>
         </div>
+
       </div>
     </div>
   );
