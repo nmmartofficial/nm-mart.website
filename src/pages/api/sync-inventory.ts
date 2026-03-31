@@ -2,29 +2,37 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: any, res: any) {
-  // Sirf POST request allow karein
+  // 1. CORS Headers (Security check bypass karne ke liye)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // 2. Testing ke liye (Agar Browser mein kholein toh ye dikhe)
+  if (req.method === 'GET') {
+    return res.status(200).json({ 
+      status: "Online", 
+      message: "NM Mart API is Live!",
+      path: "src/pages/api/sync-inventory.ts" 
+    });
+  }
+
+  // 3. Main Data Sync (POST)
   if (req.method === 'POST') {
     try {
       const data = req.body;
-      
-      // Console mein check karne ke liye (Vercel Logs mein dikhega)
-      console.log("Data received from NM Mart:", Array.isArray(data) ? data.length : "object", "items");
+      console.log("Data Received from Desktop:", Array.isArray(data) ? data.length : "Object");
 
-      // Bina kisi security (401) ke data accept karna
       return res.status(200).json({
         success: true,
-        message: "NM Mart Inventory Synced Successfully!",
+        message: "Inventory Synced Successfully!",
         count: Array.isArray(data) ? data.length : 0
       });
-
     } catch (error) {
-      return res.status(400).json({ success: false, error: "Invalid Data received" });
+      return res.status(400).json({ success: false, error: "Data Error" });
     }
-  } 
-  
-  // Agar Browser (GET) se khola jaye toh 405 dikhayega
-  else {
-    res.setHeader('Allow', ['POST']);
-    return res.status(405).json({ message: `Method ${req.method} Not Allowed. Use POST.` });
   }
 }
