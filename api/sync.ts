@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Environment variables are sometimes prefixed with VITE_ in this project, 
-// but on Vercel backend they might be without it. Let's check both.
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
+// Fallback values provided by user for immediate setup
+const FALLBACK_URL = "https://ydqjrtgrzetyxhcuqvoy.supabase.co";
+const FALLBACK_KEY = "sb_publishable_NOZCBGcyAm5SVWREtn9_Vw_LhynM0Py";
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || FALLBACK_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || FALLBACK_KEY;
 
 // Chunk size for batch processing to avoid memory/timeout issues
-// Reduced to 100 for better reliability
 const CHUNK_SIZE = 100;
 
 export default async function handler(req: any, res: any) {
@@ -62,7 +63,6 @@ export default async function handler(req: any, res: any) {
         subCategory: String(item.SubCategory || item.subCategory || ""),
         mrp: Number(item.MRP || item.Mrp || item.mrp || 0),
         saleRate: Number(item.Price || item.saleRate || 0),
-        // Map 'Discount' or 'discountPerc' or 'discount' to 'discount'
         discount: Number(item.Discount !== undefined ? item.Discount : (item.discountPerc || item.discount || 0)),
         imageUrl: String(item.ImageUrl || item.imageUrl || "")
       }));
@@ -80,7 +80,6 @@ export default async function handler(req: any, res: any) {
 
         if (error) {
           console.error(`Batch starting at index ${i} failed:`, error.message);
-          // Return the specific Supabase error to help debug
           return res.status(500).json({ 
             success: false, 
             error: `Database Error in batch ${i / CHUNK_SIZE + 1}: ${error.message}`,
