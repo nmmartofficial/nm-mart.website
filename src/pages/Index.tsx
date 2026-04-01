@@ -254,7 +254,7 @@ export default function Index() {
               <>
                 <DiscountTabs flat33={flat33} flat50={flat50} onAddToCart={addToCart} />
 
-                {/* Category Grid */}
+                {/* Products Grouped by Category */}
                 {sortedCategories.length > 0 && (
                   <div className="mb-12">
                     <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
@@ -275,6 +275,55 @@ export default function Index() {
                     </div>
                   </div>
                 )}
+
+                {/* Category-wise Product Sections */}
+                {sortedCategories.slice(0, 4).map(cat => {
+                  const catProducts = allProducts.filter(p => p.category === cat && !HIDDEN_CATS.includes(p.category)).slice(0, 6);
+                  if (catProducts.length === 0) return null;
+                  return (
+                    <div key={cat} className="mb-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-black text-foreground text-base uppercase tracking-tight flex items-center gap-2">
+                          <span className="text-lg">{CATEGORY_ICONS[cat] || "📦"}</span> {cat}
+                        </h3>
+                        <button onClick={() => { setSelectedCat(cat); setQuery(""); }}
+                          className="text-[10px] font-bold uppercase text-primary flex items-center gap-1 hover:underline">
+                          View All <ChevronRight size={12} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                        {catProducts.map((p, idx) => (
+                          <motion.div key={`${p.barcode}-${idx}`}
+                            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                            className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
+                            onClick={() => navigate(`/product/${productSlug(p)}`)}
+                          >
+                            <div className="relative h-24 bg-secondary/30">
+                              <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
+                              {p.discount > 0 && (
+                                <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-[8px] font-bold px-1 py-0.5 rounded">-{p.discount}%</span>
+                              )}
+                            </div>
+                            <div className="p-2 flex flex-col flex-1">
+                              <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-6 overflow-hidden mb-1">{p.name}</h3>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-base font-black text-primary">₹{p.saleRate}</span>
+                                {p.mrp > p.saleRate && <span className="text-[8px] text-muted-foreground line-through">₹{p.mrp}</span>}
+                              </div>
+                              {(p.saleRate === 0) && (
+                                <span className="text-[8px] font-bold text-amber-500 mt-1">🕐 Pre-order for Tomorrow Delivery</span>
+                              )}
+                              <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
+                                className="mt-auto bg-primary text-primary-foreground py-1 rounded-lg text-[8px] font-bold uppercase hover:bg-primary/90 transition-colors">
+                                Add to Cart
+                              </button>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
 
                 <WelfareCardBanner />
               </>
@@ -412,7 +461,7 @@ export default function Index() {
       </footer>
 
       {/* WhatsApp FAB */}
-      <a href={`https://wa.me/${WA_NUMBER}?text=Hi NM Mart!`} target="_blank" rel="noopener noreferrer"
+      <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hi NM Mart, I need manual support with my order/account.')}`} target="_blank" rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-40 bg-[hsl(var(--success))] text-white p-4 rounded-full shadow-xl hover:scale-110 transition-transform">
         <MessageCircle size={24} />
       </a>

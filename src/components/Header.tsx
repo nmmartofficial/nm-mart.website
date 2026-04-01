@@ -16,12 +16,10 @@ const Header = () => {
 
       {/* Main Header - Deep Black to Slate Gradient */}
       <div className="bg-gradient-to-r from-black via-[#050505] to-black backdrop-blur-xl p-4 flex justify-between items-center border-b border-[#FF8C00]/20">
-        <Link to="/" className="flex items-center gap-4 group">
-          {/* Logo Icon - Caseari/Orange Theme */}
+        <Link to="/" className="flex items-center gap-4 group no-underline">
           <div className="bg-[#FF8C00] p-3 rounded-2xl shadow-[0_0_20px_rgba(255,140,0,0.4)] group-hover:scale-110 transition-transform duration-300">
             <ShoppingCart className="text-black" size={24} />
           </div>
-          
           <div className="flex flex-col">
             <h1 className="text-2xl md:text-3xl font-black text-white leading-none italic uppercase tracking-tighter">
               NM <span className="text-[#FF8C00]">MART</span>

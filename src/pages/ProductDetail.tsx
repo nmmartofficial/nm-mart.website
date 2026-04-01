@@ -33,7 +33,7 @@ const ProductDetail = () => {
   }
 
   const whatsappLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
-    `Hi NM Mart! I want to order:\n\n🛒 ${product.name}\n💰 Price: ₹${product.saleRate}\n📦 MRP: ₹${product.mrp}\n\nPlease confirm!`
+    `Hi NM Mart, I need manual support with my order/account.\n\n🛒 Product: ${product.name}\n💰 Price: ₹${product.saleRate}\n📦 MRP: ₹${product.mrp}`
   )}`;
 
   return (

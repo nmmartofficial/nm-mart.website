@@ -7,7 +7,7 @@ const WhatsAppButton = () => {
     // 'bottom-6' पर ताकि ये सबसे नीचे रहे
     <div className="fixed bottom-6 right-6 z-[9999]">
       <a 
-        href={`https://wa.me/${phoneNumber}`}
+        href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent('Hi NM Mart, I need manual support with my order/account.')}`}
         target="_blank"
         rel="noopener noreferrer"
         // w-12 h-12 और p-2.5 से ये पीले बटन के बराबर हो जाएगा
