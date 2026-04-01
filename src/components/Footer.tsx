@@ -8,12 +8,12 @@ const Footer = () => (
         
         {/* Brand */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 no-underline">
             <div className="w-9 h-9 rounded-xl bg-[#FF8C00] flex items-center justify-center shadow-[0_0_15px_rgba(255,140,0,0.3)]">
               <ShoppingCart className="w-5 h-5 text-black font-bold" />
             </div>
             <span className="font-black font-display text-xl tracking-tighter uppercase italic">NM Mart</span>
-          </div>
+          </Link>
           <p className="text-xs text-gray-500 leading-relaxed uppercase font-bold tracking-wider">
             Your trusted neighbourhood store for quality daily essentials and premium home textiles.
           </p>
