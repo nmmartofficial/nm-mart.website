@@ -412,7 +412,7 @@ export default function Index() {
       </footer>
 
       {/* WhatsApp FAB */}
-      <a href={`https://wa.me/${WA_NUMBER}?text=Hi NM Mart!`} target="_blank" rel="noopener noreferrer"
+      <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hi NM Mart, I need manual support with my order/account.')}`} target="_blank" rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-40 bg-[hsl(var(--success))] text-white p-4 rounded-full shadow-xl hover:scale-110 transition-transform">
         <MessageCircle size={24} />
       </a>
