@@ -525,7 +525,7 @@ export default function Index() {
                   )}
                   <button disabled={cartTotal < MIN_ORDER}
                     onClick={() => { setCheckoutOpen(true); setCartOpen(false); }}
-                    className="w-full gradient-orange text-white py-3 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed">
+                    className="w-full gradient-brand text-white py-3 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed">
                     Checkout करें
                   </button>
                 </div>
@@ -587,7 +587,7 @@ export default function Index() {
                   </div>
                 )}
                 <button onClick={placeOrder}
-                  className="w-full gradient-orange text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2">
+                  className="w-full gradient-brand text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2">
                   <Send size={18} /> WhatsApp पर Order भेजें
                 </button>
               </div>
@@ -615,7 +615,7 @@ export default function Index() {
                   <div key={i} className="bg-secondary rounded-xl p-4 mb-3 space-y-2">
                     <div className="flex justify-between text-xs">
                       <span className="font-bold uppercase text-foreground">{o.id}</span>
-                      <span className="gradient-orange text-white px-2 py-0.5 rounded text-[9px] font-bold">{o.status}</span>
+                      <span className="gradient-brand text-white px-2 py-0.5 rounded text-[9px] font-bold">{o.status}</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground">{o.date}</p>
                     <p className="font-black text-primary">₹{o.total}</p>
