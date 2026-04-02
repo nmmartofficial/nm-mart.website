@@ -1,61 +1,78 @@
 const fs = require('fs');
-const path = require('path');
 const xlsx = require('xlsx');
 const axios = require('axios');
 
-// Sirf folder ka rasta
-const FOLDER_PATH = 'C:/NM_Mart_Sync/';
+// 1. Aapki file ka rasta (Path)
+const EXCEL_PATH = 'C:/NM_Mart_Sync/stock.xls'; 
+
+// 2. Naya Supabase Sync URL (Vercel API)
+const SYNC_API_URL = 'https://nmmart.in/api/sync';
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8XYEt7z_oOxcKwNqQY67Aes7kvupx7Fkh6McS5TRfhiwo3_UETtIL8c74cUZlvTMQNw/exec';
 
 console.log("------------------------------------------");
-console.log("🚀 NM MART SYNC SYSTEM START HO GAYA HAI!");
-console.log("Watching folder: " + FOLDER_PATH);
+console.log("🚀 NM MART RETAIL POS SYNC START!");
+console.log("Watching: " + EXCEL_PATH);
+console.log("Target: " + SYNC_API_URL);
 console.log("------------------------------------------");
 
-// Folder mein kisi bhi file par nazar rakhna
-fs.watch(FOLDER_PATH, (eventType, filename) => {
-    if (filename && (filename.endsWith('.xls') || filename.endsWith('.xlsx'))) {
-        console.log(`📢 File badlav detect hua: ${filename}`);
-        const fullPath = path.join(FOLDER_PATH, filename);
-        // Thoda intezar taaki file poori save ho jaye
-        setTimeout(() => sendDataToGoogle(fullPath), 1000);
+// File mein badlav par nazar rakhna
+fs.watchFile(EXCEL_PATH, { interval: 5000 }, (curr, prev) => {
+    if (curr.mtime > prev.mtime) {
+        console.log("📢 POS Export Detect Hua! Supabase Update Kar Raha Hoon...");
+        syncToCloud();
     }
 });
 
-async function sendDataToGoogle(filePath) {
+async function syncToCloud() {
     try {
-        const workbook = xlsx.readFile(filePath);
+        // Excel file read karna
+        const workbook = xlsx.readFile(EXCEL_PATH);
         const sheetName = workbook.SheetNames[0];
         const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+
         const itemsToSync = [];
 
+        // Row 6 se data lena shuru karna
         for (let i = 5; i < data.length; i++) {
             const row = data[i];
-            if (row[3]) { 
+            
+            if (row[3]) { // Barcode check
                 itemsToSync.push({
-                    brand: row[2],
-                    barcode: row[3],
-                    discount: row[4],
-                    stock: row[11],
-                    mrp: row[12],
-                    salePrice: row[13]
+                    name: row[2] || "Product " + row[3], // Brand/Name
+                    barcode: String(row[3]),
+                    discount: Number(row[4] || 0),
+                    stock: String(row[11] || "0"),
+                    mrp: Number(row[12] || 0),
+                    saleRate: Number(row[13] || 0),
+                    category: "POS Sync"
                 });
             }
         }
 
-        if (itemsToSync.length > 0) {
-            console.log(`📦 ${itemsToSync.length} items upload ho rahe hain...`);
-            const response = await axios.post(GOOGLE_SCRIPT_URL, JSON.stringify(itemsToSync));
-            if(response.data.status === "success") {
-                console.log("✅ Mubarak ho! Google Sheet update ho gayi.");
+        if (itemsToSync.length === 0) return console.log("⚠️ Koi items nahi mile sync ke liye.");
+
+        console.log(`📦 Total ${itemsToSync.length} products mile. Supabase bhej raha hoon...`);
+
+        // 1. Supabase ko bhejenge (Website ke liye)
+        try {
+            const supabaseRes = await axios.post(SYNC_API_URL, itemsToSync);
+            if(supabaseRes.data.success) {
+                console.log("✅ Mubarak ho! Supabase Update Ho Gaya!");
             }
+        } catch (e) {
+            console.error("❌ Supabase Sync Fail: ", e.message);
         }
+
+        // 2. Purana Google Sheet sync bhi chalu rakhenge (Backup ke liye)
+        try {
+            await axios.post(GOOGLE_SCRIPT_URL, JSON.stringify(itemsToSync));
+            console.log("✅ Backup: Google Sheet Updated!");
+        } catch (e) {
+            console.log("⚠️ Google Sheet Backup failed, but Supabase is primary.");
+        }
+
     } catch (error) {
-        console.error("❌ Error: File open hai ya read nahi ho rahi.");
+        console.error("❌ Error aayi: ", error.message);
+        console.log("Tip: Check karein ki file C:/NM_Mart_Sync/stock.xls sahi jagah par hai.");
     }
 }
-
-// Shuruat mein agar koi file hai toh sync kar dein
-const files = fs.readdirSync(FOLDER_PATH);
-const excelFile = files.find(f => f.endsWith('.xls') || f.endsWith('.xlsx'));
-if (excelFile) sendDataToGoogle(path.join(FOLDER_PATH, excelFile));

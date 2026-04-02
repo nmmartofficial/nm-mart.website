@@ -148,19 +148,56 @@ export default function Index() {
   const loyaltyPoints = getLoyaltyPoints();
   const memberId = user ? `NM-MEM-${(user.id || "").slice(0, 4).toUpperCase()}` : null;
 
-  const placeOrder = () => {
-    if (cartTotal < MIN_ORDER) return alert(`Min order ₹${MIN_ORDER}!`);
-    const orderId = "NM" + Date.now().toString(36).toUpperCase();
-    const orderRecord: OrderRecord = { id: orderId, items: [...cart], total: cartTotal, date: new Date().toLocaleString("en-IN"), status: "Pending" };
-    saveOrder(orderRecord);
-    addLoyaltyPoints(10);
+  const placeOrder = async () => {
+     try {
+       const { data: { session } } = await supabase.auth.getSession();
+       let customerDetails = "";
+       let orderCustomerData = {};
 
-    const msg = cart.map(c => `• ${c.name} (x${c.qty}) = ₹${c.saleRate * c.qty}`).join("\n");
-    const payLabel = payMethod === "cod" ? "💸 COD" : "💳 UPI";
-    const memberLine = memberId ? `👤 Member: ${memberId}` : "";
-    const text = `🛒 *NM MART ORDER*\n🆔 Order ID: ${orderId}\n${memberLine}\n\n${msg}\n\n💰 *Total: ₹${cartTotal}*\n${payLabel}\n📍 Delivery: Manjhanpur Area`;
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`);
-    clearCart(); setCheckoutOpen(false); setCartOpen(false);
+      if (session) {
+        const { data: customer } = await supabase
+          .from("customers")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+
+        if (customer) {
+          customerDetails = `\n\n👤 *Customer Details:* \nName: ${customer.name}\nPhone: ${customer.phone}\nAddress: ${customer.address}\nLandmark: ${customer.landmark || "N/A"}`;
+          // Store customer data in order for Admin view
+          orderCustomerData = {
+            customer: customer.name,
+            phone: customer.phone,
+            address: customer.address,
+            landmark: customer.landmark
+          };
+        }
+      }
+
+      if (cartTotal < MIN_ORDER) return alert(`Min order ₹${MIN_ORDER}!`);
+      const orderId = `NMM-${Date.now()}`;
+      const itemsText = cart.map(c => `- ${c.name} (x${c.qty}): ₹${c.saleRate * c.qty}`).join("\n");
+      const text = `*New Order from NM Mart Web* 🛒\n\n🆔 *Order ID:* ${orderId}\n📦 *Items:*\n${itemsText}\n\n💰 *Total:* ₹${cartTotal}\n💳 *Payment:* ${payMethod.toUpperCase()}${customerDetails}\n\n_Please confirm my order!_`;
+      
+      const orderData: OrderRecord = {
+        id: orderId,
+        items: cart,
+        total: cartTotal,
+        date: new Date().toLocaleString(),
+        status: "Pending",
+        ...orderCustomerData // Attach customer info to local history
+      };
+      
+      saveOrder(orderData);
+      addLoyaltyPoints(10);
+      
+      window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
+      clearCart();
+      setCheckoutOpen(false);
+      setCartOpen(false);
+    } catch (err) {
+      console.error("Order process failed", err);
+      alert("Order process failed");
+    }
   };
 
   const reorder = (order: OrderRecord) => {

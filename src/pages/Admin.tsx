@@ -526,7 +526,12 @@ const Admin = () => {
                         </span>
                       </div>
                       <p className="text-white font-bold text-sm">{order.customer || "Walk-in Customer"}</p>
-                      <p className="text-gray-500 text-[10px]">📱 {order.mobile || "-"} • {order.date}</p>
+                      {order.address && (
+                        <p className="text-muted-foreground text-[10px] flex items-center gap-1">
+                          <MapPin size={10} className="text-primary" /> {order.address} {order.landmark ? `(Near ${order.landmark})` : ""}
+                        </p>
+                      )}
+                      <p className="text-gray-500 text-[10px]">📱 {order.mobile || order.phone || "-"} • {order.date}</p>
                       <p className="text-[#FF8C00] font-black text-lg">₹{order.total}</p>
                     </div>
                     <div className="flex gap-2">
