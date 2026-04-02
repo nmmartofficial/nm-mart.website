@@ -1,7 +1,7 @@
 import { ShoppingCart, Mail, MapPin, User, Search, Package } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 
 const LOGO_URL = "https://i.postimg.cc/9XJ2GS8L/logo.jpg";
 const SLOGAN = "Shop More, Save More";

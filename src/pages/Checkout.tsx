@@ -5,11 +5,11 @@ import {
   Loader2, CheckCircle2, ShoppingBag, Truck, ShieldCheck, 
   ChevronRight, Building2, Landmark, Map as MapIcon
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "@/components/shop/Header";
+import Footer from "@/components/shop/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Checkout = () => {

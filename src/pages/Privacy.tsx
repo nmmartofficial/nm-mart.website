@@ -1,5 +1,5 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "@/components/shop/Header";
+import Footer from "@/components/shop/Footer";
 import { ShieldCheck, Lock, Eye, FileText, Globe, Scale, Mail } from "lucide-react";
 
 const Privacy = () => {

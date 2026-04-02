@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "@/components/shop/Header";
+import Footer from "@/components/shop/Footer";
 import { User, Package, MapPin, LogOut, Star, Loader2, Save, Phone as PhoneIcon, Clock, ChevronRight, Truck } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { OrderRecord } from "@/lib/store-utils";
 

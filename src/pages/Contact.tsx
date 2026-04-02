@@ -1,5 +1,5 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "@/components/shop/Header";
+import Footer from "@/components/shop/Footer";
 import { Phone, Mail, MapPin, Clock, Send, MessageSquare, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

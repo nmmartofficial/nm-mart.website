@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Product } from "@/lib/store-utils";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 
 export function useProducts() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);

@@ -14,8 +14,8 @@ import Checkout from "@/pages/Checkout";
 import ResetPassword from "@/pages/ResetPassword";
 
 // Admin Pages
-import Admin from "@/pages/admin/Admin";
-import DeliveryDashboard from "@/pages/admin/Delivery";
+import Admin from "@/pages/Admin";
+import DeliveryDashboard from "@/pages/Delivery";
 
 function App() {
   return (

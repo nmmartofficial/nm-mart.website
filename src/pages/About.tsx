@@ -1,5 +1,5 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "@/components/shop/Header";
+import Footer from "@/components/shop/Footer";
 import { ShoppingCart, ShieldCheck, Truck, Users, Award, TrendingUp } from "lucide-react";
 
 const About = () => {

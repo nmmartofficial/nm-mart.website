@@ -3,9 +3,9 @@ import { ArrowLeft, MessageCircle, ShoppingCart, Star, Share2, Loader2, Package,
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { parseProductSlug, WA_NUMBER } from "@/lib/store-utils";
-import ProductImageDisplay from "@/components/ProductImageDisplay";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
+import Header from "@/components/shop/Header";
+import Footer from "@/components/shop/Footer";
 import { useState } from "react";
 import { toast } from "sonner";
 
