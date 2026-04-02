@@ -146,7 +146,20 @@ const Login = () => {
     <div className="min-h-screen bg-[#f8f9fa] text-[#111] flex flex-col font-sans">
       <Header />
       
-      <main className="flex-1 flex flex-col items-center py-12 px-4">
+      <main className="flex-1 flex flex-col items-center py-12 px-4 relative">
+        {/* Back to Home Button */}
+        <div className="w-full max-w-[350px] mb-4">
+          <button 
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-gray-400 hover:text-primary transition-colors text-[11px] font-black uppercase tracking-widest italic group"
+          >
+            <div className="bg-white p-2 rounded-full shadow-sm border border-gray-100 group-hover:border-primary/20 transition-all">
+              <ArrowLeft size={14} />
+            </div>
+            Back to Home
+          </button>
+        </div>
+
         {/* Sign In Card */}
         <div className="w-full max-w-[350px] space-y-4">
           {/* Main Auth Card */}
