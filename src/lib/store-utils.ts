@@ -4,6 +4,7 @@ export interface Product {
   mrp: number;
   saleRate: number; // This will map to 'Price' from API
   category: string;
+  brand: string;
   subCategory: string;
   barcode: string;
   imageUrl: string;

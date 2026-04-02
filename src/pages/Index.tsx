@@ -77,11 +77,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Index() {
   const navigate = useNavigate();
-  const { allProducts, loading, categories, flat33, flat50 } = useProducts();
+  const { allProducts, loading, categories, brands, flat33, flat50 } = useProducts();
   const { cart, addToCart, updateQty, removeItem, clearCart, cartTotal, cartCount, setCart } = useCart();
 
   const [query, setQuery] = useState("");
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [payMethod, setPayMethod] = useState<"cod" | "upi">("cod");
@@ -127,7 +128,7 @@ export default function Index() {
   }, [selectedCat, query]);
 
   // Reset visible count on filter change
-  useEffect(() => { setVisibleCount(ITEMS_PER_PAGE); }, [selectedCat, query]);
+  useEffect(() => { setVisibleCount(ITEMS_PER_PAGE); }, [selectedCat, selectedBrand, query]);
 
   // Filter out Bedsheets, sort priority categories first
   const sortedCategories = useMemo(() => {
@@ -140,12 +141,13 @@ export default function Index() {
   const filtered = useMemo(() => {
     let list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category));
     if (selectedCat) list = list.filter(p => p.category === selectedCat);
+    if (selectedBrand) list = list.filter(p => (p as any).brand === selectedBrand);
     if (query) {
       const q = query.toLowerCase();
-      list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category) && (p.name.toLowerCase().includes(q) || p.barcode.includes(q)));
+      list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category) && (p.name.toLowerCase().includes(q) || p.barcode.includes(q) || p.category.toLowerCase().includes(q)));
     }
     return list;
-  }, [allProducts, selectedCat, query]);
+  }, [allProducts, selectedCat, selectedBrand, query]);
 
   const visibleProducts = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
@@ -338,7 +340,15 @@ export default function Index() {
       </div>
 
       {/* Hero Banner */}
-      <HeroBanner />
+      <HeroBanner onBannerClick={(link) => {
+        if (link.type === 'category') setSelectedCat(link.value);
+        if (link.type === 'query') setQuery(link.value);
+        if (link.type === 'offer') {
+          setQuery(""); setSelectedCat(null);
+          // Scroll to offer section
+          document.getElementById(`offer-${link.value}`)?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }} />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -373,34 +383,122 @@ export default function Index() {
         ) : (
           <>
             {/* Home View */}
-            {!selectedCat && !query && (
+            {!selectedCat && !selectedBrand && !query && (
               <>
-                <DiscountTabs flat33={flat33} flat50={flat50} onAddToCart={addToCart} />
+                {/* 50% OFF Section */}
+                {flat50.length > 0 && (
+                  <div id="offer-50" className="mb-12">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="font-black text-foreground text-lg uppercase flex items-center gap-2 tracking-tight">
+                        <Gift size={18} className="text-primary" /> 50% OFF Deals
+                      </h3>
+                      <span className="bg-primary/10 text-primary text-[10px] font-black px-3 py-1 rounded-full uppercase italic animate-pulse">Big Savings</span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                      {flat50.slice(0, 6).map((p, idx) => (
+                        <motion.div key={`${p.barcode}-${idx}`}
+                          whileHover={{ y: -5 }}
+                          className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
+                          onClick={() => navigate(`/product/${productSlug(p)}`)}
+                        >
+                          <div className="relative h-24 bg-secondary/30">
+                            <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
+                            <span className="absolute top-1 right-1 bg-primary text-white text-[8px] font-black px-1.5 py-0.5 rounded italic">50% OFF</span>
+                          </div>
+                          <div className="p-2 flex flex-col flex-1">
+                            <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-6 overflow-hidden mb-1">{p.name}</h3>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-base font-black text-primary">₹{p.saleRate}</span>
+                              <span className="text-[8px] text-muted-foreground line-through">₹{p.mrp}</span>
+                            </div>
+                            <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
+                              className="mt-2 bg-primary text-primary-foreground py-1 rounded-lg text-[8px] font-bold uppercase hover:bg-black transition-colors">
+                              Add to Cart
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                {/* Products Grouped by Category */}
+                {/* 33% OFF Section */}
+                {flat33.length > 0 && (
+                  <div id="offer-33" className="mb-12">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="font-black text-foreground text-lg uppercase flex items-center gap-2 tracking-tight">
+                        <Package size={18} className="text-primary" /> 33% OFF Deals
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                      {flat33.slice(0, 6).map((p, idx) => (
+                        <motion.div key={`${p.barcode}-${idx}`}
+                          whileHover={{ y: -5 }}
+                          className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
+                          onClick={() => navigate(`/product/${productSlug(p)}`)}
+                        >
+                          <div className="relative h-24 bg-secondary/30">
+                            <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
+                            <span className="absolute top-1 right-1 bg-orange-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded italic">33% OFF</span>
+                          </div>
+                          <div className="p-2 flex flex-col flex-1">
+                            <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-6 overflow-hidden mb-1">{p.name}</h3>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-base font-black text-primary">₹{p.saleRate}</span>
+                              <span className="text-[8px] text-muted-foreground line-through">₹{p.mrp}</span>
+                            </div>
+                            <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
+                              className="mt-2 bg-primary text-primary-foreground py-1 rounded-lg text-[8px] font-bold uppercase hover:bg-black transition-colors">
+                              Add to Cart
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Shop by Category Section */}
                 {sortedCategories.length > 0 && (
                   <div className="mb-12">
                     <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
-                      <LayoutGrid size={18} className="text-primary" /> Browse Categories
+                      <LayoutGrid size={18} className="text-primary" /> Shop by Category
                     </h3>
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                       {sortedCategories.map(cat => (
                         <motion.button whileTap={{ scale: 0.94 }} key={cat}
-                          onClick={() => { setSelectedCat(cat); setQuery(""); }}
+                          onClick={() => { setSelectedCat(cat); setSelectedBrand(null); setQuery(""); }}
                           className="p-4 rounded-xl bg-card border border-border flex flex-col items-center gap-2 transition-all group hover:border-primary/50 hover:shadow-glow">
                           <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary text-2xl group-hover:bg-primary/20 transition-colors">
                             {CATEGORY_ICONS[cat] || "📦"}
                           </div>
                           <span className="font-bold text-foreground uppercase text-[9px] tracking-tight text-center leading-tight">{cat}</span>
-                          <span className="text-[8px] text-primary flex items-center gap-0.5 font-semibold">Shop <ChevronRight size={8} /></span>
                         </motion.button>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* Category-wise Product Sections */}
-                {sortedCategories.slice(0, 4).map(cat => {
+                {/* Shop by Brand Section */}
+                {brands.length > 0 && (
+                  <div className="mb-12">
+                    <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+                      <Star size={18} className="text-primary" /> Shop by Brand
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {brands.map(brand => (
+                        <motion.button whileTap={{ scale: 0.95 }} key={brand}
+                          onClick={() => { setSelectedBrand(brand); setSelectedCat(null); setQuery(""); }}
+                          className="px-5 py-2.5 rounded-full bg-card border border-border text-[10px] font-black uppercase tracking-widest hover:border-primary hover:text-primary transition-all shadow-sm">
+                          {brand}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Dynamic Category-wise Product Sections */}
+                {sortedCategories.slice(0, 6).map(cat => {
                   const catProducts = allProducts.filter(p => p.category === cat && !HIDDEN_CATS.includes(p.category)).slice(0, 6);
                   if (catProducts.length === 0) return null;
                   return (
@@ -453,13 +551,13 @@ export default function Index() {
             )}
 
             {/* Product Listing */}
-            {(selectedCat || query) && (
+            {(selectedCat || selectedBrand || query) && (
               <>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="font-black text-lg text-foreground uppercase tracking-tight">
-                    {query ? `"${query}" के रिजल्ट` : selectedCat}
+                    {query ? `"${query}" के रिजल्ट` : (selectedCat || selectedBrand)}
                   </h2>
-                  <button onClick={() => { setSelectedCat(null); setQuery(""); }}
+                  <button onClick={() => { setSelectedCat(null); setSelectedBrand(null); setQuery(""); }}
                     className="text-[10px] font-bold uppercase text-primary border-b-2 border-primary hover:opacity-80">← वापस जाएं</button>
                 </div>
 

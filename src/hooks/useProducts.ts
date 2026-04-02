@@ -20,6 +20,7 @@ export function useProducts() {
             name: item.product_name || item.name,
             barcode: item.barcode,
             category: item.category || "General",
+            brand: item.brand || "Local",
             subCategory: item.sub_category || item.subCategory || "",
             mrp: Number(item.mrp || 0),
             saleRate: Number(item.sale_price || item.saleRate || 0),
@@ -44,15 +45,28 @@ export function useProducts() {
     [allProducts]
   );
 
+  const brands = useMemo(() => 
+    [...new Set(allProducts.map(p => (p as any).brand).filter(Boolean))],
+    [allProducts]
+  );
+
   const flat33 = useMemo(() => 
-    allProducts.filter(p => p.discount >= 30 && p.discount < 50),
+    allProducts.filter(p => {
+      if (!p.mrp || !p.saleRate) return false;
+      const discountPercent = ((p.mrp - p.saleRate) / p.mrp) * 100;
+      return Math.round(discountPercent) === 33;
+    }),
     [allProducts]
   );
 
   const flat50 = useMemo(() => 
-    allProducts.filter(p => p.discount >= 50),
+    allProducts.filter(p => {
+      if (!p.mrp || !p.saleRate) return false;
+      const discountPercent = ((p.mrp - p.saleRate) / p.mrp) * 100;
+      return Math.round(discountPercent) === 50;
+    }),
     [allProducts]
   );
 
-  return { allProducts, loading, categories, flat33, flat50 };
+  return { allProducts, loading, categories, brands, flat33, flat50 };
 }

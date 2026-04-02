@@ -6,44 +6,55 @@ const BANNERS = [
     title: "🛒 Daily Essentials",
     subtitle: "रोज़मर्रा का सामान — सबसे सस्ते दाम पर!",
     bg: "from-[#00A8E1] via-[#0081ad] to-black",
+    link: { type: 'category', value: 'Daily Essentials' }
   },
   {
     title: "🍿 Snacks & Munchies",
     subtitle: "Chips, Namkeen, Biscuits — Flat Discount!",
     bg: "from-[#00A8E1] via-[#33b9e7] to-white",
-    textColor: "text-black"
+    textColor: "text-black",
+    link: { type: 'category', value: 'Snacks' }
   },
   {
     title: "🥦 Grocery Essentials",
     subtitle: "7000+ आइटम्स होलसेल प्राइस पर",
     bg: "from-white via-[#f0f9ff] to-[#00A8E1]",
-    textColor: "text-black"
+    textColor: "text-black",
+    link: { type: 'category', value: 'Grocery' }
   },
   {
-    title: "🥜 Premium Dry Fruits",
-    subtitle: "Almonds, Cashews, Raisins — ताज़ा क्वालिटी",
+    title: "🥜 Kaju & Dry Fruits",
+    subtitle: "Premium Cashews & Raisins — ताज़ा क्वालिटी",
     bg: "from-black via-[#0081ad] to-[#00A8E1]",
+    link: { type: 'query', value: 'Kaju' }
   },
   {
     title: "🔥 Flat 50% OFF",
     subtitle: "500+ प्रोडक्ट्स पर — सीमित समय!",
     bg: "from-[#00A8E1] via-white to-white",
-    textColor: "text-black"
+    textColor: "text-black",
+    link: { type: 'offer', value: '50' }
   },
   {
     title: "🏆 NM Mart Welfare Card",
     subtitle: "₹599 में ₹1500 का वैल्यू — 6 महीने!",
     bg: "from-[#00A8E1] via-[#00A8E1] to-[#0081ad]",
+    link: { type: 'query', value: 'Welfare' }
   },
   {
     title: "⚡ Mega Sale Live",
     subtitle: "अनबीटेबल होलसेल प्राइसेस — अभी खरीदें!",
     bg: "from-white via-[#e0f2fe] to-[#00A8E1]",
-    textColor: "text-black"
+    textColor: "text-black",
+    link: { type: 'query', value: 'Sale' }
   },
 ];
 
-const HeroBanner = () => {
+interface HeroBannerProps {
+  onBannerClick?: (link: { type: string, value: string }) => void;
+}
+
+const HeroBanner = ({ onBannerClick }: HeroBannerProps) => {
   const [current, setCurrent] = useState(0);
 
   const next = useCallback(() => setCurrent(c => (c + 1) % BANNERS.length), []);
@@ -57,7 +68,7 @@ const HeroBanner = () => {
   const banner = BANNERS[current];
 
   return (
-    <div className="relative w-full overflow-hidden">
+    <div className="relative w-full overflow-hidden cursor-pointer" onClick={() => onBannerClick?.(banner.link)}>
       <div className={`bg-gradient-to-r ${banner.bg} py-14 md:py-20 px-6 text-center ${banner.textColor || 'text-white'} transition-all duration-700`}>
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl md:text-4xl font-black tracking-tight mb-2 uppercase italic">{banner.title}</h2>
@@ -65,16 +76,16 @@ const HeroBanner = () => {
         </div>
       </div>
 
-      <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm p-2 rounded-full hover:bg-white/40 transition-colors shadow-sm">
+      <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm p-2 rounded-full hover:bg-white/40 transition-colors shadow-sm">
         <ChevronLeft size={20} className={banner.textColor === 'text-black' ? 'text-black' : 'text-white'} />
       </button>
-      <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm p-2 rounded-full hover:bg-white/40 transition-colors shadow-sm">
+      <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm p-2 rounded-full hover:bg-white/40 transition-colors shadow-sm">
         <ChevronRight size={20} className={banner.textColor === 'text-black' ? 'text-black' : 'text-white'} />
       </button>
 
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
         {BANNERS.map((_, i) => (
-          <button key={i} onClick={() => setCurrent(i)}
+          <button key={i} onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
             className={`h-1.5 rounded-full transition-all ${i === current ? (banner.textColor === 'text-black' ? "bg-black w-6" : "bg-white w-6") : (banner.textColor === 'text-black' ? "bg-black/20 w-3" : "bg-white/30 w-3")}`} />
         ))}
       </div>
