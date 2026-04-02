@@ -31,10 +31,16 @@ const Header = () => {
         </Link>
 
         {/* Navigation / Action Button */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
+          <Link 
+            to="/track" 
+            className="border border-[#FF8C00]/30 text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg hover:bg-white/5 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 italic"
+          >
+             Track Order
+          </Link>
           <Link 
             to="/contact" 
-            className="bg-[#FF8C00] text-black px-6 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg hover:bg-white hover:scale-105 active:scale-95 transition-all flex items-center gap-2 italic"
+            className="bg-[#FF8C00] text-black px-4 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-lg hover:bg-white hover:scale-105 active:scale-95 transition-all flex items-center gap-2 italic"
           >
              Contact Us
           </Link>

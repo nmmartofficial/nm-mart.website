@@ -34,6 +34,11 @@ const Footer = () => (
       <span className="w-1 h-1 bg-[#FF8C00] rounded-full"></span> Contact Us
     </Link>
     
+    {/* Track Order Link */}
+    <Link to="/track" className="text-[13px] text-gray-400 hover:text-white transition-all hover:translate-x-1 flex items-center gap-2">
+      <span className="w-1 h-1 bg-[#FF8C00] rounded-full"></span> Track Order
+    </Link>
+    
     {/* Privacy Policy Link */}
     <Link to="/privacy" className="text-[13px] text-gray-400 hover:text-white transition-all hover:translate-x-1 flex items-center gap-2">
       <span className="w-1 h-1 bg-[#FF8C00] rounded-full"></span> Privacy Policy

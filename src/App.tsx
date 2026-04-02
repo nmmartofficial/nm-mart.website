@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index"; // आपकी फोटो में Index.tsx दिख रही है, यही होम पेज है
 import Admin from "./pages/Admin"; // जो आपने नई फाइल बनाई है
+import TrackOrder from "./pages/TrackOrder";
 
 function App() {
   return (
@@ -11,6 +12,9 @@ function App() {
 
         {/* जब आप /admin लिखेंगे, तब स्कैनर वाला पेज खुलेगा */}
         <Route path="/admin" element={<Admin />} />
+
+        {/* Track Your Order Page */}
+        <Route path="/track" element={<TrackOrder />} />
       </Routes>
     </Router>
   );
