@@ -11,6 +11,7 @@ import UserProfile from "@/pages/UserProfile";
 import OrderTracker from "@/pages/OrderTracker";
 import ProductDetail from "@/pages/ProductDetail";
 import Checkout from "@/pages/Checkout";
+import ResetPassword from "@/pages/ResetPassword";
 
 // Admin Pages
 import Admin from "@/pages/admin/Admin";
@@ -31,6 +32,7 @@ function App() {
         <Route path="/tracker" element={<OrderTracker />} />
         <Route path="/product/:slug" element={<ProductDetail />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={<Admin />} />
