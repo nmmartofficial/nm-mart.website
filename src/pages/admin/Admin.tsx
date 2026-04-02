@@ -5,12 +5,13 @@ import {
   TrendingUp, AlertCircle, Package, User, CreditCard, 
   ChevronRight, Star, MapPin, ShieldCheck, BarChart3, 
   FileDown, Printer, Truck, Clock, Loader2, RefreshCcw,
-  CheckCircle2, IndianRupee, Trash2
+  CheckCircle2, IndianRupee, Trash2, FileUp
 } from "lucide-react";
 import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/lib/store-utils";
+import * as XLSX from "xlsx";
 
 const LOGO_URL = "https://i.postimg.cc/9XJ2GS8L/logo.jpg";
 const SLOGAN = "Shop More, Save More";
@@ -33,6 +34,7 @@ const Admin = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [fetchingProduct, setFetchingProduct] = useState(false);
 
   // Welfare States
@@ -47,6 +49,7 @@ const Admin = () => {
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const ADMIN_PASS = "NMMART2026";
 
@@ -63,6 +66,64 @@ const Admin = () => {
       fetchOrders();
     }
   }, [isAuthenticated, activeTab]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        if (jsonData.length === 0) {
+          toast.error("The file is empty");
+          setIsImporting(false);
+          return;
+        }
+
+        // Map Excel columns to database fields
+        const productsToInsert = jsonData.map((row: any) => ({
+          barcode: String(row.Barcode || row.barcode || row.ID || ""),
+          name: row.Name || row.name || row.Product || "",
+          mrp: Number(row.MRP || row.mrp || row.Price || 0),
+          saleRate: Number(row.SaleRate || row.saleRate || row.SalePrice || row.Price || 0),
+          category: row.Category || row.category || "General",
+          subCategory: row.SubCategory || row.subCategory || "",
+          imageUrl: row.Image || row.imageUrl || row.image || "",
+          stock: row.Stock || row.stock || "in-stock",
+          discount: Number(row.Discount || row.discount || 0),
+          updated_at: new Date().toISOString()
+        })).filter(p => p.barcode && p.name);
+
+        if (productsToInsert.length === 0) {
+          toast.error("No valid products found in file (Need Barcode and Name)");
+          setIsImporting(false);
+          return;
+        }
+
+        const { error } = await supabase
+          .from('inventory')
+          .upsert(productsToInsert, { onConflict: 'barcode' });
+
+        if (error) throw error;
+
+        toast.success(`Successfully imported ${productsToInsert.length} products!`);
+      } catch (err: any) {
+        console.error("Import error:", err);
+        toast.error("Failed to import products: " + err.message);
+      } finally {
+        setIsImporting(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
 
   const fetchOrders = async () => {
     setOrdersLoading(true);
@@ -352,12 +413,29 @@ const Admin = () => {
                   </div>
                   Update Inventory
                 </h3>
-                <button 
-                  onClick={() => setIsScanning(!isScanning)}
-                  className={`p-3 rounded-2xl transition-all shadow-sm ${isScanning ? "bg-red-500 text-white" : "bg-primary text-white hover:bg-black"}`}
-                >
-                  <ScanBarcode size={20} />
-                </button>
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept=".xlsx, .xls, .csv"
+                    className="hidden"
+                  />
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isImporting}
+                    className="flex items-center gap-2 bg-gray-50 text-gray-500 px-4 py-2.5 rounded-xl font-bold text-xs uppercase hover:bg-primary hover:text-white transition-all shadow-sm"
+                  >
+                    {isImporting ? <Loader2 className="animate-spin" size={16} /> : <FileUp size={16} />}
+                    <span className="hidden sm:inline">Import Excel</span>
+                  </button>
+                  <button 
+                    onClick={() => setIsScanning(!isScanning)}
+                    className={`p-3 rounded-2xl transition-all shadow-sm ${isScanning ? "bg-red-500 text-white" : "bg-primary text-white hover:bg-black"}`}
+                  >
+                    <ScanBarcode size={20} />
+                  </button>
+                </div>
               </div>
 
               <form onSubmit={handleInventorySubmit} className="space-y-6">
