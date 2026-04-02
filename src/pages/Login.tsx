@@ -147,13 +147,24 @@ const Login = () => {
       <Header />
       
       <main className="flex-1 flex flex-col items-center py-12 px-4 relative">
-        {/* Back to Home Button */}
-        <div className="w-full max-w-[350px] mb-4">
+        {/* Back to Home Button - Top Left Style */}
+        <div className="absolute top-6 left-6 hidden md:block">
+          <button 
+            onClick={() => navigate("/")}
+            className="flex items-center gap-3 bg-white border border-gray-100 px-5 py-2.5 rounded-2xl text-gray-400 hover:text-primary hover:border-primary/20 transition-all shadow-sm group"
+          >
+            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="text-xs font-black uppercase tracking-widest italic">Back to Shop</span>
+          </button>
+        </div>
+
+        {/* Mobile Back Button */}
+        <div className="w-full max-w-[350px] mb-6 md:hidden">
           <button 
             onClick={() => navigate("/")}
             className="flex items-center gap-2 text-gray-400 hover:text-primary transition-colors text-[11px] font-black uppercase tracking-widest italic group"
           >
-            <div className="bg-white p-2 rounded-full shadow-sm border border-gray-100 group-hover:border-primary/20 transition-all">
+            <div className="bg-white p-2 rounded-full shadow-sm border border-gray-100">
               <ArrowLeft size={14} />
             </div>
             Back to Home
