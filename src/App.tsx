@@ -1,20 +1,40 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index"; // आपकी फोटो में Index.tsx दिख रही है, यही होम पेज है
-import Admin from "./pages/Admin"; // जो आपने नई फाइल बनाई है
-import TrackOrder from "./pages/TrackOrder";
+import { Toaster } from "sonner";
+
+// Pages
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import Privacy from "@/pages/Privacy";
+import UserProfile from "@/pages/UserProfile";
+import OrderTracker from "@/pages/OrderTracker";
+import ProductDetail from "@/pages/ProductDetail";
+import Checkout from "@/pages/Checkout";
+
+// Admin Pages
+import Admin from "@/pages/admin/Admin";
+import DeliveryDashboard from "@/pages/admin/Delivery";
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-center" expand={false} richColors />
       <Routes>
-        {/* जब कोई nmmart.in खोलेगा, तो Index वाला पेज (दुकान) दिखेगी */}
+        {/* Customer Routes */}
         <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/tracker" element={<OrderTracker />} />
+        <Route path="/product/:slug" element={<ProductDetail />} />
+        <Route path="/checkout" element={<Checkout />} />
 
-        {/* जब आप /admin लिखेंगे, तब स्कैनर वाला पेज खुलेगा */}
+        {/* Admin Routes */}
         <Route path="/admin" element={<Admin />} />
-
-        {/* Track Your Order Page */}
-        <Route path="/track" element={<TrackOrder />} />
+        <Route path="/delivery" element={<DeliveryDashboard />} />
       </Routes>
     </Router>
   );

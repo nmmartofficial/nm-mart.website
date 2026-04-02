@@ -1,76 +1,172 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-// यहाँ 'lucide-react' का सही इस्तेमाल किया गया है ताकि एरर न आए
-import { Phone, Mail, MapPin, Clock, MessageSquare } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Send, MessageSquare, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
-const Contact = () => (
-  <div className="min-h-screen flex flex-col bg-black text-white">
-    <Header />
-    
-    <main className="flex-1 py-16 md:py-24 px-4">
-      <div className="max-w-4xl mx-auto">
-        
-        {/* Title Section */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter mb-4">
-            Contact <span className="text-[#FF8C00]">NM Mart</span>
-          </h2>
-          <div className="w-24 h-1 bg-[#FF8C00] mx-auto rounded-full"></div>
+const Contact = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    // Simulate form submission
+    setTimeout(() => {
+      toast.success("Message sent successfully! We will get back to you soon.");
+      setLoading(false);
+      (e.target as HTMLFormElement).reset();
+    }, 1500);
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#f8f9fa] text-black font-sans">
+      <Header />
+      
+      <main className="flex-1 py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-20 space-y-4">
+            <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-black">
+              Get In <span className="text-primary">Touch</span>
+            </h1>
+            <p className="text-gray-400 font-bold uppercase tracking-[4px] text-[10px]">
+              We are here to help you with your wholesale shopping needs
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-16 items-start">
+            {/* Contact Information */}
+            <div className="space-y-10">
+              <div className="bg-white border border-gray-100 p-10 rounded-[40px] shadow-sm space-y-8">
+                <h3 className="text-2xl font-black italic uppercase text-black flex items-center gap-3">
+                  <div className="bg-primary p-2 rounded-lg text-white">
+                    <MapPin size={20} />
+                  </div>
+                  Our Store Location
+                </h3>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
+                      <MapPin size={18} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Address</p>
+                      <p className="font-bold text-lg text-black leading-relaxed">
+                        NM Mart, Near B.P. Public School,<br />
+                        Manjhanpur, Kaushambi, UP - 212207
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
+                      <Phone size={18} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Call / WhatsApp</p>
+                      <p className="font-bold text-lg text-black">+91 708 115 4604</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
+                      <Mail size={18} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Email Support</p>
+                      <p className="font-bold text-lg text-black">support@nmmart.in</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
+                      <Clock size={18} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Business Hours</p>
+                      <p className="font-bold text-lg text-black italic">Daily 09:00 AM – 09:00 PM</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* WhatsApp Quick Link */}
+              <div className="bg-primary p-10 rounded-[40px] shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="text-center md:text-left">
+                  <h4 className="text-2xl font-black italic uppercase text-white">Instant Support?</h4>
+                  <p className="font-bold text-white/80 text-sm uppercase tracking-widest">Chat with us on WhatsApp now</p>
+                </div>
+                <a 
+                  href="https://wa.me/917081154604" 
+                  target="_blank" 
+                  className="bg-white text-primary px-8 py-4 rounded-2xl font-black uppercase italic text-sm hover:bg-black hover:text-white transition-all shadow-sm flex items-center gap-2"
+                >
+                  <MessageSquare size={18} /> Chat Now
+                </a>
+              </div>
+            </div>
+
+            {/* Contact Form */}
+            <div className="bg-white border border-gray-100 p-10 rounded-[40px] shadow-sm space-y-8">
+              <h3 className="text-2xl font-black italic uppercase text-black flex items-center gap-3">
+                <div className="bg-primary p-2 rounded-lg text-white">
+                  <Send size={20} />
+                </div>
+                Send a Message
+              </h3>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Full Name</label>
+                  <input 
+                    type="text" 
+                    placeholder="ENTER YOUR NAME"
+                    required
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold uppercase tracking-wider text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Mobile Number</label>
+                  <input 
+                    type="tel" 
+                    placeholder="ENTER YOUR PHONE"
+                    required
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold tracking-wider text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Your Message</label>
+                  <textarea 
+                    placeholder="HOW CAN WE HELP YOU?"
+                    required
+                    rows={4}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold uppercase tracking-wider text-sm resize-none"
+                  ></textarea>
+                </div>
+
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] hover:bg-black transition-all shadow-sm flex items-center justify-center gap-3 italic"
+                >
+                  {loading ? <Loader2 className="animate-spin" size={20} /> : (
+                    <>
+                      <Send size={18} /> Send Inquiry
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
+      </main>
 
-        {/* Contact Info Grid */}
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
-          
-          {/* Call & WhatsApp Box */}
-          <div className="bg-[#0a0a0a] border border-white/5 p-10 rounded-[50px] hover:border-[#FF8C00]/30 transition-all group text-center">
-            <div className="w-16 h-16 bg-[#FF8C00] rounded-2xl flex items-center justify-center text-black mx-auto mb-6 shadow-[0_10px_30px_rgba(255,140,0,0.2)]">
-              <Phone size={32} />
-            </div>
-            <h3 className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">WhatsApp & Call</h3>
-            <p className="text-2xl font-black text-white italic">+91 7081154604</p>
-            <p className="text-gray-500 text-xs mt-2 italic uppercase font-bold tracking-widest">Order Anytime</p>
-          </div>
-
-          {/* Email Support Box */}
-          <div className="bg-[#0a0a0a] border border-white/5 p-10 rounded-[50px] hover:border-[#FF8C00]/30 transition-all group text-center">
-            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-[#FF8C00] mx-auto mb-6 border border-white/10">
-              <Mail size={32} />
-            </div>
-            <h3 className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Email Support</h3>
-            <p className="text-xl font-bold text-white lowercase">support@nmmart.in</p>
-            <p className="text-gray-500 text-xs mt-2 italic uppercase font-bold tracking-widest">Fast Response</p>
-          </div>
-
-        </div>
-
-        {/* Address & Timings Footer Box */}
-        <div className="bg-gradient-to-br from-[#0a0a0a] to-black border border-white/5 p-10 rounded-[50px] text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1 bg-[#FF8C00]/10 border border-[#FF8C00]/20 rounded-full mb-6">
-            <MapPin size={14} className="text-[#FF8C00]" />
-            <span className="text-[10px] text-[#FF8C00] font-black uppercase tracking-widest italic">Store Location</span>
-          </div>
-          
-          <p className="text-xl md:text-2xl font-bold text-white mb-4 italic">
-            Manjhanpur, Kaushambi (B.P Public School के पास)
-          </p>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 border-t border-white/5">
-            <div className="flex items-center gap-2 text-gray-400">
-               <Clock size={16} className="text-[#FF8C00]" />
-               <span className="text-sm font-bold italic uppercase tracking-widest">Daily 09:00 AM – 09:00 PM</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-400 border-l border-white/10 pl-6 hidden sm:flex">
-               <MessageSquare size={16} className="text-[#FF8C00]" />
-               <span className="text-sm font-bold italic uppercase tracking-widest underline decoration-[#FF8C00] underline-offset-4 cursor-default">Shop More, Save More</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </main>
-
-    <Footer />
-  </div>
-);
+      <Footer />
+    </div>
+  );
+};
 
 export default Contact;

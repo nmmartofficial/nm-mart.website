@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingCart, Search, X, Plus, Minus, Trash2, MessageCircle, Send,
   Mic, MicOff, Clock, Star, MapPin, LayoutGrid, ArrowUp, Package, Gift, RotateCcw,
-  ChevronRight, Banknote, QrCode, Phone, Instagram, Facebook, Youtube, CreditCard, ExternalLink
+  ChevronRight, Banknote, QrCode, Phone, Instagram, Facebook, Youtube, CreditCard, ExternalLink,
+  User
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
@@ -17,6 +18,7 @@ import WelfareCardBanner from "@/components/WelfareCardBanner";
 import ChatBot from "@/components/ChatBot";
 
 const LOGO_URL = "https://i.postimg.cc/9XJ2GS8L/logo.jpg";
+const SLOGAN = "Shop More, Save More";
 const ITEMS_PER_PAGE = 40;
 
 /* ─── Countdown Hook ─── */
@@ -69,6 +71,8 @@ const CATEGORY_ICONS: Record<string, string> = {
 /* ─── Priority categories (shown first) ─── */
 const PRIORITY_CATS = ["Daily Essentials", "Snacks"];
 const HIDDEN_CATS = ["Bedsheets", "bedsheets"];
+
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -178,16 +182,36 @@ export default function Index() {
       const itemsText = cart.map(c => `- ${c.name} (x${c.qty}): ₹${c.saleRate * c.qty}`).join("\n");
       const text = `*New Order from NM Mart Web* 🛒\n\n🆔 *Order ID:* ${orderId}\n📦 *Items:*\n${itemsText}\n\n💰 *Total:* ₹${cartTotal}\n💳 *Payment:* ${payMethod.toUpperCase()}${customerDetails}\n\n_Please confirm my order!_`;
       
-      const orderData: OrderRecord = {
+      const orderData = {
+        id: orderId,
+        customer_id: user?.id || null,
+        items: cart,
+        total: cartTotal,
+        status: "Pending",
+        customer_name: orderCustomerData.customer || "Guest",
+        customer_phone: orderCustomerData.phone || "",
+        shipping_address: orderCustomerData.address || "Store Pickup",
+        landmark: orderCustomerData.landmark || ""
+      };
+      
+      // Save to Supabase
+      const { error: supabaseError } = await supabase
+        .from("orders")
+        .insert([orderData]);
+
+      if (supabaseError) {
+        console.error("Supabase order save error:", supabaseError);
+        // Fallback to local storage if Supabase fails
+      }
+
+      saveOrder({
         id: orderId,
         items: cart,
         total: cartTotal,
         date: new Date().toLocaleString(),
-        status: "Pending",
-        ...orderCustomerData // Attach customer info to local history
-      };
+        status: "Pending"
+      });
       
-      saveOrder(orderData);
       addLoyaltyPoints(10);
       
       window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
@@ -211,7 +235,7 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       {/* Flash Sale Timer */}
       <div className="gradient-orange text-white text-center py-2 text-xs font-bold tracking-wide flex items-center justify-center gap-2">
         <Clock size={14} />
@@ -219,39 +243,29 @@ export default function Index() {
         <span className="bg-black/30 text-white px-2.5 py-0.5 rounded font-mono text-sm">{countdown}</span>
       </div>
 
-      {/* Sticky Header with Logo & Search */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md shadow-lg border-b border-border">
+      {/* Sticky Header with Logo */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto flex items-center gap-3 px-3 py-2.5">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 shrink-0">
             <img src={LOGO_URL} alt="NM Mart" className="w-10 h-10 rounded-xl shadow-md" />
             <div className="hidden sm:block">
-              <h1 className="text-base font-black tracking-tight leading-none">NM <span className="text-primary">MART</span></h1>
-              <p className="text-[7px] uppercase tracking-[0.15em] text-muted-foreground font-semibold">Shop More Save More</p>
+              <h1 className="text-base font-black tracking-tight leading-none text-black italic uppercase">NM <span className="text-primary">MART</span></h1>
+              <p className="text-[7px] uppercase tracking-[0.15em] text-gray-400 font-bold italic">{SLOGAN}</p>
             </div>
           </a>
 
-          {/* Search Bar - always visible */}
-          <div className="flex-1 flex items-center bg-secondary rounded-xl border border-border overflow-hidden">
-            <Search size={16} className="ml-3 text-primary shrink-0" />
-            <input
-              type="text"
-              placeholder="7000+ products खोजें..."
-              value={query}
-              onChange={e => { setQuery(e.target.value); setSelectedCat(null); }}
-              className="flex-1 px-2 py-2.5 bg-transparent text-sm font-medium focus:outline-none placeholder:text-muted-foreground text-foreground"
-            />
-            <button onClick={toggleVoice}
-              className={`p-2 mr-1 rounded-lg transition-colors ${listening ? "bg-destructive text-destructive-foreground" : "hover:bg-card text-muted-foreground"}`}>
-              {listening ? <MicOff size={16} /> : <Mic size={16} />}
-            </button>
-          </div>
+          <div className="flex-1" />
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1.5 shrink-0">
             {user ? (
-              <button onClick={handleLogout} className="text-[9px] font-bold bg-secondary text-foreground px-3 py-2 rounded-lg border border-border hover:border-primary transition-all uppercase">
-                Logout
+              <button 
+                onClick={() => navigate("/profile")} 
+                className="flex items-center gap-2 bg-secondary text-foreground px-3 py-2 rounded-lg border border-border hover:border-sky-blue transition-all group"
+              >
+                <User size={14} className="text-sky-blue" />
+                <span className="text-[9px] font-bold uppercase hidden md:inline">My Profile</span>
               </button>
             ) : (
               <button onClick={() => navigate("/login")}
@@ -265,7 +279,7 @@ export default function Index() {
             <button onClick={() => setCartOpen(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors">
               <ShoppingCart size={20} />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 gradient-orange text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 gradient-sky-blue text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
@@ -274,15 +288,83 @@ export default function Index() {
         </div>
       </header>
 
+      {/* Search Section - Professional & Prominent */}
+      <div className="sticky top-[64px] z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl">
+        <div className="max-w-5xl mx-auto">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 rounded-3xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative flex items-center gap-3 bg-secondary border border-border rounded-2xl p-2 md:p-3 focus-within:border-primary/50 transition-all shadow-inner">
+              <div className="pl-3 text-muted-foreground group-focus-within:text-primary transition-colors">
+                <Search size={22} strokeWidth={2.5} />
+              </div>
+              <input
+                type="text"
+                placeholder="Search over 7,000+ products (e.g. Milk, Rice, Soap)..."
+                className="flex-1 bg-transparent border-none outline-none text-foreground text-base md:text-lg font-bold placeholder:text-muted-foreground/60 placeholder:font-black placeholder:uppercase placeholder:text-[10px] md:placeholder:text-xs placeholder:tracking-[2px]"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setSelectedCat(null); }}
+              />
+              <div className="flex items-center gap-1 md:gap-2 pr-2">
+                {query && (
+                  <button 
+                    onClick={() => setQuery("")}
+                    className="p-2 hover:bg-card rounded-xl text-muted-foreground hover:text-foreground transition-all"
+                  >
+                    <X size={20} />
+                  </button>
+                )}
+                <div className="w-[1px] h-8 bg-border mx-1"></div>
+                <button
+                  onClick={toggleVoice}
+                  className={`p-3 rounded-xl transition-all flex items-center gap-2 group/btn ${
+                    listening 
+                    ? "bg-destructive text-destructive-foreground animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.4)]" 
+                    : "bg-card text-muted-foreground hover:bg-secondary hover:text-primary border border-border"
+                  }`}
+                >
+                  {listening ? <Mic size={20} /> : <MicOff size={20} />}
+                  <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest">
+                    {listening ? "Listening..." : "Voice Search"}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Banner */}
       <HeroBanner />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {loading ? (
-          <div className="py-20 text-center flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-            <p className="font-bold text-primary uppercase text-xs tracking-wide">Loading 7000+ products...</p>
+          <div className="space-y-12">
+            {/* Category Skeleton */}
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="flex flex-col items-center gap-2">
+                  <Skeleton className="w-16 h-16 rounded-2xl" />
+                  <Skeleton className="w-20 h-3" />
+                </div>
+              ))}
+            </div>
+            {/* Product Grid Skeleton */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => (
+                <div key={i} className="bg-card border border-border rounded-2xl p-4 space-y-4">
+                  <Skeleton className="w-full aspect-square rounded-xl" />
+                  <div className="space-y-2">
+                    <Skeleton className="w-full h-4" />
+                    <Skeleton className="w-2/3 h-4" />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="w-12 h-6" />
+                    <Skeleton className="w-16 h-8 rounded-lg" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <>
@@ -561,7 +643,7 @@ export default function Index() {
                     </div>
                   )}
                   <button disabled={cartTotal < MIN_ORDER}
-                    onClick={() => { setCheckoutOpen(true); setCartOpen(false); }}
+                    onClick={() => { navigate("/checkout"); setCartOpen(false); }}
                     className="w-full gradient-brand text-white py-3 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed">
                     Checkout करें
                   </button>

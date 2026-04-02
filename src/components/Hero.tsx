@@ -56,9 +56,9 @@ const Hero = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
           </div>
 
-          {/* Text Content - Black & Orange Theme */}
+          {/* Text Content - Black & Sky Blue Theme */}
           <div className="relative h-full flex flex-col justify-center px-8 md:px-20">
-            <span className="text-[#FF8C00] font-bold tracking-widest mb-4">
+            <span className="text-[#00A8E1] font-bold tracking-widest mb-4">
               {slide.offer}
             </span>
             <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4 leading-tight">
@@ -68,7 +68,7 @@ const Hero = () => {
               {slide.subtitle}
             </p>
             <div className="flex gap-4">
-              <button className="bg-[#FF8C00] text-black font-bold py-3 px-8 rounded-full flex items-center hover:bg-[#e67e00] transition shadow-lg shadow-[#FF8C00]/20">
+              <button className="bg-[#00A8E1] text-black font-bold py-3 px-8 rounded-full flex items-center hover:bg-[#0081ad] transition shadow-lg shadow-[#00A8E1]/20">
                 Shop Now <ShoppingCart className="ml-2 w-5 h-5" />
               </button>
             </div>
@@ -79,13 +79,13 @@ const Hero = () => {
       {/* Manual Controls */}
       <button 
         onClick={() => setCurrentSlide(currentSlide === 0 ? slides.length-1 : currentSlide-1)}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-[#FF8C00] transition"
+        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-[#00A8E1] transition"
       >
         <ArrowLeft />
       </button>
       <button 
         onClick={() => setCurrentSlide(currentSlide === slides.length-1 ? 0 : currentSlide+1)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-[#FF8C00] transition"
+        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-[#00A8E1] transition"
       >
         <ArrowRight />
       </button>
