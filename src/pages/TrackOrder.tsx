@@ -1,24 +1,48 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Package, Truck, Search, Phone, Hash } from "lucide-react";
+import { Package, Truck, Search, Phone, Hash, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const TrackOrder = () => {
   const [mobileNumber, setMobileNumber] = useState("");
   const [orderId, setOrderId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [orderStatus, setOrderStatus] = useState<any>(null);
 
-  const handleTrack = (e: React.FormEvent) => {
+  const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!mobileNumber || !orderId) {
       toast.error("Please fill in all fields");
       return;
     }
-    // In a real app, you would fetch order status from an API.
-    // For now, we'll just show a professional toast.
-    toast.info("Order status: Your order is being processed and will be updated soon.", {
-      description: `Tracking for Order ID ending in ...${orderId}`,
-    });
+    
+    setLoading(true);
+    setOrderStatus(null);
+    try {
+      // Search for order by phone and partial ID
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('customer_phone', mobileNumber)
+        .ilike('id', `%${orderId}`)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setOrderStatus(data);
+        toast.success("Order found!");
+      } else {
+        toast.error("No matching order found. Please check your details.");
+      }
+    } catch (err: any) {
+      console.error("Track order error:", err);
+      toast.error("Failed to track order");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -104,16 +128,36 @@ const TrackOrder = () => {
                 {/* Track Button */}
                 <button
                   type="submit"
+                  disabled={loading}
                   className="w-full bg-[#D32F2F] hover:bg-[#B71C1C] text-white font-black uppercase italic py-5 rounded-2xl shadow-[0_10px_30px_rgba(211,47,47,0.3)] hover:shadow-[0_15px_40px_rgba(211,47,47,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-4"
                 >
-                  <Search size={20} />
+                  {loading ? <Loader2 className="animate-spin" size={20} /> : <Search size={20} />}
                   Track Order
                 </button>
               </form>
 
+              {orderStatus && (
+                <div className="mt-8 p-6 bg-white/5 border border-white/10 rounded-3xl animate-in fade-in zoom-in-95 duration-300">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Status</p>
+                      <h4 className="text-xl font-black italic uppercase text-[#D32F2F]">{orderStatus.status}</h4>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Order ID</p>
+                      <p className="text-xs font-bold text-white">#{orderStatus.id}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Order Date</p>
+                    <p className="text-xs font-bold text-white">{new Date(orderStatus.created_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Help text */}
               <p className="mt-8 text-center text-gray-600 text-[10px] uppercase font-bold tracking-widest">
-                Need help? <span className="text-[#D32F2F] cursor-pointer hover:underline">Contact Support</span>
+                Need help? <span className="text-[#D32F2F] cursor-pointer hover:underline" onClick={() => window.open(`https://wa.me/917081154604?text=Hi, I need help tracking my order.`, "_blank")}>Contact Support</span>
               </p>
             </div>
           </div>

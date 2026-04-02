@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
+import { toast } from "sonner";
 import { Product, productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, getOrderHistory, saveOrder, addLoyaltyPoints, getLoyaltyPoints, OrderRecord } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/ProductImageDisplay";
 import HeroBanner from "@/components/HeroBanner";
@@ -156,23 +157,23 @@ export default function Index() {
      try {
        const { data: { session } } = await supabase.auth.getSession();
        let customerDetails = "";
-       let orderCustomerData = {};
+       let orderCustomerData: any = {};
 
       if (session) {
-        const { data: customer } = await supabase
-          .from("customers")
+        const { data: profile } = await supabase
+          .from("profiles")
           .select("*")
           .eq("id", session.user.id)
           .single();
 
-        if (customer) {
-          customerDetails = `\n\n👤 *Customer Details:* \nName: ${customer.name}\nPhone: ${customer.phone}\nAddress: ${customer.address}\nLandmark: ${customer.landmark || "N/A"}`;
+        if (profile) {
+          customerDetails = `\n\n👤 *Customer Details:* \nName: ${profile.full_name}\nPhone: ${profile.mobile}\nAddress: ${profile.address || "N/A"}\nLandmark: ${profile.landmark || "N/A"}`;
           // Store customer data in order for Admin view
           orderCustomerData = {
-            customer: customer.name,
-            phone: customer.phone,
-            address: customer.address,
-            landmark: customer.landmark
+            customer: profile.full_name,
+            phone: profile.mobile,
+            address: profile.address,
+            landmark: profile.landmark
           };
         }
       }
@@ -191,7 +192,9 @@ export default function Index() {
         customer_name: orderCustomerData.customer || "Guest",
         customer_phone: orderCustomerData.phone || "",
         shipping_address: orderCustomerData.address || "Store Pickup",
-        landmark: orderCustomerData.landmark || ""
+        landmark: orderCustomerData.landmark || "",
+        payment_method: payMethod,
+        created_at: new Date().toISOString()
       };
       
       // Save to Supabase
@@ -201,7 +204,7 @@ export default function Index() {
 
       if (supabaseError) {
         console.error("Supabase order save error:", supabaseError);
-        // Fallback to local storage if Supabase fails
+        toast.error("Failed to save order to database, but sending via WhatsApp...");
       }
 
       saveOrder({
@@ -218,9 +221,10 @@ export default function Index() {
       clearCart();
       setCheckoutOpen(false);
       setCartOpen(false);
+      toast.success("Order placed successfully!");
     } catch (err) {
       console.error("Order process failed", err);
-      alert("Order process failed");
+      toast.error("Order process failed");
     }
   };
 

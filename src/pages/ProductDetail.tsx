@@ -1,10 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageCircle, ShoppingCart, Star, Share2, Loader2, Package, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, MessageCircle, ShoppingCart, Star, Share2, Loader2, Package, CheckCircle2, Plus, Minus } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
+import { useCart } from "@/hooks/useCart";
 import { parseProductSlug, WA_NUMBER } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/ProductImageDisplay";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const SLOGAN = "Shop More, Save More";
 
@@ -12,10 +15,23 @@ const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { allProducts, loading } = useProducts();
+  const { addToCart, cart, updateQty } = useCart();
+  const [adding, setAdding] = useState(false);
 
   const { name, barcode } = parseProductSlug(slug || "");
   const product = allProducts.find(p => p.name === name && p.barcode === barcode)
     || allProducts.find(p => p.name === name);
+
+  const cartItem = product ? cart.find(item => item.name === product.name && item.barcode === product.barcode) : null;
+  const cartIndex = product ? cart.findIndex(item => item.name === product.name && item.barcode === product.barcode) : -1;
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    setAdding(true);
+    addToCart(product);
+    toast.success("Added to cart!");
+    setTimeout(() => setAdding(false), 500);
+  };
 
   if (loading) {
     return (
@@ -147,6 +163,35 @@ const ProductDetail = () => {
                 <div className="h-[1px] bg-gray-50 my-6"></div>
 
                 <div className="space-y-4">
+                  {cartItem ? (
+                    <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-2xl border border-gray-100">
+                      <button 
+                        onClick={() => updateQty(cartIndex, -1)}
+                        className="w-14 h-14 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-black hover:text-primary transition-colors shadow-sm"
+                      >
+                        <Minus size={20} />
+                      </button>
+                      <div className="flex-1 text-center">
+                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Quantity in Cart</p>
+                        <p className="text-xl font-black italic">{cartItem.qty}</p>
+                      </div>
+                      <button 
+                        onClick={() => updateQty(cartIndex, 1)}
+                        className="w-14 h-14 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-black hover:text-primary transition-colors shadow-sm"
+                      >
+                        <Plus size={20} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={handleAddToCart}
+                      disabled={adding}
+                      className="w-full flex items-center justify-center gap-3 bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] shadow-sm hover:bg-black transition-all active:scale-[0.98] italic text-sm"
+                    >
+                      {adding ? <Loader2 className="animate-spin" size={20} /> : <ShoppingCart size={20} />} Add to Basket
+                    </button>
+                  )}
+                  
                   <a 
                     href={whatsappLink} 
                     target="_blank" 

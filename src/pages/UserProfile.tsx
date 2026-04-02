@@ -55,7 +55,7 @@ const UserProfile = () => {
       setUser(session.user);
 
       const { data, error } = await supabase
-        .from("customers")
+        .from("profiles")
         .select("*")
         .eq("id", session.user.id)
         .single();
@@ -64,11 +64,11 @@ const UserProfile = () => {
 
       if (data) {
         setProfile({
-          name: data.name || "",
-          phone: data.phone || session.user.phone || "",
+          name: data.full_name || "",
+          phone: data.mobile || session.user.phone || "",
           address: data.address || "",
           landmark: data.landmark || "",
-          points: data.points || 0
+          points: data.loyalty_points || 0
         });
       } else {
         setProfile(prev => ({ ...prev, phone: session.user.phone?.replace("+91", "") || "" }));
@@ -89,11 +89,11 @@ const UserProfile = () => {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from("customers")
+        .from("profiles")
         .upsert({
           id: user.id,
-          name: profile.name,
-          phone: profile.phone,
+          full_name: profile.name,
+          mobile: profile.phone,
           address: profile.address,
           landmark: profile.landmark,
           updated_at: new Date().toISOString()

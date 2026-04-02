@@ -12,7 +12,6 @@ const Login = () => {
   const [mode, setMode] = useState<"phone" | "email">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [step, setStep] = useState<"input" | "otp">("input");
@@ -61,14 +60,34 @@ const Login = () => {
     } finally { setLoading(false); }
   };
 
-  const handleEmailAuth = async () => {
-    if (!email || !password) { toast.error("Please fill email and password"); return; }
+  const handleAuth = async () => {
+    if (mode === "phone" && step === "input") {
+      await handlePhoneSubmit();
+      return;
+    } else if (mode === "phone" && step === "otp") {
+      await handleOtpVerify();
+      return;
+    }
+
+    // Password mode (Treating Mobile as identifier)
+    if (!phone || !password) { toast.error("Please fill mobile and password"); return; }
     if (isSignUp && !fullName) { toast.error("Please enter your full name"); return; }
     
     setLoading(true);
+    const formattedEmail = `${phone}@nmmart.in`;
+    
     try {
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({ 
+          email: formattedEmail, 
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              mobile: phone
+            }
+          }
+        });
         if (error) throw error;
         
         if (data.user) {
@@ -78,15 +97,19 @@ const Login = () => {
             .upsert({ 
               id: data.user.id, 
               full_name: fullName, 
-              mobile: phone || "", // Phone might be empty if using email sign up
+              mobile: phone,
               updated_at: new Date().toISOString()
             });
           if (profileError) console.error("Profile error:", profileError);
         }
         
-        toast.success("Account created! Please verify your email.");
+        toast.success("Account created successfully!");
+        navigate("/");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ 
+          email: formattedEmail, 
+          password 
+        });
         if (error) throw error;
         toast.success("Login successful!");
         navigate("/");
@@ -184,14 +207,17 @@ const Login = () => {
             ) : (
               <>
                 <div className="space-y-1">
-                  <label className="text-sm font-bold block">Email</label>
-                  <input 
-                    type="email" 
-                    placeholder="Email" 
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-                  />
+                  <label className="text-sm font-bold block">Mobile number</label>
+                  <div className="flex gap-2">
+                    <span className="bg-[#f0f2f2] border border-[#adb1b8] px-3 py-2 rounded shadow-sm text-sm flex items-center">IN +91</span>
+                    <input 
+                      type="tel" 
+                      placeholder="Mobile number" 
+                      value={phone}
+                      onChange={e => setPhone(e.target.value.replace(/\D/g, ""))}
+                      className="flex-1 border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-bold block">Password</label>
@@ -204,7 +230,7 @@ const Login = () => {
                   />
                 </div>
                 <button 
-                  onClick={handleEmailAuth}
+                  onClick={handleAuth}
                   disabled={loading}
                   className="w-full bg-primary text-white py-2 rounded shadow-sm hover:bg-black transition-all text-sm font-bold flex items-center justify-center gap-2"
                 >
@@ -222,7 +248,7 @@ const Login = () => {
               onClick={() => { setMode(mode === "phone" ? "email" : "phone"); setStep("input"); }}
               className="w-full bg-[#f0f2f2] border border-[#adb1b8] text-black py-2 rounded shadow-sm hover:bg-[#e7e9ec] transition-all text-sm font-bold"
             >
-              Use {mode === "phone" ? "Email" : "Phone Number"}
+              Use {mode === "phone" ? "Password Login" : "OTP Login"}
             </button>
 
             <p className="text-[12px] leading-relaxed text-[#111]">
