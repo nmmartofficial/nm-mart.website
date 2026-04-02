@@ -14,6 +14,10 @@ interface InventoryTabProps {
   setCategory: (v: string) => void;
   subCategory: string;
   setSubCategory: (v: string) => void;
+  brand: string;
+  setBrand: (v: string) => void;
+  stockQuantity: string;
+  setStockQuantity: (v: string) => void;
   imageUrl: string;
   setImageUrl: (v: string) => void;
   isScanning: boolean;
@@ -31,6 +35,7 @@ interface InventoryTabProps {
 const InventoryTab = ({
   barcode, setBarcode, productName, setProductName, mrp, setMrp,
   salePrice, setSalePrice, category, setCategory, subCategory, setSubCategory,
+  brand, setBrand, stockQuantity, setStockQuantity,
   imageUrl, setImageUrl, isScanning, setIsScanning, loading, isImporting,
   fetchingProduct, handleFileUpload, handleInventorySubmit, fetchProductDetails,
   barcodeInputRef, fileInputRef
@@ -143,6 +148,29 @@ const InventoryTab = ({
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold uppercase text-sm"
                 value={subCategory}
                 onChange={(e) => setSubCategory(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Brand</label>
+              <input 
+                type="text" 
+                placeholder="e.g. Tata"
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold uppercase text-sm"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Stock Quantity</label>
+              <input 
+                type="number" 
+                placeholder="0"
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold text-sm"
+                value={stockQuantity}
+                onChange={(e) => setStockQuantity(e.target.value)}
               />
             </div>
           </div>

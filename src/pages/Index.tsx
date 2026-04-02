@@ -17,6 +17,7 @@ import HeroBanner from "@/components/shop/HeroBanner";
 import DiscountTabs from "@/components/shop/DiscountTabs";
 import WelfareCardBanner from "@/components/shop/WelfareCardBanner";
 import ChatBot from "@/components/shop/ChatBot";
+import Footer from "@/components/shop/Footer";
 
 const LOGO_URL = "https://i.postimg.cc/9XJ2GS8L/logo.jpg";
 const SLOGAN = "Shop More, Save More";
@@ -598,28 +599,18 @@ export default function Index() {
                             className="flex-1 bg-primary text-primary-foreground py-1.5 rounded-lg text-[9px] font-bold uppercase hover:bg-primary/90 transition-colors">
                             Add
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Order: ${p.name} - ₹${p.saleRate}`)}`); }}
-                            className="p-1.5 bg-[hsl(var(--success))] rounded-lg text-white hover:opacity-90" title="WhatsApp">
-                            <MessageCircle size={12} />
-                          </button>
                         </div>
                       </div>
                     </motion.div>
                   ))}
                 </div>
 
-                {/* Infinite scroll trigger */}
                 {visibleCount < filtered.length && (
-                  <div ref={loadMoreRef} className="py-8 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-                    <p className="text-xs text-muted-foreground mt-2">{filtered.length - visibleCount} और products लोड हो रहे हैं...</p>
-                  </div>
-                )}
-
-                {filtered.length === 0 && (
-                  <div className="text-center py-20 text-muted-foreground">
-                    <Package size={48} className="mx-auto mb-4 opacity-30" />
-                    <p className="font-bold">कोई प्रोडक्ट नहीं मिला</p>
+                  <div className="mt-12 text-center">
+                    <button onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
+                      className="bg-white border-2 border-primary text-primary px-10 py-3 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-primary hover:text-white transition-all shadow-md active:scale-95">
+                      Load More Products
+                    </button>
                   </div>
                 )}
               </>
@@ -628,58 +619,7 @@ export default function Index() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-card border-t border-border mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <img src={LOGO_URL} alt="NM Mart" className="w-9 h-9 rounded-lg" />
-                <span className="font-black text-lg tracking-tight">NM <span className="text-primary">MART</span></span>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                मंझनपुर का सबसे भरोसेमंद रिटेल स्टोर। 7000+ प्रोडक्ट्स होलसेल रेट पर। क्वालिटी गारंटीड।
-              </p>
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-foreground uppercase mb-3 tracking-wider">Quick Links</h4>
-              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                <a href="/about" className="hover:text-primary transition-colors">About Us</a>
-                <a href="/contact" className="hover:text-primary transition-colors">Contact Us</a>
-                <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
-                <a href="/admin" className="hover:text-primary transition-colors text-muted-foreground/30 text-xs">Admin</a>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-foreground uppercase mb-3 tracking-wider">Contact</h4>
-              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                <p className="flex items-center gap-2"><MapPin size={14} className="text-primary" /> Near B.P. Public School, Manjhanpur, Kaushambi, UP - 212207</p>
-                <a href="tel:+917081154604" className="flex items-center gap-2 hover:text-primary transition-colors"><Phone size={14} className="text-primary" /> +91 708 115 4604</a>
-                <p className="text-xs">⏰ 8 AM – 10 PM Daily</p>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-foreground uppercase mb-3 tracking-wider">Follow & Rate Us</h4>
-              <div className="flex gap-3 mb-4">
-                <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-[hsl(var(--success))] hover:bg-[hsl(var(--success))] hover:text-white transition-all"><MessageCircle size={18} /></a>
-                <a href="#" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-all"><Instagram size={18} /></a>
-                <a href="#" className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all"><Facebook size={18} /></a>
-              </div>
-              <a href="https://maps.google.com/?q=Manjhanpur+Kaushambi+UP" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-secondary px-3 py-2 rounded-lg text-xs font-bold text-muted-foreground hover:text-primary transition-colors mb-2">
-                <MapPin size={14} /> Google Maps पर देखें
-              </a>
-              <a href="https://g.page/r/YOUR_PLACE_ID/review" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-2 rounded-lg text-xs font-bold text-primary hover:bg-primary hover:text-primary-foreground transition-all">
-                <Star size={14} /> Rate Our Store ⭐
-              </a>
-            </div>
-          </div>
-          <div className="border-t border-border mt-8 pt-4 text-center text-[10px] text-muted-foreground/50 uppercase tracking-widest">
-            © {new Date().getFullYear()} NM MART — Retail OS v7.0 | Manjhanpur, UP
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* WhatsApp FAB */}
       <a href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hi NM Mart, I need manual support with my order/account.')}`} target="_blank" rel="noopener noreferrer"

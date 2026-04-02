@@ -49,7 +49,7 @@ const AdminLogin = ({ password, setPassword, handleLogin }: AdminLoginProps) => 
           </div>
         </div>
       </div>
-      <p className="mt-8 text-[10px] text-gray-400 font-black uppercase tracking-[4px] italic">© 2026 NM Mart Retail OS v5.0.2</p>
+      <p className="mt-8 text-[10px] text-black font-black uppercase tracking-[4px] italic text-center">© 2026 NM MART | Powered by NM Mart</p>
     </div>
   );
 };

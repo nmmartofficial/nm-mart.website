@@ -34,6 +34,8 @@ const Admin = () => {
   const [salePrice, setSalePrice] = useState("");
   const [category, setCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
+  const [brand, setBrand] = useState("");
+  const [stockQuantity, setStockQuantity] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -102,6 +104,7 @@ const Admin = () => {
           sale_price: Number(row.SalePrice || row.sale_price || row.SaleRate || row.saleRate || row.Price || 0),
           category: row.Category || row.category || "General",
           sub_category: row.SubCategory || row.subCategory || row.sub_category || "",
+          brand: row.Brand || row.brand || "Local",
           image_url: row.Image || row.imageUrl || row.image || row.image_url || "",
           stock_quantity: Number(row.Stock || row.stock || row.stock_quantity || 0),
           updated_at: new Date().toISOString()
@@ -201,12 +204,14 @@ const Admin = () => {
         setSalePrice(data.sale_price || data.saleRate || "");
         setCategory(data.category || "");
         setSubCategory(data.sub_category || data.subCategory || "");
+        setBrand(data.brand || "");
+        setStockQuantity(String(data.stock_quantity || ""));
         setImageUrl(data.image_url || data.imageUrl || "");
         if (navigator.vibrate) navigator.vibrate(100);
         toast.success(`Found: ${data.product_name || data.name}`);
       } else {
         setProductName(""); setMrp(""); setSalePrice(""); 
-        setCategory(""); setSubCategory(""); setImageUrl("");
+        setCategory(""); setSubCategory(""); setBrand(""); setStockQuantity(""); setImageUrl("");
       }
     } catch (err: any) {
       console.error("Error fetching product:", err);
@@ -238,6 +243,8 @@ const Admin = () => {
           sale_price: Number(salePrice),
           category,
           sub_category: subCategory,
+          brand,
+          stock_quantity: Number(stockQuantity || 0),
           image_url: imageUrl,
           updated_at: new Date().toISOString()
         }, { onConflict: 'barcode' });
@@ -249,7 +256,7 @@ const Admin = () => {
 
       toast.success("Inventory updated successfully!");
       setBarcode(""); setProductName(""); setMrp(""); setSalePrice("");
-      setCategory(""); setSubCategory(""); setImageUrl("");
+      setCategory(""); setSubCategory(""); setBrand(""); setStockQuantity(""); setImageUrl("");
       if (barcodeInputRef.current) barcodeInputRef.current.focus();
     } catch (err: any) {
       console.error("Error updating inventory:", err);
@@ -362,6 +369,8 @@ const Admin = () => {
             salePrice={salePrice} setSalePrice={setSalePrice}
             category={category} setCategory={setCategory}
             subCategory={subCategory} setSubCategory={setSubCategory}
+            brand={brand} setBrand={setBrand}
+            stockQuantity={stockQuantity} setStockQuantity={setStockQuantity}
             imageUrl={imageUrl} setImageUrl={setImageUrl}
             isScanning={isScanning} setIsScanning={setIsScanning}
             loading={loading} isImporting={isImporting}

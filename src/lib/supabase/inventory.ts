@@ -7,6 +7,7 @@ export interface InventoryItem {
   sale_price: number;
   category: string;
   sub_category?: string;
+  brand?: string;
   image_url?: string;
   stock_quantity?: number;
   updated_at?: string;
