@@ -75,6 +75,11 @@ const Admin = () => {
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error("You must be logged in as an admin to import products.");
+        }
+
         const data = new Uint8Array(event.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
@@ -111,12 +116,15 @@ const Admin = () => {
           .from('inventory')
           .upsert(productsToInsert, { onConflict: 'barcode' });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Bulk Upsert Error Details:", error);
+          throw new Error(`[${error.code}] ${error.message || "Bulk database update failed"}`);
+        }
 
         toast.success(`Successfully imported ${productsToInsert.length} products!`);
       } catch (err: any) {
         console.error("Import error:", err);
-        toast.error("Failed to import products: " + err.message);
+        toast.error(err.message || "Import failed");
       } finally {
         setIsImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -217,6 +225,12 @@ const Admin = () => {
     setLoading(true);
     
     try {
+      // Check if user is authenticated in Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("You must be logged in as an admin to update inventory.");
+      }
+
       const { error } = await supabase
         .from('inventory')
         .upsert({
@@ -231,7 +245,10 @@ const Admin = () => {
           updated_at: new Date().toISOString()
         }, { onConflict: 'barcode' });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase Error Details:", error);
+        throw new Error(`[${error.code}] ${error.message || "Database rejected the update"}`);
+      }
 
       toast.success("Inventory updated successfully!");
       setBarcode(""); setProductName(""); setMrp(""); setSalePrice(""); setDiscount("");
@@ -239,7 +256,7 @@ const Admin = () => {
       if (barcodeInputRef.current) barcodeInputRef.current.focus();
     } catch (err: any) {
       console.error("Error updating inventory:", err);
-      toast.error("Failed to update inventory");
+      toast.error(err.message || "Failed to update inventory");
     } finally {
       setLoading(false);
     }
