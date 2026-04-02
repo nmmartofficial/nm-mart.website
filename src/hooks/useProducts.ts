@@ -17,15 +17,15 @@ export function useProducts() {
 
         if (data) {
           const mappedProducts: Product[] = data.map((item: any) => ({
-            name: item.name,
+            name: item.product_name || item.name,
             barcode: item.barcode,
             category: item.category || "General",
-            subCategory: item.subCategory || "",
+            subCategory: item.sub_category || item.subCategory || "",
             mrp: Number(item.mrp || 0),
-            saleRate: Number(item.saleRate || 0),
-            imageUrl: item.imageUrl || "",
+            saleRate: Number(item.sale_price || item.saleRate || 0),
+            imageUrl: item.image_url || item.imageUrl || "",
             discount: Number(item.discount || 0),
-            save: Math.round(Number(item.mrp || 0) - Number(item.saleRate || 0))
+            save: Math.round(Number(item.mrp || 0) - Number(item.sale_price || item.saleRate || 0))
           }));
           setAllProducts(mappedProducts);
         }

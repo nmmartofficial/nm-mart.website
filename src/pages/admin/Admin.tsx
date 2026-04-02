@@ -95,16 +95,15 @@ const Admin = () => {
         // Map Excel columns to database fields
         const productsToInsert = jsonData.map((row: any) => ({
           barcode: String(row.Barcode || row.barcode || row.ID || ""),
-          name: row.Name || row.name || row.Product || "",
+          product_name: row.Name || row.name || row.Product || row.product_name || "",
           mrp: Number(row.MRP || row.mrp || row.Price || 0),
-          saleRate: Number(row.SaleRate || row.saleRate || row.SalePrice || row.Price || 0),
+          sale_price: Number(row.SalePrice || row.sale_price || row.SaleRate || row.saleRate || row.Price || 0),
           category: row.Category || row.category || "General",
-          subCategory: row.SubCategory || row.subCategory || "",
-          imageUrl: row.Image || row.imageUrl || row.image || "",
-          stock: row.Stock || row.stock || "in-stock",
-          discount: Number(row.Discount || row.discount || 0),
+          sub_category: row.SubCategory || row.subCategory || row.sub_category || "",
+          image_url: row.Image || row.imageUrl || row.image || row.image_url || "",
+          stock_quantity: Number(row.Stock || row.stock || row.stock_quantity || 0),
           updated_at: new Date().toISOString()
-        })).filter(p => p.barcode && p.name);
+        })).filter(p => p.barcode && p.product_name);
 
         if (productsToInsert.length === 0) {
           toast.error("No valid products found in file (Need Barcode and Name)");
@@ -195,15 +194,14 @@ const Admin = () => {
       if (error) throw error;
 
       if (data) {
-        setProductName(data.name);
+        setProductName(data.product_name || data.name);
         setMrp(data.mrp || "");
-        setSalePrice(data.saleRate || "");
-        setDiscount(data.discount || "");
+        setSalePrice(data.sale_price || data.saleRate || "");
         setCategory(data.category || "");
-        setSubCategory(data.subCategory || "");
-        setImageUrl(data.imageUrl || "");
+        setSubCategory(data.sub_category || data.subCategory || "");
+        setImageUrl(data.image_url || data.imageUrl || "");
         if (navigator.vibrate) navigator.vibrate(100);
-        toast.success(`Found: ${data.name}`);
+        toast.success(`Found: ${data.product_name || data.name}`);
       } else {
         // Clear fields if not found, except barcode
         setProductName(""); setMrp(""); setSalePrice(""); setDiscount("");
@@ -235,13 +233,12 @@ const Admin = () => {
         .from('inventory')
         .upsert({
           barcode,
-          name: productName,
+          product_name: productName,
           mrp: Number(mrp),
-          saleRate: Number(salePrice),
-          discount: Number(discount),
+          sale_price: Number(salePrice),
           category,
-          subCategory,
-          imageUrl,
+          sub_category: subCategory,
+          image_url: imageUrl,
           updated_at: new Date().toISOString()
         }, { onConflict: 'barcode' });
 
