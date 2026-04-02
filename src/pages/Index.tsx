@@ -12,11 +12,11 @@ import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import { Product, productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, getOrderHistory, saveOrder, addLoyaltyPoints, getLoyaltyPoints, OrderRecord } from "@/lib/store-utils";
-import ProductImageDisplay from "@/components/shop/shop/ProductImageDisplay";
-import HeroBanner from "@/components/shop/shop/HeroBanner";
-import DiscountTabs from "@/components/shop/shop/DiscountTabs";
-import WelfareCardBanner from "@/components/shop/shop/WelfareCardBanner";
-import ChatBot from "@/components/shop/shop/ChatBot";
+import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
+import HeroBanner from "@/components/shop/HeroBanner";
+import DiscountTabs from "@/components/shop/DiscountTabs";
+import WelfareCardBanner from "@/components/shop/WelfareCardBanner";
+import ChatBot from "@/components/shop/ChatBot";
 
 const LOGO_URL = "https://i.postimg.cc/9XJ2GS8L/logo.jpg";
 const SLOGAN = "Shop More, Save More";
