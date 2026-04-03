@@ -90,9 +90,11 @@ export default function Index() {
   const [showOrders, setShowOrders] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [welfareCard, setWelfareCard] = useState<{ number: string; active: boolean } | null>(null);
+  const [welfareCard, setWelfareCard] = useState<{ number: string; active: boolean; points: number } | null>(null);
   const [showWelfareModal, setShowWelfareModal] = useState(false);
+  const [showGoldenCard, setShowGoldenCard] = useState(false);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const countdown = useCountdown();
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
@@ -117,23 +119,35 @@ export default function Index() {
   }, []);
 
   const fetchWelfareStatus = async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('welfare_status, welfare_card_number')
-        .eq('id', userId)
-        .single();
-      
-      if (data && (data.welfare_status === 'active' || data.welfare_card_number)) {
-        setWelfareCard({
-          number: data.welfare_card_number || "NM-W-0001",
-          active: data.welfare_status === 'active'
-        });
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('welfare_status, welfare_card_number, points_balance')
+          .eq('id', userId)
+          .single();
+        
+        if (data) {
+          let cardNumber = data.welfare_card_number;
+          
+          // Auto-generate 10-digit card number if missing
+          if (!cardNumber) {
+            cardNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+            await supabase
+              .from('profiles')
+              .update({ welfare_card_number: cardNumber })
+              .eq('id', userId);
+          }
+
+          setWelfareCard({
+            number: cardNumber,
+            active: data.welfare_status === 'active',
+            points: data.points_balance || 0
+          });
+        }
+      } catch (err) {
+        console.error("Welfare status fetch error:", err);
       }
-    } catch (err) {
-      console.error("Welfare status fetch error:", err);
-    }
-  };
+    };
 
   // Back to top
   useEffect(() => {
@@ -253,6 +267,16 @@ export default function Index() {
         toast.error("Failed to save order to database, but sending via WhatsApp...");
       }
 
+      const pointsEarned = Math.floor(finalTotal / 100);
+      
+      // Update points in database
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ points_balance: (welfareCard?.points || 0) + pointsEarned })
+          .eq('id', user.id);
+      }
+
       saveOrder({
         id: orderId,
         items: cart,
@@ -261,7 +285,7 @@ export default function Index() {
         status: "Pending"
       });
       
-      addLoyaltyPoints(10);
+      addLoyaltyPoints(pointsEarned);
       
       window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
       clearCart();
@@ -324,14 +348,10 @@ export default function Index() {
               </button>
             )}
 
-            <button onClick={() => setShowOrders(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors" title="Orders">
-              <Package size={18} />
-            </button>
-
             {/* Welfare Card / Rewards Button */}
             {welfareCard?.active ? (
               <button 
-                onClick={() => navigate("/profile")}
+                onClick={() => setShowGoldenCard(true)}
                 className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-2 border-yellow-600 px-2.5 py-1.5 rounded-xl hover:shadow-lg transition-all group shadow-sm animate-pulse-glow"
               >
                 <Star size={14} className="text-yellow-800 fill-current" />
@@ -349,6 +369,10 @@ export default function Index() {
                 <span className="text-[9px] font-black uppercase tracking-tighter text-black group-hover:text-white hidden sm:inline">Rewards</span>
               </button>
             )}
+
+            <button onClick={() => setShowOrders(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors" title="Orders">
+              <Package size={18} />
+            </button>
 
             <button onClick={() => setCartOpen(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors">
               <ShoppingCart size={20} />
@@ -680,6 +704,9 @@ export default function Index() {
                     </button>
                   </div>
                 )}
+                
+                {/* Infinite Scroll Target */}
+                <div ref={loadMoreRef} className="h-10 w-full" />
               </>
             )}
           </>
@@ -852,8 +879,73 @@ export default function Index() {
         )}
       </AnimatePresence>
 
-      {/* Welfare Card Modal */}
+      {/* Welfare Card Modals */}
       <AnimatePresence>
+        {showGoldenCard && welfareCard && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, rotateY: 90 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+              exit={{ opacity: 0, scale: 0.9, rotateY: -90 }}
+              className="relative w-full max-w-md aspect-[1.6/1] bg-gradient-to-br from-[#bf953f] via-[#fcf6ba] to-[#b38728] rounded-3xl p-8 shadow-[0_0_50px_rgba(191,149,63,0.4)] border border-white/20 overflow-hidden group"
+            >
+              {/* Chip Detail */}
+              <div className="absolute top-12 left-10 w-12 h-10 bg-gradient-to-br from-yellow-200 to-yellow-600 rounded-lg shadow-inner opacity-80" />
+              
+              {/* Logo */}
+              <div className="absolute top-8 right-10 flex flex-col items-end">
+                <h2 className="text-2xl font-black italic text-yellow-900 tracking-tighter leading-none">NM <span className="text-black">MART</span></h2>
+                <p className="text-[8px] font-bold text-yellow-800 uppercase tracking-widest">Welfare Member</p>
+              </div>
+
+              {/* Card Number */}
+              <div className="mt-20">
+                <p className="text-[10px] font-black text-yellow-900/60 uppercase tracking-[4px] mb-1">Card Number</p>
+                <p className="text-2xl font-black text-black font-mono tracking-[6px] drop-shadow-sm">
+                  {welfareCard.number.match(/.{1,4}/g)?.join(' ') || welfareCard.number}
+                </p>
+              </div>
+
+              {/* Bottom Info */}
+              <div className="absolute bottom-8 left-10 right-10 flex justify-between items-end">
+                <div>
+                  <p className="text-[8px] font-black text-yellow-900/60 uppercase tracking-widest mb-1">Card Holder</p>
+                  <p className="text-sm font-black text-black uppercase italic tracking-tight">{user?.user_metadata?.full_name || "NM Member"}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[8px] font-black text-yellow-900/60 uppercase tracking-widest mb-1">Balance</p>
+                  <div className="flex items-center gap-1.5 justify-end">
+                    <Star size={14} className="text-yellow-900 fill-current" />
+                    <p className="text-xl font-black text-black italic">{welfareCard.points} <span className="text-[10px]">PTS</span></p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <button 
+                onClick={() => setShowGoldenCard(false)}
+                className="absolute top-4 left-4 p-2 bg-black/10 hover:bg-black/20 rounded-full transition-all text-yellow-900"
+              >
+                <X size={16} />
+              </button>
+
+              {/* Holographic Effect */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+            </motion.div>
+            
+            {/* Action Button outside the card */}
+            <div className="absolute bottom-20 flex flex-col items-center gap-4">
+              <button 
+                onClick={() => window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi NM Mart! I want to redeem my ${welfareCard.points} points for a discount.`)}`, "_blank")}
+                className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 italic"
+              >
+                Redeem Points <Gift size={20} />
+              </button>
+              <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">1 Point = ₹1 Discount</p>
+            </div>
+          </div>
+        )}
+
         {showWelfareModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div 
