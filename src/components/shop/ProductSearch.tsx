@@ -62,7 +62,7 @@ const ProductSearch = () => {
           <div className="relative">
             <input 
               type="text" 
-              placeholder="Search in 7000+ Items..." 
+              placeholder="Search in 7,358+ Items..." 
               className="w-full bg-gray-100 border-2 border-transparent p-4 rounded-2xl pl-12 focus:border-blue-500 focus:bg-white transition-all font-bold shadow-inner"
               onChange={(e) => setQuery(e.target.value)}
               value={query}

@@ -98,17 +98,17 @@ const Admin = () => {
         }
 
         const productsToInsert = jsonData.map((row: any) => ({
-          barcode: String(row.Barcode || row.barcode || row.ID || ""),
-          product_name: row.Name || row.name || row.Product || row.product_name || "",
+          barcode: String(row.Barcode || row.barcode || row.barcode || row.ID || ""),
+          name: row.Name || row.name || row.Product || row.product_name || "",
           mrp: Number(row.MRP || row.mrp || row.Price || 0),
-          sale_price: Number(row.SalePrice || row.sale_price || row.SaleRate || row.saleRate || row.Price || 0),
+          salerate: Number(row.SalePrice || row.sale_price || row.SaleRate || row.saleRate || row.Price || row.salerate || 0),
           category: row.Category || row.category || "General",
           sub_category: row.SubCategory || row.subCategory || row.sub_category || "",
           brand: row.Brand || row.brand || "Local",
           image_url: row.Image || row.imageUrl || row.image || row.image_url || "",
-          stock_quantity: Number(row.Stock || row.stock || row.stock_quantity || 0),
+          stock: Number(row.Stock || row.stock || row.stock_quantity || 0),
           updated_at: new Date().toISOString()
-        })).filter(p => p.barcode && p.product_name);
+        })).filter(p => p.barcode && p.name);
 
         if (productsToInsert.length === 0) {
           toast.error("No valid products found in file (Need Barcode and Name)");
@@ -117,7 +117,7 @@ const Admin = () => {
         }
 
         const { error } = await supabase
-          .from('inventory')
+          .from('products')
           .upsert(productsToInsert, { onConflict: 'barcode' });
 
         if (error) {
@@ -191,7 +191,7 @@ const Admin = () => {
     setFetchingProduct(true);
     try {
       const { data, error } = await supabase
-        .from('inventory')
+        .from('products')
         .select('*')
         .eq('barcode', code)
         .maybeSingle();
@@ -199,16 +199,16 @@ const Admin = () => {
       if (error) throw error;
 
       if (data) {
-        setProductName(data.product_name || data.name);
+        setProductName(data.name || "Unknown Product");
         setMrp(data.mrp || "");
-        setSalePrice(data.sale_price || data.saleRate || "");
+        setSalePrice(data.salerate || "");
         setCategory(data.category || "");
-        setSubCategory(data.sub_category || data.subCategory || "");
+        setSubCategory(data.sub_category || "");
         setBrand(data.brand || "");
-        setStockQuantity(String(data.stock_quantity || ""));
-        setImageUrl(data.image_url || data.imageUrl || "");
+        setStockQuantity(String(data.stock || ""));
+        setImageUrl(data.image_url || "");
         if (navigator.vibrate) navigator.vibrate(100);
-        toast.success(`Found: ${data.product_name || data.name}`);
+        toast.success(`Found: ${data.name}`);
       } else {
         setProductName(""); setMrp(""); setSalePrice(""); 
         setCategory(""); setSubCategory(""); setBrand(""); setStockQuantity(""); setImageUrl("");
@@ -235,16 +235,16 @@ const Admin = () => {
       }
 
       const { error } = await supabase
-        .from('inventory')
+        .from('products')
         .upsert({
           barcode,
-          product_name: productName,
+          name: productName,
           mrp: Number(mrp),
-          sale_price: Number(salePrice),
+          salerate: Number(salePrice),
           category,
           sub_category: subCategory,
           brand,
-          stock_quantity: Number(stockQuantity || 0),
+          stock: Number(stockQuantity || 0),
           image_url: imageUrl,
           updated_at: new Date().toISOString()
         }, { onConflict: 'barcode' });

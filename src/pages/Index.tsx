@@ -373,7 +373,7 @@ export default function Index() {
               </div>
               <input
                 type="text"
-                placeholder="Search over 7,000+ products (e.g. Milk, Rice, Soap)..."
+                placeholder="Search over 7,358+ products (e.g. Milk, Rice, Soap)..."
                 className="flex-1 bg-transparent border-none outline-none text-foreground text-base md:text-lg font-bold placeholder:text-muted-foreground/60 placeholder:font-black placeholder:uppercase placeholder:text-[10px] md:placeholder:text-xs placeholder:tracking-[2px]"
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSelectedCat(null); }}

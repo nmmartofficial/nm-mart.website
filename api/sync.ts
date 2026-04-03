@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase credentials provided by user
-const SUPABASE_URL = "https://lxdqygldjjbgpzpklbns.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_Y1d7P8E-IH-IfVI1tOb3NQ_zZSs5-yc";
+const SUPABASE_URL = "https://wcoymnkyqjlncztyabxc.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_8yFEGZaTqzkOirj2ax---g_R8E4PiSV";
 
 const supabaseUrl = process.env.SUPABASE_URL || SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
@@ -60,7 +60,7 @@ export default async function handler(req: any, res: any) {
         barcode: String(item.Barcode || ""),
         name: String(item.ItemName || "Unknown Product"),
         mrp: Number(item.MRP || 0),
-        saleRate: Number(item.SalesRate || 0),
+        salerate: Number(item.SalesRate || 0),
         stock: Number(item.Stock || 0),
         discount: Math.round(Math.max(0, Number(item.MRP || 0) - Number(item.SalesRate || 0))),
         updated_at: new Date().toISOString()

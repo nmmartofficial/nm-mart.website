@@ -28,7 +28,7 @@ const ProductGrid = ({ products, isLoading }: any) => {
       <div className="relative mb-10 max-w-2xl mx-auto -mt-8 shadow-2xl rounded-2xl overflow-hidden">
         <input 
           type="text" 
-          placeholder="7000+ items mein search karein..." 
+          placeholder="7,358+ items mein search karein..." 
           className="w-full bg-white border-none p-5 pl-14 font-bold text-lg focus:ring-2 focus:ring-blue-900"
           onChange={(e) => setQuery(e.target.value)}
         />

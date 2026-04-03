@@ -10,24 +10,24 @@ export function useProducts() {
     const fetchProducts = async () => {
       try {
         const { data, error } = await supabase
-          .from('inventory')
+          .from('products')
           .select('*');
 
         if (error) throw error;
 
         if (data) {
           const mappedProducts: Product[] = data.map((item: any) => ({
-            name: item.name || item.ItemName || "Unknown Product",
-            barcode: item.barcode || item.Barcode,
+            name: item.name || "Unknown Product",
+            barcode: item.barcode,
             category: item.category || "General",
             brand: item.brand || "Local",
             subCategory: item.sub_category || "",
             mrp: Number(item.mrp || 0),
-            saleRate: Number(item.saleRate || item.SalesRate || 0),
+            saleRate: Number(item.salerate || item.saleRate || 0),
             imageUrl: item.image_url || "",
             discount: Number(item.discount || 0),
-            stock: Number(item.stock || item.Stock || 0),
-            save: Math.round(Number(item.mrp || 0) - Number(item.saleRate || item.SalesRate || 0))
+            stock: Number(item.stock || 0),
+            save: Math.round(Number(item.mrp || 0) - Number(item.salerate || item.saleRate || 0))
           }));
           setAllProducts(mappedProducts);
         }

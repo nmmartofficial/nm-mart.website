@@ -2,14 +2,14 @@ import { supabase } from "./client";
 
 export interface InventoryItem {
   barcode: string;
-  product_name: string;
+  name: string;
   mrp: number;
-  sale_price: number;
+  salerate: number;
   category: string;
   sub_category?: string;
   brand?: string;
   image_url?: string;
-  stock_quantity?: number;
+  stock?: number;
   updated_at?: string;
 }
 
@@ -22,7 +22,7 @@ export async function upsertInventory(data: InventoryItem | InventoryItem[]) {
   const items = isBulk ? data : [data];
   
   const { data: result, error } = await supabase
-    .from('inventory')
+    .from('products')
     .upsert(items, { onConflict: 'barcode' });
 
   if (error) {
@@ -38,7 +38,7 @@ export async function upsertInventory(data: InventoryItem | InventoryItem[]) {
  */
 export async function getProductByBarcode(barcode: string) {
   const { data, error } = await supabase
-    .from('inventory')
+    .from('products')
     .select('*')
     .eq('barcode', barcode)
     .maybeSingle();
@@ -56,7 +56,7 @@ export async function getProductByBarcode(barcode: string) {
  */
 export async function getAllProducts() {
   const { data, error } = await supabase
-    .from('inventory')
+    .from('products')
     .select('*')
     .order('updated_at', { ascending: false });
 
