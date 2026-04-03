@@ -3,18 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingCart, Search, X, MessageCircle,
-  Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift, RotateCcw,
-  ChevronRight, Phone, Instagram, Facebook, Youtube, ExternalLink,
-  User
+  Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift,
+  ChevronRight, User as UserIcon, CreditCard
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
-import { Product, productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, getOrderHistory, saveOrder, addLoyaltyPoints, getLoyaltyPoints, OrderRecord } from "@/lib/store-utils";
+import { productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, addLoyaltyPoints, getLoyaltyPoints, OrderRecord } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import HeroBanner from "@/components/shop/HeroBanner";
-import DiscountTabs from "@/components/shop/DiscountTabs";
 import ChatBot from "@/components/shop/ChatBot";
 import Footer from "@/components/shop/Footer";
 import FlashSaleBanner from "@/components/shop/FlashSaleBanner";
@@ -58,8 +57,6 @@ const CATEGORY_ICONS: Record<string, string> = {
 /* ─── Priority categories (shown first) ─── */
 const PRIORITY_CATS = ["Daily Essentials", "Snacks"];
 const HIDDEN_CATS = ["Bedsheets", "bedsheets"];
-
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -317,7 +314,7 @@ export default function Index() {
                 onClick={() => navigate("/profile")} 
                 className="flex items-center gap-2 bg-secondary text-foreground px-3 py-2 rounded-lg border border-border hover:border-sky-blue transition-all group"
               >
-                <User size={14} className="text-sky-blue" />
+                <UserIcon size={14} className="text-sky-blue" />
                 <span className="text-[9px] font-bold uppercase hidden md:inline">My Profile</span>
               </button>
             ) : (
