@@ -20,7 +20,9 @@ const UserProfile = () => {
     address: "",
     landmark: "",
     avatar_url: "",
-    points: 0
+    points: 0,
+    welfare_status: "inactive",
+    welfare_card_number: ""
   });
 
   useEffect(() => {
@@ -70,7 +72,9 @@ const UserProfile = () => {
           address: data.address || "",
           landmark: data.landmark || "",
           avatar_url: data.avatar_url || "",
-          points: data.loyalty_points || 0
+          points: data.loyalty_points || 0,
+          welfare_status: data.welfare_status || "inactive",
+          welfare_card_number: data.welfare_card_number || ""
         });
       } else {
         setProfile(prev => ({ ...prev, phone: session.user.phone?.replace("+91", "") || "" }));
@@ -331,6 +335,45 @@ const UserProfile = () => {
                   <span className="text-3xl font-black text-white italic leading-none">{profile.points}</span>
                 </div>
               </div>
+
+              {/* Welfare Card Status Section */}
+              {profile.welfare_status === 'active' ? (
+                <div className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 p-8 rounded-[40px] shadow-lg border-2 border-yellow-600 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/20 transition-all" />
+                  <div className="flex items-center gap-6 text-center md:text-left relative z-10">
+                    <div className="w-16 h-16 bg-yellow-600/20 rounded-3xl flex items-center justify-center text-yellow-900 shadow-sm shrink-0">
+                      <Star size={32} className="fill-current" />
+                    </div>
+                    <div>
+                      <h4 className="text-2xl font-black italic uppercase text-yellow-900">NM Welfare Member</h4>
+                      <p className="font-bold text-yellow-800 text-[10px] uppercase tracking-[3px] italic mt-1">Status: <span className="text-green-700">Active</span></p>
+                    </div>
+                  </div>
+                  <div className="bg-white/30 border border-yellow-600/30 px-8 py-4 rounded-2xl backdrop-blur-md relative z-10">
+                    <span className="text-[9px] font-black text-yellow-900 uppercase tracking-widest block mb-1">Card Number</span>
+                    <span className="text-xl font-black text-black italic leading-none">{profile.welfare_card_number}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-black p-8 rounded-[40px] shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12 blur-xl" />
+                  <div className="flex items-center gap-6 text-center md:text-left relative z-10">
+                    <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-yellow-400 shadow-sm shrink-0">
+                      <Star size={32} />
+                    </div>
+                    <div>
+                      <h4 className="text-2xl font-black italic uppercase text-white">Join Welfare Club</h4>
+                      <p className="font-bold text-white/60 text-[10px] uppercase tracking-[3px] italic mt-1">Get Flat 5-10% extra discount on every order!</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hi NM Mart! I'm interested in the Welfare Card membership. Please guide me on how to join.")}`, "_blank")}
+                    className="bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-xl relative z-10 italic"
+                  >
+                    Get Card Now
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

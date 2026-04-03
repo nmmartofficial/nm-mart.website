@@ -90,8 +90,9 @@ export default function Index() {
   const [showOrders, setShowOrders] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [welfareCard, setWelfareCard] = useState<{ number: string; active: boolean } | null>(null);
+  const [showWelfareModal, setShowWelfareModal] = useState(false);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const countdown = useCountdown();
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
@@ -100,10 +101,39 @@ export default function Index() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchWelfareStatus(session.user.id);
+      } else {
+        setWelfareCard(null);
+      }
     });
-    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchWelfareStatus(session.user.id);
+      }
+    });
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchWelfareStatus = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('welfare_status, welfare_card_number')
+        .eq('id', userId)
+        .single();
+      
+      if (data && (data.welfare_status === 'active' || data.welfare_card_number)) {
+        setWelfareCard({
+          number: data.welfare_card_number || "NM-W-0001",
+          active: data.welfare_status === 'active'
+        });
+      }
+    } catch (err) {
+      console.error("Welfare status fetch error:", err);
+    }
+  };
 
   // Back to top
   useEffect(() => {
@@ -154,6 +184,8 @@ export default function Index() {
 
   const remaining = MIN_ORDER - cartTotal;
   const loyaltyPoints = getLoyaltyPoints();
+  const welfareDiscount = welfareCard?.active ? Math.round(cartTotal * 0.05) : 0;
+  const finalTotal = cartTotal - welfareDiscount;
   const memberId = user ? `NM-MEM-${(user.id || "").slice(0, 4).toUpperCase()}` : null;
 
   const placeOrder = async () => {
@@ -171,6 +203,9 @@ export default function Index() {
 
         if (profile) {
           customerDetails = `\n\n👤 *Customer Details:* \nName: ${profile.full_name}\nPhone: ${profile.mobile}\nAddress: ${profile.address || "N/A"}\nLandmark: ${profile.landmark || "N/A"}`;
+          if (profile.welfare_status === 'active') {
+            customerDetails += `\n🌟 *Welfare Member:* ${profile.welfare_card_number}`;
+          }
           // Store customer data in order for Admin view
           orderCustomerData = {
             customer: profile.full_name,
@@ -184,13 +219,21 @@ export default function Index() {
       if (cartTotal < MIN_ORDER) return alert(`Min order ₹${MIN_ORDER}!`);
       const orderId = `NMM-${Date.now()}`;
       const itemsText = cart.map(c => `- ${c.name} (x${c.qty}): ₹${c.saleRate * c.qty}`).join("\n");
-      const text = `*New Order from NM Mart Web* 🛒\n\n🆔 *Order ID:* ${orderId}\n📦 *Items:*\n${itemsText}\n\n💰 *Total:* ₹${cartTotal}\n💳 *Payment:* ${payMethod.toUpperCase()}${customerDetails}\n\n_Please confirm my order!_`;
+      let text = `*New Order from NM Mart Web* 🛒\n\n🆔 *Order ID:* ${orderId}\n📦 *Items:*\n${itemsText}\n\n💰 *Subtotal:* ₹${cartTotal}`;
+      
+      if (welfareDiscount > 0) {
+        text += `\n🌟 *Welfare Discount (5%):* -₹${welfareDiscount}\n✅ *Final Total:* ₹${finalTotal}`;
+      } else {
+        text += `\n\n💰 *Total:* ₹${cartTotal}`;
+      }
+      
+      text += `\n💳 *Payment:* ${payMethod.toUpperCase()}${customerDetails}\n\n_Please confirm my order!_`;
       
       const orderData = {
         id: orderId,
         customer_id: user?.id || null,
         items: cart,
-        total: cartTotal,
+        total: finalTotal,
         status: "Pending",
         customer_name: orderCustomerData.customer || "Guest",
         customer_phone: orderCustomerData.phone || "",
@@ -280,9 +323,33 @@ export default function Index() {
                 <CreditCard size={12} /> Login
               </button>
             )}
+
             <button onClick={() => setShowOrders(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors" title="Orders">
               <Package size={18} />
             </button>
+
+            {/* Welfare Card / Rewards Button */}
+            {welfareCard?.active ? (
+              <button 
+                onClick={() => navigate("/profile")}
+                className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-2 border-yellow-600 px-2.5 py-1.5 rounded-xl hover:shadow-lg transition-all group shadow-sm animate-pulse-glow"
+              >
+                <Star size={14} className="text-yellow-800 fill-current" />
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-[8px] font-black uppercase tracking-tighter text-yellow-900">Active Card</span>
+                  <span className="text-[9px] font-black text-black hidden sm:inline">{welfareCard.number}</span>
+                </div>
+              </button>
+            ) : (
+              <button 
+                onClick={() => setShowWelfareModal(true)}
+                className="flex items-center gap-1.5 bg-white border-2 border-black px-2.5 py-1.5 rounded-xl hover:bg-black hover:text-white transition-all group shadow-sm"
+              >
+                <Star size={14} className="text-black group-hover:text-white fill-current" />
+                <span className="text-[9px] font-black uppercase tracking-tighter text-black group-hover:text-white hidden sm:inline">Rewards</span>
+              </button>
+            )}
+
             <button onClick={() => setCartOpen(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors">
               <ShoppingCart size={20} />
               {cartCount > 0 && (
@@ -678,7 +745,22 @@ export default function Index() {
               </div>
               {cart.length > 0 && (
                 <div className="border-t border-border p-4 space-y-3">
-                  <div className="flex justify-between font-black text-lg"><span>Total</span><span className="text-primary">₹{cartTotal}</span></div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-bold text-sm text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span>₹{cartTotal}</span>
+                    </div>
+                    {welfareDiscount > 0 && (
+                      <div className="flex justify-between font-black text-sm text-yellow-600 italic">
+                        <span className="flex items-center gap-1"><Star size={12} className="fill-current" /> Welfare Discount (5%)</span>
+                        <span>-₹{welfareDiscount}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-black text-lg border-t border-border/50 pt-2">
+                      <span>Total</span>
+                      <span className="text-primary">₹{finalTotal}</span>
+                    </div>
+                  </div>
                   {remaining > 0 && (
                     <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 text-xs text-center font-bold text-primary">
                       ₹{remaining} और जोड़ें (Min. ₹{MIN_ORDER})
@@ -722,8 +804,21 @@ export default function Index() {
                       <span className="font-bold text-foreground">₹{c.saleRate * c.qty}</span>
                     </div>
                   ))}
-                  <div className="border-t border-border pt-2 flex justify-between font-black text-lg">
-                    <span>Total</span><span className="text-primary">₹{cartTotal}</span>
+                  <div className="border-t border-border pt-2 space-y-1">
+                    <div className="flex justify-between font-bold text-sm text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span>₹{cartTotal}</span>
+                    </div>
+                    {welfareDiscount > 0 && (
+                      <div className="flex justify-between font-black text-sm text-yellow-600 italic">
+                        <span className="flex items-center gap-1"><Star size={12} className="fill-current" /> Welfare Discount (5%)</span>
+                        <span>-₹{welfareDiscount}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-black text-lg pt-1">
+                      <span>Total</span>
+                      <span className="text-primary">₹{finalTotal}</span>
+                    </div>
                   </div>
                 </div>
                 <h3 className="font-bold text-sm mb-3 text-foreground uppercase tracking-wider text-center">Payment Method</h3>
@@ -754,6 +849,89 @@ export default function Index() {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Welfare Card Modal */}
+      <AnimatePresence>
+        {showWelfareModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-[32px] overflow-hidden shadow-2xl border border-yellow-100"
+            >
+              {/* Decorative Background */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -mr-16 -mt-16 blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/10 rounded-full -ml-16 -mb-16 blur-3xl" />
+
+              <button 
+                onClick={() => setShowWelfareModal(false)}
+                className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors z-10"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <Star size={32} className="text-white fill-current" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black italic uppercase tracking-tighter">Welfare <span className="text-yellow-600">Card</span></h2>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic">Join the Elite NM Circle</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-start gap-4 p-4 bg-yellow-50 rounded-2xl border border-yellow-100/50">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <Gift size={20} className="text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="font-black text-sm uppercase italic">Flat 5-10% Extra Discount</p>
+                      <p className="text-xs text-gray-500 font-medium">Automatic discount on every order, including existing offers!</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <CreditCard size={20} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-black text-sm uppercase italic">Premium Store Access</p>
+                      <p className="text-xs text-gray-500 font-medium">Get priority support and exclusive member-only flash sales.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <MessageCircle size={20} className="text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-black text-sm uppercase italic">Priority Delivery</p>
+                      <p className="text-xs text-gray-500 font-medium">Your orders are packed and shipped on high priority.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hi NM Mart! I'm interested in the Welfare Card membership. Please guide me on how to join.")}`, "_blank");
+                    setShowWelfareModal(false);
+                  }}
+                  className="w-full bg-black text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-yellow-600 transition-all shadow-xl flex items-center justify-center gap-3 italic"
+                >
+                  Join NM Welfare Now <Star size={18} className="fill-current" />
+                </button>
+                
+                <p className="text-center mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest italic">
+                  Membership valid for 6 months • ₹599/-
+                </p>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
