@@ -58,7 +58,7 @@ const Footer = () => (
                 <MapPin className="w-4 h-4 text-primary shrink-0" />
               </div>
               <span className="text-[11px] text-black font-medium uppercase tracking-wider leading-relaxed">
-                Near B.P. Public School,<br />Manjhanpur, Kaushambi, UP
+                Naya Nagar, Dhata Road,<br />Manjhanpur, Kaushambi, UP
               </span>
             </div>
             <div className="flex items-center gap-4 group">

@@ -89,7 +89,7 @@ const Header = () => {
             <Mail size={10} className="text-primary"/> support@nmmart.in
           </span>
           <span className="hidden md:flex items-center gap-2 italic">
-            <MapPin size={10} className="text-primary"/> Near B.P. Public School, Manjhanpur
+            <MapPin size={10} className="text-primary"/> Naya Nagar, Dhata Road, Manjhanpur
           </span>
         </div>
         <div className="flex items-center gap-4">

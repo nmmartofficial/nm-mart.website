@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ShoppingCart, Search, X, Plus, Minus, Trash2, MessageCircle, Send,
-  Mic, MicOff, Clock, Star, MapPin, LayoutGrid, ArrowUp, Package, Gift, RotateCcw,
-  ChevronRight, Banknote, QrCode, Phone, Instagram, Facebook, Youtube, CreditCard, ExternalLink,
+  ShoppingCart, Search, X, MessageCircle,
+  Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift, RotateCcw,
+  ChevronRight, Phone, Instagram, Facebook, Youtube, ExternalLink,
   User
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
@@ -15,32 +15,17 @@ import { Product, productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, getOrderHistory, sa
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import HeroBanner from "@/components/shop/HeroBanner";
 import DiscountTabs from "@/components/shop/DiscountTabs";
-import WelfareCardBanner from "@/components/shop/WelfareCardBanner";
 import ChatBot from "@/components/shop/ChatBot";
 import Footer from "@/components/shop/Footer";
+import FlashSaleBanner from "@/components/shop/FlashSaleBanner";
+import WelfareModals from "@/components/shop/modals/WelfareModals";
+import CartDrawer from "@/components/shop/modals/CartDrawer";
+import CheckoutModal from "@/components/shop/modals/CheckoutModal";
+import OrdersModal from "@/components/shop/modals/OrdersModal";
 
 const LOGO_URL = "/nm-mart-logo.png";
 const SLOGAN = "Shop More, Save More";
 const ITEMS_PER_PAGE = 40;
-
-/* ─── Countdown Hook ─── */
-function useCountdown() {
-  const getRemaining = () => {
-    const now = new Date();
-    const end = new Date(now);
-    end.setHours(23, 59, 59, 999);
-    return Math.max(0, Math.floor((end.getTime() - now.getTime()) / 1000));
-  };
-  const [sec, setSec] = useState(getRemaining);
-  useEffect(() => {
-    const t = setInterval(() => setSec(getRemaining()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const h = String(Math.floor(sec / 3600)).padStart(2, "0");
-  const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
-  const s = String(sec % 60).padStart(2, "0");
-  return `${h}:${m}:${s}`;
-}
 
 /* ─── Voice Search Hook ─── */
 function useVoiceSearch(onResult: (t: string) => void) {
@@ -96,7 +81,6 @@ export default function Index() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const countdown = useCountdown();
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
 
   // Auth state persistence
@@ -310,12 +294,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
-      {/* Flash Sale Timer */}
-      <div className="gradient-orange text-white text-center py-2 text-xs font-bold tracking-wide flex items-center justify-center gap-2">
-        <Clock size={14} />
-        <span>⚡ FLASH SALE ENDS IN</span>
-        <span className="bg-black/30 text-white px-2.5 py-0.5 rounded font-mono text-sm">{countdown}</span>
-      </div>
+      <FlashSaleBanner />
 
       {/* Sticky Header with Logo */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
@@ -732,332 +711,47 @@ export default function Index() {
         )}
       </AnimatePresence>
 
-      {/* Cart Drawer */}
-      <AnimatePresence>
-        {cartOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 z-50" onClick={() => setCartOpen(false)} />
-            <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-card z-50 flex flex-col shadow-2xl border-l border-border">
-              <div className="flex items-center justify-between p-4 border-b border-border">
-                <h2 className="font-black text-lg text-foreground flex items-center gap-2"><ShoppingCart size={20} className="text-primary" /> Cart ({cartCount})</h2>
-                <button onClick={() => setCartOpen(false)} className="p-2 hover:bg-secondary rounded-lg"><X size={20} /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {cart.length === 0 ? (
-                  <div className="text-center py-16 text-muted-foreground">
-                    <ShoppingCart size={40} className="mx-auto mb-3 opacity-30" /><p className="font-bold">Cart खाली है</p>
-                  </div>
-                ) : cart.map((c, i) => (
-                  <div key={i} className="flex items-center gap-3 bg-secondary rounded-xl p-3">
-                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                      <ProductImageDisplay imageUrl={c.imageUrl} name={c.name} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold text-foreground uppercase truncate">{c.name}</p>
-                      <p className="text-sm font-black text-primary">₹{c.saleRate * c.qty}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => updateQty(i, -1)} className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center"><Minus size={12} /></button>
-                      <span className="w-7 text-center text-sm font-bold">{c.qty}</span>
-                      <button onClick={() => updateQty(i, 1)} className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center"><Plus size={12} /></button>
-                    </div>
-                    <button onClick={() => removeItem(i)} className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg"><Trash2 size={14} /></button>
-                  </div>
-                ))}
-              </div>
-              {cart.length > 0 && (
-                <div className="border-t border-border p-4 space-y-3">
-                  <div className="space-y-1">
-                    <div className="flex justify-between font-bold text-sm text-muted-foreground">
-                      <span>Subtotal</span>
-                      <span>₹{cartTotal}</span>
-                    </div>
-                    {welfareDiscount > 0 && (
-                      <div className="flex justify-between font-black text-sm text-yellow-600 italic">
-                        <span className="flex items-center gap-1"><Star size={12} className="fill-current" /> Welfare Discount (5%)</span>
-                        <span>-₹{welfareDiscount}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between font-black text-lg border-t border-border/50 pt-2">
-                      <span>Total</span>
-                      <span className="text-primary">₹{finalTotal}</span>
-                    </div>
-                  </div>
-                  {remaining > 0 && (
-                    <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 text-xs text-center font-bold text-primary">
-                      ₹{remaining} और जोड़ें (Min. ₹{MIN_ORDER})
-                    </div>
-                  )}
-                  <button disabled={cartTotal < MIN_ORDER}
-                    onClick={() => { navigate("/checkout"); setCartOpen(false); }}
-                    className="w-full gradient-brand text-white py-3 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed">
-                    Checkout करें
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <CartDrawer 
+        cartOpen={cartOpen}
+        setCartOpen={setCartOpen}
+        cart={cart}
+        cartCount={cartCount}
+        cartTotal={cartTotal}
+        updateQty={updateQty}
+        removeItem={removeItem}
+        welfareDiscount={welfareDiscount}
+        finalTotal={finalTotal}
+        remaining={remaining}
+        setCheckoutOpen={setCheckoutOpen}
+      />
 
-      {/* Checkout Modal */}
-      <AnimatePresence>
-        {checkoutOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 z-50" onClick={() => setCheckoutOpen(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[460px] md:max-h-[90vh] bg-card rounded-2xl shadow-2xl z-50 overflow-y-auto border border-border">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-black text-foreground">💳 Checkout</h2>
-                  <button onClick={() => setCheckoutOpen(false)} className="p-2 hover:bg-secondary rounded-lg"><X size={18} /></button>
-                </div>
-                {memberId && (
-                  <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 mb-4 text-center">
-                    <p className="text-[9px] text-muted-foreground uppercase font-bold">Member ID</p>
-                    <p className="text-primary font-black">{memberId}</p>
-                  </div>
-                )}
-                <div className="bg-secondary rounded-xl p-4 mb-6 text-sm space-y-2">
-                  {cart.map((c, i) => (
-                    <div key={i} className="flex justify-between">
-                      <span className="text-foreground text-xs truncate flex-1 mr-2">{c.name} x{c.qty}</span>
-                      <span className="font-bold text-foreground">₹{c.saleRate * c.qty}</span>
-                    </div>
-                  ))}
-                  <div className="border-t border-border pt-2 space-y-1">
-                    <div className="flex justify-between font-bold text-sm text-muted-foreground">
-                      <span>Subtotal</span>
-                      <span>₹{cartTotal}</span>
-                    </div>
-                    {welfareDiscount > 0 && (
-                      <div className="flex justify-between font-black text-sm text-yellow-600 italic">
-                        <span className="flex items-center gap-1"><Star size={12} className="fill-current" /> Welfare Discount (5%)</span>
-                        <span>-₹{welfareDiscount}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between font-black text-lg pt-1">
-                      <span>Total</span>
-                      <span className="text-primary">₹{finalTotal}</span>
-                    </div>
-                  </div>
-                </div>
-                <h3 className="font-bold text-sm mb-3 text-foreground uppercase tracking-wider text-center">Payment Method</h3>
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <button onClick={() => setPayMethod("cod")}
-                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "cod" ? "border-primary bg-primary/10" : "border-border"}`}>
-                    <Banknote size={20} className={payMethod === "cod" ? "text-primary" : "text-muted-foreground"} />
-                    <span className="text-[9px] font-bold uppercase">Cash/COD</span>
-                  </button>
-                  <motion.a href={`upi://pay?pa=${UPI_ID}&pn=NMMART&am=${cartTotal}&cu=INR`}
-                    onClick={() => setPayMethod("upi")} whileTap={{ scale: 0.95 }}
-                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${payMethod === "upi" ? "border-primary bg-primary/10" : "border-border"}`}>
-                    <QrCode size={20} className={payMethod === "upi" ? "text-primary" : "text-muted-foreground"} />
-                    <span className="text-[9px] font-bold uppercase">UPI Pay</span>
-                  </motion.a>
-                </div>
-                {payMethod === "upi" && (
-                  <div className="bg-secondary rounded-xl p-4 mb-4 text-center space-y-3 border-2 border-dashed border-primary/20">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${UPI_ID}&pn=NM%20MART&am=${cartTotal}&cu=INR`}
-                      alt="UPI QR" className="mx-auto w-40 h-40 rounded-lg shadow-md border-4 border-card" />
-                    <p className="text-[10px] text-muted-foreground font-mono font-bold">{UPI_ID}</p>
-                  </div>
-                )}
-                <button onClick={placeOrder}
-                  className="w-full gradient-brand text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2">
-                  <Send size={18} /> WhatsApp पर Order भेजें
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <CheckoutModal 
+        checkoutOpen={checkoutOpen}
+        setCheckoutOpen={setCheckoutOpen}
+        memberId={memberId}
+        cart={cart}
+        cartTotal={cartTotal}
+        welfareDiscount={welfareDiscount}
+        finalTotal={finalTotal}
+        payMethod={payMethod}
+        setPayMethod={setPayMethod}
+        placeOrder={placeOrder}
+      />
 
-      {/* Welfare Card Modals */}
-      <AnimatePresence>
-        {showGoldenCard && welfareCard && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, rotateY: 90 }}
-              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-              exit={{ opacity: 0, scale: 0.9, rotateY: -90 }}
-              className="relative w-full max-w-md aspect-[1.6/1] bg-gradient-to-br from-[#bf953f] via-[#fcf6ba] to-[#b38728] rounded-3xl p-8 shadow-[0_0_50px_rgba(191,149,63,0.4)] border border-white/20 overflow-hidden group"
-            >
-              {/* Chip Detail */}
-              <div className="absolute top-12 left-10 w-12 h-10 bg-gradient-to-br from-yellow-200 to-yellow-600 rounded-lg shadow-inner opacity-80" />
-              
-              {/* Logo */}
-              <div className="absolute top-8 right-10 flex flex-col items-end">
-                <h2 className="text-2xl font-black italic text-yellow-900 tracking-tighter leading-none">NM <span className="text-black">MART</span></h2>
-                <p className="text-[8px] font-bold text-yellow-800 uppercase tracking-widest">Welfare Member</p>
-              </div>
+      <WelfareModals 
+        showGoldenCard={showGoldenCard}
+        setShowGoldenCard={setShowGoldenCard}
+        showWelfareModal={showWelfareModal}
+        setShowWelfareModal={setShowWelfareModal}
+        welfareCard={welfareCard}
+        user={user}
+      />
 
-              {/* Card Number */}
-              <div className="mt-20">
-                <p className="text-[10px] font-black text-yellow-900/60 uppercase tracking-[4px] mb-1">Card Number</p>
-                <p className="text-2xl font-black text-black font-mono tracking-[6px] drop-shadow-sm">
-                  {welfareCard.number.match(/.{1,4}/g)?.join(' ') || welfareCard.number}
-                </p>
-              </div>
-
-              {/* Bottom Info */}
-              <div className="absolute bottom-8 left-10 right-10 flex justify-between items-end">
-                <div>
-                  <p className="text-[8px] font-black text-yellow-900/60 uppercase tracking-widest mb-1">Card Holder</p>
-                  <p className="text-sm font-black text-black uppercase italic tracking-tight">{user?.user_metadata?.full_name || "NM Member"}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[8px] font-black text-yellow-900/60 uppercase tracking-widest mb-1">Balance</p>
-                  <div className="flex items-center gap-1.5 justify-end">
-                    <Star size={14} className="text-yellow-900 fill-current" />
-                    <p className="text-xl font-black text-black italic">{welfareCard.points} <span className="text-[10px]">PTS</span></p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Close Button */}
-              <button 
-                onClick={() => setShowGoldenCard(false)}
-                className="absolute top-4 left-4 p-2 bg-black/10 hover:bg-black/20 rounded-full transition-all text-yellow-900"
-              >
-                <X size={16} />
-              </button>
-
-              {/* Holographic Effect */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-            </motion.div>
-            
-            {/* Action Button outside the card */}
-            <div className="absolute bottom-20 flex flex-col items-center gap-4">
-              <button 
-                onClick={() => window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi NM Mart! I want to redeem my ${welfareCard.points} points for a discount.`)}`, "_blank")}
-                className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 italic"
-              >
-                Redeem Points <Gift size={20} />
-              </button>
-              <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">1 Point = ₹1 Discount</p>
-            </div>
-          </div>
-        )}
-
-        {showWelfareModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-[32px] overflow-hidden shadow-2xl border border-yellow-100"
-            >
-              {/* Decorative Background */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -mr-16 -mt-16 blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/10 rounded-full -ml-16 -mb-16 blur-3xl" />
-
-              <button 
-                onClick={() => setShowWelfareModal(false)}
-                className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors z-10"
-              >
-                <X size={20} />
-              </button>
-
-              <div className="p-8">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Star size={32} className="text-white fill-current" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-black italic uppercase tracking-tighter">Welfare <span className="text-yellow-600">Card</span></h2>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic">Join the Elite NM Circle</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-start gap-4 p-4 bg-yellow-50 rounded-2xl border border-yellow-100/50">
-                    <div className="p-2 bg-white rounded-xl shadow-sm">
-                      <Gift size={20} className="text-yellow-600" />
-                    </div>
-                    <div>
-                      <p className="font-black text-sm uppercase italic">Flat 5-10% Extra Discount</p>
-                      <p className="text-xs text-gray-500 font-medium">Automatic discount on every order, including existing offers!</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div className="p-2 bg-white rounded-xl shadow-sm">
-                      <CreditCard size={20} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-black text-sm uppercase italic">Premium Store Access</p>
-                      <p className="text-xs text-gray-500 font-medium">Get priority support and exclusive member-only flash sales.</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div className="p-2 bg-white rounded-xl shadow-sm">
-                      <MessageCircle size={20} className="text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-black text-sm uppercase italic">Priority Delivery</p>
-                      <p className="text-xs text-gray-500 font-medium">Your orders are packed and shipped on high priority.</p>
-                    </div>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => {
-                    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hi NM Mart! I'm interested in the Welfare Card membership. Please guide me on how to join.")}`, "_blank");
-                    setShowWelfareModal(false);
-                  }}
-                  className="w-full bg-black text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-yellow-600 transition-all shadow-xl flex items-center justify-center gap-3 italic"
-                >
-                  Join NM Welfare Now <Star size={18} className="fill-current" />
-                </button>
-                
-                <p className="text-center mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest italic">
-                  Membership valid for 6 months • ₹599/-
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Orders Modal */}
-      <AnimatePresence>
-        {showOrders && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 z-50" onClick={() => setShowOrders(false)} />
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[460px] md:max-h-[80vh] bg-card rounded-2xl shadow-2xl z-50 overflow-y-auto border border-border">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-black text-foreground">📦 Order History</h2>
-                  <button onClick={() => setShowOrders(false)} className="p-2 hover:bg-secondary rounded-lg"><X size={18} /></button>
-                </div>
-                {getOrderHistory().length === 0 ? (
-                  <p className="text-center py-10 text-muted-foreground">अभी तक कोई ऑर्डर नहीं</p>
-                ) : getOrderHistory().map((o, i) => (
-                  <div key={i} className="bg-secondary rounded-xl p-4 mb-3 space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-bold uppercase text-foreground">{o.id}</span>
-                      <span className="gradient-brand text-white px-2 py-0.5 rounded text-[9px] font-bold">{o.status}</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">{o.date}</p>
-                    <p className="font-black text-primary">₹{o.total}</p>
-                    <button onClick={() => reorder(o)} className="flex items-center gap-1 text-primary text-xs font-bold hover:underline">
-                      <RotateCcw size={12} /> फिर से ऑर्डर करें
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <OrdersModal 
+        showOrders={showOrders}
+        setShowOrders={setShowOrders}
+        reorder={reorder}
+      />
     </div>
   );
 }

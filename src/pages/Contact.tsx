@@ -69,7 +69,7 @@ const Contact = () => {
                     </div>
                   </div>
 
-                  <div className="flex Nearitems-center gap-4">
+                  <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
                       <Mail size={18} className="text-primary" />
                     </div>
