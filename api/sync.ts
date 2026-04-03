@@ -1,11 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Fallback values provided by user for immediate setup
-const FALLBACK_URL = "https://ydqjrtgrzetyxhcuqvoy.supabase.co";
-const FALLBACK_KEY = "sb_publishable_NOZCBGcyAm5SVWREtn9_Vw_LhynM0Py";
+// Supabase credentials provided by user
+const SUPABASE_URL = "https://lxdqygldjjbgpzpklbns.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Y1d7P8E-IH-IfVI1tOb3NQ_zZSs5-yc";
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || FALLBACK_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || FALLBACK_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
 
 // Chunk size for batch processing to avoid memory/timeout issues
 const CHUNK_SIZE = 100;
@@ -25,12 +25,12 @@ export default async function handler(req: any, res: any) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // GET: Fetch all inventory for website
+  // GET: Fetch all products for website
   if (req.method === 'GET') {
     try {
       console.log("Fetching all products from Supabase...");
       const { data, error } = await supabase
-        .from('inventory')
+        .from('products')
         .select('*');
       
       if (error) {
@@ -44,62 +44,50 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // POST: Sync data from Desktop
+  // POST: Sync data from SQL Server
   if (req.method === 'POST') {
     try {
-      const body = req.body;
-      const items = Array.isArray(body) ? body : [body];
+      const items = Array.isArray(req.body) ? req.body : [req.body];
       
-      console.log(`Received ${items.length} items for sync.`);
+      console.log(`Received ${items.length} products for sync.`);
 
       if (items.length === 0) {
-        return res.status(200).json({ success: true, message: "No items to sync." });
+        return res.status(200).json({ success: true, message: "No products to sync." });
       }
 
+      // Map incoming fields to match your 'products' table schema
       const sanitizedData = items.map((item: any) => ({
-        barcode: String(item.Barcode || item.barcode || ""),
-        name: String(item.Name || item.name || "Unknown Product"),
-        category: String(item.Category || item.category || "General"),
-        subCategory: String(item.SubCategory || item.subCategory || ""),
-        mrp: Number(item.MRP || item.Mrp || item.mrp || 0),
-        saleRate: Number(item.Price || item.saleRate || 0),
-        discount: Number(item.Discount !== undefined ? item.Discount : (item.discountPerc || item.discount || 0)),
-        imageUrl: String(item.ImageUrl || item.imageUrl || "")
+        barcode: String(item.barcode || item.Barcode || ""),
+        name: String(item.name || item.Name || "Unknown Product"),
+        mrp: Number(item.mrp || item.MRP || 0),
+        discount: Number(item.discount || item.Discount || 0),
+        saleRate: Number(item.saleRate || item.SaleRate || item.price || 0),
+        updated_at: new Date().toISOString()
       }));
 
-      // Split into chunks to handle heavy data (7k+ items)
-      console.log(`Processing ${sanitizedData.length} items in chunks of ${CHUNK_SIZE}...`);
-      let successCount = 0;
-      
-      for (let i = 0; i < sanitizedData.length; i += CHUNK_SIZE) {
-        const chunk = sanitizedData.slice(i, i + CHUNK_SIZE);
-        
-        const { error } = await supabase
-          .from('inventory')
-          .upsert(chunk, { onConflict: 'barcode' });
+      // Use upsert to handle inserts/updates based on barcode conflict
+      const { error } = await supabase
+        .from('products')
+        .upsert(sanitizedData, { onConflict: 'barcode' });
 
-        if (error) {
-          console.error(`Batch starting at index ${i} failed:`, error.message);
-          return res.status(500).json({ 
-            success: false, 
-            error: `Database Error in batch ${i / CHUNK_SIZE + 1}: ${error.message}`,
-            details: error
-          });
-        }
-        
-        successCount += chunk.length;
+      if (error) {
+        console.error("Supabase UPSERT Error:", error.message);
+        return res.status(500).json({ 
+          success: false, 
+          error: `Database Error: ${error.message}`
+        });
       }
 
-      console.log(`Sync complete: ${successCount} items processed successfully.`);
+      console.log(`Sync complete: ${sanitizedData.length} products processed successfully.`);
       return res.status(200).json({ 
         success: true, 
-        message: "Inventory Synced Successfully!",
-        count: successCount 
+        message: "Products Synced Successfully!",
+        count: sanitizedData.length 
       });
 
     } catch (error: any) {
-      console.error("Sync Crash (500):", error.message);
-      return res.status(500).json({ success: false, error: "Server Error during sync: " + error.message });
+      console.error("CRITICAL Sync Error:", error.message);
+      return res.status(500).json({ error: `Server Error: ${error.message}` });
     }
   }
 
