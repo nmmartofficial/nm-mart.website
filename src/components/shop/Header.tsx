@@ -141,7 +141,7 @@ const Header = () => {
             </Link>
           )}
 
-          {/* Welfare Card / Rewards Button */}
+          {/* Welfare Card Button */}
           {welfareCard?.active ? (
             <button 
               onClick={handleWelfareClick}
@@ -150,7 +150,7 @@ const Header = () => {
               <Star size={14} className="text-yellow-800 fill-current" />
               <div className="flex flex-col items-start leading-none">
                 <span className="text-[8px] font-black uppercase tracking-tighter text-yellow-900">Active Card</span>
-                <span className="text-[10px] font-black text-black hidden sm:inline">{welfareCard.number}</span>
+                <span className="text-[10px] font-black text-black hidden sm:inline">{profileName.split(' ')[0] || "Active"}</span>
               </div>
             </button>
           ) : (
@@ -159,7 +159,7 @@ const Header = () => {
               className="flex items-center gap-1.5 bg-white border-2 border-black px-3 py-2 rounded-xl hover:bg-black hover:text-white transition-all group shadow-sm"
             >
               <Star size={14} className="text-black group-hover:text-white fill-current" />
-              <span className="text-[10px] font-black uppercase tracking-tighter text-black group-hover:text-white hidden sm:inline">Rewards</span>
+              <span className="text-[10px] font-black uppercase tracking-tighter text-black group-hover:text-white hidden sm:inline">Welfare Card</span>
             </button>
           )}
           
