@@ -19,7 +19,7 @@ import WelfareCardBanner from "@/components/shop/WelfareCardBanner";
 import ChatBot from "@/components/shop/ChatBot";
 import Footer from "@/components/shop/Footer";
 
-const LOGO_URL = "https://i.postimg.cc/9XJ2GS8L/logo.jpg";
+const LOGO_URL = "/nm-mart-logo.png";
 const SLOGAN = "Shop More, Save More";
 const ITEMS_PER_PAGE = 40;
 

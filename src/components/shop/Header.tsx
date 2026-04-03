@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 
-const LOGO_URL = "https://i.postimg.cc/9XJ2GS8L/logo.jpg";
+const LOGO_URL = "/nm-mart-logo.png";
 const SLOGAN = "Shop More, Save More";
 
 const Header = () => {
