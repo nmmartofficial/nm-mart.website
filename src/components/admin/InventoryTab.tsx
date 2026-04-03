@@ -25,6 +25,8 @@ interface InventoryTabProps {
   loading: boolean;
   isImporting: boolean;
   fetchingProduct: boolean;
+  productExists: boolean | null;
+  discount: string;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleInventorySubmit: (e: React.FormEvent) => void;
   fetchProductDetails: (code: string) => void;
@@ -37,7 +39,7 @@ const InventoryTab = ({
   salePrice, setSalePrice, category, setCategory, subCategory, setSubCategory,
   brand, setBrand, stockQuantity, setStockQuantity,
   imageUrl, setImageUrl, isScanning, setIsScanning, loading, isImporting,
-  fetchingProduct, handleFileUpload, handleInventorySubmit, fetchProductDetails,
+  fetchingProduct, productExists, discount, handleFileUpload, handleInventorySubmit, fetchProductDetails,
   barcodeInputRef, fileInputRef
 }: InventoryTabProps) => {
   return (
@@ -83,16 +85,28 @@ const InventoryTab = ({
               <input 
                 ref={barcodeInputRef}
                 type="text" 
-                placeholder="SCAN OR TYPE CODE"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold tracking-widest text-sm"
+                placeholder="SCAN OR TYPE BARCODE"
+                className={`w-full bg-gray-50 border rounded-2xl py-4 px-6 outline-none transition-all font-bold tracking-widest text-sm ${
+                  productExists === true ? "border-green-500 ring-2 ring-green-100" : 
+                  productExists === false ? "border-blue-500 ring-2 ring-blue-100" : 
+                  "border-gray-100 focus:border-primary"
+                }`}
                 value={barcode}
-                onChange={(e) => {
-                  setBarcode(e.target.value);
-                  if (e.target.value.length >= 8) fetchProductDetails(e.target.value);
+                onChange={(e) => setBarcode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    fetchProductDetails(barcode);
+                  }
+                }}
+                onBlur={() => {
+                  if (barcode) fetchProductDetails(barcode);
                 }}
               />
               {fetchingProduct && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-primary" size={20} />}
             </div>
+            {productExists === true && <p className="text-[10px] font-bold text-green-600 ml-1 uppercase italic">Product Found - Edit Mode</p>}
+            {productExists === false && <p className="text-[10px] font-bold text-blue-600 ml-1 uppercase italic">New Product Detected - Create Mode</p>}
           </div>
 
           <div className="space-y-2">
@@ -106,7 +120,7 @@ const InventoryTab = ({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">MRP (₹)</label>
               <input 
@@ -126,6 +140,12 @@ const InventoryTab = ({
                 value={salePrice}
                 onChange={(e) => setSalePrice(e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Discount (%)</label>
+              <div className="w-full bg-gray-100 border border-gray-200 rounded-2xl py-4 px-6 font-black text-sm text-red-500 flex items-center justify-center italic">
+                {discount}% OFF
+              </div>
             </div>
           </div>
 
@@ -189,11 +209,18 @@ const InventoryTab = ({
           <button 
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] hover:bg-black transition-all shadow-sm flex items-center justify-center gap-3 italic"
+            className={`w-full text-white py-5 rounded-2xl font-black uppercase tracking-[2px] transition-all shadow-sm flex items-center justify-center gap-3 italic ${
+              productExists === true ? "bg-green-600 hover:bg-black" : 
+              productExists === false ? "bg-blue-600 hover:bg-black" : 
+              "bg-primary hover:bg-black"
+            }`}
           >
             {loading ? <Loader2 className="animate-spin" size={20} /> : (
               <>
-                <Database size={18} /> Update Store Database
+                <Database size={18} /> 
+                {productExists === true ? "Update Product" : 
+                 productExists === false ? "Create New Entry" : 
+                 "Update Store Database"}
               </>
             )}
           </button>

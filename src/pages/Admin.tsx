@@ -41,6 +41,20 @@ const Admin = () => {
   const [loading, setLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [fetchingProduct, setFetchingProduct] = useState(false);
+  const [productExists, setProductExists] = useState<boolean | null>(null);
+  const [discount, setDiscount] = useState("0");
+
+  // Auto-calculate discount when MRP or Sale Price changes
+  useEffect(() => {
+    const m = Number(mrp);
+    const s = Number(salePrice);
+    if (m > 0 && s > 0) {
+      const d = Math.round(((m - s) / m) * 100);
+      setDiscount(String(Math.max(0, d)));
+    } else {
+      setDiscount("0");
+    }
+  }, [mrp, salePrice]);
 
   // Welfare States
   const [customerSearch, setCustomerSearch] = useState("");
@@ -187,7 +201,10 @@ const Admin = () => {
   };
 
   const fetchProductDetails = async (code: string) => {
-    if (!code) return;
+    if (!code) {
+      setProductExists(null);
+      return;
+    }
     setFetchingProduct(true);
     try {
       const { data, error } = await supabase
@@ -200,18 +217,21 @@ const Admin = () => {
 
       if (data) {
         setProductName(data.name || "Unknown Product");
-        setMrp(data.mrp || "");
-        setSalePrice(data.salerate || "");
+        setMrp(String(data.mrp || ""));
+        setSalePrice(String(data.salerate || ""));
         setCategory(data.category || "");
         setSubCategory(data.sub_category || "");
         setBrand(data.brand || "");
         setStockQuantity(String(data.stock_quantity || data.stock || ""));
         setImageUrl(data.image_url || "");
+        setProductExists(true);
         if (navigator.vibrate) navigator.vibrate(100);
         toast.success(`Found: ${data.name}`);
       } else {
         setProductName(""); setMrp(""); setSalePrice(""); 
         setCategory(""); setSubCategory(""); setBrand(""); setStockQuantity(""); setImageUrl("");
+        setProductExists(false);
+        toast.info("New Product Detected");
       }
     } catch (err: any) {
       console.error("Error fetching product:", err);
@@ -241,6 +261,7 @@ const Admin = () => {
           name: productName,
           mrp: Number(mrp),
           salerate: Number(salePrice),
+          discount: Number(discount),
           category,
           sub_category: subCategory,
           brand,
@@ -254,9 +275,10 @@ const Admin = () => {
         throw new Error(`[${error.code}] ${error.message || "Database rejected the update"}`);
       }
 
-      toast.success("Inventory updated successfully!");
+      toast.success(productExists ? "Product updated successfully!" : "New product created successfully!");
       setBarcode(""); setProductName(""); setMrp(""); setSalePrice("");
       setCategory(""); setSubCategory(""); setBrand(""); setStockQuantity(""); setImageUrl("");
+      setProductExists(null);
       if (barcodeInputRef.current) barcodeInputRef.current.focus();
     } catch (err: any) {
       console.error("Error updating inventory:", err);
