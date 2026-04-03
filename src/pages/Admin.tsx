@@ -290,18 +290,52 @@ const Admin = () => {
     if (!customerData || !pointsToAdd) return;
     setWelfareLoading(true);
     try {
-      const newPoints = (customerData.loyalty_points || 0) + Number(pointsToAdd);
+      const currentPoints = customerData.loyalty_points || customerData.points_balance || 0;
+      const newPoints = currentPoints + Number(pointsToAdd);
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ loyalty_points: newPoints })
+        .update({ 
+          loyalty_points: newPoints,
+          points_balance: newPoints // Sync both fields just in case
+        })
         .eq('id', customerData.id);
 
       if (error) throw error;
-      setCustomerData({ ...customerData, loyalty_points: newPoints });
+      setCustomerData({ ...customerData, loyalty_points: newPoints, points_balance: newPoints });
       setPointsToAdd("");
       toast.success(`Added ${pointsToAdd} points!`);
     } catch (err: any) {
       toast.error("Failed to update points");
+    } finally {
+      setWelfareLoading(false);
+    }
+  };
+
+  const handleToggleWelfare = async () => {
+    if (!customerData) return;
+    setWelfareLoading(true);
+    try {
+      const newStatus = customerData.welfare_status === 'active' ? 'inactive' : 'active';
+      
+      const updateData: any = { welfare_status: newStatus };
+      
+      // If activating and they don't have a card number, generate one
+      if (newStatus === 'active' && !customerData.welfare_card_number) {
+        updateData.welfare_card_number = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', customerData.id);
+
+      if (error) throw error;
+      
+      setCustomerData({ ...customerData, ...updateData });
+      toast.success(newStatus === 'active' ? "Welfare Membership Activated!" : "Membership Deactivated");
+    } catch (err: any) {
+      toast.error("Failed to update membership status");
     } finally {
       setWelfareLoading(false);
     }
@@ -391,6 +425,7 @@ const Admin = () => {
             welfareLoading={welfareLoading}
             handleCustomerSearch={handleCustomerSearch}
             handleAddPoints={handleAddPoints}
+            handleToggleWelfare={handleToggleWelfare}
           />
         )}
 

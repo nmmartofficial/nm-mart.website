@@ -10,11 +10,12 @@ interface WelfareTabProps {
   welfareLoading: boolean;
   handleCustomerSearch: () => void;
   handleAddPoints: () => void;
+  handleToggleWelfare: () => void;
 }
 
 const WelfareTab = ({
   customerSearch, setCustomerSearch, customerData, pointsToAdd, setPointsToAdd,
-  welfareLoading, handleCustomerSearch, handleAddPoints
+  welfareLoading, handleCustomerSearch, handleAddPoints, handleToggleWelfare
 }: WelfareTabProps) => {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -23,7 +24,7 @@ const WelfareTab = ({
           <div className="bg-primary/10 p-2 rounded-lg text-primary">
             <Star size={24} />
           </div>
-          NM Welfare Points
+          NM Welfare Points & Membership
         </h3>
 
         <div className="flex gap-4">
@@ -53,33 +54,59 @@ const WelfareTab = ({
               <div>
                 <h4 className="text-2xl font-black italic uppercase text-black">{customerData.full_name}</h4>
                 <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-1 italic">{customerData.mobile}</p>
+                <div className="mt-4">
+                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest italic shadow-sm border ${
+                    customerData.welfare_status === 'active' 
+                    ? 'bg-green-50 text-green-600 border-green-100' 
+                    : 'bg-gray-100 text-gray-400 border-gray-200'
+                  }`}>
+                    {customerData.welfare_status === 'active' ? 'Active Member' : 'Inactive Member'}
+                  </span>
+                </div>
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] mb-1">Current Points</p>
-                <p className="text-4xl font-black text-primary italic leading-none">{customerData.loyalty_points || 0}</p>
+                <p className="text-4xl font-black text-primary italic leading-none">{customerData.loyalty_points || customerData.points_balance || 0}</p>
               </div>
             </div>
 
             <div className="h-[1px] bg-gray-200 my-6"></div>
 
-            <div className="flex gap-4 items-end">
-              <div className="flex-1 space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Add Points</label>
-                <input 
-                  type="number" 
-                  placeholder="ENTER POINTS TO ADD"
-                  className="w-full bg-white border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold text-sm"
-                  value={pointsToAdd}
-                  onChange={(e) => setPointsToAdd(e.target.value)}
-                />
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex-1 space-y-4">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Welfare Membership</label>
+                <button 
+                  onClick={handleToggleWelfare}
+                  disabled={welfareLoading}
+                  className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-sm border-2 ${
+                    customerData.welfare_status === 'active'
+                    ? 'bg-white text-red-500 border-red-100 hover:bg-red-50'
+                    : 'bg-black text-white border-black hover:bg-primary hover:border-primary'
+                  }`}
+                >
+                  {customerData.welfare_status === 'active' ? "Deactivate Membership" : "Activate Welfare Membership"}
+                </button>
               </div>
-              <button 
-                onClick={handleAddPoints}
-                disabled={welfareLoading || !pointsToAdd}
-                className="bg-primary text-white h-[58px] px-10 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all shadow-sm"
-              >
-                Update Points
-              </button>
+
+              <div className="flex-1 space-y-4">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Update Points</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="number" 
+                    placeholder="POINTS"
+                    className="flex-1 bg-white border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold text-sm"
+                    value={pointsToAdd}
+                    onChange={(e) => setPointsToAdd(e.target.value)}
+                  />
+                  <button 
+                    onClick={handleAddPoints}
+                    disabled={welfareLoading || !pointsToAdd}
+                    className="bg-primary text-white px-6 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-sm shrink-0"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
