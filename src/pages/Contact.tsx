@@ -53,7 +53,7 @@ const Contact = () => {
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Address</p>
                       <p className="font-bold text-lg text-black leading-relaxed">
-                        NM Mart, Near B.P. Public School,<br />
+                        NM Mart,  Naya Nagar, Dhata Road,<br />
                         Manjhanpur, Kaushambi, UP - 212207
                       </p>
                     </div>
@@ -69,7 +69,7 @@ const Contact = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex Nearitems-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
                       <Mail size={18} className="text-primary" />
                     </div>
