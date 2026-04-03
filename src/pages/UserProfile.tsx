@@ -19,6 +19,7 @@ const UserProfile = () => {
     phone: "",
     address: "",
     landmark: "",
+    avatar_url: "",
     points: 0
   });
 
@@ -65,9 +66,10 @@ const UserProfile = () => {
       if (data) {
         setProfile({
           name: data.full_name || "",
-          phone: data.mobile || session.user.phone || "",
+          phone: data.phone_number || data.mobile || session.user.phone || "",
           address: data.address || "",
           landmark: data.landmark || "",
+          avatar_url: data.avatar_url || "",
           points: data.loyalty_points || 0
         });
       } else {
@@ -93,9 +95,11 @@ const UserProfile = () => {
         .upsert({
           id: user.id,
           full_name: profile.name,
-          mobile: profile.phone,
+          phone_number: profile.phone,
+          mobile: profile.phone, // Keep mobile for backward compatibility if needed
           address: profile.address,
           landmark: profile.landmark,
+          avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString()
         });
 
@@ -153,8 +157,12 @@ const UserProfile = () => {
             <div className="lg:col-span-1 space-y-8">
               <div className="bg-white border border-gray-100 p-8 rounded-[40px] shadow-sm space-y-8">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-primary rounded-3xl flex items-center justify-center text-white shadow-sm">
-                    <User size={32} />
+                  <div className="w-16 h-16 bg-primary rounded-3xl flex items-center justify-center text-white shadow-sm overflow-hidden">
+                    {profile.avatar_url ? (
+                      <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <User size={32} />
+                    )}
                   </div>
                   <div>
                     <h3 className="text-xl font-black italic uppercase text-black leading-none">{profile.name || "NM Member"}</h3>
@@ -167,6 +175,17 @@ const UserProfile = () => {
                 </div>
 
                 <div className="space-y-6 pt-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Profile Photo URL</label>
+                    <input 
+                      type="text" 
+                      value={profile.avatar_url}
+                      onChange={e => setProfile({...profile, avatar_url: e.target.value})}
+                      placeholder="PASTE IMAGE URL"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 px-5 outline-none focus:border-primary transition-all font-bold text-sm"
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Full Name</label>
                     <input 
