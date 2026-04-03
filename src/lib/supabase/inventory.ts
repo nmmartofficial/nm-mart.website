@@ -9,7 +9,7 @@ export interface InventoryItem {
   sub_category?: string;
   brand?: string;
   image_url?: string;
-  stock?: number;
+  stock_quantity?: number;
   updated_at?: string;
 }
 

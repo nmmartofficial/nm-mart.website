@@ -26,7 +26,7 @@ export function useProducts() {
             saleRate: Number(item.salerate || item.saleRate || 0),
             imageUrl: item.image_url || "",
             discount: Number(item.discount || 0),
-            stock: Number(item.stock || 0),
+            stock: Number(item.stock_quantity || item.stock || 0),
             save: Math.round(Number(item.mrp || 0) - Number(item.salerate || item.saleRate || 0))
           }));
           setAllProducts(mappedProducts);

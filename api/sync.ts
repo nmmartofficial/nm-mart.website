@@ -61,7 +61,7 @@ export default async function handler(req: any, res: any) {
         name: String(item.ItemName || "Unknown Product"),
         mrp: Number(item.MRP || 0),
         salerate: Number(item.SalesRate || 0),
-        stock: Number(item.Stock || 0),
+        stock_quantity: Number(item.Stock || 0),
         discount: Math.round(Math.max(0, Number(item.MRP || 0) - Number(item.SalesRate || 0))),
         updated_at: new Date().toISOString()
       }));

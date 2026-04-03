@@ -106,7 +106,7 @@ const Admin = () => {
           sub_category: row.SubCategory || row.subCategory || row.sub_category || "",
           brand: row.Brand || row.brand || "Local",
           image_url: row.Image || row.imageUrl || row.image || row.image_url || "",
-          stock: Number(row.Stock || row.stock || row.stock_quantity || 0),
+          stock_quantity: Number(row.Stock || row.stock || row.stock_quantity || 0),
           updated_at: new Date().toISOString()
         })).filter(p => p.barcode && p.name);
 
@@ -205,7 +205,7 @@ const Admin = () => {
         setCategory(data.category || "");
         setSubCategory(data.sub_category || "");
         setBrand(data.brand || "");
-        setStockQuantity(String(data.stock || ""));
+        setStockQuantity(String(data.stock_quantity || data.stock || ""));
         setImageUrl(data.image_url || "");
         if (navigator.vibrate) navigator.vibrate(100);
         toast.success(`Found: ${data.name}`);
@@ -244,7 +244,7 @@ const Admin = () => {
           category,
           sub_category: subCategory,
           brand,
-          stock: Number(stockQuantity || 0),
+          stock_quantity: Number(stockQuantity || 0),
           image_url: imageUrl,
           updated_at: new Date().toISOString()
         }, { onConflict: 'barcode' });

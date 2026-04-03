@@ -30,12 +30,15 @@ async function syncToWebsite() {
         console.log('Fetching products from RawMas...');
         const result = await pool.request().query(`
             SELECT 
-                RawCode AS barcode, 
+                RawCodeNew AS barcode, 
                 RawName AS name, 
-                Rate AS price, 
-                MRP AS mrp
+                Rate AS salerate, 
+                MRP AS mrp,
+                discountPerc AS discount,
+                It_StyleName AS category,
+                OpStock AS stock_quantity
             FROM RawMas
-            WHERE RawCode IS NOT NULL AND RawName <> 'TEST ITEM'
+            WHERE RawCodeNew IS NOT NULL AND RawName <> 'TEST ITEM'
         `);
 
         const products = result.recordset;
@@ -52,7 +55,10 @@ async function syncToWebsite() {
                 barcode: String(item.barcode).trim(),
                 name: String(item.name).trim(),
                 mrp: Number(item.mrp || 0),
-                salerate: Number(item.price || 0),
+                salerate: Number(item.salerate || 0),
+                discount: Number(item.discount || 0),
+                category: item.category || 'General',
+                stock_quantity: Number(item.stock_quantity || 0),
                 updated_at: new Date().toISOString()
             }));
 
