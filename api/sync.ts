@@ -55,17 +55,18 @@ export default async function handler(req: any, res: any) {
         return res.status(200).json({ success: true, message: "No products to sync." });
       }
 
-      // Map incoming fields to match your 'products' table schema
+      // Map incoming fields from SQL Server (Barcode, ItemName, MRP, SalesRate, Stock)
       const sanitizedData = items.map((item: any) => ({
-        barcode: String(item.barcode || item.Barcode || ""),
-        name: String(item.name || item.Name || "Unknown Product"),
-        mrp: Number(item.mrp || item.MRP || 0),
-        discount: Number(item.discount || item.Discount || 0),
-        saleRate: Number(item.saleRate || item.SaleRate || item.price || 0),
+        barcode: String(item.Barcode || ""),
+        name: String(item.ItemName || "Unknown Product"),
+        mrp: Number(item.MRP || 0),
+        saleRate: Number(item.SalesRate || 0),
+        stock: Number(item.Stock || 0),
+        discount: Math.round(Math.max(0, Number(item.MRP || 0) - Number(item.SalesRate || 0))),
         updated_at: new Date().toISOString()
       }));
 
-      // Use upsert to handle inserts/updates based on barcode conflict
+      // Use upsert to handle inserts/updates based on 'barcode' conflict
       const { error } = await supabase
         .from('products')
         .upsert(sanitizedData, { onConflict: 'barcode' });

@@ -2,7 +2,7 @@
 export interface Product {
   name: string;
   mrp: number;
-  saleRate: number; // This will map to 'Price' from API
+  saleRate: number; 
   category: string;
   brand: string;
   subCategory: string;
@@ -10,6 +10,7 @@ export interface Product {
   imageUrl: string;
   discount: number;
   save: number;
+  stock?: number;
 }
 
 export interface CartItem extends Product {
