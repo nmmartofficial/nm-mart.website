@@ -18,7 +18,7 @@ import WelfareTab from "@/components/admin/WelfareTab";
 import OrdersTab from "@/components/admin/OrdersTab";
 import AnalyticsTab from "@/components/admin/AnalyticsTab";
 
-const SLOGAN = "Shop More, Save More";
+const SLOGAN = "Shop More, Save More"; // v5.0.3
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
