@@ -19,11 +19,12 @@ const ProductDetail = () => {
   const [adding, setAdding] = useState(false);
 
   const { name, barcode } = parseProductSlug(slug || "");
-  const product = allProducts.find(p => p.name === name && p.barcode === barcode)
+  const product = allProducts.find(p => p.id === barcode)
+    || allProducts.find(p => p.barcode === barcode)
     || allProducts.find(p => p.name === name);
 
-  const cartItem = product ? cart.find(item => item.name === product.name && item.barcode === product.barcode) : null;
-  const cartIndex = product ? cart.findIndex(item => item.name === product.name && item.barcode === product.barcode) : -1;
+  const cartItem = product ? cart.find(item => item.id === product.id) : null;
+  const cartIndex = product ? cart.findIndex(item => item.id === product.id) : -1;
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -60,7 +61,7 @@ const ProductDetail = () => {
   }
 
   const whatsappLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
-    `Hi NM Mart, I want to order this product:\n\n🛒 *Product:* ${product.name}\n💰 *Price:* ₹${product.saleRate}\n📦 *MRP:* ₹${product.mrp}\n\nCan you please confirm the availability?`
+    `Hi NM Mart, I want to order this product:\n\n🛒 *Product:* ${product.name}\n💰 *Price:* ₹${product.price}\n📦 *MRP:* ₹${product.mrp}\n\nCan you please confirm the availability?`
   )}`;
 
   return (
@@ -145,13 +146,15 @@ const ProductDetail = () => {
 
               <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm space-y-6">
                 <div className="flex items-baseline gap-4">
-                  <span className="text-5xl font-black text-primary italic">₹{product.saleRate}</span>
-                  {product.mrp > product.saleRate && (
+                  <span className="text-5xl font-black text-primary italic">₹{product.price}</span>
+                  {product.mrp > product.price && (
                     <div className="flex items-center gap-3">
                       <span className="text-xl text-gray-300 line-through font-bold">₹{product.mrp}</span>
-                      <span className="bg-primary text-white text-[10px] font-black px-3 py-1 rounded-xl uppercase tracking-widest animate-pulse">
-                        {product.discount}% OFF
-                      </span>
+                      {product.discount > 0 && (
+                        <span className="bg-primary text-white text-[10px] font-black px-3 py-1 rounded-xl uppercase tracking-widest animate-pulse">
+                          {product.discount}% OFF
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>

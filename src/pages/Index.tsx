@@ -642,28 +642,38 @@ export default function Index() {
                               )}
                             </div>
                             <div className="p-2 flex flex-col flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="bg-primary/10 text-primary text-[6px] font-black px-1 py-0.5 rounded-full uppercase tracking-tighter">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="bg-primary/10 text-primary text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
                                   {p.category}
                                 </span>
-                                <span className={`text-[6px] font-bold flex items-center gap-0.5 ${p.stock && p.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
-                                  <Star size={7} className="fill-current" /> {p.stock && p.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
+                                <span className={`text-[7px] font-bold flex items-center gap-0.5 ${p.stock && p.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+                                  <Star size={8} className="fill-current" /> {p.stock && p.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
                                 </span>
                               </div>
-                              <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-6 overflow-hidden mb-1">{p.name}</h3>
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-base font-black text-primary">₹{p.price}</span>
-                                {p.mrp > p.price && <span className="text-[8px] text-muted-foreground line-through decoration-muted-foreground/50">₹{p.mrp}</span>}
+                              <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
+                              <div className="flex items-baseline gap-2 mt-1">
+                                <span className="text-xl font-black text-primary">₹{p.price}</span>
+                                {p.mrp > p.price && (
+                                  <span className="text-[10px] text-muted-foreground line-through decoration-muted-foreground/50 font-medium">₹{p.mrp}</span>
+                                )}
+                                {p.discount > 0 && (
+                                  <span className="text-[10px] font-bold text-destructive ml-auto">
+                                    {p.discount}% OFF
+                                  </span>
+                                )}
                               </div>
+                              {p.save > 0 && p.stock && p.stock > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
                               {(p.price === 0) && (
                                 <span className="text-[8px] font-bold text-amber-500 mt-1">🕐 Pre-order for Tomorrow Delivery</span>
                               )}
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
-                                disabled={!p.stock || p.stock <= 0}
-                                className={`mt-auto py-1 rounded-lg text-[8px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
-                                {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
-                              </button>
+                              <div className="flex gap-1.5 mt-auto pt-2">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
+                                  disabled={!p.stock || p.stock <= 0}
+                                  className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
+                                  {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
+                                </button>
+                              </div>
                             </div>
                           </motion.div>
                         ))}
@@ -720,37 +730,35 @@ export default function Index() {
                             </span>
                           )}
                         </div>
-                        <div className="p-2.5 flex flex-col flex-1">
-                          <div className="flex items-center justify-between mb-1.5">
-                            <span className="bg-primary/10 text-primary text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
-                              {p.category}
-                            </span>
-                            <span className={`text-[7px] font-bold flex items-center gap-0.5 ${p.stock && p.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
-                              <Star size={8} className="fill-current" /> {p.stock && p.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
-                            </span>
-                          </div>
-                          <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
-                          <div className="flex items-baseline gap-2 mt-1">
-                            <span className="text-xl font-black text-primary">₹{p.price}</span>
-                            {p.mrp > p.price && (
-                              <span className="text-[10px] text-muted-foreground line-through decoration-muted-foreground/50 font-medium">₹{p.mrp}</span>
-                            )}
-                            {p.discount > 0 && (
-                              <span className="text-[10px] font-bold text-destructive ml-auto">
-                                {p.discount}% OFF
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="bg-primary/10 text-primary text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+                                {p.category}
                               </span>
-                            )}
-                          </div>
-                          {p.save > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
-                          <div className="flex gap-1.5 mt-auto pt-2">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
-                              disabled={!p.stock || p.stock <= 0}
-                              className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
-                              {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
-                            </button>
-                          </div>
-                        </div>
+                              <span className={`text-[7px] font-bold flex items-center gap-0.5 ${p.stock && p.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+                                <Star size={8} className="fill-current" /> {p.stock && p.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
+                              </span>
+                            </div>
+                            <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
+                            <div className="flex items-baseline gap-2 mt-1">
+                              <span className="text-xl font-black text-primary">₹{p.price}</span>
+                              {p.mrp > p.price && (
+                                <span className="text-[10px] text-muted-foreground line-through decoration-muted-foreground/50 font-medium">₹{p.mrp}</span>
+                              )}
+                              {p.discount > 0 && (
+                                <span className="text-[10px] font-bold text-destructive ml-auto">
+                                  {p.discount}% OFF
+                                </span>
+                              )}
+                            </div>
+                            {p.save > 0 && p.stock && p.stock > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
+                            <div className="flex gap-1.5 mt-auto pt-2">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
+                                disabled={!p.stock || p.stock <= 0}
+                                className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
+                                {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
+                              </button>
+                            </div>
                       </motion.div>
                     ))}
                   </div>

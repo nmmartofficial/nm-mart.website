@@ -10,19 +10,18 @@ export function useProducts() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        // Strictly fetch all columns from the 'products' table
+        // Strictly fetch specific columns from the 'products' table (lowercase)
         const { data, error } = await supabase
           .from('products')
-          .select('*')
+          .select('RawCodeNew, RawName, MRP, Rate, discountPerc, category, OpStock')
           .order('RawName', { ascending: true })
-          .limit(10000); // Increased limit to fetch all 7,358+ products if available
+          .limit(10000); 
 
         if (error) throw error;
 
         if (data) {
           const mappedProducts: Product[] = data.map((item: any) => {
-            // Strictly fetch and map from the updated Supabase columns
-            const normalizedCat = normalizeCategory(item.ItemGroupName || "General");
+            const normalizedCat = normalizeCategory(item.category || "General");
             const rate = Number(item.Rate || 0);
             const mrp = Number(item.MRP || 0);
             const barcode = String(item.RawCodeNew || "").trim();
@@ -33,13 +32,13 @@ export function useProducts() {
               id: barcode,
               name: String(item.RawName || "Unknown Product").trim(),
               price: rate,
-              saleRate: rate, // Alias
+              saleRate: rate, // Alias for backward compatibility
               category: normalizedCat,
               mrp: mrp,
               barcode: barcode,
-              brand: String(item.brand || "Local").trim(),
-              subCategory: String(item.sub_category || "").trim(),
-              imageUrl: item.image_url || item.image || "",
+              brand: "Local", // Default since not in the specific select
+              subCategory: "", // Default since not in the specific select
+              imageUrl: "", // Default since not in the specific select
               discount: discount,
               stock: stock,
               save: Math.max(0, Math.round(mrp - rate))
