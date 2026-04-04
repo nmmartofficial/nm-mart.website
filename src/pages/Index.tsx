@@ -46,12 +46,21 @@ function useVoiceSearch(onResult: (t: string) => void) {
   return { listening, toggle };
 }
 
-/* ─── Category Icons ─── */
+/* ─── Category Icons (मंझनपुर NM Mart POS Categories) ─── */
 const CATEGORY_ICONS: Record<string, string> = {
-  "Daily Essentials": "🛒", "Snacks": "🍿", "Grocery": "🥦", "Household": "🏠",
-  "Beverages": "🥤", "Personal Care": "🧴", "Dairy": "🥛", "Cleaning": "🧹",
-  "Spices": "🌶️", "Dry Fruits": "🥜", "Baby Care": "👶", "Health": "💊",
-  "Stationery": "📝", "FMCG": "📦",
+  "SOAP": "🧼",
+  "DIS WASH": "🧽",
+  "COIL": "🌀",
+  "SPICES": "🌶️",
+  "SNACKS": "🍿",
+  "GROCERY": "🥦",
+  "BEVERAGES": "🥤",
+  "PERSONAL CARE": "🧴",
+  "DAIRY": "🥛",
+  "CLEANING": "🧹",
+  "STATIONERY": "📝",
+  "FMCG": "📦",
+  "DAILY ESSENTIALS": "🛒", // अगर POS में बड़े अक्षरों में है
 };
 
 /* ─── Priority categories (shown first) ─── */
