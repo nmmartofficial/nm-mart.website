@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
-import { productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, addLoyaltyPoints, getLoyaltyPoints, OrderRecord } from "@/lib/store-utils";
+import { productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, addLoyaltyPoints, getLoyaltyPoints, OrderRecord, normalizeCategory } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import HeroBanner from "@/components/shop/HeroBanner";
 import ChatBot from "@/components/shop/ChatBot";
@@ -63,13 +63,19 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 /* ─── Priority categories (shown first) ─── */
-const PRIORITY_CATS = ["SOAP", "SNACKS", "SPICES"];
+const PRIORITY_CATS = ["SOAP", "SNACKS", "SPICES"].map(normalizeCategory);
 const HIDDEN_CATS: string[] = [];
 
 export default function Index() {
   const navigate = useNavigate();
   const { allProducts, loading, categories, brands, flat33, flat50 } = useProducts();
   const { cart, addToCart, updateQty, removeItem, clearCart, cartTotal, cartCount, setCart } = useCart();
+
+  // Helper for Category Icons
+  const getCategoryIcon = (cat: string) => {
+    const normalized = normalizeCategory(cat);
+    return CATEGORY_ICONS[normalized] || "📦";
+  };
 
   const [query, setQuery] = useState("");
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
@@ -556,7 +562,7 @@ export default function Index() {
                           onClick={() => { setSelectedCat(cat); setSelectedBrand(null); setQuery(""); }}
                           className="p-4 rounded-xl bg-card border border-border flex flex-col items-center gap-2 transition-all group hover:border-primary/50 hover:shadow-glow">
                           <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary text-2xl group-hover:bg-primary/20 transition-colors">
-                            {CATEGORY_ICONS[cat] || "📦"}
+                            {getCategoryIcon(cat)}
                           </div>
                           <span className="font-bold text-foreground uppercase text-[9px] tracking-tight text-center leading-tight">{cat}</span>
                         </motion.button>
@@ -591,7 +597,7 @@ export default function Index() {
                     <div key={cat} className="mb-10">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="font-black text-foreground text-base uppercase tracking-tight flex items-center gap-2">
-                          <span className="text-lg">{CATEGORY_ICONS[cat] || "📦"}</span> {cat}
+                          <span className="text-lg">{getCategoryIcon(cat)}</span> {cat}
                         </h3>
                         <button onClick={() => { setSelectedCat(cat); setQuery(""); }}
                           className="text-[10px] font-bold uppercase text-primary flex items-center gap-1 hover:underline">

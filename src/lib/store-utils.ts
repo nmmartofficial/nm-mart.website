@@ -54,6 +54,13 @@ export function addLoyaltyPoints(n: number) {
 export function productSlug(product: Product): string {
   return encodeURIComponent(`${product.name}__${product.barcode}`);
 }
+
+// ─── Smart Category Normalization ───
+export function normalizeCategory(cat: string): string {
+  if (!cat) return "GENERAL";
+  return cat.trim().toUpperCase();
+}
+
 export function parseProductSlug(slug: string): { name: string; barcode: string } {
   const decoded = decodeURIComponent(slug);
   const parts = decoded.split("__");

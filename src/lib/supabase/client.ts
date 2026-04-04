@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // NM MART - Final Supabase Configuration
-const supabaseUrl = 'https://wcoymnkyqjlncztyabxc.supabase.co';
-const supabaseAnonKey = 'sb_publishable_8yFEGZaTqzkOirj2ax---g_R8E4PiSV';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ydqjrtgrzetyxhcuqvoy.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_secret_3MzreJNOmCAHfqczDukXIA_dCabn2rL';
 
 // क्लाइंट बनाना
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

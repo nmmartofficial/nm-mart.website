@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Product } from "@/lib/store-utils";
+import { Product, normalizeCategory } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
 
 export function useProducts() {
@@ -19,19 +19,22 @@ export function useProducts() {
         if (error) throw error;
 
         if (data) {
-          const mappedProducts: Product[] = data.map((item: any) => ({
-            name: String(item.name || "Unknown Product").trim(),
-            barcode: String(item.barcode || "").trim(),
-            category: String(item.category || "General").trim().toUpperCase(),
-            brand: String(item.brand || "Local").trim(),
-            subCategory: String(item.sub_category || "").trim(),
-            mrp: Number(item.mrp || 0),
-            saleRate: Number(item.salerate || item.saleRate || 0),
-            imageUrl: item.image_url || item.image || "",
-            discount: Number(item.discount || 0),
-            stock: Number(item.stock_quantity || item.stock || 0),
-            save: Math.max(0, Math.round(Number(item.mrp || 0) - Number(item.salerate || item.saleRate || 0)))
-          }));
+          const mappedProducts: Product[] = data.map((item: any) => {
+            const normalizedCat = normalizeCategory(item.category);
+            return {
+              name: String(item.name || "Unknown Product").trim(),
+              barcode: String(item.barcode || "").trim(),
+              category: normalizedCat,
+              brand: String(item.brand || "Local").trim(),
+              subCategory: String(item.sub_category || "").trim(),
+              mrp: Number(item.mrp || 0),
+              saleRate: Number(item.salerate || item.saleRate || 0),
+              imageUrl: item.image_url || item.image || "",
+              discount: Number(item.discount || 0),
+              stock: Number(item.stock_quantity || item.stock || 0),
+              save: Math.max(0, Math.round(Number(item.mrp || 0) - Number(item.salerate || item.saleRate || 0)))
+            };
+          });
           setAllProducts(mappedProducts);
         }
       } catch (err) {
