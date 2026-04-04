@@ -21,23 +21,27 @@ export function useProducts() {
 
         if (data) {
           const mappedProducts: Product[] = data.map((item: any) => {
-            const normalizedCat = normalizeCategory(item.category);
-            const salerate = Number(item.salerate || 0);
-            const mrp = Number(item.mrp || 0);
+            const normalizedCat = normalizeCategory(item.ItemGroupName || item.category || "General");
+            const rate = Number(item.Rate || item.salerate || item.saleRate || 0);
+            const mrp = Number(item.MRP || item.mrp || 0);
+            const barcode = String(item.RawCodeNew || item.barcode || "").trim();
+            const discount = Number(item.discountPerc || item.discount || 0);
+            const stock = Number(item.OpStock || item.stock_quantity || item.stock || 0);
+            
             return {
-              id: String(item.barcode || "").trim(),
-              name: String(item.name || "Unknown Product").trim(),
-              price: salerate,
-              saleRate: salerate, // Alias
+              id: barcode,
+              name: String(item.RawName || item.name || "Unknown Product").trim(),
+              price: rate,
+              saleRate: rate, // Alias
               category: normalizedCat,
               mrp: mrp,
-              barcode: String(item.barcode || "").trim(),
+              barcode: barcode,
               brand: String(item.brand || "Local").trim(),
               subCategory: String(item.sub_category || "").trim(),
               imageUrl: item.image_url || item.image || "",
-              discount: Number(item.discount || 0),
-              stock: Number(item.stock_quantity || item.stock || 0),
-              save: Math.max(0, Math.round(mrp - salerate))
+              discount: discount,
+              stock: stock,
+              save: Math.max(0, Math.round(mrp - rate))
             };
           });
           setAllProducts(mappedProducts);

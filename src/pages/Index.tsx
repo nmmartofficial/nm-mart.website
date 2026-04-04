@@ -618,10 +618,15 @@ export default function Index() {
                               )}
                             </div>
                             <div className="p-2 flex flex-col flex-1">
-                              <div className="flex items-center gap-1.5 mb-1">
+                              <div className="flex items-center justify-between mb-1">
                                 <span className="bg-primary/10 text-primary text-[6px] font-black px-1 py-0.5 rounded-full uppercase tracking-tighter">
                                   {p.category}
                                 </span>
+                                {p.stock > 0 && (
+                                  <span className="text-[6px] font-bold text-[hsl(var(--success))] flex items-center gap-0.5">
+                                    <Star size={7} className="fill-current" /> IN STOCK
+                                  </span>
+                                )}
                               </div>
                               <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-6 overflow-hidden mb-1">{p.name}</h3>
                               <div className="flex items-baseline gap-1">
@@ -692,10 +697,15 @@ export default function Index() {
                           )}
                         </div>
                         <div className="p-2.5 flex flex-col flex-1">
-                          <div className="flex items-center gap-1.5 mb-1.5">
+                          <div className="flex items-center justify-between mb-1.5">
                             <span className="bg-primary/10 text-primary text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
                               {p.category}
                             </span>
+                            {p.stock > 0 && (
+                              <span className="text-[7px] font-bold text-[hsl(var(--success))] flex items-center gap-0.5">
+                                <Star size={8} className="fill-current" /> IN STOCK
+                              </span>
+                            )}
                           </div>
                           <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
                           <div className="flex items-baseline gap-2 mt-1">
