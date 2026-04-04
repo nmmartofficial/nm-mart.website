@@ -14,25 +14,30 @@ export function useProducts() {
         const { data, error } = await supabase
           .from('products')
           .select('*')
-          .order('name', { ascending: true });
+          .order('name', { ascending: true })
+          .limit(10000); // Increased limit to fetch all 7,358+ products if available
 
         if (error) throw error;
 
         if (data) {
           const mappedProducts: Product[] = data.map((item: any) => {
             const normalizedCat = normalizeCategory(item.category);
+            const salerate = Number(item.salerate || 0);
+            const mrp = Number(item.mrp || 0);
             return {
+              id: String(item.barcode || "").trim(),
               name: String(item.name || "Unknown Product").trim(),
-              barcode: String(item.barcode || "").trim(),
+              price: salerate,
+              saleRate: salerate, // Alias
               category: normalizedCat,
+              mrp: mrp,
+              barcode: String(item.barcode || "").trim(),
               brand: String(item.brand || "Local").trim(),
               subCategory: String(item.sub_category || "").trim(),
-              mrp: Number(item.mrp || 0),
-              saleRate: Number(item.salerate || item.saleRate || 0),
               imageUrl: item.image_url || item.image || "",
               discount: Number(item.discount || 0),
               stock: Number(item.stock_quantity || item.stock || 0),
-              save: Math.max(0, Math.round(Number(item.mrp || 0) - Number(item.salerate || item.saleRate || 0)))
+              save: Math.max(0, Math.round(mrp - salerate))
             };
           });
           setAllProducts(mappedProducts);
@@ -59,8 +64,8 @@ export function useProducts() {
 
   const flat33 = useMemo(() => 
     allProducts.filter(p => {
-      if (!p.mrp || !p.saleRate) return false;
-      const discountPercent = ((p.mrp - p.saleRate) / p.mrp) * 100;
+      if (!p.mrp || !p.price) return false;
+      const discountPercent = ((p.mrp - p.price) / p.mrp) * 100;
       return Math.round(discountPercent) === 33;
     }),
     [allProducts]
@@ -68,8 +73,8 @@ export function useProducts() {
 
   const flat50 = useMemo(() => 
     allProducts.filter(p => {
-      if (!p.mrp || !p.saleRate) return false;
-      const discountPercent = ((p.mrp - p.saleRate) / p.mrp) * 100;
+      if (!p.mrp || !p.price) return false;
+      const discountPercent = ((p.mrp - p.price) / p.mrp) * 100;
       return Math.round(discountPercent) === 50;
     }),
     [allProducts]

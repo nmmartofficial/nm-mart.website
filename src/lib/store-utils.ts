@@ -1,8 +1,10 @@
 // ─── Types ───
 export interface Product {
+  id: string; // From barcode
   name: string;
   mrp: number;
-  saleRate: number; 
+  price: number; // From salerate
+  saleRate: number; // Alias for backward compatibility
   category: string;
   brand: string;
   subCategory: string;

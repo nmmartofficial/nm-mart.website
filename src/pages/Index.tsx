@@ -495,7 +495,7 @@ export default function Index() {
                             </div>
                             <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-6 overflow-hidden mb-1">{p.name}</h3>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-base font-black text-primary">₹{p.saleRate}</span>
+                              <span className="text-base font-black text-primary">₹{p.price}</span>
                               <span className="text-[8px] text-muted-foreground line-through">₹{p.mrp}</span>
                             </div>
                             <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
@@ -536,7 +536,7 @@ export default function Index() {
                             </div>
                             <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-6 overflow-hidden mb-1">{p.name}</h3>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-base font-black text-primary">₹{p.saleRate}</span>
+                              <span className="text-base font-black text-primary">₹{p.price}</span>
                               <span className="text-[8px] text-muted-foreground line-through">₹{p.mrp}</span>
                             </div>
                             <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
@@ -625,10 +625,10 @@ export default function Index() {
                               </div>
                               <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-6 overflow-hidden mb-1">{p.name}</h3>
                               <div className="flex items-baseline gap-1">
-                                <span className="text-base font-black text-primary">₹{p.saleRate}</span>
-                                {p.mrp > p.saleRate && <span className="text-[8px] text-muted-foreground line-through">₹{p.mrp}</span>}
+                                <span className="text-base font-black text-primary">₹{p.price}</span>
+                                {p.mrp > p.price && <span className="text-[8px] text-muted-foreground line-through">₹{p.mrp}</span>}
                               </div>
-                              {(p.saleRate === 0) && (
+                              {(p.price === 0) && (
                                 <span className="text-[8px] font-bold text-amber-500 mt-1">🕐 Pre-order for Tomorrow Delivery</span>
                               )}
                               <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
@@ -699,8 +699,8 @@ export default function Index() {
                           </div>
                           <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
                           <div className="flex items-baseline gap-2 mt-1">
-                            <span className="text-xl font-black text-primary">₹{p.saleRate}</span>
-                            {p.discount > 0 && p.mrp > p.saleRate && (
+                            <span className="text-xl font-black text-primary">₹{p.price}</span>
+                            {p.discount > 0 && p.mrp > p.price && (
                               <span className="text-[10px] text-muted-foreground line-through decoration-destructive/50">₹{p.mrp}</span>
                             )}
                             {p.discount > 0 && (
