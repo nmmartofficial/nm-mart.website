@@ -118,6 +118,9 @@ const ProductDetail = () => {
                   <span className="bg-primary/5 border border-primary/20 text-primary text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest italic">
                     {product.category}
                   </span>
+                  <span className={`text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest italic ${product.stock && product.stock > 0 ? "bg-green-50 border border-green-200 text-green-600" : "bg-red-50 border border-red-200 text-red-600"}`}>
+                    {product.stock && product.stock > 0 ? "In Stock" : "Out of Stock"}
+                  </span>
                   {product.subCategory && (
                     <span className="text-gray-300 font-bold">/</span>
                   )}
@@ -185,10 +188,15 @@ const ProductDetail = () => {
                   ) : (
                     <button 
                       onClick={handleAddToCart}
-                      disabled={adding}
-                      className="w-full flex items-center justify-center gap-3 bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] shadow-sm hover:bg-black transition-all active:scale-[0.98] italic text-sm"
+                      disabled={adding || !product.stock || product.stock <= 0}
+                      className={`w-full flex items-center justify-center gap-3 py-5 rounded-2xl font-black uppercase tracking-[2px] shadow-sm transition-all active:scale-[0.98] italic text-sm ${
+                        product.stock && product.stock > 0 
+                        ? "bg-primary text-white hover:bg-black" 
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                      }`}
                     >
-                      {adding ? <Loader2 className="animate-spin" size={20} /> : <ShoppingCart size={20} />} Add to Basket
+                      {adding ? <Loader2 className="animate-spin" size={20} /> : (product.stock && product.stock > 0 ? <ShoppingCart size={20} /> : <Package size={20} />)} 
+                      {product.stock && product.stock > 0 ? "Add to Basket" : "Out of Stock"}
                     </button>
                   )}
                   
