@@ -9,30 +9,33 @@ export function useProducts() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setLoading(true);
+        // Strictly fetch all columns from the 'products' table
         const { data, error } = await supabase
           .from('products')
-          .select('*');
+          .select('*')
+          .order('name', { ascending: true });
 
         if (error) throw error;
 
         if (data) {
           const mappedProducts: Product[] = data.map((item: any) => ({
-            name: item.name || "Unknown Product",
-            barcode: item.barcode,
-            category: item.category || "General",
-            brand: item.brand || "Local",
-            subCategory: item.sub_category || "",
+            name: String(item.name || "Unknown Product").trim(),
+            barcode: String(item.barcode || "").trim(),
+            category: String(item.category || "General").trim().toUpperCase(),
+            brand: String(item.brand || "Local").trim(),
+            subCategory: String(item.sub_category || "").trim(),
             mrp: Number(item.mrp || 0),
             saleRate: Number(item.salerate || item.saleRate || 0),
-            imageUrl: item.image_url || "",
+            imageUrl: item.image_url || item.image || "",
             discount: Number(item.discount || 0),
             stock: Number(item.stock_quantity || item.stock || 0),
-            save: Math.round(Number(item.mrp || 0) - Number(item.salerate || item.saleRate || 0))
+            save: Math.max(0, Math.round(Number(item.mrp || 0) - Number(item.salerate || item.saleRate || 0)))
           }));
           setAllProducts(mappedProducts);
         }
       } catch (err) {
-        console.error("Error fetching products from Supabase:", err);
+        console.error("Supabase Fetch Error:", err);
       } finally {
         setLoading(false);
       }

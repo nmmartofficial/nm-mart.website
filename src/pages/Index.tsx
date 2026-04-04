@@ -60,12 +60,11 @@ const CATEGORY_ICONS: Record<string, string> = {
   "CLEANING": "🧹",
   "STATIONERY": "📝",
   "FMCG": "📦",
-  "DAILY ESSENTIALS": "🛒", // अगर POS में बड़े अक्षरों में है
 };
 
 /* ─── Priority categories (shown first) ─── */
-const PRIORITY_CATS = ["Daily Essentials", "Snacks"];
-const HIDDEN_CATS = ["Bedsheets", "bedsheets"];
+const PRIORITY_CATS = ["SOAP", "SNACKS", "SPICES"];
+const HIDDEN_CATS: string[] = [];
 
 export default function Index() {
   const navigate = useNavigate();
@@ -382,7 +381,7 @@ export default function Index() {
               </div>
               <input
                 type="text"
-                placeholder="Search over 7,358+ products (e.g. Milk, Rice, Soap)..."
+                placeholder="Search over 7,358+ products in NM Mart Manjhanpur..."
                 className="flex-1 bg-transparent border-none outline-none text-foreground text-base md:text-lg font-bold placeholder:text-muted-foreground/60 placeholder:font-black placeholder:uppercase placeholder:text-[10px] md:placeholder:text-xs placeholder:tracking-[2px]"
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSelectedCat(null); }}
@@ -653,51 +652,69 @@ export default function Index() {
 
                 <p className="text-xs text-muted-foreground mb-4">{filtered.length} products मिले</p>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                  {visibleProducts.map((p, idx) => (
-                    <motion.div key={`${p.barcode}-${idx}`}
-                      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: Math.min(idx * 0.01, 0.2) }}
-                      className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
-                      onClick={() => navigate(`/product/${productSlug(p)}`)}
+                {filtered.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mb-4">
+                      <Search size={32} className="text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-bold uppercase tracking-tight">No products found</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs mx-auto mt-2">
+                      हमने आपकी खोज के लिए कोई उत्पाद नहीं पाया। कृपया कुछ और खोजें।
+                    </p>
+                    <button 
+                      onClick={() => { setQuery(""); setSelectedCat(null); setSelectedBrand(null); }}
+                      className="mt-6 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-bold uppercase text-[10px] tracking-widest hover:bg-primary/90 transition-all"
                     >
-                      <div className="relative h-28 bg-secondary/30">
-                        <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
-                        {p.discount > 0 && (
-                          <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            -{p.discount}%
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-2.5 flex flex-col flex-1">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <span className="bg-primary/10 text-primary text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
-                            {p.category}
-                          </span>
-                        </div>
-                        <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <span className="text-xl font-black text-primary">₹{p.saleRate}</span>
-                          {p.discount > 0 && p.mrp > p.saleRate && (
-                            <span className="text-[10px] text-muted-foreground line-through decoration-destructive/50">₹{p.mrp}</span>
-                          )}
+                      Clear All Filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {visibleProducts.map((p, idx) => (
+                      <motion.div key={`${p.barcode}-${idx}`}
+                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: Math.min(idx * 0.01, 0.2) }}
+                        className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
+                        onClick={() => navigate(`/product/${productSlug(p)}`)}
+                      >
+                        <div className="relative h-28 bg-secondary/30">
+                          <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
                           {p.discount > 0 && (
-                            <span className="text-[10px] font-bold text-destructive ml-auto">
-                              {p.discount}% OFF
+                            <span className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-[9px] font-bold px-1.5 py-0.5 rounded">
+                              -{p.discount}%
                             </span>
                           )}
                         </div>
-                        {p.save > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
-                        <div className="flex gap-1.5 mt-auto pt-2">
-                          <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
-                            className="flex-1 bg-primary text-primary-foreground py-1.5 rounded-lg text-[9px] font-bold uppercase hover:bg-primary/90 transition-colors">
-                            Add
-                          </button>
+                        <div className="p-2.5 flex flex-col flex-1">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <span className="bg-primary/10 text-primary text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+                              {p.category}
+                            </span>
+                          </div>
+                          <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
+                          <div className="flex items-baseline gap-2 mt-1">
+                            <span className="text-xl font-black text-primary">₹{p.saleRate}</span>
+                            {p.discount > 0 && p.mrp > p.saleRate && (
+                              <span className="text-[10px] text-muted-foreground line-through decoration-destructive/50">₹{p.mrp}</span>
+                            )}
+                            {p.discount > 0 && (
+                              <span className="text-[10px] font-bold text-destructive ml-auto">
+                                {p.discount}% OFF
+                              </span>
+                            )}
+                          </div>
+                          {p.save > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
+                          <div className="flex gap-1.5 mt-auto pt-2">
+                            <button onClick={(e) => { e.stopPropagation(); addToCart(p); }}
+                              className="flex-1 bg-primary text-primary-foreground py-1.5 rounded-lg text-[9px] font-bold uppercase hover:bg-primary/90 transition-colors">
+                              Add
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
 
                 {visibleCount < filtered.length && (
                   <div className="mt-12 text-center">
