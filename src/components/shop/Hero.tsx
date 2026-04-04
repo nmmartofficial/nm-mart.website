@@ -13,15 +13,15 @@ const Hero = () => {
       offer: "Up to 50% OFF"
     },
     {
-      title: "PREMIUM DRY FRUITS",
-      subtitle: "Directly Sourced for NM Mart Customers",
-      image: "https://images.unsplash.com/photo-1596591606975-97ee5cef3a1e?auto=format&fit=crop&q=80&w=1200",
-      offer: "Mega Savings"
+      title: "AUTHENTIC SPICES",
+      subtitle: "Pure Spices from NM Mart's Local Warehouse",
+      image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=1200",
+      offer: "Premium Quality"
     },
     {
-      title: "FMCG & HOUSEHOLD",
-      subtitle: "Branded Products, Unbeatable Prices",
-      image: "https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?auto=format&fit=crop&q=80&w=1200",
+      title: "PERSONAL CARE",
+      subtitle: "Branded Soaps & Hygiene Essentials",
+      image: "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&q=80&w=1200",
       offer: "Best Deals"
     },
     {
