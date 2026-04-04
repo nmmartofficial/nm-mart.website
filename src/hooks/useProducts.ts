@@ -14,23 +14,24 @@ export function useProducts() {
         const { data, error } = await supabase
           .from('products')
           .select('*')
-          .order('name', { ascending: true })
+          .order('RawName', { ascending: true })
           .limit(10000); // Increased limit to fetch all 7,358+ products if available
 
         if (error) throw error;
 
         if (data) {
           const mappedProducts: Product[] = data.map((item: any) => {
-            const normalizedCat = normalizeCategory(item.ItemGroupName || item.category || "General");
-            const rate = Number(item.Rate || item.salerate || item.saleRate || 0);
-            const mrp = Number(item.MRP || item.mrp || 0);
-            const barcode = String(item.RawCodeNew || item.barcode || "").trim();
-            const discount = Number(item.discountPerc || item.discount || 0);
-            const stock = Number(item.OpStock || item.stock_quantity || item.stock || 0);
+            // Strictly fetch and map from the updated Supabase columns
+            const normalizedCat = normalizeCategory(item.ItemGroupName || "General");
+            const rate = Number(item.Rate || 0);
+            const mrp = Number(item.MRP || 0);
+            const barcode = String(item.RawCodeNew || "").trim();
+            const discount = Number(item.discountPerc || 0);
+            const stock = Number(item.OpStock || 0);
             
             return {
               id: barcode,
-              name: String(item.RawName || item.name || "Unknown Product").trim(),
+              name: String(item.RawName || "Unknown Product").trim(),
               price: rate,
               saleRate: rate, // Alias
               category: normalizedCat,

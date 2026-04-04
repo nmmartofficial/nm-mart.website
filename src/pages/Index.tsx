@@ -179,12 +179,24 @@ export default function Index() {
   }, [categories]);
 
   const filtered = useMemo(() => {
+    // 100% Live data from the 'products' table using mapped columns
     let list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category));
-    if (selectedCat) list = list.filter(p => p.category === selectedCat);
-    if (selectedBrand) list = list.filter(p => (p as any).brand === selectedBrand);
+    
+    if (selectedCat) {
+      list = list.filter(p => p.category === selectedCat);
+    }
+    
+    if (selectedBrand) {
+      list = list.filter(p => (p as any).brand === selectedBrand);
+    }
+    
     if (query) {
       const q = query.toLowerCase();
-      list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category) && (p.name.toLowerCase().includes(q) || p.barcode.includes(q) || p.category.toLowerCase().includes(q)));
+      // Searching through RawName and RawCodeNew columns (mapped as name and barcode)
+      list = list.filter(p => 
+        p.name.toLowerCase().includes(q) || 
+        p.barcode.toLowerCase().includes(q)
+      );
     }
     return list;
   }, [allProducts, selectedCat, selectedBrand, query]);

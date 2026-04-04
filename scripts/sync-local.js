@@ -2,8 +2,8 @@ const { createClient } = require('@supabase/supabase-js');
 const sql = require('mssql');
 
 // --- NM MART CONFIGURATION ---
-const SUPABASE_URL = 'https://wcoymnkyqjlncztyabxc.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_8yFEGZaTqzkOirj2ax---g_R8E4PiSV'; 
+const SUPABASE_URL = 'https://ydqjrtgrzetyxhcuqvoy.supabase.co';
+const SUPABASE_KEY = 'sb_secret_3MzreJNOmCAHfqczDukXIA_dCabn2rL'; 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const sqlConfig = {
@@ -30,13 +30,13 @@ async function syncToWebsite() {
         console.log('Fetching products from RawMas...');
         const result = await pool.request().query(`
             SELECT 
-                RawCodeNew AS barcode, 
-                RawName AS name, 
-                Rate AS salerate, 
-                MRP AS mrp,
-                discountPerc AS discount,
-                It_StyleName AS category,
-                OpStock AS stock_quantity
+                RawCodeNew, 
+                RawName, 
+                Rate, 
+                MRP,
+                discountPerc,
+                ItemGroupName,
+                OpStock
             FROM RawMas
             WHERE RawCodeNew IS NOT NULL AND RawName <> 'TEST ITEM'
         `);
@@ -50,21 +50,21 @@ async function syncToWebsite() {
         for (let i = 0; i < products.length; i += BATCH_SIZE) {
             const batch = products.slice(i, i + BATCH_SIZE);
             
-            // MAP COLUMNS: We use columns that definitely exist in the 'products' table
+            // MAP COLUMNS: Upsert exact fields into Supabase without renaming
             const sanitizedBatch = batch.map(item => ({
-                barcode: String(item.barcode).trim(),
-                name: String(item.name).trim(),
-                mrp: Number(item.mrp || 0),
-                salerate: Number(item.salerate || 0),
-                discount: Number(item.discount || 0),
-                category: item.category || 'General',
-                stock_quantity: Number(item.stock_quantity || 0),
+                RawCodeNew: String(item.RawCodeNew).trim(),
+                RawName: String(item.RawName).trim(),
+                Rate: Number(item.Rate || 0),
+                MRP: Number(item.MRP || 0),
+                discountPerc: Number(item.discountPerc || 0),
+                ItemGroupName: String(item.ItemGroupName || 'General').trim(),
+                OpStock: Number(item.OpStock || 0),
                 updated_at: new Date().toISOString()
             }));
 
             const { error } = await supabase
                 .from('products') 
-                .upsert(sanitizedBatch, { onConflict: 'barcode' });
+                .upsert(sanitizedBatch, { onConflict: 'RawCodeNew' });
 
             if (error) {
                 console.error(`Batch Error (Index ${i}):`, error.message);
