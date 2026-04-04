@@ -38,6 +38,8 @@ const Admin = () => {
   const [stockQuantity, setStockQuantity] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isScanning, setIsScanning] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [fetchingProduct, setFetchingProduct] = useState(false);
@@ -69,6 +71,41 @@ const Admin = () => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const startScanner = () => {
+    if (scannerRef.current) return;
+    
+    setIsScanning(true);
+    setTimeout(() => {
+      const html5QrCode = new Html5Qrcode("reader");
+      scannerRef.current = html5QrCode;
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          setBarcode(decodedText);
+          fetchProductDetails(decodedText);
+          stopScanner();
+        },
+        () => {}
+      ).catch(err => {
+        console.error("Scanner error:", err);
+        toast.error("Camera access denied");
+        setIsScanning(false);
+      });
+    }, 100);
+  };
+
+  const stopScanner = () => {
+    if (scannerRef.current) {
+      scannerRef.current.stop().then(() => {
+        scannerRef.current = null;
+        setIsScanning(false);
+      });
+    } else {
+      setIsScanning(false);
+    }
+  };
 
   const ADMIN_PASS = "NMMART2026";
 
@@ -210,23 +247,23 @@ const Admin = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('barcode', code)
+        .eq('RawCodeNew', code)
         .maybeSingle();
 
       if (error) throw error;
 
       if (data) {
-        setProductName(data.name || "Unknown Product");
-        setMrp(String(data.mrp || ""));
-        setSalePrice(String(data.salerate || ""));
-        setCategory(data.category || "");
+        setProductName(data.RawName || data.name || "Unknown Product");
+        setMrp(String(data.MRP || data.mrp || ""));
+        setSalePrice(String(data.Rate || data.salerate || ""));
+        setCategory(data.ItemGroupName || data.category || "");
         setSubCategory(data.sub_category || "");
         setBrand(data.brand || "");
-        setStockQuantity(String(data.stock_quantity || data.stock || ""));
+        setStockQuantity(String(data.OpStock || data.stock_quantity || data.stock || ""));
         setImageUrl(data.image_url || "");
         setProductExists(true);
         if (navigator.vibrate) navigator.vibrate(100);
-        toast.success(`Found: ${data.name}`);
+        toast.success(`Found: ${data.RawName || data.name}`);
       } else {
         setProductName(""); setMrp(""); setSalePrice(""); 
         setCategory(""); setSubCategory(""); setBrand(""); setStockQuantity(""); setImageUrl("");
@@ -237,6 +274,44 @@ const Admin = () => {
       console.error("Error fetching product:", err);
     } finally {
       setFetchingProduct(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !barcode) {
+      if (!barcode) toast.error("Please scan/enter barcode first!");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${barcode}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      // 1. Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('nm-mart-assets')
+        .upload(filePath, file, { 
+          upsert: true,
+          contentType: file.type 
+        });
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('nm-mart-assets')
+        .getPublicUrl(filePath);
+
+      setImageUrl(publicUrl);
+      toast.success("Image uploaded successfully!");
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -257,18 +332,16 @@ const Admin = () => {
       const { error } = await supabase
         .from('products')
         .upsert({
-          barcode,
-          name: productName,
-          mrp: Number(mrp),
-          salerate: Number(salePrice),
-          discount: Number(discount),
-          category,
-          sub_category: subCategory,
-          brand,
-          stock_quantity: Number(stockQuantity || 0),
+          RawCodeNew: barcode,
+          RawName: productName,
+          MRP: Number(mrp),
+          Rate: Number(salePrice),
+          discountPerc: Number(discount),
+          ItemGroupName: category,
+          OpStock: Number(stockQuantity || 0),
           image_url: imageUrl,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'barcode' });
+        }, { onConflict: 'RawCodeNew' });
 
       if (error) {
         console.error("Supabase Error Details:", error);
@@ -419,24 +492,28 @@ const Admin = () => {
       <main className="max-w-7xl mx-auto px-6 py-12 flex-1 w-full">
         {activeTab === 'inventory' && (
           <InventoryTab 
-            barcode={barcode} setBarcode={setBarcode}
-            productName={productName} setProductName={setProductName}
-            mrp={mrp} setMrp={setMrp}
-            salePrice={salePrice} setSalePrice={setSalePrice}
-            category={category} setCategory={setCategory}
-            subCategory={subCategory} setSubCategory={setSubCategory}
-            brand={brand} setBrand={setBrand}
-            stockQuantity={stockQuantity} setStockQuantity={setStockQuantity}
-            imageUrl={imageUrl} setImageUrl={setImageUrl}
-            isScanning={isScanning} setIsScanning={setIsScanning}
-            loading={loading} isImporting={isImporting}
-            fetchingProduct={fetchingProduct}
-            handleFileUpload={handleFileUpload}
-            handleInventorySubmit={handleInventorySubmit}
-            fetchProductDetails={fetchProductDetails}
-            barcodeInputRef={barcodeInputRef}
-            fileInputRef={fileInputRef}
-          />
+                barcode={barcode} setBarcode={setBarcode}
+                productName={productName} setProductName={setProductName}
+                mrp={mrp} setMrp={setMrp}
+                salePrice={salePrice} setSalePrice={setSalePrice}
+                category={category} setCategory={setCategory}
+                subCategory={subCategory} setSubCategory={setSubCategory}
+                brand={brand} setBrand={setBrand}
+                stockQuantity={stockQuantity} setStockQuantity={setStockQuantity}
+                imageUrl={imageUrl} setImageUrl={setImageUrl}
+                isScanning={isScanning} setIsScanning={setIsScanning}
+                loading={loading} isImporting={isImporting}
+                fetchingProduct={fetchingProduct} productExists={productExists}
+                discount={discount} handleFileUpload={handleFileUpload}
+                handleInventorySubmit={handleInventorySubmit}
+                fetchProductDetails={fetchProductDetails}
+                barcodeInputRef={barcodeInputRef} fileInputRef={fileInputRef}
+                handleImageUpload={handleImageUpload}
+                uploading={uploading}
+                imageInputRef={imageInputRef}
+                startScanner={startScanner}
+                stopScanner={stopScanner}
+              />
         )}
 
         {activeTab === 'welfare' && (
