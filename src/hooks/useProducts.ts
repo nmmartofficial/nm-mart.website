@@ -10,41 +10,63 @@ export function useProducts() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        // Strictly fetch specific columns from the 'products' table (lowercase)
-        const { data, error } = await supabase
+        // Extremely flexible fetch: Try 'products' first, then 'Products'
+        let { data, error } = await supabase
           .from('products')
-          .select('RawCodeNew, RawName, MRP, Rate, discountPerc, category, OpStock')
+          .select('*')
           .order('RawName', { ascending: true })
           .limit(10000); 
 
-        if (error) throw error;
+        // If 'products' fails or is empty, try 'Products' (Case sensitivity check)
+        if (error || !data || data.length === 0) {
+          const secondTry = await supabase
+            .from('Products')
+            .select('*')
+            .order('RawName', { ascending: true })
+            .limit(10000);
+          
+          if (!secondTry.error && secondTry.data && secondTry.data.length > 0) {
+            data = secondTry.data;
+            error = null;
+          }
+        }
+
+        if (error) {
+          console.error("Supabase Database Error:", error);
+          throw error;
+        }
 
         if (data) {
+          console.log(`Fetched ${data.length} products from Supabase.`);
           const mappedProducts: Product[] = data.map((item: any) => {
-            const normalizedCat = normalizeCategory(item.category || "General");
-            const rate = Number(item.Rate || 0);
-            const mrp = Number(item.MRP || 0);
-            const barcode = String(item.RawCodeNew || "").trim();
-            const discount = Number(item.discountPerc || 0);
-            const stock = Number(item.OpStock || 0);
+            // Flexible mapping to handle different column name conventions
+            const normalizedCat = normalizeCategory(item.ItemGroupName || item.category || "GENERAL");
+            const rate = Number(item.Rate || item.salerate || item.saleRate || 0);
+            const mrp = Number(item.MRP || item.mrp || 0);
+            const barcode = String(item.RawCodeNew || item.barcode || "").trim();
+            const discount = Number(item.discountPerc || item.discount || 0);
+            const stock = Number(item.OpStock || item.stock_quantity || item.stock || 0);
+            const name = String(item.RawName || item.name || "Unknown Product").trim();
             
             return {
               id: barcode,
-              name: String(item.RawName || "Unknown Product").trim(),
+              name: name,
               price: rate,
-              saleRate: rate, // Alias for backward compatibility
+              saleRate: rate, // Alias
               category: normalizedCat,
               mrp: mrp,
               barcode: barcode,
-              brand: "Local", // Default since not in the specific select
-              subCategory: "", // Default since not in the specific select
-              imageUrl: "", // Default since not in the specific select
+              brand: String(item.brand || "Local").trim(),
+              subCategory: String(item.sub_category || "").trim(),
+              imageUrl: item.image_url || item.image || "",
               discount: discount,
               stock: stock,
               save: Math.max(0, Math.round(mrp - rate))
             };
           });
           setAllProducts(mappedProducts);
+        } else {
+          console.warn("No data returned from Supabase products table.");
         }
       } catch (err) {
         console.error("Supabase Fetch Error:", err);
