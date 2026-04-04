@@ -7,7 +7,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ||
 
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 
                         import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
-                        'sb_secret_3MzreJNOmCAHfqczDukXIA_dCabn2rL';
+                        'sb_publishable_NOZCBGcyAm5SVWREtn9_Vw_LhynM0Py';
 
 // क्लाइंट बनाना
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
