@@ -31,8 +31,36 @@ export interface OrderRecord {
 export const WA_NUMBER = "917081154604";
 export const UPI_ID = "paytmqr5fwdiq@ptys";
 export const ITEMS_PER_PAGE = 60;
-export const MIN_ORDER = 500;
+export const MIN_ORDER = 1499;
+export const FREE_DELIVERY_THRESHOLD = 2999;
+export const FLAT_DELIVERY_FEE = 70;
 export const LOGO_FALLBACK = "https://nmmart.in/logo.jpeg";
+
+export const STORE_DETAILS = {
+  name: "NM MART",
+  address: "Naya Nagar, First Dhata Road, Manjhanpur, Kaushambi, UP, PIN-212207",
+  mob: "+91-7081154604",
+  gstin: "09CCFPR9966P1Z9"
+};
+
+// ─── Calculations ───
+export function calculateDeliveryFee(total: number): number {
+  if (total >= FREE_DELIVERY_THRESHOLD) return 0;
+  if (total >= MIN_ORDER) return FLAT_DELIVERY_FEE;
+  return FLAT_DELIVERY_FEE; // Still show fee for reference even if below min order
+}
+
+export function calculateTaxes(total: number) {
+  // Simplified GST calculation (assuming 18% inclusive GST for POS display)
+  const gstRate = 0.18;
+  const taxableAmount = total / (1 + gstRate);
+  const totalGst = total - taxableAmount;
+  return {
+    cgst: Number((totalGst / 2).toFixed(2)),
+    sgst: Number((totalGst / 2).toFixed(2)),
+    taxableAmount: Number(taxableAmount.toFixed(2))
+  };
+}
 
 // ─── Order History ───
 export function getOrderHistory(): OrderRecord[] {

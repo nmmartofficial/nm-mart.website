@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Html5Qrcode } from "html5-qrcode";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import {
   ShoppingCart, Search, X, MessageCircle,
   Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift,
@@ -14,7 +16,11 @@ import { supabase } from "@/lib/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
-import { productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, addLoyaltyPoints, getLoyaltyPoints, OrderRecord, normalizeCategory } from "@/lib/store-utils";
+import { 
+  productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, 
+  addLoyaltyPoints, getLoyaltyPoints, OrderRecord, normalizeCategory,
+  STORE_DETAILS, calculateTaxes, calculateDeliveryFee
+} from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import HeroBanner from "@/components/shop/HeroBanner";
 import ChatBot from "@/components/shop/ChatBot";
@@ -90,7 +96,138 @@ export default function Index() {
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [payMethod, setPayMethod] = useState<"cod" | "upi">("cod");
+  const [payMethod, setPayMethod] = useState<"card" | "upi" | "netbanking">("upi");
+
+  const generatePDFBill = (orderId: string, items: any[], subtotal: number, discount: number, delivery: number, total: number, customer: any) => {
+    const doc = new jsPDF({
+      unit: 'mm',
+      format: [80, 200] // POS Roll width
+    });
+
+    const margin = 5;
+    let y = 10;
+
+    // Header
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(STORE_DETAILS.name, 40, y, { align: "center" });
+    
+    y += 5;
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    const addrLines = doc.splitTextToSize(STORE_DETAILS.address, 70);
+    doc.text(addrLines, 40, y, { align: "center" });
+    
+    y += addrLines.length * 3 + 2;
+    doc.text(`Mob: ${STORE_DETAILS.mob}`, 40, y, { align: "center" });
+    y += 3;
+    doc.text(`GSTIN: ${STORE_DETAILS.gstin}`, 40, y, { align: "center" });
+    
+    y += 5;
+    doc.setLineWidth(0.1);
+    doc.line(margin, y, 75, y);
+    
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text(`BILL NO: ${orderId}`, margin, y);
+    y += 4;
+    doc.text(`DATE: ${new Date().toLocaleString()}`, margin, y);
+    
+    if (customer?.name) {
+      y += 4;
+      doc.text(`CUST: ${customer.name} (${customer.phone})`, margin, y);
+    }
+
+    y += 5;
+    doc.line(margin, y, 75, y);
+
+    // Table Header
+    y += 5;
+    doc.setFontSize(6);
+    doc.text("ITEM", margin, y);
+    doc.text("QTY", 40, y);
+    doc.text("RATE", 50, y);
+    doc.text("AMT", 70, y, { align: "right" });
+
+    y += 2;
+    doc.line(margin, y, 75, y);
+
+    // Items
+    doc.setFont("helvetica", "normal");
+    let totalSaving = 0;
+    items.forEach(item => {
+      y += 4;
+      const itemName = item.name.length > 20 ? item.name.substring(0, 18) + ".." : item.name;
+      doc.text(itemName, margin, y);
+      doc.text(item.qty.toString(), 40, y);
+      doc.text(item.saleRate.toString(), 50, y);
+      doc.text((item.qty * item.saleRate).toString(), 70, y, { align: "right" });
+      
+      if (item.mrp > item.saleRate) {
+        totalSaving += (item.mrp - item.saleRate) * item.qty;
+      }
+      
+      if (y > 180) {
+        doc.addPage();
+        y = 10;
+      }
+    });
+
+    y += 4;
+    doc.line(margin, y, 75, y);
+
+    // Totals
+    const taxes = calculateTaxes(total - delivery);
+    
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("SUBTOTAL:", 50, y);
+    doc.text(`Rs. ${subtotal}`, 70, y, { align: "right" });
+    
+    if (discount > 0) {
+      y += 4;
+      doc.text("WELFARE DISC:", 50, y);
+      doc.text(`-Rs. ${discount}`, 70, y, { align: "right" });
+    }
+    
+    y += 4;
+    doc.text("CGST (9%):", 50, y);
+    doc.text(`Rs. ${taxes.cgst}`, 70, y, { align: "right" });
+    
+    y += 4;
+    doc.text("SGST (9%):", 50, y);
+    doc.text(`Rs. ${taxes.sgst}`, 70, y, { align: "right" });
+    
+    y += 4;
+    doc.text("DELIVERY:", 50, y);
+    doc.text(delivery === 0 ? "FREE" : `Rs. ${delivery}`, 70, y, { align: "right" });
+
+    y += 6;
+    doc.setFontSize(10);
+    doc.text("NET PAYABLE:", 40, y);
+    doc.text(`Rs. ${total}`, 70, y, { align: "right" });
+
+    y += 6;
+    doc.setFontSize(8);
+    doc.setTextColor(0, 128, 0);
+    doc.text(`TOTAL SAVING: Rs. ${totalSaving + discount}`, 40, y, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+
+    // Footer
+    y += 8;
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "italic");
+    doc.text("1. Prices inclusive of all taxes.", 40, y, { align: "center" });
+    y += 3;
+    doc.text("2. No Return No Exchange.", 40, y, { align: "center" });
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("THANK YOU FOR SHOPPING!", 40, y, { align: "center" });
+
+    doc.save(`Bill_${orderId}.pdf`);
+    return doc.output('blob');
+  };
+
   const [transactionId, setTransactionId] = useState("");
   const [showOrders, setShowOrders] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -357,22 +494,37 @@ export default function Index() {
 
       if (cartTotal < MIN_ORDER) return alert(`Min order ₹${MIN_ORDER}!`);
       const orderId = `NMM-${Date.now()}`;
+      const deliveryFee = calculateDeliveryFee(cartTotal);
+      const totalWithDelivery = finalTotal + deliveryFee;
+      
+      // Generate PDF Bill
+      generatePDFBill(
+        orderId, 
+        cart, 
+        cartTotal, 
+        welfareDiscount, 
+        deliveryFee, 
+        totalWithDelivery, 
+        { name: orderCustomerData.customer || "Guest", phone: orderCustomerData.phone || "" }
+      );
+
       const itemsText = cart.map(c => `- ${c.name} (x${c.qty}): ₹${c.saleRate * c.qty}`).join("\n");
-      let text = `*New Order from NM Mart Web* 🛒\n\n🆔 *Order ID:* ${orderId}\n📦 *Items:*\n${itemsText}\n\n💰 *Subtotal:* ₹${cartTotal}`;
+      let text = `*New Order from NM MART* 🛒\n\n🆔 *Order ID:* ${orderId}\n📦 *Items:*\n${itemsText}\n\n💰 *Subtotal:* ₹${cartTotal}`;
       
       if (welfareDiscount > 0) {
-        text += `\n🌟 *Welfare Discount (5%):* -₹${welfareDiscount}\n✅ *Final Total:* ₹${finalTotal}`;
-      } else {
-        text += `\n\n💰 *Total:* ₹${finalTotal}`;
+        text += `\n🌟 *Welfare Discount (5%):* -₹${welfareDiscount}`;
       }
       
-      text += `\n💳 *Payment:* ${payMethod.toUpperCase()}${payMethod === 'upi' && transactionId ? `\n🆔 *UTR/Txn ID:* ${transactionId}` : ''}${customerDetails}\n\n_Please confirm my order!_`;
+      text += `\n🚚 *Delivery Fee:* ${deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}`;
+      text += `\n✅ *Grand Total:* ₹${totalWithDelivery}`;
+      
+      text += `\n\n💳 *Payment:* ${payMethod.toUpperCase()}${payMethod === 'upi' && transactionId ? `\n🆔 *UTR/Txn ID:* ${transactionId}` : ''}${customerDetails}\n\n_Note: I have downloaded my POS Bill. Please confirm my order!_`;
       
       const orderData = {
         id: orderId,
         customer_id: user?.id || null,
         items: cart,
-        total: finalTotal,
+        total: totalWithDelivery,
         status: "Pending",
         customer_name: orderCustomerData.customer || "Guest",
         customer_phone: orderCustomerData.phone || "",
