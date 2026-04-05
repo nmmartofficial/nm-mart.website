@@ -1,14 +1,15 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageCircle, ShoppingCart, Star, Share2, Loader2, Package, CheckCircle2, Plus, Minus } from "lucide-react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, MessageCircle, ShoppingCart, Star, Share2, Loader2, Package, CheckCircle2, Plus, Minus, ChevronRight } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
-import { parseProductSlug, WA_NUMBER, normalizeCategory, Product } from "@/lib/store-utils";
+import { parseProductSlug, WA_NUMBER, normalizeCategory, Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
+import { motion } from "framer-motion";
 
 const SLOGAN = "Shop More, Save More";
 
@@ -22,6 +23,13 @@ const ProductDetail = () => {
   const [fetching, setFetching] = useState(true);
 
   const { name, barcode } = parseProductSlug(slug || "");
+
+  const relatedProducts = useMemo(() => {
+    if (!product) return [];
+    return allProducts
+      .filter(p => p.category === product.category && p.barcode !== product.barcode)
+      .slice(0, 6);
+  }, [product, allProducts]);
 
   useEffect(() => {
     const findProduct = async () => {
@@ -77,6 +85,16 @@ const ProductDetail = () => {
     findProduct();
   }, [slug, barcode, allProducts, productsLoading]);
 
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.name} | NM Mart - Best Wholesale Price in Manjhanpur`;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        metaDesc.setAttribute('content', `Buy ${product.name} at wholesale price ₹${product.price}. Shop daily essentials, grocery, and more at NM Mart Manjhanpur.`);
+      }
+    }
+  }, [product]);
+
   const cartItem = product ? cart.find(item => item.id === product.id) : null;
   const cartIndex = product ? cart.findIndex(item => item.id === product.id) : -1;
 
@@ -87,6 +105,8 @@ const ProductDetail = () => {
     toast.success("Added to cart!");
     setTimeout(() => setAdding(false), 500);
   };
+
+  const whatsappLink = product ? `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`*I want to order:* \n📦 Product: ${product.name}\n🆔 Barcode: ${product.barcode}\n💰 Price: ₹${product.price}\n\nIs this available?`)}` : "#";
 
   if (fetching || (productsLoading && !product)) {
     return (
@@ -99,7 +119,7 @@ const ProductDetail = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center gap-6 px-4">
+      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center gap-6 px-4 text-center">
         <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center text-gray-200">
           <Package size={40} />
         </div>
@@ -113,10 +133,6 @@ const ProductDetail = () => {
       </div>
     );
   }
-
-  const whatsappLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
-    `Hi NM Mart, I want to order this product:\n\n🛒 *Product:* ${product.name}\n💰 *Price:* ₹${product.price}\n📦 *MRP:* ₹${product.mrp}\n\nCan you please confirm the availability?`
-  )}`;
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-black font-sans flex flex-col">
@@ -284,7 +300,7 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              {/* Trust Badges - Mobile Only (Already hidden in the main image card for mobile) */}
+              {/* Trust Badges - Mobile Only */}
               <div className="grid grid-cols-2 gap-3 md:hidden">
                 <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3">
                   <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center text-green-500 shrink-0">
@@ -307,6 +323,54 @@ const ProductDetail = () => {
               </div>
             </div>
           </div>
+
+          {/* Related Products Section */}
+          {relatedProducts.length > 0 && (
+            <div className="mt-20">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl md:text-2xl font-black text-black uppercase tracking-tighter italic flex items-center gap-3">
+                  <Package className="text-primary" size={24} /> Similar Products
+                </h3>
+                <Link to="/" className="text-[10px] font-black uppercase text-primary tracking-widest hover:underline flex items-center gap-1 italic">
+                  View All Collection <ChevronRight size={14} />
+                </Link>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {relatedProducts.map((p, idx) => (
+                  <motion.div 
+                    key={`${p.barcode}-${idx}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-white border border-gray-100 rounded-2xl overflow-hidden group hover:border-primary/30 transition-all flex flex-col cursor-pointer shadow-sm hover:shadow-md"
+                    onClick={() => {
+                      navigate(`/product/${productSlug(p)}`);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  >
+                    <div className="relative h-28 bg-gray-50/50">
+                      <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
+                      {p.discount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 bg-destructive text-white text-[8px] font-black px-2 py-0.5 rounded-lg shadow-sm">
+                          {p.discount}% OFF
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-2.5 flex flex-col flex-1">
+                      <h3 className="font-bold text-[9px] text-gray-800 uppercase leading-tight h-7 overflow-hidden mb-1.5">{p.name}</h3>
+                      <div className="mt-auto flex items-baseline gap-1.5">
+                        <span className="text-sm font-black text-primary italic">₹{p.price}</span>
+                        {p.mrp > p.price && (
+                          <span className="text-[8px] text-gray-300 line-through font-bold">₹{p.mrp}</span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

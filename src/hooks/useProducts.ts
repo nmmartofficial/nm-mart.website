@@ -13,6 +13,7 @@ export function useProducts() {
   const [total33, setTotal33] = useState(0);
   const [hasMore50, setHasMore50] = useState(false);
   const [hasMore33, setHasMore33] = useState(false);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
 
   const mapProduct = (item: any): Product => {
     const normalizedCat = normalizeCategory(item.ItemGroupName || item.category || "GENERAL");
@@ -38,6 +39,22 @@ export function useProducts() {
       stock: stock,
       save: Math.max(0, Math.round(mrp - rate))
     };
+  };
+
+  const fetchAllCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('ItemGroupName')
+        .not('ItemGroupName', 'is', null);
+      
+      if (data) {
+        const uniqueCats = [...new Set(data.map((item: any) => normalizeCategory(item.ItemGroupName)))].filter(Boolean);
+        setAllCategories(uniqueCats);
+      }
+    } catch (err) {
+      console.error("Error fetching all categories:", err);
+    }
   };
 
   const fetchDiscountedProducts = async (type: 50 | 33, offset = 0) => {
@@ -82,6 +99,7 @@ export function useProducts() {
         setLoading(true);
         fetchDiscountedProducts(50, 0);
         fetchDiscountedProducts(33, 0);
+        fetchAllCategories();
       }
       
       const { data, error, count } = await supabase
@@ -139,8 +157,8 @@ export function useProducts() {
   };
 
   const categories = useMemo(() => 
-    [...new Set(allProducts.map(p => p.category).filter(Boolean))],
-    [allProducts]
+    allCategories.length > 0 ? allCategories : [...new Set(allProducts.map(p => p.category).filter(Boolean))],
+    [allProducts, allCategories]
   );
 
   const brands = useMemo(() => 

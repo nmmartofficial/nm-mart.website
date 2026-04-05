@@ -249,6 +249,26 @@ export default function Index() {
     return [...priority, ...rest];
   }, [categories]);
 
+  const handleBannerClick = (link: { type: string, value: string }) => {
+    if (link.type === 'category') {
+      setSelectedCat(link.value);
+      setSelectedBrand(null);
+      setQuery("");
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+    } else if (link.type === 'query') {
+      setQuery(link.value);
+      setSelectedCat(null);
+      setSelectedBrand(null);
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+    } else if (link.type === 'offer') {
+      // Offers are usually at the top, just scroll there or we can add a filter
+      setQuery("");
+      setSelectedCat(null);
+      setSelectedBrand(null);
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+    }
+  };
+
   const filtered = useMemo(() => {
     // 100% Live data from the 'products' table using mapped columns
     let list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category));
@@ -547,15 +567,7 @@ export default function Index() {
       </AnimatePresence>
 
       {/* Hero Banner */}
-      <HeroBanner onBannerClick={(link) => {
-        if (link.type === 'category') setSelectedCat(link.value);
-        if (link.type === 'query') setQuery(link.value);
-        if (link.type === 'offer') {
-          setQuery(""); setSelectedCat(null);
-          // Scroll to offer section
-          document.getElementById(`offer-${link.value}`)?.scrollIntoView({ behavior: 'smooth' });
-        }
-      }} />
+      <HeroBanner onBannerClick={handleBannerClick} />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -714,7 +726,11 @@ export default function Index() {
                     className="text-[10px] font-bold uppercase text-primary border-b-2 border-primary hover:opacity-80">← वापस जाएं</button>
                 </div>
 
-                <p className="text-xs text-muted-foreground mb-4">{totalCount} items in NM Mart | {filtered.length} products loaded</p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  {selectedCat 
+                    ? `${filtered.length} products found in ${selectedCat}` 
+                    : (query ? `Showing ${filtered.length} results for "${query}"` : `${totalCount} items in NM Mart`)}
+                </p>
 
                 {filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
