@@ -2,26 +2,80 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MessageCircle, ShoppingCart, Star, Share2, Loader2, Package, CheckCircle2, Plus, Minus } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
-import { parseProductSlug, WA_NUMBER } from "@/lib/store-utils";
+import { parseProductSlug, WA_NUMBER, normalizeCategory, Product } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase/client";
 
 const SLOGAN = "Shop More, Save More";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { allProducts, loading } = useProducts();
+  const { allProducts, loading: productsLoading } = useProducts();
   const { addToCart, cart, updateQty } = useCart();
   const [adding, setAdding] = useState(false);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [fetching, setFetching] = useState(true);
 
   const { name, barcode } = parseProductSlug(slug || "");
-  const product = allProducts.find(p => p.id === barcode)
-    || allProducts.find(p => p.barcode === barcode)
-    || allProducts.find(p => p.name === name);
+
+  useEffect(() => {
+    const findProduct = async () => {
+      setFetching(true);
+      // 1. Try finding in loaded products first
+      let found = allProducts.find(p => p.barcode === barcode || p.id === barcode);
+      
+      if (found) {
+        setProduct(found);
+        setFetching(false);
+        return;
+      }
+
+      // 2. If not found and products are loaded, fetch from Supabase
+      if (!productsLoading) {
+        try {
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('RawCodeNew', barcode)
+            .maybeSingle();
+
+          if (data) {
+            const rate = Number(data.Rate || data.salerate || data.saleRate || 0);
+            const mrp = Number(data.MRP || data.mrp || 0);
+            const disc = Number(data.discountPerc || data.discount || 0);
+            
+            const mapped: Product = {
+              id: data.RawCodeNew,
+              name: data.RawName || "Unknown Product",
+              price: rate,
+              saleRate: rate,
+              category: normalizeCategory(data.ItemGroupName || data.category || "GENERAL"),
+              mrp: mrp,
+              barcode: data.RawCodeNew,
+              brand: data.brand || "Local",
+              subCategory: data.sub_category || "",
+              imageUrl: data.image_url || "",
+              discount: disc,
+              stock: Number(data.OpStock || 0),
+              save: Math.max(0, Math.round(mrp - rate))
+            };
+            setProduct(mapped);
+          }
+        } catch (err) {
+          console.error("Error fetching product:", err);
+        } finally {
+          setFetching(false);
+        }
+      }
+    };
+
+    findProduct();
+  }, [slug, barcode, allProducts, productsLoading]);
 
   const cartItem = product ? cart.find(item => item.id === product.id) : null;
   const cartIndex = product ? cart.findIndex(item => item.id === product.id) : -1;
@@ -34,7 +88,7 @@ const ProductDetail = () => {
     setTimeout(() => setAdding(false), 500);
   };
 
-  if (loading) {
+  if (fetching || (productsLoading && !product)) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-primary" size={40} />
