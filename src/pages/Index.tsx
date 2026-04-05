@@ -112,7 +112,17 @@ export default function Index() {
       scannerRef.current = html5QrCode;
       html5QrCode.start(
         { facingMode: "environment" },
-        { fps: 20, qrbox: { width: 250, height: 250 } },
+        { 
+          fps: 60, 
+          qrbox: (viewfinderWidth, vh) => {
+            const minEdge = Math.min(viewfinderWidth, vh);
+            const size = Math.floor(minEdge * 0.8);
+            return { width: size, height: size / 2 }; // Rectangular for barcodes
+          },
+          aspectRatio: 1.0,
+          disableFlip: true,
+          rememberLastUsedCamera: true
+        },
         (decodedText) => {
           setQuery(decodedText);
           handleBarcodeSearch(decodedText);
