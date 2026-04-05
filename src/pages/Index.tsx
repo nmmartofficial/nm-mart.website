@@ -497,6 +497,30 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
+      {/* Admin Mode Bar */}
+      {isAdminMode && (
+        <div className="bg-black text-white py-2 px-4 flex items-center justify-between sticky top-0 z-[60] border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+            <span className="text-[10px] font-black uppercase tracking-[2px] italic">Admin Mode Active</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link to="/admin" className="text-[9px] font-black uppercase tracking-widest hover:text-primary transition-colors flex items-center gap-1.5">
+              <Database size={12} /> Dashboard
+            </Link>
+            <button 
+              onClick={() => {
+                localStorage.removeItem("nm_admin_session");
+                setIsAdminMode(false);
+                toast.info("Admin Mode Disabled");
+              }}
+              className="text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition-colors"
+            >
+              Exit
+            </button>
+          </div>
+        </div>
+      )}
       <FlashSaleBanner />
 
       {/* Sticky Header with Logo */}
