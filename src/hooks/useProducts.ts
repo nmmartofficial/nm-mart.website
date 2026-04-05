@@ -9,6 +9,10 @@ export function useProducts() {
   const [totalCount, setTotalCount] = useState(0);
   const [flat50, setFlat50] = useState<Product[]>([]);
   const [flat33, setFlat33] = useState<Product[]>([]);
+  const [total50, setTotal50] = useState(0);
+  const [total33, setTotal33] = useState(0);
+  const [hasMore50, setHasMore50] = useState(false);
+  const [hasMore33, setHasMore33] = useState(false);
 
   const mapProduct = (item: any): Product => {
     const normalizedCat = normalizeCategory(item.ItemGroupName || item.category || "GENERAL");
@@ -36,27 +40,39 @@ export function useProducts() {
     };
   };
 
-  const fetchDiscountedProducts = async () => {
+  const fetchDiscountedProducts = async (type: 50 | 33, offset = 0) => {
     try {
-      // Fetch 50% discount items specifically
-      const { data: data50 } = await supabase
+      const { data, error, count } = await supabase
         .from('products')
-        .select('*')
-        .eq('discountPerc', 50)
-        .limit(12);
+        .select('*', { count: 'exact' })
+        .eq('discountPerc', type)
+        .order('RawName', { ascending: true })
+        .range(offset, offset + 11);
       
-      if (data50) setFlat50(data50.map(mapProduct));
+      if (error) throw error;
 
-      // Fetch 33% discount items specifically
-      const { data: data33 } = await supabase
-        .from('products')
-        .select('*')
-        .eq('discountPerc', 33)
-        .limit(12);
-      
-      if (data33) setFlat33(data33.map(mapProduct));
+      if (data) {
+        const mapped = data.map(mapProduct);
+        if (type === 50) {
+          if (offset === 0) {
+            setFlat50(mapped);
+            setTotal50(count || 0);
+          } else {
+            setFlat50(prev => [...prev, ...mapped]);
+          }
+          setHasMore50(data.length === 12);
+        } else {
+          if (offset === 0) {
+            setFlat33(mapped);
+            setTotal33(count || 0);
+          } else {
+            setFlat33(prev => [...prev, ...mapped]);
+          }
+          setHasMore33(data.length === 12);
+        }
+      }
     } catch (err) {
-      console.error("Discount Fetch Error:", err);
+      console.error(`Discount Fetch Error (${type}%):`, err);
     }
   };
 
@@ -64,7 +80,8 @@ export function useProducts() {
     try {
       if (offset === 0) {
         setLoading(true);
-        fetchDiscountedProducts();
+        fetchDiscountedProducts(50, 0);
+        fetchDiscountedProducts(33, 0);
       }
       
       const { data, error, count } = await supabase
@@ -109,6 +126,18 @@ export function useProducts() {
     }
   };
 
+  const loadMore50 = () => {
+    if (hasMore50) {
+      fetchDiscountedProducts(50, flat50.length);
+    }
+  };
+
+  const loadMore33 = () => {
+    if (hasMore33) {
+      fetchDiscountedProducts(33, flat33.length);
+    }
+  };
+
   const categories = useMemo(() => 
     [...new Set(allProducts.map(p => p.category).filter(Boolean))],
     [allProducts]
@@ -119,5 +148,9 @@ export function useProducts() {
     [allProducts]
   );
 
-  return { allProducts, loading, categories, brands, flat33, flat50, hasMore, loadMore, totalCount };
+  return { 
+    allProducts, loading, categories, brands, 
+    flat33, flat50, hasMore, loadMore, totalCount,
+    total50, total33, hasMore50, hasMore33, loadMore50, loadMore33
+  };
 }

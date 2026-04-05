@@ -69,7 +69,11 @@ const HIDDEN_CATS: string[] = [];
 
 export default function Index() {
   const navigate = useNavigate();
-  const { allProducts, loading, categories, brands, flat33, flat50, hasMore, loadMore, totalCount } = useProducts();
+  const { 
+    allProducts, loading, categories, brands, 
+    flat33, flat50, hasMore, loadMore, totalCount,
+    total50, total33, hasMore50, hasMore33, loadMore50, loadMore33
+  } = useProducts();
   const { cart, addToCart, updateQty, removeItem, clearCart, cartTotal, cartCount, setCart } = useCart();
 
   // Helper for Category Icons
@@ -467,6 +471,12 @@ export default function Index() {
                   <DiscountTabs 
                     flat33={flat33} 
                     flat50={flat50} 
+                    total50={total50}
+                    total33={total33}
+                    hasMore50={hasMore50}
+                    hasMore33={hasMore33}
+                    loadMore50={loadMore50}
+                    loadMore33={loadMore33}
                     onAddToCart={addToCart} 
                   />
                 )}
