@@ -46,10 +46,15 @@ const ProductDetail = () => {
       // 2. If not found and products are loaded, fetch from Supabase
       if (!productsLoading) {
         try {
+          const cutoffDate = new Date();
+          cutoffDate.setMonth(cutoffDate.getMonth() - 18);
+          const cutoffISO = cutoffDate.toISOString();
+
           const { data, error } = await supabase
             .from('products')
             .select('*')
             .eq('RawCodeNew', barcode)
+            .or(`OpStock.gt.0,updated_at.gte.${cutoffISO}`)
             .maybeSingle();
 
           if (data) {
