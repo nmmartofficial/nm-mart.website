@@ -5,46 +5,46 @@ const BANNERS = [
   {
     title: "🛒 Daily Essentials",
     subtitle: "रोज़मर्रा का सामान — सबसे सस्ते दाम पर!",
-    bg: "from-[#00A8E1] via-[#0081ad] to-black",
+    bg: "from-[#ff8c00] via-[#ff4500] to-black",
     link: { type: 'category', value: 'Daily Essentials' }
   },
   {
     title: "🍿 Snacks & Munchies",
     subtitle: "Chips, Namkeen, Biscuits — Flat Discount!",
-    bg: "from-[#00A8E1] via-[#33b9e7] to-white",
+    bg: "from-[#ff8c00] via-[#ffa500] to-white",
     textColor: "text-black",
     link: { type: 'category', value: 'Snacks' }
   },
   {
     title: "🥦 Grocery Essentials",
     subtitle: "7000+ आइटम्स होलसेल प्राइस पर",
-    bg: "from-white via-[#f0f9ff] to-[#00A8E1]",
+    bg: "from-white via-[#fff7ed] to-[#ff8c00]",
     textColor: "text-black",
     link: { type: 'category', value: 'Grocery' }
   },
   {
     title: "🥜 Kaju & Dry Fruits",
     subtitle: "Premium Cashews & Raisins — ताज़ा क्वालिटी",
-    bg: "from-black via-[#0081ad] to-[#00A8E1]",
+    bg: "from-black via-[#ea580c] to-[#ff8c00]",
     link: { type: 'query', value: 'Kaju' }
   },
   {
     title: "🔥 Flat 50% OFF",
     subtitle: "500+ प्रोडक्ट्स पर — सीमित समय!",
-    bg: "from-[#00A8E1] via-white to-white",
+    bg: "from-[#ff8c00] via-white to-white",
     textColor: "text-black",
     link: { type: 'offer', value: '50' }
   },
   {
     title: "🏆 NM Mart Welfare Card",
     subtitle: "₹599 में ₹1500 का वैल्यू — 6 महीने!",
-    bg: "from-[#00A8E1] via-[#00A8E1] to-[#0081ad]",
+    bg: "from-[#ff8c00] via-[#f97316] to-[#ea580c]",
     link: { type: 'query', value: 'Welfare' }
   },
   {
     title: "⚡ Mega Sale Live",
     subtitle: "अनबीटेबल होलसेल प्राइसेस — अभी खरीदें!",
-    bg: "from-white via-[#e0f2fe] to-[#00A8E1]",
+    bg: "from-white via-[#fff7ed] to-[#ff8c00]",
     textColor: "text-black",
     link: { type: 'query', value: 'Sale' }
   },
