@@ -276,7 +276,23 @@ const Admin = () => {
     setIsAuthenticated(false);
     localStorage.removeItem("nm_admin_session");
     toast.info("Logged out from NM Mart Dashboard");
+    
+    // Show Tawk.to again on logout
+    if ((window as any).Tawk_API && (window as any).Tawk_API.showWidget) {
+      (window as any).Tawk_API.showWidget();
+    }
   };
+
+  useEffect(() => {
+    // Hide Tawk.to if authenticated, show if not
+    if ((window as any).Tawk_API) {
+      if (isAuthenticated) {
+        if ((window as any).Tawk_API.hideWidget) (window as any).Tawk_API.hideWidget();
+      } else {
+        if ((window as any).Tawk_API.showWidget) (window as any).Tawk_API.showWidget();
+      }
+    }
+  }, [isAuthenticated]);
 
   const fetchProductDetails = async (code: string) => {
     if (!code) {

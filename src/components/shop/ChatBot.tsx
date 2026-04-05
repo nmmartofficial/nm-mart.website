@@ -9,7 +9,22 @@ interface ChatMessage {
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [input, setInput] = useState('');
+
+  useEffect(() => {
+    // Check if user is admin
+    const adminSession = localStorage.getItem("nm_admin_session") === "true";
+    setIsAdmin(adminSession);
+
+    // Listen for storage changes to update admin status
+    const handleStorageChange = () => {
+      setIsAdmin(localStorage.getItem("nm_admin_session") === "true");
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const [products, setProducts] = useState<{ name: string; saleRate: string; img: string }[]>([]);
   const [cart, setCart] = useState<{ name: string; saleRate: string; img: string }[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -75,41 +90,44 @@ const ChatBot = () => {
     setInput('');
   };
 
+  if (isAdmin) return null;
+
   return (
     <div className="fixed bottom-24 right-4 z-[9999]">
-      <button onClick={() => setIsOpen(!isOpen)} className="bg-primary text-primary-foreground p-3 rounded-full shadow-lg relative">
-        {isOpen ? <X size={20} /> : <MessageCircle size={20} />}
+      <button onClick={() => setIsOpen(!isOpen)} className="bg-primary text-primary-foreground p-2.5 rounded-full shadow-lg relative hover:scale-110 transition-transform active:scale-95">
+        {isOpen ? <X size={18} /> : <MessageCircle size={18} />}
         {cart.length > 0 && !isOpen && (
-          <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold animate-bounce">
+          <span className="absolute -top-1 -right-1 bg-destructive text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold animate-bounce shadow-sm">
             {cart.length}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-14 right-0 w-[290px] md:w-[320px] bg-card border border-border rounded-xl shadow-2xl flex flex-col h-[450px]">
-          <div className="bg-primary py-2 px-3 flex justify-between items-center rounded-t-xl">
-            <h3 className="font-bold text-primary-foreground text-[11px] uppercase tracking-tighter">NM Mart Shopping Assistant</h3>
-            {cart.length > 0 && (
-              <button onClick={() => setCart([])} title="Clear Cart"><Trash2 size={14} className="text-primary-foreground hover:text-destructive" /></button>
-            )}
+        <div className="absolute bottom-12 right-0 w-[270px] md:w-[300px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col h-[400px] overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="bg-primary py-2 px-3 flex justify-between items-center">
+            <h3 className="font-black text-primary-foreground text-[10px] uppercase tracking-tighter italic">NM Shopping AI</h3>
+            <div className="flex items-center gap-2">
+              {cart.length > 0 && (
+                <button onClick={() => setCart([])} title="Clear Cart" className="hover:scale-110 transition-transform"><Trash2 size={12} className="text-primary-foreground/80 hover:text-white" /></button>
+              )}
+              <button onClick={() => setIsOpen(false)} className="hover:scale-110 transition-transform"><X size={14} className="text-primary-foreground/80 hover:text-white" /></button>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2.5 scrollbar-hide bg-gray-50/30">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
-                <div className={`max-w-[90%] p-2 rounded-lg text-[10px] ${msg.isBot ? 'bg-secondary text-secondary-foreground' : 'bg-primary text-primary-foreground font-bold'}`}>
-                  {msg.text}
+                <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-[10px] font-bold ${msg.isBot ? 'bg-white border border-gray-100 text-black shadow-sm' : 'bg-primary text-white shadow-md shadow-primary/10'}`}>
+                  <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
                   {msg.options && (
-                    <div className="mt-2 space-y-1.5">
-                      {msg.options.map((prod, idx) => (
-                        <div key={idx} className="bg-card border border-border p-1 rounded-md flex gap-2 items-center">
-                          <img src={prod.img || "https://nmmart.in/logo.jpeg"} className="w-8 h-8 rounded object-cover" alt={prod.name} onError={e => { (e.target as HTMLImageElement).src = "https://nmmart.in/logo.jpeg"; }} />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-primary font-bold truncate text-[9px]">{prod.name}</div>
-                            <div className="text-foreground text-[9px]">₹{prod.saleRate}</div>
-                          </div>
-                          <button onClick={() => addToCart(prod)} className="p-1 bg-primary rounded text-primary-foreground"><ShoppingCart size={12} /></button>
+                    <div className="mt-2 space-y-1.5 pt-1 border-t border-gray-50">
+                      {msg.options.map((opt, j) => (
+                        <div key={j} className="flex items-center justify-between gap-2 p-1.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group border border-transparent hover:border-gray-200">
+                          <span className="flex-1 text-[9px] truncate text-gray-700">{opt.name} - ₹{opt.saleRate}</span>
+                          <button onClick={() => addToCart(opt)} className="text-primary hover:text-black transition-colors shrink-0">
+                            <ShoppingCart size={12} className="group-hover:scale-110" />
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -120,20 +138,31 @@ const ChatBot = () => {
             <div ref={chatEndRef} />
           </div>
 
-          {cart.length > 0 && (
-            <div className="p-2 border-t border-border">
-              <button
+          <div className="p-2.5 bg-white border-t border-border flex flex-col gap-2">
+            {cart.length > 0 && (
+              <button 
                 onClick={sendToWhatsApp}
-                className="w-full bg-[hsl(var(--success))] text-white py-2 rounded-lg flex items-center justify-center gap-2 text-[11px] font-black hover:opacity-90 transition-all"
+                className="w-full bg-green-500 text-white py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all shadow-sm italic"
               >
-                <SendHorizontal size={14} /> SEND ORDER ({cart.length})
+                <SendHorizontal size={12} /> Order WhatsApp ({cart.length})
+              </button>
+            )}
+            <div className="flex gap-1.5 items-center">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="Search products..."
+                className="flex-1 bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5 text-[10px] font-bold outline-none focus:border-primary transition-all placeholder:text-gray-300"
+              />
+              <button 
+                onClick={handleSend}
+                className="bg-primary text-white p-1.5 rounded-lg hover:scale-105 transition-transform shadow-md"
+              >
+                <Send size={14} />
               </button>
             </div>
-          )}
-
-          <div className="p-2 bg-secondary/50 flex gap-1.5">
-            <input type="text" placeholder="Search item..." className="flex-1 bg-card text-foreground px-2 py-1 rounded-md border border-border outline-none text-[11px]" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} />
-            <button onClick={handleSend} className="bg-primary p-1.5 rounded-md text-primary-foreground"><Send size={14} /></button>
           </div>
         </div>
       )}
