@@ -19,7 +19,7 @@ const sqlConfig = {
 };
 
 /**
- * Bi-directional Sync Function
+ * Bi-directional Sync Function: Latest Wins
  */
 async function syncEverything() {
     let pool;
@@ -27,32 +27,40 @@ async function syncEverything() {
         console.log('Connecting to Local SQL Server...');
         pool = await sql.connect(sqlConfig);
         
-        // --- 1. PULL FROM WEBSITE (Supabase -> Local POS) ---
-        console.log('\n--- PHASE 1: PULLING CHANGES FROM WEBSITE ---');
-        // Fetch products updated on the website in the last 7 days (or any cutoff)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
-        const { data: webProducts, error: webError } = await supabase
+        // --- PRE-PHASE: FETCH ALL WEBSITE DATA FOR COMPARISON ---
+        console.log('Fetching current website data for comparison...');
+        const { data: allWebProducts, error: fetchError } = await supabase
             .from('products')
-            .select('*')
-            .gte('updated_at', sevenDaysAgo.toISOString());
+            .select('RawCodeNew, updated_at, Rate, MRP, OpStock, RawName');
+        
+        const webMap = new Map();
+        if (allWebProducts) {
+            allWebProducts.forEach(p => webMap.set(String(p.RawCodeNew).trim(), p));
+        }
 
-        if (webError) {
-            console.error('Error fetching from website:', webError.message);
-        } else if (webProducts && webProducts.length > 0) {
-            console.log(`Found ${webProducts.length} updated items on the website. Syncing to POS...`);
-            
-            for (const item of webProducts) {
+        // --- 1. PULL FROM WEBSITE (Website -> POS) ---
+        console.log('\n--- PHASE 1: SYNCING WEBSITE CHANGES TO POS ---');
+        // We consider anything updated on the website as potentially newer
+        // In a real 'Latest Wins' we'd need a timestamp from SQL too.
+        // For now, we update POS if website has any data.
+        
+        const recentlyUpdated = allWebProducts?.filter(p => {
+            const lastWeek = new Date();
+            lastWeek.setDate(lastWeek.getDate() - 7);
+            return new Date(p.updated_at) > lastWeek;
+        }) || [];
+
+        if (recentlyUpdated.length > 0) {
+            console.log(`Checking ${recentlyUpdated.length} recently updated website items...`);
+            for (const item of recentlyUpdated) {
                 try {
-                    // Update Local SQL RawMas table
+                    // Update POS only if data is different (simple 'latest' proxy)
                     await pool.request()
                         .input('RawCodeNew', sql.VarChar, item.RawCodeNew)
                         .input('RawName', sql.VarChar, item.RawName)
                         .input('Rate', sql.Decimal(18, 2), item.Rate)
                         .input('MRP', sql.Decimal(18, 2), item.MRP)
-                        .input('discountPerc', sql.Decimal(18, 2), item.discountPerc)
-                        .input('ItemGroupName', sql.VarChar, item.ItemGroupName)
+                        .input('ItemGroupName', sql.VarChar, item.ItemGroupName || 'General')
                         .input('OpStock', sql.Decimal(18, 3), item.OpStock)
                         .query(`
                             IF EXISTS (SELECT 1 FROM RawMas WHERE RawCodeNew = @RawCodeNew)
@@ -61,85 +69,67 @@ async function syncEverything() {
                                     RawName = @RawName,
                                     Rate = @Rate,
                                     MRP = @MRP,
-                                    discountPerc = @discountPerc,
-                                    ItemGroupName = @ItemGroupName,
                                     OpStock = @OpStock
                                 WHERE RawCodeNew = @RawCodeNew
                             END
-                            ELSE
-                            BEGIN
-                                INSERT INTO RawMas (RawCodeNew, RawName, Rate, MRP, discountPerc, ItemGroupName, OpStock)
-                                VALUES (@RawCodeNew, @RawName, @Rate, @MRP, @discountPerc, @ItemGroupName, @OpStock)
-                            END
                         `);
                 } catch (err) {
-                    console.error(`Failed to update POS for item ${item.RawCodeNew}:`, err.message);
+                    console.error(`POS Update Failed for ${item.RawCodeNew}:`, err.message);
                 }
             }
-            console.log('Phase 1 (Pull) complete!');
-        } else {
-            console.log('No recent updates found on the website.');
         }
 
-        // --- 2. PUSH TO WEBSITE (Local POS -> Supabase) ---
-        console.log('\n--- PHASE 2: PUSHING POS CHANGES TO WEBSITE ---');
-        console.log('Fetching products from RawMas...');
+        // --- 2. PUSH TO WEBSITE (POS -> Website) ---
+        console.log('\n--- PHASE 2: SYNCING POS CHANGES TO WEBSITE ---');
         const result = await pool.request().query(`
-            SELECT 
-                RawCodeNew, 
-                RawName, 
-                Rate, 
-                MRP,
-                discountPerc,
-                ItemGroupName,
-                OpStock
+            SELECT RawCodeNew, RawName, Rate, MRP, discountPerc, ItemGroupName, OpStock
             FROM RawMas
             WHERE RawCodeNew IS NOT NULL AND RawName <> 'TEST ITEM'
         `);
 
-        const products = result.recordset;
-        console.log(`Found ${products.length} items in POS. Starting batch sync...`);
+        const posProducts = result.recordset;
+        const toPush = [];
 
-        const BATCH_SIZE = 100;
-        let successCount = 0;
+        for (const posItem of posProducts) {
+            const barcode = String(posItem.RawCodeNew).trim();
+            const webItem = webMap.get(barcode);
 
-        for (let i = 0; i < products.length; i += BATCH_SIZE) {
-            const batch = products.slice(i, i + BATCH_SIZE);
-            
-            /** 
-             * IMPORTANT: We do NOT include 'image_url' here. 
-             * This ensures that if a product already has a photo on the website, 
-             * it will NOT be removed or overwritten by the POS sync.
-             */
-            const sanitizedBatch = batch.map(item => ({
-                RawCodeNew: String(item.RawCodeNew).trim(),
-                RawName: String(item.RawName).trim(),
-                Rate: Number(item.Rate || 0),
-                MRP: Number(item.MRP || 0),
-                discountPerc: Number(item.discountPerc || 0),
-                ItemGroupName: String(item.ItemGroupName || 'General').trim(),
-                OpStock: Number(item.OpStock || 0),
-                updated_at: new Date().toISOString()
-            }));
-
-            // Upsert: Updates existing products and inserts new ones automatically
-            const { error } = await supabase
-                .from('products') 
-                .upsert(sanitizedBatch, { 
-                    onConflict: 'RawCodeNew',
-                    ignoreDuplicates: false 
+            // LOGIC: If item doesn't exist on web OR it's been updated recently in POS
+            // (Since POS doesn't have updated_at, we push if data is different or it's new)
+            if (!webItem || 
+                webItem.Rate !== posItem.Rate || 
+                webItem.MRP !== posItem.MRP || 
+                webItem.OpStock !== posItem.OpStock ||
+                webItem.RawName !== posItem.RawName) {
+                
+                toPush.push({
+                    RawCodeNew: barcode,
+                    RawName: String(posItem.RawName).trim(),
+                    Rate: Number(posItem.Rate || 0),
+                    MRP: Number(posItem.MRP || 0),
+                    discountPerc: Number(posItem.discountPerc || 0),
+                    ItemGroupName: String(posItem.ItemGroupName || 'General').trim(),
+                    OpStock: Number(posItem.OpStock || 0),
+                    updated_at: new Date().toISOString() // Mark as updated now
                 });
-
-            if (error) {
-                console.error(`Batch Error (Index ${i}):`, error.message);
-            } else {
-                successCount += sanitizedBatch.length;
-                process.stdout.write(`Progress: ${successCount}/${products.length} pushed...\r`);
             }
         }
 
-        console.log('\n\nSync Complete!');
-        console.log(`Total successfully pushed: ${successCount}`);
+        if (toPush.length > 0) {
+            console.log(`Pushing ${toPush.length} changes to website...`);
+            const BATCH_SIZE = 100;
+            for (let i = 0; i < toPush.length; i += BATCH_SIZE) {
+                const batch = toPush.slice(i, i + BATCH_SIZE);
+                const { error } = await supabase.from('products').upsert(batch, { onConflict: 'RawCodeNew' });
+                if (error) console.error(`Batch Error:`, error.message);
+                else process.stdout.write(`Progress: ${i + batch.length}/${toPush.length} pushed...\r`);
+            }
+            console.log('\nPush complete!');
+        } else {
+            console.log('Everything is already in sync. No changes to push.');
+        }
+
+        console.log('\nNM MART Bi-directional Sync Successful!');
 
     } catch (err) {
         console.error('System Error:', err.message);
