@@ -50,7 +50,11 @@ async function syncToWebsite() {
         for (let i = 0; i < products.length; i += BATCH_SIZE) {
             const batch = products.slice(i, i + BATCH_SIZE);
             
-            // MAP COLUMNS: Upsert exact fields into Supabase without renaming
+            /** 
+             * IMPORTANT: We do NOT include 'image_url' here. 
+             * This ensures that if a product already has a photo on the website, 
+             * it will NOT be removed or overwritten by the POS sync.
+             */
             const sanitizedBatch = batch.map(item => ({
                 RawCodeNew: String(item.RawCodeNew).trim(),
                 RawName: String(item.RawName).trim(),
@@ -62,9 +66,13 @@ async function syncToWebsite() {
                 updated_at: new Date().toISOString()
             }));
 
+            // Upsert: Updates existing products and inserts new ones automatically
             const { error } = await supabase
                 .from('products') 
-                .upsert(sanitizedBatch, { onConflict: 'RawCodeNew' });
+                .upsert(sanitizedBatch, { 
+                    onConflict: 'RawCodeNew',
+                    ignoreDuplicates: false // This ensures existing products ARE updated with new price/stock
+                });
 
             if (error) {
                 console.error(`Batch Error (Index ${i}):`, error.message);
