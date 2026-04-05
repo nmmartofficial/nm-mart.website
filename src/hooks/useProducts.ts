@@ -57,10 +57,12 @@ export function useProducts() {
         .from('products')
         .select('ItemGroupName')
         .or(`OpStock.gt.0,updated_at.gte.${cutoffISO}`)
-        .not('ItemGroupName', 'is', null);
+        .not('ItemGroupName', 'is', null)
+        .neq('ItemGroupName', '')
+        .neq('ItemGroupName', ' ');
       
       if (data) {
-        const uniqueCats = [...new Set(data.map((item: any) => normalizeCategory(item.ItemGroupName)))].filter(Boolean);
+        const uniqueCats = [...new Set(data.map((item: any) => normalizeCategory(item.ItemGroupName)))].filter(c => c && c.length > 1);
         setAllCategories(uniqueCats);
       }
     } catch (err) {
