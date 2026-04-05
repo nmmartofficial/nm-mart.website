@@ -6,7 +6,7 @@ import {
   ShoppingCart, Search, X, MessageCircle,
   Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift,
   ChevronRight, User as UserIcon, CreditCard, ScanBarcode,
-  Edit3, Save, Loader2 as LoaderIcon
+  Edit3, Save, Loader2 as LoaderIcon, Image as ImageIcon, Upload
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase/client";
@@ -107,6 +107,8 @@ export default function Index() {
   });
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editLoading, setEditLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const quickEditImageRef = useRef<HTMLInputElement>(null);
 
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
 
@@ -427,8 +429,40 @@ export default function Index() {
       ...p,
       mrp: p.mrp,
       salePrice: p.price,
-      stock: p.stock || 0
+      stock: p.stock || 0,
+      category: p.category || "",
+      imageUrl: p.imageUrl || ""
     });
+  };
+
+  const handleQuickImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingProduct) return;
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${editingProduct.barcode}-${Math.random()}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      setEditingProduct({ ...editingProduct, imageUrl: publicUrl });
+      toast.success("Image uploaded!");
+    } catch (err) {
+      console.error("Image upload failed", err);
+      toast.error("Image upload failed");
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const submitQuickEdit = async () => {
@@ -438,9 +472,12 @@ export default function Index() {
       const { error } = await supabase
         .from('products')
         .update({
+          RawName: editingProduct.name,
+          ItemGroupName: editingProduct.category,
           MRP: Number(editingProduct.mrp),
           Rate: Number(editingProduct.salePrice),
           OpStock: Number(editingProduct.stock),
+          image_url: editingProduct.imageUrl,
           updated_at: new Date().toISOString()
         })
         .eq('RawCodeNew', editingProduct.barcode);
@@ -448,8 +485,8 @@ export default function Index() {
       if (error) throw error;
       toast.success("Product updated instantly!");
       setEditingProduct(null);
-      // Optional: reload products or update local state
-      loadMore(); // Trigger a refresh of current view
+      // Refresh to show changes
+      window.location.reload(); 
     } catch (err) {
       console.error("Quick edit failed", err);
       toast.error("Update failed");
@@ -951,11 +988,49 @@ export default function Index() {
                 </div>
 
                 <div className="space-y-5">
+                  {/* Quick Image Edit */}
+                  <div className="flex justify-center mb-4">
+                    <div className="relative group cursor-pointer" onClick={() => quickEditImageRef.current?.click()}>
+                      <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 group-hover:border-primary transition-all">
+                        {uploadingImage ? (
+                          <LoaderIcon className="animate-spin text-primary" size={24} />
+                        ) : editingProduct.imageUrl ? (
+                          <img src={editingProduct.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="text-gray-300" size={24} />
+                        )}
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity">
+                        <Upload className="text-white" size={20} />
+                      </div>
+                      <input 
+                        type="file" 
+                        ref={quickEditImageRef} 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handleQuickImageUpload} 
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Product Name</label>
-                    <div className="bg-gray-50 p-3 rounded-xl text-xs font-bold text-black border border-gray-100 italic">
-                      {editingProduct.name}
-                    </div>
+                    <input 
+                      type="text" 
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-primary transition-all"
+                      value={editingProduct.name}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Category</label>
+                    <input 
+                      type="text" 
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-primary transition-all"
+                      value={editingProduct.category}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
