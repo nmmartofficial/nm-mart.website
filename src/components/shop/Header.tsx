@@ -82,13 +82,13 @@ const Header = () => {
 
   return (
     <header className="flex flex-col w-full z-50 sticky top-0 shadow-sm">
-      {/* Top Thin Bar - Professional & Clean */}
-      <div className="bg-[#f8f9fa] text-gray-500 py-2.5 px-6 flex justify-between items-center text-[9px] font-black uppercase tracking-[3px] border-b border-gray-100">
+      {/* Top Thin Bar - Hidden on mobile to save space */}
+      <div className="hidden md:flex bg-[#f8f9fa] text-gray-500 py-2.5 px-6 justify-between items-center text-[9px] font-black uppercase tracking-[3px] border-b border-gray-100">
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-2 italic">
             <Mail size={10} className="text-primary"/> support@nmmart.in
           </span>
-          <span className="hidden md:flex items-center gap-2 italic">
+          <span className="flex items-center gap-2 italic">
             <MapPin size={10} className="text-primary"/> Naya Nagar, Dhata Road, Manjhanpur
           </span>
         </div>
@@ -100,30 +100,30 @@ const Header = () => {
       </div>
 
       {/* Main Header - White background */}
-      <div className="bg-white p-4 flex justify-between items-center border-b border-primary/10">
-        <Link to="/" className="flex items-center gap-4 group no-underline shrink-0">
-          <div className="bg-primary p-3 rounded-2xl shadow-sm group-hover:scale-110 transition-transform duration-300">
-            <ShoppingCart className="text-white" size={24} />
+      <div className="bg-white p-3 md:p-4 flex justify-between items-center border-b border-primary/10">
+        <Link to="/" className="flex items-center gap-3 md:gap-4 group no-underline shrink-0">
+          <div className="bg-primary p-2 md:p-3 rounded-xl md:rounded-2xl shadow-sm group-hover:scale-110 transition-transform duration-300">
+            <ShoppingCart className="text-white" size={20} md:size={24} />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-2xl md:text-3xl font-black text-black leading-none italic uppercase tracking-tighter">
+            <h1 className="text-xl md:text-3xl font-black text-black leading-none italic uppercase tracking-tighter">
               NM <span className="text-primary">MART</span>
             </h1>
-            <p className="text-[9px] font-black text-gray-400 tracking-[0.3em] uppercase mt-1 italic">
+            <p className="text-[7px] md:text-[9px] font-black text-gray-400 tracking-[0.2em] md:tracking-[0.3em] uppercase mt-0.5 md:mt-1 italic">
               {SLOGAN}
             </p>
           </div>
         </Link>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-1.5 md:gap-4">
           {user ? (
             <Link 
               to="/profile" 
-              className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-100 px-4 py-2 rounded-2xl transition-all group"
+              className="flex items-center gap-2 md:gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-100 px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl transition-all group"
             >
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-black">
-                <User size={16} />
+              <div className="w-6 h-6 md:w-8 md:h-8 bg-primary rounded-full flex items-center justify-center text-white font-black">
+                <User size={12} md:size={16} />
               </div>
               <div className="hidden md:flex flex-col items-start leading-none">
                 <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
@@ -135,9 +135,9 @@ const Header = () => {
           ) : (
             <Link 
               to="/login" 
-              className="bg-gray-50 text-black border border-gray-100 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-sm hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-2 italic"
+              className="bg-gray-50 text-black border border-gray-100 px-4 md:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl font-black text-[9px] md:text-[10px] uppercase shadow-sm hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-1.5 md:gap-2 italic"
             >
-              <User size={14} /> Sign In
+              <User size={12} md:size={14} /> Sign In
             </Link>
           )}
 
@@ -145,21 +145,21 @@ const Header = () => {
           {welfareCard?.active ? (
             <button 
               onClick={handleWelfareClick}
-              className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-2 border-yellow-600 px-3 py-1.5 rounded-xl hover:shadow-lg transition-all group shadow-sm animate-pulse-glow"
+              className="flex items-center gap-1 bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border border-yellow-600 px-2 md:px-3 py-1.5 rounded-lg md:rounded-xl hover:shadow-lg transition-all group shadow-sm animate-pulse-glow"
             >
-              <Star size={14} className="text-yellow-800 fill-current" />
+              <Star size={12} md:size={14} className="text-yellow-800 fill-current" />
               <div className="flex flex-col items-start leading-none">
-                <span className="text-[8px] font-black uppercase tracking-tighter text-yellow-900">Active Card</span>
-                <span className="text-[10px] font-black text-black hidden sm:inline">{profileName.split(' ')[0] || "Active"}</span>
+                <span className="text-[7px] md:text-[8px] font-black uppercase tracking-tighter text-yellow-900">Active</span>
+                <span className="text-[9px] md:text-[10px] font-black text-black hidden sm:inline">{profileName.split(' ')[0] || "Active"}</span>
               </div>
             </button>
           ) : (
             <button 
               onClick={handleWelfareClick}
-              className="flex items-center gap-1.5 bg-white border-2 border-black px-3 py-2 rounded-xl hover:bg-black hover:text-white transition-all group shadow-sm"
+              className="flex items-center gap-1 bg-white border border-black px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl hover:bg-black hover:text-white transition-all group shadow-sm"
             >
-              <Star size={14} className="text-black group-hover:text-white fill-current" />
-              <span className="text-[10px] font-black uppercase tracking-tighter text-black group-hover:text-white hidden sm:inline">Welfare Card</span>
+              <Star size={12} md:size={14} className="text-black group-hover:text-white fill-current" />
+              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-tighter text-black group-hover:text-white hidden sm:inline">Welfare</span>
             </button>
           )}
           

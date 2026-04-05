@@ -122,20 +122,20 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-[#f8f9fa] text-black font-sans flex flex-col">
       <Header />
 
-      <main className="flex-1 py-12 px-4 md:px-6">
+      <main className="flex-1 py-6 md:py-12 px-4 md:px-6">
         <div className="max-w-5xl mx-auto">
           {/* Back Navigation */}
           <button 
             onClick={() => navigate(-1)} 
-            className="flex items-center gap-2 text-gray-400 hover:text-primary font-black uppercase tracking-widest text-[10px] mb-8 group transition-colors"
+            className="flex items-center gap-2 text-gray-400 hover:text-primary font-black uppercase tracking-widest text-[10px] mb-4 md:mb-8 group transition-colors"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Collection
           </button>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-start">
             {/* Left: Image Card */}
-            <div className="bg-white border border-gray-100 rounded-[40px] p-8 md:p-12 shadow-sm sticky top-28">
-              <div className="aspect-square flex items-center justify-center overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded-[24px] md:rounded-[40px] p-4 md:p-12 shadow-sm lg:sticky lg:top-28">
+              <div className="aspect-[4/3] md:aspect-square flex items-center justify-center overflow-hidden bg-gray-50/50 rounded-2xl md:rounded-3xl">
                 <ProductImageDisplay 
                   imageUrl={product.imageUrl} 
                   name={product.name} 
@@ -143,8 +143,8 @@ const ProductDetail = () => {
                 />
               </div>
               
-              {/* Trust Badges */}
-              <div className="grid grid-cols-2 gap-4 mt-12 pt-8 border-t border-gray-50">
+              {/* Trust Badges - Hidden on mobile to save space, shown on md+ */}
+              <div className="hidden md:grid grid-cols-2 gap-4 mt-12 pt-8 border-t border-gray-50">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
                     <CheckCircle2 size={20} />
@@ -281,6 +281,28 @@ const ProductDetail = () => {
                   <p className="text-xs font-bold text-gray-500 leading-relaxed uppercase">
                     "This product is directly sourced from manufacturers to ensure the lowest wholesale price in Manjhanpur. 100% genuine quality guarantee."
                   </p>
+                </div>
+              </div>
+
+              {/* Trust Badges - Mobile Only (Already hidden in the main image card for mobile) */}
+              <div className="grid grid-cols-2 gap-3 md:hidden">
+                <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center text-green-500 shrink-0">
+                    <CheckCircle2 size={16} />
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Quality</p>
+                    <p className="text-[9px] font-black uppercase text-black italic">100% Purity</p>
+                  </div>
+                </div>
+                <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-primary/5 rounded-lg flex items-center justify-center text-primary shrink-0">
+                    <Package size={16} />
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Wholesale</p>
+                    <p className="text-[9px] font-black uppercase text-black italic">Best Rates</p>
+                  </div>
                 </div>
               </div>
             </div>
