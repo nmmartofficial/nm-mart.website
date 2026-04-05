@@ -31,7 +31,7 @@ async function syncEverything() {
         console.log('Fetching current website data for comparison...');
         const { data: allWebProducts, error: fetchError } = await supabase
             .from('products')
-            .select('RawCodeNew, updated_at, Rate, MRP, OpStock, RawName');
+            .select('RawCodeNew, updated_at, Rate, MRP, OpStock, RawName, image_url, ItemGroupName, discountPerc');
         
         const webMap = new Map();
         if (allWebProducts) {
@@ -100,9 +100,11 @@ async function syncEverything() {
                 webItem.Rate !== posItem.Rate || 
                 webItem.MRP !== posItem.MRP || 
                 webItem.OpStock !== posItem.OpStock ||
-                webItem.RawName !== posItem.RawName) {
+                webItem.RawName !== posItem.RawName ||
+                webItem.discountPerc !== posItem.discountPerc ||
+                webItem.ItemGroupName !== posItem.ItemGroupName) {
                 
-                toPush.push({
+                const pushData = {
                     RawCodeNew: barcode,
                     RawName: String(posItem.RawName).trim(),
                     Rate: Number(posItem.Rate || 0),
@@ -111,7 +113,14 @@ async function syncEverything() {
                     ItemGroupName: String(posItem.ItemGroupName || 'General').trim(),
                     OpStock: Number(posItem.OpStock || 0),
                     updated_at: new Date().toISOString() // Mark as updated now
-                });
+                };
+
+                // CRITICAL: Preserve the image_url if it exists on the web
+                if (webItem && webItem.image_url) {
+                    pushData.image_url = webItem.image_url;
+                }
+
+                toPush.push(pushData);
             }
         }
 
