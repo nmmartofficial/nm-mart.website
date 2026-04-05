@@ -81,6 +81,7 @@ export function useProducts() {
         .select('*', { count: 'exact' })
         .eq('discountPerc', type)
         .or(`OpStock.gt.0,updated_at.gte.${cutoffISO}`)
+        .order('image_url', { ascending: false, nullsFirst: false })
         .order('RawName', { ascending: true })
         .range(offset, offset + 11);
       
@@ -128,6 +129,7 @@ export function useProducts() {
         .from('products')
         .select('*', { count: 'exact' })
         .or(`OpStock.gt.0,updated_at.gte.${cutoffISO}`)
+        .order('image_url', { ascending: false, nullsFirst: false })
         .order('RawName', { ascending: true })
         .range(offset, offset + 49);
 

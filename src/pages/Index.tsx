@@ -293,6 +293,15 @@ export default function Index() {
     // 100% Live data from the 'products' table using mapped columns
     let list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category));
     
+    // Sort: Products with images first
+    list = [...list].sort((a, b) => {
+      const aHasImg = !!a.imageUrl;
+      const bHasImg = !!b.imageUrl;
+      if (aHasImg && !bHasImg) return -1;
+      if (!aHasImg && bHasImg) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
     if (selectedCat) {
       list = list.filter(p => p.category === selectedCat);
     }
@@ -769,7 +778,16 @@ export default function Index() {
 
                 {/* Dynamic Category-wise Product Sections */}
                 {sortedCategories.slice(0, 6).map(cat => {
-                  const catProducts = allProducts.filter(p => p.category === cat && !HIDDEN_CATS.includes(p.category)).slice(0, 6);
+                  const catProducts = allProducts
+                    .filter(p => p.category === cat && !HIDDEN_CATS.includes(p.category))
+                    .sort((a, b) => {
+                      const aHasImg = !!a.imageUrl;
+                      const bHasImg = !!b.imageUrl;
+                      if (aHasImg && !bHasImg) return -1;
+                      if (!aHasImg && bHasImg) return 1;
+                      return a.name.localeCompare(b.name);
+                    })
+                    .slice(0, 6);
                   if (catProducts.length === 0) return null;
                   return (
                     <div key={cat} className="mb-10">
