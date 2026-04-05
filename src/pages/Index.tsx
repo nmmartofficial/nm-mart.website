@@ -724,6 +724,7 @@ export default function Index() {
                     loadMore50={loadMore50}
                     loadMore33={loadMore33}
                     onAddToCart={addToCart} 
+                    onQuickEdit={handleQuickEdit}
                   />
                 )}
 
@@ -831,7 +832,7 @@ export default function Index() {
                                 {isAdminMode && (
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); handleQuickEdit(p); }}
-                                    className="p-1.5 bg-yellow-400 text-black rounded-lg hover:bg-black hover:text-white transition-all shadow-md active:scale-95"
+                                    className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-black transition-all shadow-md active:scale-95"
                                     title="Quick Edit Product"
                                   >
                                     <Edit3 size={14} strokeWidth={2.5} />
@@ -930,7 +931,7 @@ export default function Index() {
                               {isAdminMode && (
                                 <button 
                                   onClick={(e) => { e.stopPropagation(); handleQuickEdit(p); }}
-                                  className="p-1.5 bg-yellow-400 text-black rounded-lg hover:bg-black hover:text-white transition-all shadow-md active:scale-95"
+                                  className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-black transition-all shadow-md active:scale-95"
                                   title="Quick Edit Product"
                                 >
                                   <Edit3 size={14} strokeWidth={2.5} />

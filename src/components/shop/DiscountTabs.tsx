@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Flame } from "lucide-react";
+import { Zap, Flame, Edit3 } from "lucide-react";
 import { Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "./ProductImageDisplay";
 
@@ -14,15 +14,23 @@ interface Props {
   loadMore50: () => void;
   loadMore33: () => void;
   onAddToCart: (p: Product) => void;
+  onQuickEdit?: (p: Product) => void;
 }
 
 const DiscountTabs = ({ 
   flat33, flat50, total50, total33, 
   hasMore50, hasMore33, loadMore50, loadMore33, 
-  onAddToCart 
+  onAddToCart, onQuickEdit
 }: Props) => {
   const [activeTab, setActiveTab] = useState<"33" | "50">("50");
+  const [isAdminMode, setIsAdminMode] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const adminSession = localStorage.getItem("nm_admin_session") === "true";
+    setIsAdminMode(adminSession);
+  }, []);
+
   const products = activeTab === "50" ? flat50 : flat33;
   const hasMore = activeTab === "50" ? hasMore50 : hasMore33;
   const loadMore = activeTab === "50" ? loadMore50 : loadMore33;
@@ -74,12 +82,23 @@ const DiscountTabs = ({
                 <span className="text-base font-black text-primary">₹{p.saleRate}</span>
                 <span className="text-[9px] text-muted-foreground line-through">₹{p.mrp}</span>
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); onAddToCart(p); }}
-                className="mt-auto pt-2 w-full bg-primary text-primary-foreground py-1.5 rounded-lg text-[8px] font-bold uppercase hover:bg-primary/90 transition-colors"
-              >
-                + Add to Cart
-              </button>
+              <div className="flex gap-1.5 mt-auto pt-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onAddToCart(p); }}
+                  className="flex-1 bg-primary text-primary-foreground py-1.5 rounded-lg text-[8px] font-bold uppercase hover:bg-primary/90 transition-colors"
+                >
+                  + Add to Cart
+                </button>
+                {isAdminMode && onQuickEdit && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onQuickEdit(p); }}
+                    className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-black transition-all shadow-md active:scale-95"
+                    title="Quick Edit Product"
+                  >
+                    <Edit3 size={12} strokeWidth={2.5} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}
