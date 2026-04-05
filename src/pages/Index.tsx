@@ -605,24 +605,27 @@ export default function Index() {
     setUploadingImage(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${editingProduct.barcode}-${Math.random()}.${fileExt}`;
+      const fileName = `${editingProduct.barcode}.${fileExt}`;
       const filePath = `products/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
+        .from('nm-mart-assets')
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type
+        });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
+        .from('nm-mart-assets')
         .getPublicUrl(filePath);
 
       setEditingProduct({ ...editingProduct, imageUrl: publicUrl });
-      toast.success("Image uploaded!");
-    } catch (err) {
+      toast.success("Image uploaded successfully!");
+    } catch (err: any) {
       console.error("Image upload failed", err);
-      toast.error("Image upload failed");
+      toast.error(err.message || "Image upload failed");
     } finally {
       setUploadingImage(false);
     }
