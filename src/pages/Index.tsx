@@ -17,6 +17,7 @@ import HeroBanner from "@/components/shop/HeroBanner";
 import ChatBot from "@/components/shop/ChatBot";
 import Footer from "@/components/shop/Footer";
 import FlashSaleBanner from "@/components/shop/FlashSaleBanner";
+import DiscountTabs from "@/components/shop/DiscountTabs";
 import WelfareModals from "@/components/shop/modals/WelfareModals";
 import CartDrawer from "@/components/shop/modals/CartDrawer";
 import CheckoutModal from "@/components/shop/modals/CheckoutModal";
@@ -66,7 +67,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 const PRIORITY_CATS = ["SOAP", "SNACKS", "SPICES"].map(normalizeCategory);
 const HIDDEN_CATS: string[] = [];
 
-export function Index() {
+export default function Index() {
   const navigate = useNavigate();
   const { allProducts, loading, categories, brands, flat33, flat50, hasMore, loadMore, totalCount } = useProducts();
   const { cart, addToCart, updateQty, removeItem, clearCart, cartTotal, cartCount, setCart } = useCart();
@@ -477,97 +478,13 @@ export function Index() {
             {/* Home View */}
             {!selectedCat && !selectedBrand && !query && (
               <>
-                {/* 50% OFF Section */}
-                {flat50.length > 0 && (
-                  <div id="offer-50" className="mb-12">
-                    <div className="flex items-center justify-between mb-5">
-                      <h3 className="font-black text-foreground text-lg uppercase flex items-center gap-2 tracking-tight">
-                        <Gift size={18} className="text-primary" /> 50% OFF Deals
-                      </h3>
-                      <span className="bg-primary/10 text-primary text-[10px] font-black px-3 py-1 rounded-full uppercase italic animate-pulse">Big Savings</span>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                      {flat50.slice(0, 6).map((p, idx) => (
-                        <motion.div key={`${p.barcode}-${idx}`}
-                          whileHover={{ y: -5 }}
-                          className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
-                          onClick={() => navigate(`/product/${productSlug(p)}`)}
-                        >
-                          <div className="relative h-24 bg-secondary/30">
-                            <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
-                            <span className="absolute top-1 right-1 bg-primary text-white text-[8px] font-black px-2 py-0.5 rounded-lg shadow-sm">50% OFF</span>
-                          </div>
-                          <div className="p-2 flex flex-col flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="bg-primary/10 text-primary text-[6px] font-black px-1 py-0.5 rounded-full uppercase tracking-tighter">
-                                {p.category}
-                              </span>
-                              <span className={`text-[6px] font-bold flex items-center gap-0.5 ${p.stock && p.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
-                                <Star size={7} className="fill-current" /> {p.stock && p.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
-                              </span>
-                            </div>
-                            <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-6 overflow-hidden mb-1">{p.name}</h3>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-base font-black text-primary">₹{p.price}</span>
-                              {p.mrp > p.price && <span className="text-[8px] text-muted-foreground line-through decoration-muted-foreground/50">₹{p.mrp}</span>}
-                            </div>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
-                              disabled={!p.stock || p.stock <= 0}
-                              className={`mt-2 py-1 rounded-lg text-[8px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-black" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
-                              {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
-                            </button>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 33% OFF Section */}
-                {flat33.length > 0 && (
-                  <div id="offer-33" className="mb-12">
-                    <div className="flex items-center justify-between mb-5">
-                      <h3 className="font-black text-foreground text-lg uppercase flex items-center gap-2 tracking-tight">
-                        <Package size={18} className="text-primary" /> 33% OFF Deals
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                      {flat33.slice(0, 6).map((p, idx) => (
-                        <motion.div key={`${p.barcode}-${idx}`}
-                          whileHover={{ y: -5 }}
-                          className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
-                          onClick={() => navigate(`/product/${productSlug(p)}`)}
-                        >
-                          <div className="relative h-24 bg-secondary/30">
-                            <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
-                            <span className="absolute top-1 right-1 bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded-lg shadow-sm">33% OFF</span>
-                          </div>
-                          <div className="p-2 flex flex-col flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="bg-primary/10 text-primary text-[6px] font-black px-1 py-0.5 rounded-full uppercase tracking-tighter">
-                                {p.category}
-                              </span>
-                              <span className={`text-[6px] font-bold flex items-center gap-0.5 ${p.stock && p.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
-                                <Star size={7} className="fill-current" /> {p.stock && p.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
-                              </span>
-                            </div>
-                            <h3 className="font-semibold text-[9px] text-foreground uppercase leading-tight h-6 overflow-hidden mb-1">{p.name}</h3>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-base font-black text-primary">₹{p.price}</span>
-                              {p.mrp > p.price && <span className="text-[8px] text-muted-foreground line-through decoration-muted-foreground/50">₹{p.mrp}</span>}
-                            </div>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
-                              disabled={!p.stock || p.stock <= 0}
-                              className={`mt-2 py-1 rounded-lg text-[8px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-black" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
-                              {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
-                            </button>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
+                {/* Discount Collections Tabs (50% & 33%) */}
+                {(flat50.length > 0 || flat33.length > 0) && (
+                  <DiscountTabs 
+                    flat33={flat33} 
+                    flat50={flat50} 
+                    onAddToCart={addToCart} 
+                  />
                 )}
 
                 {/* Shop by Category Section */}
