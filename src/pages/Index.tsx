@@ -303,6 +303,7 @@ export default function Index() {
         .from('products')
         .select('*')
         .eq('RawCodeNew', code)
+        .gt('OpStock', 0)
         .maybeSingle();
       
       if (data) {

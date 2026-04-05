@@ -49,14 +49,10 @@ export function useProducts() {
 
   const fetchAllCategories = async () => {
     try {
-      const cutoffDate = new Date();
-      cutoffDate.setMonth(cutoffDate.getMonth() - 18);
-      const cutoffISO = cutoffDate.toISOString();
-
       const { data, error } = await supabase
         .from('products')
         .select('ItemGroupName')
-        .or(`OpStock.gt.0,updated_at.gte.${cutoffISO}`)
+        .gt('OpStock', 0)
         .not('ItemGroupName', 'is', null)
         .neq('ItemGroupName', '')
         .neq('ItemGroupName', ' ');
@@ -72,15 +68,11 @@ export function useProducts() {
 
   const fetchDiscountedProducts = async (type: 50 | 33, offset = 0) => {
     try {
-      const cutoffDate = new Date();
-      cutoffDate.setMonth(cutoffDate.getMonth() - 18);
-      const cutoffISO = cutoffDate.toISOString();
-
       const { data, error, count } = await supabase
         .from('products')
         .select('*', { count: 'exact' })
         .eq('discountPerc', type)
-        .or(`OpStock.gt.0,updated_at.gte.${cutoffISO}`)
+        .gt('OpStock', 0)
         .order('image_url', { ascending: false, nullsFirst: false })
         .order('RawName', { ascending: true })
         .range(offset, offset + 11);
@@ -121,14 +113,10 @@ export function useProducts() {
         fetchAllCategories();
       }
       
-      const cutoffDate = new Date();
-      cutoffDate.setMonth(cutoffDate.getMonth() - 18);
-      const cutoffISO = cutoffDate.toISOString();
-
       const { data, error, count } = await supabase
         .from('products')
         .select('*', { count: 'exact' })
-        .or(`OpStock.gt.0,updated_at.gte.${cutoffISO}`)
+        .gt('OpStock', 0)
         .order('image_url', { ascending: false, nullsFirst: false })
         .order('RawName', { ascending: true })
         .range(offset, offset + 49);
