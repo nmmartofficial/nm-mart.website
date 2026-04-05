@@ -456,29 +456,13 @@ export default function Index() {
                 </div>
               ))}
             </div>
-            {/* Product Grid Skeleton */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => (
-                <div key={i} className="bg-card border border-border rounded-2xl p-4 space-y-4">
-                  <Skeleton className="w-full aspect-square rounded-xl" />
-                  <div className="space-y-2">
-                    <Skeleton className="w-full h-4" />
-                    <Skeleton className="w-2/3 h-4" />
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Skeleton className="w-12 h-6" />
-                    <Skeleton className="w-16 h-8 rounded-lg" />
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         ) : (
           <>
             {/* Home View */}
             {!selectedCat && !selectedBrand && !query && (
               <>
-                {/* Discount Collections Tabs (50% & 33%) */}
+                {/* Discount Collections Tabs (50% & 33%) - MOVED TO TOP */}
                 {(flat50.length > 0 || flat33.length > 0) && (
                   <DiscountTabs 
                     flat33={flat33} 
