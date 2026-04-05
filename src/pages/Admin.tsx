@@ -68,6 +68,7 @@ const Admin = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [totalInventory, setTotalInventory] = useState(0);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchTotalCount = async () => {
@@ -79,7 +80,23 @@ const Admin = () => {
         setTotalInventory(count);
       }
     };
-    if (isAuthenticated) fetchTotalCount();
+    
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('ItemGroupName')
+        .not('ItemGroupName', 'is', null);
+      
+      if (!error && data) {
+        const unique = Array.from(new Set(data.map(d => d.ItemGroupName))).sort();
+        setAllCategories(unique as string[]);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchTotalCount();
+      fetchCategories();
+    }
   }, [isAuthenticated]);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -548,6 +565,7 @@ const Admin = () => {
                 imageInputRef={imageInputRef}
                 startScanner={startScanner}
                 stopScanner={stopScanner}
+                allCategories={allCategories}
               />
         )}
 

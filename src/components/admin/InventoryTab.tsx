@@ -37,6 +37,7 @@ interface InventoryTabProps {
   imageInputRef: React.RefObject<HTMLInputElement>;
   startScanner: () => void;
   stopScanner: () => void;
+  allCategories: string[];
 }
 
 const InventoryTab = ({
@@ -45,8 +46,19 @@ const InventoryTab = ({
   brand, setBrand, stockQuantity, setStockQuantity,
   imageUrl, setImageUrl, isScanning, setIsScanning, loading, isImporting,
   fetchingProduct, productExists, discount, handleFileUpload, handleInventorySubmit, fetchProductDetails,
-  barcodeInputRef, fileInputRef, handleImageUpload, uploading, imageInputRef, startScanner, stopScanner
+  barcodeInputRef, fileInputRef, handleImageUpload, uploading, imageInputRef, startScanner, stopScanner,
+  allCategories
 }: InventoryTabProps) => {
+  const [catQuery, setCatQuery] = React.useState("");
+  const [showCatSuggestions, setShowCatSuggestions] = React.useState(false);
+
+  const filteredCats = React.useMemo(() => {
+    if (!catQuery) return [];
+    return allCategories.filter(c => 
+      c.toLowerCase().includes(catQuery.toLowerCase())
+    ).slice(0, 5);
+  }, [catQuery, allCategories]);
+
   return (
     <div className="grid lg:grid-cols-2 gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Form Section */}
@@ -218,15 +230,39 @@ const InventoryTab = ({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-2 relative">
               <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Category</label>
               <input 
                 type="text" 
                 placeholder="e.g. Snacks"
                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold uppercase text-sm"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setCategory(val);
+                  setCatQuery(val);
+                  setShowCatSuggestions(true);
+                }}
+                onFocus={() => setShowCatSuggestions(true)}
               />
+              {showCatSuggestions && filteredCats.length > 0 && (
+                <div className="absolute z-50 w-full bg-white border border-gray-100 rounded-2xl shadow-xl mt-1 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  {filteredCats.map((cat, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className="w-full text-left px-6 py-3 hover:bg-primary/5 text-xs font-black uppercase tracking-widest transition-colors border-b border-gray-50 last:border-0"
+                      onClick={() => {
+                        setCategory(cat);
+                        setCatQuery("");
+                        setShowCatSuggestions(false);
+                      }}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Stock Quantity</label>
