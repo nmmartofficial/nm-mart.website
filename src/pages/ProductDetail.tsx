@@ -58,9 +58,14 @@ const ProductDetail = () => {
             .maybeSingle();
 
           if (data) {
-            const rate = Number(data.Rate || data.salerate || data.saleRate || 0);
             const mrp = Number(data.MRP || data.mrp || 0);
             const disc = Number(data.discountPerc || data.discount || 0);
+            
+            // Auto-calculate rate based on discount if present
+            let rate = Number(data.Rate || data.salerate || data.saleRate || 0);
+            if (disc > 0 && mrp > 0) {
+              rate = Math.round(mrp - (mrp * (disc / 100)));
+            }
             
             const mapped: Product = {
               id: data.RawCodeNew,

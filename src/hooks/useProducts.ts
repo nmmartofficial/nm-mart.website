@@ -17,10 +17,16 @@ export function useProducts() {
 
   const mapProduct = (item: any): Product => {
     const normalizedCat = normalizeCategory(item.ItemGroupName || item.category || "GENERAL");
-    const rate = Number(item.Rate || item.salerate || item.saleRate || 0);
     const mrp = Number(item.MRP || item.mrp || 0);
-    const barcode = String(item.RawCodeNew || item.barcode || "").trim();
     const discount = Number(item.discountPerc || item.discount || 0);
+    
+    // Auto-calculate rate based on discount if present
+    let rate = Number(item.Rate || item.salerate || item.saleRate || 0);
+    if (discount > 0 && mrp > 0) {
+      rate = Math.round(mrp - (mrp * (discount / 100)));
+    }
+
+    const barcode = String(item.RawCodeNew || item.barcode || "").trim();
     const stock = Number(item.OpStock || item.stock_quantity || item.stock || 0);
     const name = String(item.RawName || item.name || "Unknown Product").trim();
     
