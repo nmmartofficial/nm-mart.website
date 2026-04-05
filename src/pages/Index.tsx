@@ -1222,6 +1222,14 @@ export default function Index() {
                   </div>
 
                   <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Barcode / Product Code</label>
+                    <div className="w-full bg-gray-100 border border-gray-200 rounded-xl p-3 text-xs font-black text-primary tracking-widest flex items-center gap-2">
+                      <ScanBarcode size={14} />
+                      {editingProduct.barcode}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
                     <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Product Name</label>
                     <input 
                       type="text" 
