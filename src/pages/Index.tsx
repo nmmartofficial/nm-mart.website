@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Html5Qrcode } from "html5-qrcode";
 import {
   ShoppingCart, Search, X, MessageCircle,
   Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift,
-  ChevronRight, User as UserIcon, CreditCard, ScanBarcode
+  ChevronRight, User as UserIcon, CreditCard, ScanBarcode,
+  Edit3, Save, Loader2 as LoaderIcon
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase/client";
@@ -101,6 +102,11 @@ export default function Index() {
   const [isScanning, setIsScanning] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [scannedProduct, setScannedProduct] = useState<any>(null);
+  const [isAdminMode, setIsAdminMode] = useState(() => {
+    return localStorage.getItem("nm_admin_session") === "true";
+  });
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
 
@@ -416,6 +422,42 @@ export default function Index() {
     setUser(null);
   };
 
+  const handleQuickEdit = (p: any) => {
+    setEditingProduct({
+      ...p,
+      mrp: p.mrp,
+      salePrice: p.price,
+      stock: p.stock || 0
+    });
+  };
+
+  const submitQuickEdit = async () => {
+    if (!editingProduct) return;
+    setEditLoading(true);
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({
+          MRP: Number(editingProduct.mrp),
+          Rate: Number(editingProduct.salePrice),
+          OpStock: Number(editingProduct.stock),
+          updated_at: new Date().toISOString()
+        })
+        .eq('RawCodeNew', editingProduct.barcode);
+
+      if (error) throw error;
+      toast.success("Product updated instantly!");
+      setEditingProduct(null);
+      // Optional: reload products or update local state
+      loadMore(); // Trigger a refresh of current view
+    } catch (err) {
+      console.error("Quick edit failed", err);
+      toast.error("Update failed");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       <FlashSaleBanner />
@@ -716,6 +758,15 @@ export default function Index() {
                                   className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
                                   {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
                                 </button>
+                                {isAdminMode && (
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleQuickEdit(p); }}
+                                    className="p-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-primary hover:text-white transition-colors"
+                                    title="Quick Edit"
+                                  >
+                                    <Edit3 size={14} />
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </motion.div>
@@ -806,6 +857,15 @@ export default function Index() {
                                 className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
                                 {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
                               </button>
+                              {isAdminMode && (
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleQuickEdit(p); }}
+                                  className="p-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-primary hover:text-white transition-colors"
+                                  title="Quick Edit"
+                                >
+                                  <Edit3 size={14} />
+                                </button>
+                              )}
                             </div>
                         </div>
                       </motion.div>
@@ -865,6 +925,86 @@ export default function Index() {
         remaining={remaining}
         setCheckoutOpen={setCheckoutOpen}
       />
+
+      {/* Quick Edit Modal */}
+      <AnimatePresence>
+        {editingProduct && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" 
+              onClick={() => setEditingProduct(null)} 
+            />
+            <motion.div 
+              initial={{ opacity: 0, y: 50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 50, scale: 0.9 }}
+              className="fixed inset-x-4 bottom-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[400px] bg-white rounded-[32px] shadow-2xl z-[101] overflow-hidden border border-gray-100"
+            >
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-xl font-black italic uppercase text-black leading-none">Quick Edit</h3>
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-[2px] mt-1 italic">{editingProduct.barcode}</p>
+                  </div>
+                  <button onClick={() => setEditingProduct(null)} className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Product Name</label>
+                    <div className="bg-gray-50 p-3 rounded-xl text-xs font-bold text-black border border-gray-100 italic">
+                      {editingProduct.name}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">MRP (₹)</label>
+                      <input 
+                        type="number" 
+                        className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm font-black outline-none focus:border-primary transition-all"
+                        value={editingProduct.mrp}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, mrp: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Sale Rate (₹)</label>
+                      <input 
+                        type="number" 
+                        className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm font-black outline-none focus:border-primary transition-all text-primary"
+                        value={editingProduct.salePrice}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, salePrice: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Stock (Pieces)</label>
+                    <input 
+                      type="number" 
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm font-black outline-none focus:border-primary transition-all"
+                      value={editingProduct.stock}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, stock: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="pt-4">
+                    <button 
+                      onClick={submitQuickEdit}
+                      disabled={editLoading}
+                      className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-2 italic"
+                    >
+                      {editLoading ? <LoaderIcon className="animate-spin" size={18} /> : <Save size={18} />}
+                      Update Instantly
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <CheckoutModal 
         checkoutOpen={checkoutOpen}
