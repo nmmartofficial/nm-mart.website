@@ -66,9 +66,9 @@ const CATEGORY_ICONS: Record<string, string> = {
 const PRIORITY_CATS = ["SOAP", "SNACKS", "SPICES"].map(normalizeCategory);
 const HIDDEN_CATS: string[] = [];
 
-export default function Index() {
+export function Index() {
   const navigate = useNavigate();
-  const { allProducts, loading, categories, brands, flat33, flat50 } = useProducts();
+  const { allProducts, loading, categories, brands, flat33, flat50, hasMore, loadMore, totalCount } = useProducts();
   const { cart, addToCart, updateQty, removeItem, clearCart, cartTotal, cartCount, setCart } = useCart();
 
   // Helper for Category Icons
@@ -154,18 +154,18 @@ export default function Index() {
   // Infinite scroll with IntersectionObserver
   useEffect(() => {
     const el = loadMoreRef.current;
-    if (!el) return;
+    if (!el || !hasMore || loading) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+          loadMore();
         }
       },
       { rootMargin: "200px" }
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [selectedCat, query]);
+  }, [hasMore, loading, loadMore]);
 
   // Reset visible count on filter change
   useEffect(() => { setVisibleCount(ITEMS_PER_PAGE); }, [selectedCat, selectedBrand, query]);
@@ -200,8 +200,6 @@ export default function Index() {
     }
     return list;
   }, [allProducts, selectedCat, selectedBrand, query]);
-
-  const visibleProducts = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
   const remaining = MIN_ORDER - cartTotal;
   const loyaltyPoints = getLoyaltyPoints();
@@ -695,7 +693,7 @@ export default function Index() {
                     className="text-[10px] font-bold uppercase text-primary border-b-2 border-primary hover:opacity-80">← वापस जाएं</button>
                 </div>
 
-                <p className="text-xs text-muted-foreground mb-4">{filtered.length} products मिले</p>
+                <p className="text-xs text-muted-foreground mb-4">{totalCount} items in NM Mart | {filtered.length} products loaded</p>
 
                 {filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -715,7 +713,7 @@ export default function Index() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                    {visibleProducts.map((p, idx) => (
+                    {filtered.map((p, idx) => (
                       <motion.div key={`${p.barcode}-${idx}`}
                         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(idx * 0.01, 0.2) }}
@@ -730,6 +728,7 @@ export default function Index() {
                             </span>
                           )}
                         </div>
+                        <div className="p-3 flex flex-col flex-1">
                             <div className="flex items-center justify-between mb-1.5">
                               <span className="bg-primary/10 text-primary text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
                                 {p.category}
@@ -759,16 +758,18 @@ export default function Index() {
                                 {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
                               </button>
                             </div>
+                        </div>
                       </motion.div>
                     ))}
                   </div>
                 )}
 
-                {visibleCount < filtered.length && (
+                {hasMore && (
                   <div className="mt-12 text-center">
-                    <button onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
-                      className="bg-white border-2 border-primary text-primary px-10 py-3 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-primary hover:text-white transition-all shadow-md active:scale-95">
-                      Load More Products
+                    <button onClick={() => loadMore()}
+                      disabled={loading}
+                      className="bg-white border-2 border-primary text-primary px-10 py-3 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-primary hover:text-white transition-all shadow-md active:scale-95 disabled:opacity-50">
+                      {loading ? "Loading..." : "Load More Products"}
                     </button>
                   </div>
                 )}

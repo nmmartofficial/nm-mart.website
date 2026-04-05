@@ -67,6 +67,20 @@ const Admin = () => {
   // Orders States
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [totalInventory, setTotalInventory] = useState(0);
+
+  useEffect(() => {
+    const fetchTotalCount = async () => {
+      const { count, error } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
+      
+      if (!error && count !== null) {
+        setTotalInventory(count);
+      }
+    };
+    if (isAuthenticated) fetchTotalCount();
+  }, [isAuthenticated]);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -494,6 +508,27 @@ const Admin = () => {
       </div>
 
       <main className="max-w-7xl mx-auto px-6 py-12 flex-1 w-full">
+        {/* Inventory Counter */}
+        {activeTab === 'inventory' && (
+          <div className="mb-8 flex items-center justify-between bg-primary/5 border border-primary/10 rounded-3xl p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                <Package size={24} />
+              </div>
+              <div>
+                <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-[3px] italic">Live Inventory</h4>
+                <p className="text-2xl font-black italic uppercase text-black">
+                  Total Inventory: <span className="text-primary">{totalInventory.toLocaleString()} Items</span>
+                </p>
+              </div>
+            </div>
+            <div className="hidden md:block text-right">
+              <p className="text-[10px] font-black uppercase text-primary italic tracking-widest">Database Synced</p>
+              <p className="text-[8px] font-bold text-gray-400 uppercase mt-1">v5.0.3 Live</p>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'inventory' && (
           <InventoryTab 
                 barcode={barcode} setBarcode={setBarcode}
