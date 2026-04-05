@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Html5Qrcode } from "html5-qrcode";
 import {
   ShoppingCart, Search, X, MessageCircle,
   Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift,
-  ChevronRight, User as UserIcon, CreditCard
+  ChevronRight, User as UserIcon, CreditCard, ScanBarcode
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase/client";
@@ -96,8 +97,73 @@ export default function Index() {
   const [showGoldenCard, setShowGoldenCard] = useState(false);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const [scannedProduct, setScannedProduct] = useState<any>(null);
 
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
+
+  const startScanner = () => {
+    if (scannerRef.current) return;
+    setIsScanning(true);
+    setTimeout(() => {
+      const html5QrCode = new Html5Qrcode("search-reader");
+      scannerRef.current = html5QrCode;
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 20, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          setQuery(decodedText);
+          handleBarcodeSearch(decodedText);
+          stopScanner();
+        },
+        () => {}
+      ).catch(err => {
+        console.error("Scanner error:", err);
+        toast.error("Camera access denied");
+        setIsScanning(false);
+      });
+    }, 100);
+  };
+
+  const stopScanner = () => {
+    if (scannerRef.current) {
+      scannerRef.current.stop().then(() => {
+        scannerRef.current = null;
+        setIsScanning(false);
+      }).catch(() => {
+        scannerRef.current = null;
+        setIsScanning(false);
+      });
+    } else {
+      setIsScanning(false);
+    }
+  };
+
+  const handleBarcodeSearch = async (code: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('RawCodeNew', code)
+        .maybeSingle();
+      
+      if (data) {
+        // If found, navigate to product detail immediately for "instant catch"
+        const p = {
+          id: data.RawCodeNew,
+          name: data.RawName,
+          barcode: data.RawCodeNew,
+          category: normalizeCategory(data.ItemGroupName || "GENERAL")
+        };
+        navigate(`/product/${productSlug(p)}`);
+      } else {
+        toast.info("Product not found by barcode, showing search results...");
+      }
+    } catch (err) {
+      console.error("Barcode search error:", err);
+    }
+  };
 
   // Auth state persistence
   useEffect(() => {
@@ -405,7 +471,20 @@ export default function Index() {
                 placeholder="Search over 7,358+ products in NM Mart Manjhanpur..."
                 className="flex-1 bg-transparent border-none outline-none text-foreground text-base md:text-lg font-bold placeholder:text-muted-foreground/60 placeholder:font-black placeholder:uppercase placeholder:text-[10px] md:placeholder:text-xs placeholder:tracking-[2px]"
                 value={query}
-                onChange={(e) => { setQuery(e.target.value); setSelectedCat(null); }}
+                onChange={(e) => { 
+                  const val = e.target.value;
+                  setQuery(val); 
+                  setSelectedCat(null);
+                  // If input looks like a full barcode (usually 8, 12, or 13 digits), try instant catch
+                  if (/^\d{8,14}$/.test(val)) {
+                    handleBarcodeSearch(val);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && /^\d+$/.test(query)) {
+                    handleBarcodeSearch(query);
+                  }
+                }}
               />
               <div className="flex items-center gap-1 md:gap-2 pr-2">
                 {query && (
@@ -430,11 +509,42 @@ export default function Index() {
                     {listening ? "Listening..." : "Voice Search"}
                   </span>
                 </button>
+                <button
+                  onClick={startScanner}
+                  className="p-3 rounded-xl bg-card text-muted-foreground hover:bg-secondary hover:text-primary border border-border transition-all flex items-center gap-2"
+                >
+                  <ScanBarcode size={20} />
+                  <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest">Scan Barcode</span>
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Barcode Scanner Overlay */}
+      <AnimatePresence>
+        {isScanning && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6"
+          >
+            <div className="w-full max-w-lg aspect-square bg-black rounded-[40px] overflow-hidden border-4 border-primary relative shadow-2xl">
+              <div id="search-reader" className="w-full h-full"></div>
+              <div className="absolute inset-0 border-2 border-white/20 pointer-events-none flex items-center justify-center">
+                <div className="w-64 h-64 border-2 border-primary rounded-3xl animate-pulse shadow-[0_0_50px_rgba(255,0,0,0.3)]"></div>
+              </div>
+            </div>
+            <p className="mt-8 text-white font-black uppercase tracking-[4px] text-xs animate-bounce italic">Align barcode inside frame</p>
+            <button 
+              onClick={stopScanner}
+              className="mt-10 bg-white/10 hover:bg-white/20 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all border border-white/20"
+            >
+              Cancel Scan
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hero Banner */}
       <HeroBanner onBannerClick={(link) => {
