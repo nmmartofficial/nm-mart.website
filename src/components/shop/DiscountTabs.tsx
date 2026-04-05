@@ -26,7 +26,7 @@ const DiscountTabs = ({ flat33, flat50, onAddToCart }: Props) => {
           onClick={() => setActiveTab("50")}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm uppercase transition-all ${
             activeTab === "50"
-              ? "gradient-orange text-white shadow-lg shadow-[hsl(var(--orange))]/20 scale-105"
+              ? "bg-red-600 text-white shadow-lg shadow-red-500/20 scale-105"
               : "bg-secondary text-muted-foreground hover:bg-secondary/80"
           }`}
         >
@@ -36,7 +36,7 @@ const DiscountTabs = ({ flat33, flat50, onAddToCart }: Props) => {
           onClick={() => setActiveTab("33")}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm uppercase transition-all ${
             activeTab === "33"
-              ? "gradient-orange text-white shadow-lg shadow-[hsl(var(--orange))]/20 scale-105"
+              ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20 scale-105"
               : "bg-secondary text-muted-foreground hover:bg-secondary/80"
           }`}
         >
@@ -52,8 +52,8 @@ const DiscountTabs = ({ flat33, flat50, onAddToCart }: Props) => {
           >
             <div className="relative h-28 bg-secondary/50">
               <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
-              <span className="absolute top-1.5 right-1.5 text-[8px] font-black px-2 py-0.5 rounded gradient-orange text-white">
-                -{p.discount}%
+              <span className={`absolute top-1.5 right-1.5 text-[10px] font-black px-2 py-1 rounded shadow-md text-white ${activeTab === "50" ? "bg-red-600" : "bg-orange-500"}`}>
+                -{p.discount}% OFF
               </span>
             </div>
             <div className="p-2.5 flex flex-col flex-1">

@@ -32,6 +32,8 @@
     --black-pure: 0 0% 0%;
     --success: 142 71% 45%;
     --warning: 38 92% 50%;
+    --orange: 24 100% 50%;
+    --navy: 222 47% 11%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 4%;
@@ -61,6 +63,9 @@
 @layer utilities {
   .gradient-brand {
     background: linear-gradient(135deg, hsl(var(--brand-red)) 0%, #a02323 100%);
+  }
+  .gradient-orange {
+    background: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
   }
   .gradient-dark {
     background: linear-gradient(135deg, hsl(var(--brand-grey)) 0%, #000000 100%);
