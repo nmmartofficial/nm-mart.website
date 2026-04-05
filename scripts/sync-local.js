@@ -19,14 +19,70 @@ const sqlConfig = {
 };
 
 /**
- * Sync function with batching (100 items per batch)
+ * Bi-directional Sync Function
  */
-async function syncToWebsite() {
+async function syncEverything() {
     let pool;
     try {
         console.log('Connecting to Local SQL Server...');
         pool = await sql.connect(sqlConfig);
         
+        // --- 1. PULL FROM WEBSITE (Supabase -> Local POS) ---
+        console.log('\n--- PHASE 1: PULLING CHANGES FROM WEBSITE ---');
+        // Fetch products updated on the website in the last 7 days (or any cutoff)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const { data: webProducts, error: webError } = await supabase
+            .from('products')
+            .select('*')
+            .gte('updated_at', sevenDaysAgo.toISOString());
+
+        if (webError) {
+            console.error('Error fetching from website:', webError.message);
+        } else if (webProducts && webProducts.length > 0) {
+            console.log(`Found ${webProducts.length} updated items on the website. Syncing to POS...`);
+            
+            for (const item of webProducts) {
+                try {
+                    // Update Local SQL RawMas table
+                    await pool.request()
+                        .input('RawCodeNew', sql.VarChar, item.RawCodeNew)
+                        .input('RawName', sql.VarChar, item.RawName)
+                        .input('Rate', sql.Decimal(18, 2), item.Rate)
+                        .input('MRP', sql.Decimal(18, 2), item.MRP)
+                        .input('discountPerc', sql.Decimal(18, 2), item.discountPerc)
+                        .input('ItemGroupName', sql.VarChar, item.ItemGroupName)
+                        .input('OpStock', sql.Decimal(18, 3), item.OpStock)
+                        .query(`
+                            IF EXISTS (SELECT 1 FROM RawMas WHERE RawCodeNew = @RawCodeNew)
+                            BEGIN
+                                UPDATE RawMas SET 
+                                    RawName = @RawName,
+                                    Rate = @Rate,
+                                    MRP = @MRP,
+                                    discountPerc = @discountPerc,
+                                    ItemGroupName = @ItemGroupName,
+                                    OpStock = @OpStock
+                                WHERE RawCodeNew = @RawCodeNew
+                            END
+                            ELSE
+                            BEGIN
+                                INSERT INTO RawMas (RawCodeNew, RawName, Rate, MRP, discountPerc, ItemGroupName, OpStock)
+                                VALUES (@RawCodeNew, @RawName, @Rate, @MRP, @discountPerc, @ItemGroupName, @OpStock)
+                            END
+                        `);
+                } catch (err) {
+                    console.error(`Failed to update POS for item ${item.RawCodeNew}:`, err.message);
+                }
+            }
+            console.log('Phase 1 (Pull) complete!');
+        } else {
+            console.log('No recent updates found on the website.');
+        }
+
+        // --- 2. PUSH TO WEBSITE (Local POS -> Supabase) ---
+        console.log('\n--- PHASE 2: PUSHING POS CHANGES TO WEBSITE ---');
         console.log('Fetching products from RawMas...');
         const result = await pool.request().query(`
             SELECT 
@@ -42,7 +98,7 @@ async function syncToWebsite() {
         `);
 
         const products = result.recordset;
-        console.log(`Found ${products.length} items. Starting batch sync...`);
+        console.log(`Found ${products.length} items in POS. Starting batch sync...`);
 
         const BATCH_SIZE = 100;
         let successCount = 0;
@@ -71,19 +127,19 @@ async function syncToWebsite() {
                 .from('products') 
                 .upsert(sanitizedBatch, { 
                     onConflict: 'RawCodeNew',
-                    ignoreDuplicates: false // This ensures existing products ARE updated with new price/stock
+                    ignoreDuplicates: false 
                 });
 
             if (error) {
                 console.error(`Batch Error (Index ${i}):`, error.message);
             } else {
                 successCount += sanitizedBatch.length;
-                process.stdout.write(`Progress: ${successCount}/${products.length} synced...\r`);
+                process.stdout.write(`Progress: ${successCount}/${products.length} pushed...\r`);
             }
         }
 
-        console.log('\nSync Complete!');
-        console.log(`Total successfully synced: ${successCount}`);
+        console.log('\n\nSync Complete!');
+        console.log(`Total successfully pushed: ${successCount}`);
 
     } catch (err) {
         console.error('System Error:', err.message);
@@ -92,4 +148,4 @@ async function syncToWebsite() {
     }
 }
 
-syncToWebsite();
+syncEverything();
