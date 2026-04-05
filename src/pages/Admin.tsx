@@ -503,8 +503,9 @@ const Admin = () => {
       <Header />
       
       {/* Admin Dashboard Header */}
-      <div className="bg-white border-b border-gray-100 px-6 py-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+      <div className="bg-white border-b border-gray-100 px-6 py-6 sticky top-[64px] z-40 shadow-sm">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6">
+          {/* Column 1: Brand/Logo */}
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-sm shadow-primary/20">
               <Database size={28} />
@@ -517,7 +518,8 @@ const Admin = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+          {/* Column 2: Tabs */}
+          <div className="flex items-center justify-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
             {[
               { id: 'inventory', label: 'Inventory', icon: ScanBarcode },
               { id: 'welfare', label: 'Welfare', icon: Star },
@@ -538,16 +540,17 @@ const Admin = () => {
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Column 3: Site Control */}
+          <div className="flex items-center justify-end gap-3 border-l border-gray-100 pl-6">
             <Link 
               to="/"
-              className="flex items-center gap-2 bg-primary/10 text-primary px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm border border-primary/10"
+              className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary transition-all shadow-lg active:scale-95 group"
             >
-              <ShoppingCart size={16} /> View Store
+              <ShoppingCart size={16} className="group-hover:animate-bounce" /> Go to Site
             </Link>
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-2 bg-gray-50 text-gray-500 px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all shadow-sm border border-gray-100"
+              className="flex items-center gap-2 bg-red-50 text-red-500 px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm border border-red-100"
             >
               <LogOut size={16} /> Logout
             </button>

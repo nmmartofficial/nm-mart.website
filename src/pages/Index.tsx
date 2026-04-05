@@ -500,14 +500,20 @@ export default function Index() {
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       {/* Admin Mode Bar */}
       {isAdminMode && (
-        <div className="bg-[#111] text-white py-2 px-4 flex items-center justify-between sticky top-0 z-[60] border-b border-white/10 shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
-            <span className="text-[10px] font-black uppercase tracking-[2px] italic text-white/90">NM Mart Admin</span>
+        <div className="bg-black text-white py-3 px-6 flex items-center justify-between sticky top-0 z-[60] border-b border-white/20 shadow-2xl">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-red-600 animate-pulse shadow-[0_0_12px_rgba(220,38,38,0.9)]"></div>
+              <h2 className="text-sm font-black uppercase tracking-[4px] italic text-white">ADMIN MODE ACTIVE</h2>
+            </div>
+            <div className="hidden lg:flex items-center gap-3 bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Inventory Control Enabled</span>
+            </div>
           </div>
+          
           <div className="flex items-center gap-4">
-            <Link to="/admin" className="text-[9px] font-black uppercase tracking-widest hover:text-primary transition-all flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-primary/30">
-              <Database size={12} /> Admin Dashboard
+            <Link to="/admin" className="flex items-center gap-2 bg-primary text-white px-6 py-2 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 group">
+              <Database size={14} className="group-hover:rotate-12 transition-transform" /> Return to Inventory
             </Link>
             <button 
               onClick={() => {
@@ -515,9 +521,9 @@ export default function Index() {
                 setIsAdminMode(false);
                 toast.info("Admin Mode Disabled");
               }}
-              className="text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-white hover:bg-red-500 transition-all bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20"
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-all px-4 py-2 rounded-2xl border border-white/10 hover:border-red-500/50"
             >
-              Exit Admin
+              Exit Mode
             </button>
           </div>
         </div>
@@ -525,7 +531,7 @@ export default function Index() {
       <FlashSaleBanner />
 
       {/* Sticky Header with Logo */}
-      <header className={`sticky z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300 ${isAdminMode ? 'top-[40px]' : 'top-0'}`}>
+      <header className={`sticky z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300 ${isAdminMode ? 'top-[52px]' : 'top-0'}`}>
         <div className="max-w-7xl mx-auto flex items-center gap-3 px-3 py-2.5">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 shrink-0">
@@ -594,7 +600,7 @@ export default function Index() {
       </header>
 
       {/* Search Section - Professional & Prominent */}
-      <div className={`sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 ${isAdminMode ? 'top-[104px]' : 'top-[64px]'}`}>
+      <div className={`sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 ${isAdminMode ? 'top-[116px]' : 'top-[64px]'}`}>
         <div className="max-w-5xl mx-auto">
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 rounded-3xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
@@ -683,7 +689,7 @@ export default function Index() {
       </AnimatePresence>
 
       {/* Hero Banner */}
-      <div className={`${isAdminMode ? 'pt-[104px]' : 'pt-0'}`}>
+      <div className={`${isAdminMode ? 'pt-[116px]' : 'pt-0'}`}>
         <HeroBanner onBannerClick={handleBannerClick} />
       </div>
 
