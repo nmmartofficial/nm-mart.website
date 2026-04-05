@@ -89,6 +89,7 @@ export default function Index() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [payMethod, setPayMethod] = useState<"cod" | "upi">("cod");
+  const [transactionId, setTransactionId] = useState("");
   const [showOrders, setShowOrders] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -334,10 +335,10 @@ export default function Index() {
       if (welfareDiscount > 0) {
         text += `\n🌟 *Welfare Discount (5%):* -₹${welfareDiscount}\n✅ *Final Total:* ₹${finalTotal}`;
       } else {
-        text += `\n\n💰 *Total:* ₹${cartTotal}`;
+        text += `\n\n💰 *Total:* ₹${finalTotal}`;
       }
       
-      text += `\n💳 *Payment:* ${payMethod.toUpperCase()}${customerDetails}\n\n_Please confirm my order!_`;
+      text += `\n💳 *Payment:* ${payMethod.toUpperCase()}${payMethod === 'upi' && transactionId ? `\n🆔 *UTR/Txn ID:* ${transactionId}` : ''}${customerDetails}\n\n_Please confirm my order!_`;
       
       const orderData = {
         id: orderId,
@@ -350,6 +351,7 @@ export default function Index() {
         shipping_address: orderCustomerData.address || "Store Pickup",
         landmark: orderCustomerData.landmark || "",
         payment_method: payMethod,
+        transaction_id: payMethod === 'upi' ? transactionId : null,
         created_at: new Date().toISOString()
       };
       
@@ -864,6 +866,8 @@ export default function Index() {
         finalTotal={finalTotal}
         payMethod={payMethod}
         setPayMethod={setPayMethod}
+        transactionId={transactionId}
+        setTransactionId={setTransactionId}
         placeOrder={placeOrder}
       />
 

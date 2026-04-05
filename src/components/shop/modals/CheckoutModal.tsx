@@ -12,6 +12,8 @@ interface CheckoutModalProps {
   finalTotal: number;
   payMethod: "cod" | "upi";
   setPayMethod: (v: "cod" | "upi") => void;
+  transactionId: string;
+  setTransactionId: (v: string) => void;
   placeOrder: () => void;
 }
 
@@ -25,6 +27,8 @@ const CheckoutModal = ({
   finalTotal,
   payMethod,
   setPayMethod,
+  transactionId,
+  setTransactionId,
   placeOrder
 }: CheckoutModalProps) => {
   return (
@@ -84,15 +88,55 @@ const CheckoutModal = ({
                 </motion.button>
               </div>
               {payMethod === "upi" && (
-                <div className="bg-secondary rounded-xl p-4 mb-4 text-center space-y-3 border-2 border-dashed border-primary/20">
-                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${UPI_ID}&pn=NM%20MART&am=${finalTotal}&cu=INR`}
-                    alt="UPI QR" className="mx-auto w-40 h-40 rounded-lg shadow-md border-4 border-card" />
-                  <p className="text-[10px] text-muted-foreground font-mono font-bold">{UPI_ID}</p>
+                <div className="bg-secondary rounded-xl p-4 mb-4 text-center space-y-4 border-2 border-dashed border-primary/20">
+                  <div className="relative group mx-auto w-40 h-40">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${UPI_ID}%26pn=NM%20MART%26am=${finalTotal}%26cu=INR`}
+                      alt="UPI QR" 
+                      className="w-full h-full rounded-lg shadow-md border-4 border-card" 
+                    />
+                    <div className="absolute inset-0 bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-[8px] font-black text-white bg-black/50 px-2 py-1 rounded">Scan to Pay</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-[10px] text-muted-foreground font-mono font-bold tracking-tight">{UPI_ID}</p>
+                    
+                    {/* Mobile Pay Button */}
+                    <a 
+                      href={`upi://pay?pa=${UPI_ID}&pn=NM%20MART&am=${finalTotal}&cu=INR`}
+                      className="md:hidden flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-xl font-black text-[10px] uppercase shadow-md active:scale-95 transition-all"
+                    >
+                      <QrCode size={14} /> Pay with Any UPI App
+                    </a>
+                  </div>
+
+                  <div className="h-[1px] bg-border my-2"></div>
+
+                  <div className="space-y-2 text-left">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">Transaction ID / UTR (Required)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Enter 12-digit UTR Number" 
+                      className="w-full bg-card border border-border p-3 rounded-xl text-xs font-bold focus:border-primary outline-none transition-all"
+                      value={transactionId}
+                      onChange={(e) => setTransactionId(e.target.value)}
+                    />
+                    <p className="text-[8px] text-gray-400 italic px-1">* Payment hone ke baad reference number yahan daalein.</p>
+                  </div>
                 </div>
               )}
-              <button onClick={placeOrder}
-                className="w-full gradient-brand text-white py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2">
-                <Send size={18} /> WhatsApp पर Order भेजें
+              <button 
+                onClick={placeOrder}
+                disabled={payMethod === 'upi' && !transactionId}
+                className={`w-full py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 transition-all ${
+                  payMethod === 'upi' && !transactionId 
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+                  : "gradient-brand text-white hover:scale-[1.02]"
+                }`}
+              >
+                <Send size={18} /> {payMethod === 'upi' ? "Submit & WhatsApp Order" : "WhatsApp पर Order भेजें"}
               </button>
             </div>
           </motion.div>
