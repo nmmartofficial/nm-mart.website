@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { 
-  ScanBarcode, LogOut, Database, Package, Star, BarChart3, 
+  ScanBarcode, LogOut, Database, Package, Star, BarChart3, ShoppingCart
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";

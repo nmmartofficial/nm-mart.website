@@ -6,7 +6,8 @@ import {
   ShoppingCart, Search, X, MessageCircle,
   Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift,
   ChevronRight, User as UserIcon, CreditCard, ScanBarcode,
-  Edit3, Save, Loader2 as LoaderIcon, Image as ImageIcon, Upload
+  Edit3, Save, Loader2 as LoaderIcon, Image as ImageIcon, Upload,
+  Database, LogOut
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase/client";
@@ -499,14 +500,14 @@ export default function Index() {
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       {/* Admin Mode Bar */}
       {isAdminMode && (
-        <div className="bg-black text-white py-2 px-4 flex items-center justify-between sticky top-0 z-[60] border-b border-white/10">
+        <div className="bg-[#111] text-white py-2 px-4 flex items-center justify-between sticky top-0 z-[60] border-b border-white/10 shadow-lg">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-            <span className="text-[10px] font-black uppercase tracking-[2px] italic">Admin Mode Active</span>
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
+            <span className="text-[10px] font-black uppercase tracking-[2px] italic text-white/90">NM Mart Admin</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/admin" className="text-[9px] font-black uppercase tracking-widest hover:text-primary transition-colors flex items-center gap-1.5">
-              <Database size={12} /> Dashboard
+            <Link to="/admin" className="text-[9px] font-black uppercase tracking-widest hover:text-primary transition-all flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-primary/30">
+              <Database size={12} /> Admin Dashboard
             </Link>
             <button 
               onClick={() => {
@@ -514,9 +515,9 @@ export default function Index() {
                 setIsAdminMode(false);
                 toast.info("Admin Mode Disabled");
               }}
-              className="text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition-colors"
+              className="text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-white hover:bg-red-500 transition-all bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20"
             >
-              Exit
+              Exit Admin
             </button>
           </div>
         </div>
@@ -524,7 +525,7 @@ export default function Index() {
       <FlashSaleBanner />
 
       {/* Sticky Header with Logo */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
+      <header className={`sticky z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300 ${isAdminMode ? 'top-[40px]' : 'top-0'}`}>
         <div className="max-w-7xl mx-auto flex items-center gap-3 px-3 py-2.5">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 shrink-0">
@@ -593,7 +594,7 @@ export default function Index() {
       </header>
 
       {/* Search Section - Professional & Prominent */}
-      <div className="sticky top-[64px] z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl">
+      <div className={`sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 ${isAdminMode ? 'top-[104px]' : 'top-[64px]'}`}>
         <div className="max-w-5xl mx-auto">
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 rounded-3xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
@@ -682,7 +683,9 @@ export default function Index() {
       </AnimatePresence>
 
       {/* Hero Banner */}
-      <HeroBanner onBannerClick={handleBannerClick} />
+      <div className={`${isAdminMode ? 'pt-[104px]' : 'pt-0'}`}>
+        <HeroBanner onBannerClick={handleBannerClick} />
+      </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -822,10 +825,10 @@ export default function Index() {
                                 {isAdminMode && (
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); handleQuickEdit(p); }}
-                                    className="p-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-primary hover:text-white transition-colors"
-                                    title="Quick Edit"
+                                    className="p-1.5 bg-yellow-400 text-black rounded-lg hover:bg-black hover:text-white transition-all shadow-md active:scale-95"
+                                    title="Quick Edit Product"
                                   >
-                                    <Edit3 size={14} />
+                                    <Edit3 size={14} strokeWidth={2.5} />
                                   </button>
                                 )}
                               </div>
@@ -921,10 +924,10 @@ export default function Index() {
                               {isAdminMode && (
                                 <button 
                                   onClick={(e) => { e.stopPropagation(); handleQuickEdit(p); }}
-                                  className="p-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-primary hover:text-white transition-colors"
-                                  title="Quick Edit"
+                                  className="p-1.5 bg-yellow-400 text-black rounded-lg hover:bg-black hover:text-white transition-all shadow-md active:scale-95"
+                                  title="Quick Edit Product"
                                 >
-                                  <Edit3 size={14} />
+                                  <Edit3 size={14} strokeWidth={2.5} />
                                 </button>
                               )}
                             </div>
