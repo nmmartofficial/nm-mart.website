@@ -1,22 +1,74 @@
 import { Star, Search, Loader2 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
+import { supabase } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
-interface WelfareTabProps {
-  customerSearch: string;
-  setCustomerSearch: (v: string) => void;
-  customerData: any;
-  pointsToAdd: string;
-  setPointsToAdd: (v: string) => void;
-  welfareLoading: boolean;
-  handleCustomerSearch: () => void;
-  handleAddPoints: () => void;
-  handleToggleWelfare: () => void;
-}
+const WelfareTab = () => {
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [customerData, setCustomerData] = useState<any>(null);
+  const [pointsToAdd, setPointsToAdd] = useState("");
+  const [welfareLoading, setWelfareLoading] = useState(false);
 
-const WelfareTab = ({
-  customerSearch, setCustomerSearch, customerData, pointsToAdd, setPointsToAdd,
-  welfareLoading, handleCustomerSearch, handleAddPoints, handleToggleWelfare
-}: WelfareTabProps) => {
+  const handleCustomerSearch = async () => {
+    if (!customerSearch) return;
+    setWelfareLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`mobile.eq.${customerSearch},full_name.ilike.%${customerSearch}%`)
+        .maybeSingle();
+
+      if (error) throw error;
+      setCustomerData(data);
+    } catch (err: any) {
+      console.error("Error searching customer:", err);
+    } finally {
+      setWelfareLoading(false);
+    }
+  };
+
+  const handleAddPoints = async () => {
+    if (!customerData || !pointsToAdd) return;
+    setWelfareLoading(true);
+    try {
+      const newPoints = (customerData.loyalty_points || 0) + Number(pointsToAdd);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ loyalty_points: newPoints })
+        .eq('id', customerData.id);
+
+      if (error) throw error;
+      setCustomerData({ ...customerData, loyalty_points: newPoints });
+      setPointsToAdd("");
+      toast.success("Points updated!");
+    } catch (err: any) {
+      toast.error("Failed to update points");
+    } finally {
+      setWelfareLoading(false);
+    }
+  };
+
+  const handleToggleWelfare = async () => {
+    if (!customerData) return;
+    const newStatus = customerData.welfare_status === 'active' ? 'inactive' : 'active';
+    setWelfareLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ welfare_status: newStatus })
+        .eq('id', customerData.id);
+
+      if (error) throw error;
+      setCustomerData({ ...customerData, welfare_status: newStatus });
+      toast.success(`Welfare ${newStatus === 'active' ? 'activated' : 'deactivated'}`);
+    } catch (err: any) {
+      toast.error("Status update failed");
+    } finally {
+      setWelfareLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm space-y-8">
@@ -101,9 +153,9 @@ const WelfareTab = ({
                   <button 
                     onClick={handleAddPoints}
                     disabled={welfareLoading || !pointsToAdd}
-                    className="bg-primary text-white px-6 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-sm shrink-0"
+                    className="bg-primary text-white px-6 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-lg"
                   >
-                    Add
+                    Update
                   </button>
                 </div>
               </div>

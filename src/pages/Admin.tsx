@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { 
-  ScanBarcode, LogOut, Database, Package, Star, BarChart3, ShoppingCart, Image as ImageIcon, Grid, Settings, Sparkles
+  ScanBarcode, LogOut, Database, Package, Star, BarChart3, ShoppingCart, Image as ImageIcon, Grid, Settings, Sparkles, LayoutGrid
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
@@ -295,41 +295,41 @@ const Admin = () => {
       if (error) throw error;
 
       if (data && data.password_hash === password) {
-        setIsAuthenticated(true);
-        localStorage.setItem("nm_admin_session", "true");
-        toast.success("Welcome back, Admin!");
-      } else {
-        toast.error("Invalid Admin Credentials");
+          setIsAuthenticated(true);
+          localStorage.setItem("nm_admin_session", "true");
+          toast.success("Welcome back, Admin!");
+        } else {
+          toast.error("Invalid Admin Credentials");
+        }
+      } catch (err: any) {
+        console.error("Login error:", err);
+        toast.error("Login failed. Check connection.");
       }
-    } catch (err: any) {
-      console.error("Login error:", err);
-      toast.error("Login failed. Check connection.");
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem("nm_admin_session");
-    toast.info("Logged out from NM Mart Dashboard");
-    
-    // Show Tawk.to again on logout
-    if ((window as any).Tawk_API && (window as any).Tawk_API.showWidget) {
-      (window as any).Tawk_API.showWidget();
-    }
-  };
-
-  useEffect(() => {
-    // Hide Tawk.to if authenticated, show if not
-    if ((window as any).Tawk_API) {
-      if (isAuthenticated) {
-        if ((window as any).Tawk_API.hideWidget) (window as any).Tawk_API.hideWidget();
-      } else {
-        if ((window as any).Tawk_API.showWidget) (window as any).Tawk_API.showWidget();
+    };
+  
+    const handleLogout = () => {
+      setIsAuthenticated(false);
+      localStorage.removeItem("nm_admin_session");
+      toast.info("Logged out from NM Mart Dashboard");
+      
+      // Show Tawk.to again on logout
+      if ((window as any).Tawk_API && (window as any).Tawk_API.showWidget) {
+        (window as any).Tawk_API.showWidget();
       }
-    }
-  }, [isAuthenticated]);
-
-  const fetchProductDetails = async (code: string) => {
+    };
+  
+    useEffect(() => {
+      // Hide Tawk.to if authenticated, show if not
+      if ((window as any).Tawk_API) {
+        if (isAuthenticated) {
+          if ((window as any).Tawk_API.hideWidget) (window as any).Tawk_API.hideWidget();
+        } else {
+          if ((window as any).Tawk_API.showWidget) (window as any).Tawk_API.showWidget();
+        }
+      }
+    }, [isAuthenticated]);
+  
+    const fetchProductDetails = async (code: string) => {
     if (!code) {
       setProductExists(null);
       return;
@@ -643,24 +643,11 @@ const Admin = () => {
         )}
 
         {activeTab === 'welfare' && (
-          <WelfareTab 
-            customerSearch={customerSearch} setCustomerSearch={setCustomerSearch}
-            customerData={customerData}
-            pointsToAdd={pointsToAdd} setPointsToAdd={setPointsToAdd}
-            welfareLoading={welfareLoading}
-            handleCustomerSearch={handleCustomerSearch}
-            handleAddPoints={handleAddPoints}
-            handleToggleWelfare={handleToggleWelfare}
-          />
+          <WelfareTab />
         )}
 
         {activeTab === 'orders' && (
-          <OrdersTab 
-            orders={orders}
-            ordersLoading={ordersLoading}
-            fetchOrders={fetchOrders}
-            updateOrderStatus={updateOrderStatus}
-          />
+          <OrdersTab />
         )}
 
         {activeTab === 'analytics' && (

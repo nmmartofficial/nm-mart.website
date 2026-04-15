@@ -441,7 +441,7 @@ export default function Index() {
   const sortedCategories = useMemo(() => {
     // If we have custom categories from DB, use them first
     if (categories.length > 0) {
-      return categories.map(c => c.title);
+      return categories.map(c => c.name);
     }
     const filtered = posCategories.filter(c => !HIDDEN_CATS.includes(c));
     const priority = filtered.filter(c => PRIORITY_CATS.includes(c));

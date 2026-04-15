@@ -1,14 +1,48 @@
-import { Package, RefreshCcw, Loader2, Phone, MapPin, Truck, CheckCircle2, Trash2 } from "lucide-react";
-import React from "react";
+import { Package, RefreshCcw, Loader2, Phone, MapPin, Truck, CheckCircle2, Trash2, XCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
-interface OrdersTabProps {
-  orders: any[];
-  ordersLoading: boolean;
-  fetchOrders: () => void;
-  updateOrderStatus: (id: string, status: string) => void;
-}
+const OrdersTab = () => {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
-const OrdersTab = ({ orders, ordersLoading, fetchOrders, updateOrderStatus }: OrdersTabProps) => {
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    setOrdersLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (err: any) {
+      console.error("Error fetching orders:", err);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      toast.success(`Order #${orderId} marked as ${newStatus}`);
+    } catch (err: any) {
+      toast.error("Failed to update order status");
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex justify-between items-center">
@@ -103,7 +137,7 @@ const OrdersTab = ({ orders, ordersLoading, fetchOrders, updateOrderStatus }: Or
                       className="bg-gray-50 hover:bg-red-50 hover:text-red-500 text-gray-400 p-3 rounded-2xl transition-all"
                       title="Cancel Order"
                     >
-                      <Trash2 size={20} />
+                      <XCircle size={20} />
                     </button>
                   </div>
                 </div>
