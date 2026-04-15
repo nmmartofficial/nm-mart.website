@@ -44,8 +44,8 @@ const BannerManager = () => {
       const filePath = `banners/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('banners')
-        .upload(fileName, file, {
+        .from('nm-mart-assets')
+        .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true
         });
@@ -53,15 +53,15 @@ const BannerManager = () => {
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('banners')
-        .getPublicUrl(fileName);
+        .from('nm-mart-assets')
+        .getPublicUrl(filePath);
 
       const { error: dbError } = await supabase
         .from('website_banners')
         .insert([{
           image_url: publicUrl,
           title: file.name.split('.')[0], // Use filename as title
-          link: `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`I'm interested in this offer: ${publicUrl}`)}`,
+          whatsapp_link: `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`I'm interested in this offer: ${publicUrl}`)}`,
           active: true,
           display_order: banners.length
         }]);
@@ -82,7 +82,7 @@ const BannerManager = () => {
       // 1. Delete from storage
       const fileName = url.split('/').pop();
       if (fileName) {
-        await supabase.storage.from('banners').remove([fileName]);
+        await supabase.storage.from('nm-mart-assets').remove([`banners/${fileName}`]);
       }
 
       // 2. Delete from DB
