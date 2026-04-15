@@ -94,10 +94,16 @@ const ChatBot = () => {
 
   return (
     <div className="fixed bottom-24 right-4 z-[9999]">
-      <button onClick={() => setIsOpen(!isOpen)} className="bg-primary text-primary-foreground p-2.5 rounded-full shadow-lg relative hover:scale-110 transition-transform active:scale-95">
-        {isOpen ? <X size={18} /> : <MessageCircle size={18} />}
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="bg-primary text-primary-foreground p-3 rounded-full shadow-2xl relative hover:scale-110 transition-all active:scale-95 border-2 border-white/20 group"
+      >
+        <div className="absolute -top-12 right-0 bg-black text-white text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl border border-white/10">
+          Chat with AI
+        </div>
+        <img src="/nm-mart-logo.png" alt="NM AI" className="w-6 h-6 rounded-full" />
         {cart.length > 0 && !isOpen && (
-          <span className="absolute -top-1 -right-1 bg-destructive text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold animate-bounce shadow-sm">
+          <span className="absolute -top-1 -right-1 bg-destructive text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black animate-bounce shadow-lg border border-white/20">
             {cart.length}
           </span>
         )}

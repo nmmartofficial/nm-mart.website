@@ -1,92 +1,106 @@
 import { useState, useCallback, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
-const BANNERS = [
-  {
-    title: "🛒 Daily Essentials",
-    subtitle: "रोज़मर्रा का सामान — सबसे सस्ते दाम पर!",
-    bg: "from-[#ff8c00] via-[#ff4500] to-black",
-    link: { type: 'category', value: 'Daily Essentials' }
-  },
-  {
-    title: "🍿 Snacks & Munchies",
-    subtitle: "Chips, Namkeen, Biscuits — Flat Discount!",
-    bg: "from-[#ff8c00] via-[#ffa500] to-white",
-    textColor: "text-black",
-    link: { type: 'category', value: 'Snacks' }
-  },
-  {
-    title: "🥦 Grocery Essentials",
-    subtitle: "7000+ आइटम्स होलसेल प्राइस पर",
-    bg: "from-white via-[#fff7ed] to-[#ff8c00]",
-    textColor: "text-black",
-    link: { type: 'category', value: 'Grocery' }
-  },
-  {
-    title: "🥜 Kaju & Dry Fruits",
-    subtitle: "Premium Cashews & Raisins — ताज़ा क्वालिटी",
-    bg: "from-black via-[#ea580c] to-[#ff8c00]",
-    link: { type: 'query', value: 'Kaju' }
-  },
-  {
-    title: "🔥 Flat 50% OFF",
-    subtitle: "500+ प्रोडक्ट्स पर — सीमित समय!",
-    bg: "from-[#ff8c00] via-white to-white",
-    textColor: "text-black",
-    link: { type: 'offer', value: '50' }
-  },
-  {
-    title: "🏆 NM Mart Welfare Card",
-    subtitle: "₹599 में ₹1500 का वैल्यू — 6 महीने!",
-    bg: "from-[#ff8c00] via-[#f97316] to-[#ea580c]",
-    link: { type: 'query', value: 'Welfare' }
-  },
-  {
-    title: "⚡ Mega Sale Live",
-    subtitle: "अनबीटेबल होलसेल प्राइसेस — अभी खरीदें!",
-    bg: "from-white via-[#fff7ed] to-[#ff8c00]",
-    textColor: "text-black",
-    link: { type: 'query', value: 'Sale' }
-  },
-];
+import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
 
 interface HeroBannerProps {
   onBannerClick?: (link: { type: string, value: string }) => void;
 }
 
 const HeroBanner = ({ onBannerClick }: HeroBannerProps) => {
+  const [banners, setBanners] = useState<any[]>([]);
   const [current, setCurrent] = useState(0);
-
-  const next = useCallback(() => setCurrent(c => (c + 1) % BANNERS.length), []);
-  const prev = useCallback(() => setCurrent(c => (c - 1 + BANNERS.length) % BANNERS.length), []);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const t = setInterval(next, 3500);
-    return () => clearInterval(t);
-  }, [next]);
+    const fetchBanners = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('website_banners')
+          .select('*')
+          .order('display_order', { ascending: true });
+        
+        if (error) throw error;
+        setBanners(data || []);
+      } catch (err) {
+        console.error("Error fetching banners:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBanners();
+  }, []);
 
-  const banner = BANNERS[current];
+  const next = useCallback(() => {
+    if (banners.length === 0) return;
+    setCurrent(c => (c + 1) % banners.length);
+  }, [banners.length]);
+
+  const prev = useCallback(() => {
+    if (banners.length === 0) return;
+    setCurrent(c => (c - 1 + banners.length) % banners.length);
+  }, [banners.length]);
+
+  useEffect(() => {
+    if (banners.length === 0) return;
+    const t = setInterval(next, 5000); // 5 seconds for auto-slide
+    return () => clearInterval(t);
+  }, [next, banners.length]);
+
+  if (loading || banners.length === 0) {
+    return (
+      <div className="w-full aspect-[21/9] bg-gray-100 animate-pulse flex items-center justify-center">
+        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest italic">Loading Banners...</p>
+      </div>
+    );
+  }
+
+  const banner = banners[current];
 
   return (
-    <div className="relative w-full overflow-hidden cursor-pointer" onClick={() => onBannerClick?.(banner.link)}>
-      <div className={`bg-gradient-to-r ${banner.bg} py-14 md:py-20 px-6 text-center ${banner.textColor || 'text-white'} transition-all duration-700`}>
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl md:text-4xl font-black tracking-tight mb-2 uppercase italic">{banner.title}</h2>
-          <p className="text-sm md:text-lg font-bold opacity-90 uppercase tracking-widest">{banner.subtitle}</p>
-        </div>
+    <div className="relative w-full overflow-hidden group">
+      <div className="aspect-[21/9] w-full bg-gray-100">
+        <img 
+          src={banner.image_url} 
+          alt="" 
+          className="w-full h-full object-cover transition-opacity duration-700"
+        />
       </div>
 
-      <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm p-2 rounded-full hover:bg-white/40 transition-colors shadow-sm">
-        <ChevronLeft size={20} className={banner.textColor === 'text-black' ? 'text-black' : 'text-white'} />
+      {/* Navigation Buttons */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); prev(); }} 
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/30 backdrop-blur-md p-3 rounded-2xl hover:bg-white/50 transition-all shadow-xl opacity-0 group-hover:opacity-100"
+      >
+        <ChevronLeft size={24} className="text-black" />
       </button>
-      <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm p-2 rounded-full hover:bg-white/40 transition-colors shadow-sm">
-        <ChevronRight size={20} className={banner.textColor === 'text-black' ? 'text-black' : 'text-white'} />
+      <button 
+        onClick={(e) => { e.stopPropagation(); next(); }} 
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/30 backdrop-blur-md p-3 rounded-2xl hover:bg-white/50 transition-all shadow-xl opacity-0 group-hover:opacity-100"
+      >
+        <ChevronRight size={24} className="text-black" />
       </button>
 
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-        {BANNERS.map((_, i) => (
-          <button key={i} onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
-            className={`h-1.5 rounded-full transition-all ${i === current ? (banner.textColor === 'text-black' ? "bg-black w-6" : "bg-white w-6") : (banner.textColor === 'text-black' ? "bg-black/20 w-3" : "bg-white/30 w-3")}`} />
+      {/* WhatsApp Link Button */}
+      {banner.whatsapp_link && (
+        <a 
+          href={banner.whatsapp_link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute bottom-10 right-10 bg-green-500 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-2xl hover:bg-black transition-all active:scale-95 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MessageCircle size={18} /> Order via WhatsApp
+        </a>
+      )}
+
+      {/* Dots */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+        {banners.map((_, i) => (
+          <button 
+            key={i} 
+            onClick={() => setCurrent(i)}
+            className={`h-1.5 rounded-full transition-all ${i === current ? "bg-white w-8 shadow-sm" : "bg-white/40 w-2"}`} 
+          />
         ))}
       </div>
     </div>

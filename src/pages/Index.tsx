@@ -78,15 +78,41 @@ const HIDDEN_CATS: string[] = [];
 
 export default function Index() {
   const navigate = useNavigate();
+  const [categories, setCategories] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
+  const [homeLoading, setHomeLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      setHomeLoading(true);
+      try {
+        const { data: cats } = await supabase.from('categories').select('*').order('display_order');
+        const { data: bans } = await supabase.from('website_banners').select('*').order('display_order');
+        setCategories(cats || []);
+        setBanners(bans || []);
+      } catch (err) {
+        console.error("Home data fetch error:", err);
+      } finally {
+        setHomeLoading(false);
+      }
+    };
+    fetchHomeData();
+  }, []);
+
   const { 
-    allProducts, loading, categories, brands, 
+    allProducts, loading: productsLoading, brands, categories: posCategories,
     flat33, flat50, hasMore, loadMore, totalCount,
     total50, total33, hasMore50, hasMore33, loadMore50, loadMore33
   } = useProducts();
+  const loading = productsLoading || homeLoading;
   const { cart, addToCart, updateQty, removeItem, clearCart, cartTotal, cartCount, setCart } = useCart();
 
   // Helper for Category Icons
   const getCategoryIcon = (cat: string) => {
+    const customCat = categories.find(c => c.title === cat);
+    if (customCat?.icon_url) {
+      return <img src={customCat.icon_url} alt="" className="w-8 h-8 object-contain" />;
+    }
     const normalized = normalizeCategory(cat);
     return CATEGORY_ICONS[normalized] || "📦";
   };
@@ -401,11 +427,15 @@ export default function Index() {
 
   // Filter out Bedsheets, sort priority categories first
   const sortedCategories = useMemo(() => {
-    const filtered = categories.filter(c => !HIDDEN_CATS.includes(c));
+    // If we have custom categories from DB, use them first
+    if (categories.length > 0) {
+      return categories.map(c => c.title);
+    }
+    const filtered = posCategories.filter(c => !HIDDEN_CATS.includes(c));
     const priority = filtered.filter(c => PRIORITY_CATS.includes(c));
     const rest = filtered.filter(c => !PRIORITY_CATS.includes(c));
     return [...priority, ...rest];
-  }, [categories]);
+  }, [categories, posCategories]);
 
   const handleBannerClick = (link: { type: string, value: string }) => {
     if (link.type === 'category') {
@@ -431,12 +461,15 @@ export default function Index() {
     // 100% Live data from the 'products' table using mapped columns
     let list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category));
     
-    // Sort: Products with images first
+    // Sort: Products with images first, then by name
     list = [...list].sort((a, b) => {
-      const aHasImg = !!a.imageUrl;
-      const bHasImg = !!b.imageUrl;
+      const aHasImg = !!a.imageUrl && a.imageUrl.length > 5;
+      const bHasImg = !!b.imageUrl && b.imageUrl.length > 5;
+      
       if (aHasImg && !bHasImg) return -1;
       if (!aHasImg && bHasImg) return 1;
+      
+      // Secondary sort by name
       return a.name.localeCompare(b.name);
     });
 
@@ -900,16 +933,21 @@ export default function Index() {
                       <LayoutGrid size={18} className="text-primary" /> Shop by Category
                     </h3>
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                      {sortedCategories.map(cat => (
-                        <motion.button whileTap={{ scale: 0.94 }} key={cat}
-                          onClick={() => { setSelectedCat(cat); setSelectedBrand(null); setQuery(""); }}
-                          className="p-4 rounded-xl bg-card border border-border flex flex-col items-center gap-2 transition-all group hover:border-primary/50 hover:shadow-glow">
-                          <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary text-2xl group-hover:bg-primary/20 transition-colors">
-                            {getCategoryIcon(cat)}
-                          </div>
-                          <span className="font-bold text-foreground uppercase text-[9px] tracking-tight text-center leading-tight">{cat}</span>
-                        </motion.button>
-                      ))}
+                      {sortedCategories.map(catName => {
+                        const cat = categories.find(c => c.title === catName);
+                        return (
+                          <motion.button whileTap={{ scale: 0.94 }} key={catName}
+                            onClick={() => { setSelectedCat(catName); setSelectedBrand(null); setQuery(""); }}
+                            className="p-4 rounded-[24px] bg-white border border-gray-100 flex flex-col items-center gap-3 transition-all group hover:border-[#CC0000] hover:shadow-xl"
+                            style={cat?.bg_color ? { backgroundColor: cat.bg_color + '10' } : {}}
+                          >
+                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-gray-50 text-3xl group-hover:scale-110 transition-transform shadow-sm">
+                              {getCategoryIcon(catName)}
+                            </div>
+                            <span className="font-black text-black uppercase text-[10px] tracking-widest text-center leading-tight">{catName}</span>
+                          </motion.button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -937,10 +975,12 @@ export default function Index() {
                   const catProducts = allProducts
                     .filter(p => p.category === cat && !HIDDEN_CATS.includes(p.category))
                     .sort((a, b) => {
-                      const aHasImg = !!a.imageUrl;
-                      const bHasImg = !!b.imageUrl;
+                      const aHasImg = !!a.imageUrl && a.imageUrl.length > 5;
+                      const bHasImg = !!b.imageUrl && b.imageUrl.length > 5;
+                      
                       if (aHasImg && !bHasImg) return -1;
                       if (!aHasImg && bHasImg) return 1;
+                      
                       return a.name.localeCompare(b.name);
                     })
                     .slice(0, 6);

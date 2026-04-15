@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { 
-  ScanBarcode, LogOut, Database, Package, Star, BarChart3, ShoppingCart
+  ScanBarcode, LogOut, Database, Package, Star, BarChart3, ShoppingCart, Image as ImageIcon, Grid
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
@@ -18,6 +18,8 @@ import InventoryTab from "@/components/admin/InventoryTab";
 import WelfareTab from "@/components/admin/WelfareTab";
 import OrdersTab from "@/components/admin/OrdersTab";
 import AnalyticsTab from "@/components/admin/AnalyticsTab";
+import BannerManager from "@/components/admin/BannerManager";
+import CategoryManager from "@/components/admin/CategoryManager";
 
 const SLOGAN = "Shop More, Save More"; // v5.0.3
 
@@ -25,7 +27,8 @@ const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem("nm_admin_session") === "true";
   });
-  const [activeTab, setActiveTab] = useState<'inventory' | 'welfare' | 'orders' | 'analytics'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'welfare' | 'orders' | 'analytics' | 'banners' | 'categories'>('inventory');
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   
   // Inventory States
@@ -263,13 +266,27 @@ const Admin = () => {
     }
   };
 
-  const handleLogin = () => {
-    if (password === ADMIN_PASS) {
-      setIsAuthenticated(true);
-      localStorage.setItem("nm_admin_session", "true");
-      toast.success("Welcome back, Admin!");
-    } else {
-      toast.error("Invalid Admin PIN");
+  const handleLogin = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_config')
+        .select('*')
+        .eq('username', username)
+        .eq('password_hash', password) // Simplified check as requested
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setIsAuthenticated(true);
+        localStorage.setItem("nm_admin_session", "true");
+        toast.success("Welcome back, Admin!");
+      } else {
+        toast.error("Invalid Admin Credentials");
+      }
+    } catch (err: any) {
+      console.error("Login error:", err);
+      toast.error("Login failed. Check connection.");
     }
   };
 
@@ -495,7 +512,7 @@ const Admin = () => {
   };
 
   if (!isAuthenticated) {
-    return <AdminLogin password={password} setPassword={setPassword} handleLogin={handleLogin} />;
+    return <AdminLogin username={username} setUsername={setUsername} password={password} setPassword={setPassword} handleLogin={handleLogin} />;
   }
 
   return (
@@ -519,9 +536,11 @@ const Admin = () => {
           </div>
 
           {/* Column 2: Tabs */}
-          <div className="flex items-center justify-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+          <div className="flex items-center justify-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100 overflow-x-auto no-scrollbar">
             {[
               { id: 'inventory', label: 'Inventory', icon: ScanBarcode },
+              { id: 'banners', label: 'Banners', icon: ImageIcon },
+              { id: 'categories', label: 'Categories', icon: Grid },
               { id: 'welfare', label: 'Welfare', icon: Star },
               { id: 'orders', label: 'Orders', icon: Package },
               { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -529,9 +548,9 @@ const Admin = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                   activeTab === tab.id 
-                  ? "bg-white text-primary shadow-sm" 
+                  ? "bg-[#CC0000] text-white shadow-sm" 
                   : "text-gray-400 hover:text-black"
                 }`}
               >
@@ -581,30 +600,15 @@ const Admin = () => {
         )}
 
         {activeTab === 'inventory' && (
-          <InventoryTab 
-                barcode={barcode} setBarcode={setBarcode}
-                productName={productName} setProductName={setProductName}
-                mrp={mrp} setMrp={setMrp}
-                salePrice={salePrice} setSalePrice={setSalePrice}
-                category={category} setCategory={setCategory}
-                subCategory={subCategory} setSubCategory={setSubCategory}
-                brand={brand} setBrand={setBrand}
-                stockQuantity={stockQuantity} setStockQuantity={setStockQuantity}
-                imageUrl={imageUrl} setImageUrl={setImageUrl}
-                isScanning={isScanning} setIsScanning={setIsScanning}
-                loading={loading} isImporting={isImporting}
-                fetchingProduct={fetchingProduct} productExists={productExists}
-                discount={discount} handleFileUpload={handleFileUpload}
-                handleInventorySubmit={handleInventorySubmit}
-                fetchProductDetails={fetchProductDetails}
-                barcodeInputRef={barcodeInputRef} fileInputRef={fileInputRef}
-                handleImageUpload={handleImageUpload}
-                uploading={uploading}
-                imageInputRef={imageInputRef}
-                startScanner={startScanner}
-                stopScanner={stopScanner}
-                allCategories={allCategories}
-              />
+          <InventoryTab />
+        )}
+
+        {activeTab === 'banners' && (
+          <BannerManager />
+        )}
+
+        {activeTab === 'categories' && (
+          <CategoryManager />
         )}
 
         {activeTab === 'welfare' && (

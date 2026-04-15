@@ -40,26 +40,26 @@ async function syncEverything() {
 
         // --- 1. PULL FROM WEBSITE (Website -> POS) ---
         console.log('\n--- PHASE 1: SYNCING WEBSITE CHANGES TO POS ---');
-        // We consider anything updated on the website as potentially newer
-        // In a real 'Latest Wins' we'd need a timestamp from SQL too.
-        // For now, we update POS if website has any data.
         
+        // LOGIC: Website changes (Image, Discount, Category) are leading.
+        // We update POS if Website has newer or different data.
         const recentlyUpdated = allWebProducts?.filter(p => {
-            const lastWeek = new Date();
-            lastWeek.setDate(lastWeek.getDate() - 7);
-            return new Date(p.updated_at) > lastWeek;
+            const lastMonth = new Date();
+            lastMonth.setMonth(lastMonth.getMonth() - 1); // Increase window to 1 month
+            return new Date(p.updated_at) > lastMonth;
         }) || [];
 
         if (recentlyUpdated.length > 0) {
             console.log(`Checking ${recentlyUpdated.length} recently updated website items...`);
             for (const item of recentlyUpdated) {
                 try {
-                    // Update POS only if data is different (simple 'latest' proxy)
+                    // Update POS with website values
                     await pool.request()
                         .input('RawCodeNew', sql.VarChar, item.RawCodeNew)
                         .input('RawName', sql.VarChar, item.RawName)
                         .input('Rate', sql.Decimal(18, 2), item.Rate)
                         .input('MRP', sql.Decimal(18, 2), item.MRP)
+                        .input('discountPerc', sql.Decimal(18, 2), item.discountPerc || 0)
                         .input('ItemGroupName', sql.VarChar, item.ItemGroupName || 'General')
                         .input('OpStock', sql.Decimal(18, 3), item.OpStock)
                         .query(`
@@ -69,6 +69,8 @@ async function syncEverything() {
                                     RawName = @RawName,
                                     Rate = @Rate,
                                     MRP = @MRP,
+                                    discountPerc = @discountPerc,
+                                    ItemGroupName = @ItemGroupName,
                                     OpStock = @OpStock
                                 WHERE RawCodeNew = @RawCodeNew
                             END
@@ -94,28 +96,35 @@ async function syncEverything() {
             const barcode = String(posItem.RawCodeNew).trim();
             const webItem = webMap.get(barcode);
 
-            // LOGIC: If item doesn't exist on web OR it's been updated recently in POS
-            // (Since POS doesn't have updated_at, we push if data is different or it's new)
-            if (!webItem || 
-                webItem.Rate !== posItem.Rate || 
-                webItem.MRP !== posItem.MRP || 
-                webItem.OpStock !== posItem.OpStock ||
-                webItem.RawName !== posItem.RawName ||
-                webItem.discountPerc !== posItem.discountPerc ||
-                webItem.ItemGroupName !== posItem.ItemGroupName) {
-                
+            /**
+             * SMART SYNC LOGIC:
+             * 1. If item doesn't exist on web -> PUSH IT.
+             * 2. If item exists on web but data is different -> PUSH IT.
+             * 3. CRITICAL: We ALWAYS preserve 'image_url' and 'discountPerc' from web 
+             *    if they exist, because these are managed on the website.
+             */
+            
+            // Only push if something actually changed in POS (Price or Stock)
+            const hasChanged = !webItem || 
+                             webItem.Rate !== posItem.Rate || 
+                             webItem.MRP !== posItem.MRP || 
+                             webItem.OpStock !== posItem.OpStock ||
+                             webItem.RawName !== posItem.RawName;
+
+            if (hasChanged) {
                 const pushData = {
                     RawCodeNew: barcode,
                     RawName: String(posItem.RawName).trim(),
                     Rate: Number(posItem.Rate || 0),
                     MRP: Number(posItem.MRP || 0),
-                    discountPerc: Number(posItem.discountPerc || 0),
-                    ItemGroupName: String(posItem.ItemGroupName || 'General').trim(),
+                    // If web has a category or discount, keep it. Otherwise use POS value.
+                    discountPerc: webItem ? (webItem.discountPerc || 0) : Number(posItem.discountPerc || 0),
+                    ItemGroupName: webItem ? (webItem.ItemGroupName || 'General') : String(posItem.ItemGroupName || 'General').trim(),
                     OpStock: Number(posItem.OpStock || 0),
-                    updated_at: new Date().toISOString() // Mark as updated now
+                    updated_at: new Date().toISOString()
                 };
 
-                // CRITICAL: Preserve the image_url if it exists on the web
+                // ALWAYS preserve the image_url from the web
                 if (webItem && webItem.image_url) {
                     pushData.image_url = webItem.image_url;
                 }

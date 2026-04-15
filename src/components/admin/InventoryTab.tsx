@@ -1,392 +1,286 @@
-import { ScanBarcode, FileUp, Loader2, Database, TrendingUp, AlertCircle, Camera, Upload, Image as ImageIcon, X } from "lucide-react";
-import React from "react";
+import { useState, useEffect, useRef } from "react";
+import { 
+  Search, Loader2, Edit2, Check, X, ChevronLeft, ChevronRight, AlertCircle, Package
+} from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
-interface InventoryTabProps {
-  barcode: string;
-  setBarcode: (v: string) => void;
-  productName: string;
-  setProductName: (v: string) => void;
-  mrp: string;
-  setMrp: (v: string) => void;
-  salePrice: string;
-  setSalePrice: (v: string) => void;
-  category: string;
-  setCategory: (v: string) => void;
-  subCategory: string;
-  setSubCategory: (v: string) => void;
-  brand: string;
-  setBrand: (v: string) => void;
-  stockQuantity: string;
-  setStockQuantity: (v: string) => void;
-  imageUrl: string;
-  setImageUrl: (v: string) => void;
-  isScanning: boolean;
-  setIsScanning: (v: boolean) => void;
-  loading: boolean;
-  isImporting: boolean;
-  fetchingProduct: boolean;
-  productExists: boolean | null;
-  discount: string;
-  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleInventorySubmit: (e: React.FormEvent) => void;
-  fetchProductDetails: (code: string) => void;
-  barcodeInputRef: React.RefObject<HTMLInputElement>;
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  uploading: boolean;
-  imageInputRef: React.RefObject<HTMLInputElement>;
-  startScanner: () => void;
-  stopScanner: () => void;
-  allCategories: string[];
-}
+const InventoryTab = () => {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
 
-const InventoryTab = ({
-  barcode, setBarcode, productName, setProductName, mrp, setMrp,
-  salePrice, setSalePrice, category, setCategory, subCategory, setSubCategory,
-  brand, setBrand, stockQuantity, setStockQuantity,
-  imageUrl, setImageUrl, isScanning, setIsScanning, loading, isImporting,
-  fetchingProduct, productExists, discount, handleFileUpload, handleInventorySubmit, fetchProductDetails,
-  barcodeInputRef, fileInputRef, handleImageUpload, uploading, imageInputRef, startScanner, stopScanner,
-  allCategories
-}: InventoryTabProps) => {
-  const [catQuery, setCatQuery] = React.useState("");
-  const [showCatSuggestions, setShowCatSuggestions] = React.useState(false);
+  const [editingBarcode, setEditingBarcode] = useState<string | null>(null);
+  const [editPrice, setEditPrice] = useState("");
+  const [editStock, setEditStock] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const filteredCats = React.useMemo(() => {
-    if (!catQuery) return [];
-    return allCategories.filter(c => 
-      c.toLowerCase().includes(catQuery.toLowerCase())
-    ).slice(0, 5);
-  }, [catQuery, allCategories]);
+  useEffect(() => {
+    fetchProducts();
+  }, [page, searchQuery]);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from('products')
+        .select('*', { count: 'exact' });
+
+      if (searchQuery) {
+        query = query.or(`name.ilike.%${searchQuery}%,barcode.eq.${searchQuery}`);
+      }
+
+      const { data, count, error } = await query
+        .order('name', { ascending: true })
+        .range((page - 1) * pageSize, page * pageSize - 1);
+
+      if (error) throw error;
+      setProducts(data || []);
+      setTotalCount(count || 0);
+    } catch (err: any) {
+      console.error("Error fetching products:", err);
+      toast.error("Failed to load products");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(1);
+  };
+
+  const startEditing = (product: any) => {
+    setEditingBarcode(product.barcode);
+    setEditPrice(String(product.salerate || product.Rate || 0));
+    setEditStock(String(product.stock_quantity || product.OpStock || 0));
+  };
+
+  const cancelEditing = () => {
+    setEditingBarcode(null);
+  };
+
+  const saveEdit = async (barcode: string) => {
+    setSaving(true);
+    try {
+      // SAFE MODE: Only update salerate and stock_quantity
+      const { error } = await supabase
+        .from('products')
+        .update({
+          salerate: Number(editPrice),
+          stock_quantity: Number(editStock),
+          updated_at: new Date().toISOString()
+        })
+        .eq('barcode', barcode);
+
+      if (error) throw error;
+
+      toast.success("Product updated safely!");
+      setEditingBarcode(null);
+      fetchProducts();
+    } catch (err: any) {
+      console.error("Save error:", err);
+      toast.error("Failed to update product");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div className="grid lg:grid-cols-2 gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Form Section */}
-      <div className="bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm space-y-8">
-        <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-black italic uppercase text-black flex items-center gap-3">
-            <div className="bg-primary/10 p-2 rounded-lg text-primary">
-              <ScanBarcode size={24} />
-            </div>
-            Update Inventory
-          </h3>
-          <div className="flex items-center gap-3">
-            <input 
-              type="file" 
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".xlsx, .xls, .csv"
-              className="hidden"
-            />
-            <button 
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isImporting}
-              className="flex items-center gap-2 bg-gray-50 text-gray-500 px-4 py-2.5 rounded-xl font-bold text-xs uppercase hover:bg-primary hover:text-white transition-all shadow-sm"
-            >
-              {isImporting ? <Loader2 className="animate-spin" size={16} /> : <FileUp size={16} />}
-              <span className="hidden sm:inline">Import Excel</span>
-            </button>
-            <button 
-              type="button"
-              onClick={() => isScanning ? stopScanner() : startScanner()}
-              className={`p-3 rounded-2xl transition-all shadow-sm ${isScanning ? "bg-red-500 text-white" : "bg-primary text-white hover:bg-black"}`}
-            >
-              {isScanning ? <X size={20} /> : <ScanBarcode size={20} />}
-            </button>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Header & Stats */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-gray-100 rounded-[32px] p-6 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-[#CC0000]/10 rounded-2xl flex items-center justify-center text-[#CC0000]">
+            <Package size={24} />
           </div>
-        </div>
-
-        {isScanning && (
-          <div className="relative w-full aspect-square bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-primary">
-            <div id="reader" className="w-full h-full"></div>
-            <div className="absolute inset-0 border-2 border-white/20 pointer-events-none flex items-center justify-center">
-              <div className="w-64 h-64 border-2 border-primary rounded-3xl animate-pulse"></div>
-            </div>
-            <button 
-              type="button"
-              onClick={stopScanner}
-              className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl"
-            >
-              Cancel Scan
-            </button>
-          </div>
-        )}
-
-        <form onSubmit={handleInventorySubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Barcode / Product Code</label>
-            <div className="relative group">
-              <input 
-                ref={barcodeInputRef}
-                type="text" 
-                placeholder="SCAN OR TYPE BARCODE"
-                className={`w-full bg-gray-50 border rounded-2xl py-4 px-6 outline-none transition-all font-bold tracking-widest text-sm ${
-                  productExists === true ? "border-green-500 ring-2 ring-green-100" : 
-                  productExists === false ? "border-blue-500 ring-2 ring-blue-100" : 
-                  "border-gray-100 focus:border-primary"
-                }`}
-                value={barcode}
-                onChange={(e) => setBarcode(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    fetchProductDetails(barcode);
-                  }
-                }}
-                onBlur={() => {
-                  if (barcode) fetchProductDetails(barcode);
-                }}
-              />
-              {fetchingProduct && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-primary" size={20} />}
-            </div>
-            {productExists === true && <p className="text-[10px] font-bold text-green-600 ml-1 uppercase italic">Product Found - Edit Mode</p>}
-            {productExists === false && <p className="text-[10px] font-bold text-blue-600 ml-1 uppercase italic">New Product Detected - Create Mode</p>}
-          </div>
-
-          {/* Quick Photo Upload Section */}
-          {barcode && (
-            <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black uppercase italic text-primary flex items-center gap-2">
-                  <Camera size={14} /> Quick Product Photo
-                </h4>
-                {uploading && <Loader2 className="animate-spin text-primary" size={16} />}
-              </div>
-              
-              <div className="flex gap-3">
-                <input 
-                  type="file" 
-                  ref={imageInputRef}
-                  onChange={handleImageUpload}
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                />
-                <button 
-                  type="button"
-                  onClick={() => imageInputRef.current?.click()}
-                  disabled={uploading}
-                  className="flex-1 bg-white border-2 border-primary/20 text-primary py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all shadow-sm active:scale-95"
-                >
-                  <Camera size={18} /> Take Photo
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    if (imageInputRef.current) {
-                      imageInputRef.current.removeAttribute('capture');
-                      imageInputRef.current.click();
-                    }
-                  }}
-                  disabled={uploading}
-                  className="flex-1 bg-white border-2 border-gray-100 text-gray-400 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-all shadow-sm active:scale-95"
-                >
-                  <Upload size={18} /> Gallery
-                </button>
-              </div>
-              <p className="text-[8px] font-bold text-gray-400 uppercase text-center italic">Photo will be saved as {barcode}.jpg</p>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Product Name</label>
-            <input 
-              type="text" 
-              placeholder="ENTER PRODUCT NAME"
-              className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold uppercase text-sm"
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">MRP (₹)</label>
-              <input 
-                type="number" 
-                placeholder="0.00"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold text-sm"
-                value={mrp}
-                onChange={(e) => setMrp(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Sale Price (₹)</label>
-              <input 
-                type="number" 
-                placeholder="0.00"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold text-sm text-primary"
-                value={salePrice}
-                onChange={(e) => setSalePrice(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Discount (%)</label>
-              <div className="w-full bg-gray-100 border border-gray-200 rounded-2xl py-4 px-6 font-black text-sm text-red-500 flex items-center justify-center italic">
-                {discount}% OFF
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 relative">
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Category</label>
-              <input 
-                type="text" 
-                placeholder="e.g. Snacks"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold uppercase text-sm"
-                value={category}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setCategory(val);
-                  setCatQuery(val);
-                  setShowCatSuggestions(true);
-                }}
-                onFocus={() => setShowCatSuggestions(true)}
-              />
-              {showCatSuggestions && filteredCats.length > 0 && (
-                <div className="absolute z-50 w-full bg-white border border-gray-100 rounded-2xl shadow-xl mt-1 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                  {filteredCats.map((cat, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className="w-full text-left px-6 py-3 hover:bg-primary/5 text-xs font-black uppercase tracking-widest transition-colors border-b border-gray-50 last:border-0"
-                      onClick={() => {
-                        setCategory(cat);
-                        setCatQuery("");
-                        setShowCatSuggestions(false);
-                      }}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Stock Quantity</label>
-              <input 
-                type="number" 
-                placeholder="0"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold text-sm"
-                value={stockQuantity}
-                onChange={(e) => setStockQuantity(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Image URL (Auto-filled on upload)</label>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="https://..."
-                className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold text-xs"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-              />
-              {imageUrl && (
-                <button 
-                  type="button"
-                  onClick={() => setImageUrl("")}
-                  className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <button 
-            type="submit"
-            disabled={loading}
-            className={`w-full text-white py-5 rounded-2xl font-black uppercase tracking-[2px] transition-all shadow-sm flex items-center justify-center gap-3 italic ${
-              productExists === true ? "bg-green-600 hover:bg-black" : 
-              productExists === false ? "bg-blue-600 hover:bg-black" : 
-              "bg-primary hover:bg-black"
-            }`}
-          >
-            {loading ? <Loader2 className="animate-spin" size={24} /> : (
-              <>
-                <Database size={24} /> 
-                {productExists === true ? "Update Product" : 
-                 productExists === false ? "Create New Entry" : 
-                 "Update Store Database"}
-              </>
-            )}
-          </button>
-        </form>
-      </div>
-
-      {/* Preview Section */}
-      <div className="space-y-8">
-        <div className="bg-[#0f172a] text-white rounded-[40px] p-10 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
-          <h3 className="text-xl font-black italic uppercase mb-8 flex items-center gap-3">
-            <div className="bg-primary/20 p-2 rounded-lg text-primary">
-              <TrendingUp size={24} />
-            </div>
-            Live Preview
-          </h3>
-          
-          <div className="flex flex-col items-center text-center space-y-6">
-            <div className="w-full aspect-square bg-white/5 rounded-[32px] border border-white/10 flex items-center justify-center overflow-hidden relative group">
-              {imageUrl ? (
-                <img src={imageUrl} alt="Preview" className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-110" />
-              ) : (
-                <div className="flex flex-col items-center gap-4 text-gray-500">
-                  <ImageIcon size={64} className="opacity-20" />
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50 italic">No Image Uploaded</p>
-                </div>
-              )}
-              {uploading && (
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                  <Loader2 className="animate-spin text-primary" size={48} />
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4 w-full">
-              <div className="flex items-center justify-between">
-                <span className="bg-primary/20 text-primary text-[10px] font-black px-4 py-1.5 rounded-full uppercase italic tracking-wider">
-                  {category || "Category"}
-                </span>
-                <span className="text-green-500 text-[10px] font-black uppercase italic flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                  In Stock: {stockQuantity || 0}
-                </span>
-              </div>
-              
-              <h4 className="text-2xl font-black uppercase italic tracking-tight truncate w-full">
-                {productName || "Product Name"}
-              </h4>
-              
-              <div className="flex items-center justify-center gap-4">
-                <div className="text-3xl font-black text-primary italic">₹{salePrice || "0"}</div>
-                {mrp && Number(mrp) > Number(salePrice) && (
-                  <div className="text-lg text-gray-500 line-through font-bold">₹{mrp}</div>
-                )}
-              </div>
-
-              {discount !== "0" && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-500 py-3 rounded-2xl font-black uppercase text-[10px] tracking-[4px] italic">
-                  Save {discount}% Today
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6 flex gap-4">
-          <AlertCircle className="text-amber-500 shrink-0" size={24} />
-          <div className="space-y-1">
-            <h5 className="font-black uppercase italic text-xs text-amber-900">Pro Tip</h5>
-            <p className="text-[10px] text-amber-800 font-medium leading-relaxed">
-              Use your mobile camera to scan barcodes and take instant photos. Photos are automatically optimized and linked to the barcode for a seamless catalog update.
+          <div>
+            <h3 className="text-xl font-black italic uppercase text-black">Product Inventory</h3>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              Total: <span className="text-[#CC0000]">{totalCount.toLocaleString()}</span> Items
             </p>
           </div>
         </div>
+
+        <form onSubmit={handleSearch} className="relative group w-full md:w-96">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#CC0000] transition-colors" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search by name or barcode..."
+            className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-12 pr-4 outline-none focus:border-[#CC0000] transition-all font-bold text-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </form>
+      </div>
+
+      {/* Safe Mode Warning */}
+      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 items-center">
+        <AlertCircle className="text-amber-500 shrink-0" size={20} />
+        <p className="text-[10px] text-amber-800 font-bold uppercase tracking-wider">
+          <span className="font-black">Safe Mode Active:</span> Only Price and Stock can be edited to maintain POS synchronization.
+        </p>
+      </div>
+
+      {/* Table Section */}
+      <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Product Details</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Price (₹)</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Stock</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-20 text-center">
+                    <Loader2 className="animate-spin mx-auto text-[#CC0000]" size={32} />
+                    <p className="mt-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Loading Inventory...</p>
+                  </td>
+                </tr>
+              ) : products.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-20 text-center">
+                    <p className="text-gray-400 font-bold italic">No products found matching your search.</p>
+                  </td>
+                </tr>
+              ) : (
+                products.map((product) => (
+                  <tr key={product.barcode} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
+                          {product.image_url ? (
+                            <img src={product.image_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Package size={20} className="text-gray-300" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-black text-sm uppercase italic leading-tight">{product.name}</p>
+                          <p className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{product.barcode}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {editingBarcode === product.barcode ? (
+                        <input 
+                          type="number"
+                          className="w-24 bg-white border border-[#CC0000] rounded-lg px-2 py-1 text-center font-bold text-sm outline-none"
+                          value={editPrice}
+                          onChange={(e) => setEditPrice(e.target.value)}
+                        />
+                      ) : (
+                        <span className="font-black text-sm text-[#CC0000]">₹{product.salerate || product.Rate || 0}</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {editingBarcode === product.barcode ? (
+                        <input 
+                          type="number"
+                          className="w-20 bg-white border border-[#CC0000] rounded-lg px-2 py-1 text-center font-bold text-sm outline-none"
+                          value={editStock}
+                          onChange={(e) => setEditStock(e.target.value)}
+                        />
+                      ) : (
+                        <span className={`text-xs font-black px-3 py-1 rounded-full uppercase italic ${
+                          (product.stock_quantity || product.OpStock || 0) > 10 
+                          ? "bg-green-50 text-green-600" 
+                          : "bg-red-50 text-red-600"
+                        }`}>
+                          {product.stock_quantity || product.OpStock || 0} In Stock
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {editingBarcode === product.barcode ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => saveEdit(product.barcode)}
+                            disabled={saving}
+                            className="p-2 bg-green-500 text-white rounded-lg hover:bg-black transition-all shadow-sm"
+                          >
+                            {saving ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
+                          </button>
+                          <button 
+                            onClick={cancelEditing}
+                            className="p-2 bg-gray-100 text-gray-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => startEditing(product)}
+                          className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-[#CC0000] hover:text-white transition-all"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="px-6 py-6 bg-gray-50 flex items-center justify-between border-t border-gray-100">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              Showing <span className="text-black">{products.length}</span> of <span className="text-black">{totalCount}</span> Products
+            </p>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-50 hover:border-[#CC0000] transition-all"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <div className="flex items-center gap-1">
+                {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) pageNum = i + 1;
+                  else if (page <= 3) pageNum = i + 1;
+                  else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
+                  else pageNum = page - 2 + i;
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      className={`w-10 h-10 rounded-xl font-black text-[10px] transition-all ${
+                        page === pageNum 
+                        ? "bg-[#CC0000] text-white shadow-lg" 
+                        : "bg-white border border-gray-200 text-gray-400 hover:border-[#CC0000] hover:text-[#CC0000]"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-50 hover:border-[#CC0000] transition-all"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
