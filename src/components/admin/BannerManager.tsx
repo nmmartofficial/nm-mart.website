@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { 
-  Plus, Trash2, Link as LinkIcon, Image as ImageIcon, Loader2, Copy, Check
+  Plus, Trash2, Link as LinkIcon, Image as ImageIcon, Loader2, Copy, Check, Eye, EyeOff
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { WA_NUMBER } from "@/lib/store-utils";
 
 const BannerManager = () => {
   const [banners, setBanners] = useState<any[]>([]);
@@ -26,7 +27,7 @@ const BannerManager = () => {
       if (error) throw error;
       setBanners(data || []);
     } catch (err: any) {
-      toast.error("Failed to load banners");
+      console.error("Failed to load banners:", err);
     } finally {
       setLoading(false);
     }
@@ -43,20 +44,25 @@ const BannerManager = () => {
       const filePath = `banners/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('nm-mart-assets')
-        .upload(filePath, file);
+        .from('banners')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('nm-mart-assets')
-        .getPublicUrl(filePath);
+        .from('banners')
+        .getPublicUrl(fileName);
 
       const { error: dbError } = await supabase
         .from('website_banners')
         .insert([{
           image_url: publicUrl,
-          whatsapp_link: `https://wa.me/91XXXXXXXXXX?text=I'm interested in this offer: ${publicUrl}`,
+          title: file.name.split('.')[0], // Use filename as title
+          link: `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`I'm interested in this offer: ${publicUrl}`)}`,
+          active: true,
           display_order: banners.length
         }]);
 
@@ -74,9 +80,9 @@ const BannerManager = () => {
   const deleteBanner = async (id: string, url: string) => {
     try {
       // 1. Delete from storage
-      const path = url.split('/').pop();
-      if (path) {
-        await supabase.storage.from('nm-mart-assets').remove([`banners/${path}`]);
+      const fileName = url.split('/').pop();
+      if (fileName) {
+        await supabase.storage.from('banners').remove([fileName]);
       }
 
       // 2. Delete from DB
@@ -87,6 +93,21 @@ const BannerManager = () => {
       fetchBanners();
     } catch (err: any) {
       toast.error("Delete failed");
+    }
+  };
+
+  const toggleVisibility = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('website_banners')
+        .update({ active: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+      setBanners(banners.map(b => b.id === id ? { ...b, active: !currentStatus } : b));
+      toast.success(currentStatus ? "Banner hidden" : "Banner visible");
+    } catch (err: any) {
+      toast.error("Update failed");
     }
   };
 
@@ -130,12 +151,19 @@ const BannerManager = () => {
           </div>
         ) : (
           banners.map((banner) => (
-            <div key={banner.id} className="group bg-white border border-gray-100 rounded-[32px] overflow-hidden shadow-sm hover:shadow-xl transition-all relative">
+            <div key={banner.id} className={`group bg-white border border-gray-100 rounded-[32px] overflow-hidden shadow-sm hover:shadow-xl transition-all relative ${!banner.active ? 'opacity-60 grayscale' : ''}`}>
               <div className="aspect-[21/9] w-full bg-gray-100 overflow-hidden">
                 <img src={banner.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               
               <div className="p-4 flex items-center justify-between gap-3">
+                <button 
+                  onClick={() => toggleVisibility(banner.id, banner.active)}
+                  className={`p-3 rounded-xl transition-all ${banner.active ? 'bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white' : 'bg-primary text-white hover:bg-black'}`}
+                  title={banner.active ? "Hide Banner" : "Show Banner"}
+                >
+                  {banner.active ? <Eye size={16} /> : <EyeOff size={16} />}
+                </button>
                 <button 
                   onClick={() => copyWhatsAppLink(banner.id, banner.whatsapp_link)}
                   className="flex-1 flex items-center justify-center gap-2 bg-green-50 text-green-600 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-green-600 hover:text-white transition-all"

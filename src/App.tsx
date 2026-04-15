@@ -1,5 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/lib/ThemeProvider";
+import { useEffect } from "react";
+import { initializeDefaultConfig } from "@/lib/storeConfig";
 
 // Pages
 import Index from "@/pages/Index";
@@ -18,27 +21,33 @@ import Admin from "@/pages/Admin";
 import DeliveryDashboard from "@/pages/Delivery";
 
 function App() {
-  return (
-    <Router>
-      <Toaster position="top-center" expand={false} richColors />
-      <Routes>
-        {/* Customer Routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/profile" element={<UserProfile />} />
-        <Route path="/tracker" element={<OrderTracker />} />
-        <Route path="/product/:slug" element={<ProductDetail />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+  useEffect(() => {
+    initializeDefaultConfig();
+  }, []);
 
-        {/* Admin Routes */}
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/delivery" element={<DeliveryDashboard />} />
-      </Routes>
-    </Router>
+  return (
+    <ThemeProvider>
+      <Router>
+        <Toaster position="top-center" expand={false} richColors />
+        <Routes>
+          {/* Customer Routes */}
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/tracker" element={<OrderTracker />} />
+          <Route path="/product/:slug" element={<ProductDetail />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/delivery" element={<DeliveryDashboard />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

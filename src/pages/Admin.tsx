@@ -2,11 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { 
-  ScanBarcode, LogOut, Database, Package, Star, BarChart3, ShoppingCart, Image as ImageIcon, Grid
+  ScanBarcode, LogOut, Database, Package, Star, BarChart3, ShoppingCart, Image as ImageIcon, Grid, Settings, Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import * as XLSX from "xlsx";
+import { useTheme } from "@/lib/ThemeProvider";
 
 // Shared Components
 import Header from "@/components/shop/Header";
@@ -20,14 +21,31 @@ import OrdersTab from "@/components/admin/OrdersTab";
 import AnalyticsTab from "@/components/admin/AnalyticsTab";
 import BannerManager from "@/components/admin/BannerManager";
 import CategoryManager from "@/components/admin/CategoryManager";
+import SettingsTab from "@/components/admin/SettingsTab";
+import HighlightsManager from "@/components/admin/HighlightsManager";
+import LayoutManager from "@/components/admin/LayoutManager";
 
 const SLOGAN = "Shop More, Save More"; // v5.0.3
 
 const Admin = () => {
+  const { theme } = useTheme();
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem("nm_admin_session") === "true";
   });
-  const [activeTab, setActiveTab] = useState<'inventory' | 'welfare' | 'orders' | 'analytics' | 'banners' | 'categories'>('inventory');
+
+  const renderStoreName = () => {
+    const name = theme.storeName || "NM MART";
+    const parts = name.split(" ");
+    if (parts.length > 1) {
+      return (
+        <>
+          {parts[0]} <span className="text-primary">{parts.slice(1).join(" ")}</span>
+        </>
+      );
+    }
+    return <span className="text-primary">{name}</span>;
+  };
+  const [activeTab, setActiveTab] = useState<'inventory' | 'welfare' | 'orders' | 'analytics' | 'banners' | 'categories' | 'settings' | 'highlights' | 'layout'>('inventory');
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   
@@ -245,7 +263,6 @@ const Admin = () => {
       setOrders(data || []);
     } catch (err: any) {
       console.error("Error fetching orders:", err);
-      toast.error("Failed to fetch orders");
     } finally {
       setOrdersLoading(false);
     }
@@ -268,16 +285,16 @@ const Admin = () => {
 
   const handleLogin = async () => {
     try {
+      // Direct Plain Text Comparison (Disable Hashing)
       const { data, error } = await supabase
         .from('admin_config')
-        .select('*')
+        .select('username, password_hash')
         .eq('username', username)
-        .eq('password_hash', password) // Simplified check as requested
         .maybeSingle();
 
       if (error) throw error;
 
-      if (data) {
+      if (data && data.password_hash === password) {
         setIsAuthenticated(true);
         localStorage.setItem("nm_admin_session", "true");
         toast.success("Welcome back, Admin!");
@@ -448,9 +465,8 @@ const Admin = () => {
 
       if (error) throw error;
       setCustomerData(data);
-      if (!data) toast.error("Customer not found");
     } catch (err: any) {
-      toast.error("Error searching customer");
+      console.error("Error searching customer:", err);
     } finally {
       setWelfareLoading(false);
     }
@@ -525,11 +541,15 @@ const Admin = () => {
           {/* Column 1: Brand/Logo */}
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-sm shadow-primary/20">
-              <Database size={28} />
+              {theme.storeLogo ? (
+                <img src={theme.storeLogo} alt="Logo" className="w-8 h-8 object-contain" />
+              ) : (
+                <Database size={28} />
+              )}
             </div>
             <div>
               <h1 className="text-2xl font-black italic uppercase tracking-tighter leading-none">
-                Admin <span className="text-primary">Panel</span>
+                {renderStoreName()}
               </h1>
               <p className="text-[9px] font-black text-gray-400 uppercase tracking-[3px] mt-1 italic">Control Center</p>
             </div>
@@ -539,11 +559,14 @@ const Admin = () => {
           <div className="flex items-center justify-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100 overflow-x-auto no-scrollbar">
             {[
               { id: 'inventory', label: 'Inventory', icon: ScanBarcode },
+              { id: 'layout', label: 'Layout', icon: LayoutGrid },
+              { id: 'highlights', label: 'Highlights', icon: Sparkles },
               { id: 'banners', label: 'Banners', icon: ImageIcon },
               { id: 'categories', label: 'Categories', icon: Grid },
               { id: 'welfare', label: 'Welfare', icon: Star },
               { id: 'orders', label: 'Orders', icon: Package },
               { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+              { id: 'settings', label: 'Settings', icon: Settings },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -603,6 +626,14 @@ const Admin = () => {
           <InventoryTab />
         )}
 
+        {activeTab === 'highlights' && (
+          <HighlightsManager />
+        )}
+
+        {activeTab === 'layout' && (
+          <LayoutManager />
+        )}
+
         {activeTab === 'banners' && (
           <BannerManager />
         )}
@@ -634,6 +665,10 @@ const Admin = () => {
 
         {activeTab === 'analytics' && (
           <AnalyticsTab />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsTab />
         )}
       </main>
 

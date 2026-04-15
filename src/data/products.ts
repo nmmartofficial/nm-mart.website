@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-// --- 1. SUPABASE CONNECTION ---
-const SUPABASE_URL = 'https://ydqjrtgrzetyxhcuqvoy.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_NOZCBGcyAm5SVWREtn9_Vw_LhynM0Py'; 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+import { supabase } from "@/lib/supabase/client";
 
 // --- 2. PRODUCT INTERFACE ---
 export interface Product {
@@ -20,26 +15,31 @@ export interface Product {
 // --- 3. LIVE DATA FETCHING FUNCTION ---
 // यह फंक्शन सुपाबेस से ताजा माल उठाएगा
 export const fetchLiveProducts = async (): Promise<Product[]> => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .order('name', { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('name', { ascending: true });
 
-  if (error) {
-    console.error("Error fetching products:", error.message);
+    if (error) {
+      console.error("Error fetching products:", error.message);
+      return [];
+    }
+
+    return data.map((item: any) => ({
+      barcode: item.barcode,
+      name: item.name,
+      mrp: item.mrp,
+      salerate: item.salerate,
+      discount: item.discount,
+      category: item.category || 'General',
+      image: "🛍️", // फिलहाल एक डिफ़ॉल्ट इमोजी
+      stock: item.stock > 0 ? "in-stock" : "limited"
+    }));
+  } catch (err) {
+    console.error("Fetch Live Products Error:", err);
     return [];
   }
-
-  return data.map((item: any) => ({
-    barcode: item.barcode,
-    name: item.name,
-    mrp: item.mrp,
-    salerate: item.salerate,
-    discount: item.discount,
-    category: item.category || 'General',
-    image: "🛍️", // फिलहाल एक डिफ़ॉल्ट इमोजी
-    stock: item.stock > 0 ? "in-stock" : "limited"
-  }));
 };
 
 // --- 4. REVIEWS (इसे आप ऐसे ही रख सकते हैं) ---

@@ -43,7 +43,8 @@ export function useProducts() {
       imageUrl: item.image_url || item.image || "",
       discount: discount,
       stock: stock,
-      save: Math.max(0, Math.round(mrp - rate))
+      save: Math.max(0, Math.round(mrp - rate)),
+      badge: item.badge || ""
     };
   };
 
@@ -56,6 +57,7 @@ export function useProducts() {
         .not('ItemGroupName', 'is', null)
         .neq('ItemGroupName', '')
         .neq('ItemGroupName', ' ');
+      
       
       if (data) {
         const uniqueCats = [...new Set(data.map((item: any) => normalizeCategory(item.ItemGroupName)))].filter(c => c && c.length > 1);
@@ -73,6 +75,7 @@ export function useProducts() {
         .select('*', { count: 'exact' })
         .eq('discountPerc', type)
         .gt('OpStock', 0)
+        .neq('is_visible', false)
         .order('image_url', { ascending: false, nullsFirst: false })
         .order('RawName', { ascending: true })
         .range(offset, offset + 11);
@@ -117,6 +120,7 @@ export function useProducts() {
         .from('products')
         .select('*', { count: 'exact' })
         .gt('OpStock', 0)
+        .neq('is_visible', false)
         .order('image_url', { ascending: false, nullsFirst: false })
         .order('RawName', { ascending: true })
         .range(offset, offset + 49);

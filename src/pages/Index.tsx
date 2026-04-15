@@ -16,11 +16,13 @@ import { supabase } from "@/lib/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
+import { useTheme } from "@/lib/ThemeProvider";
 import { 
   productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, 
   addLoyaltyPoints, getLoyaltyPoints, OrderRecord, normalizeCategory,
   STORE_DETAILS, calculateTaxes, calculateDeliveryFee
 } from "@/lib/store-utils";
+import { getSectionLayout, SectionLayout } from "@/lib/storeConfig";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import HeroBanner from "@/components/shop/HeroBanner";
 import ChatBot from "@/components/shop/ChatBot";
@@ -31,6 +33,7 @@ import WelfareModals from "@/components/shop/modals/WelfareModals";
 import CartDrawer from "@/components/shop/modals/CartDrawer";
 import CheckoutModal from "@/components/shop/modals/CheckoutModal";
 import OrdersModal from "@/components/shop/modals/OrdersModal";
+import Highlights from "@/components/shop/Highlights";
 
 const LOGO_URL = "/nm-mart-logo.png";
 const SLOGAN = "Shop More, Save More";
@@ -77,19 +80,28 @@ const PRIORITY_CATS = ["SOAP", "SNACKS", "SPICES"].map(normalizeCategory);
 const HIDDEN_CATS: string[] = [];
 
 export default function Index() {
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const [layout, setLayout] = useState<SectionLayout[]>([]);
+  const [gridStyle, setGridStyle] = useState({ categoryColumns: 6, productColumns: 4 });
   const [homeLoading, setHomeLoading] = useState(true);
 
   useEffect(() => {
     const fetchHomeData = async () => {
       setHomeLoading(true);
       try {
-        const { data: cats } = await supabase.from('categories').select('*').order('display_order');
-        const { data: bans } = await supabase.from('website_banners').select('*').order('display_order');
+        const { data: cats } = await supabase.from('categories').select('*').neq('is_visible', false).order('display_order');
+        const { data: bans } = await supabase.from('website_banners').select('*').eq('active', true).order('display_order');
+        const [sectionLayout, gridData] = await Promise.all([
+          getSectionLayout(),
+          import("@/lib/storeConfig").then(m => m.getGridStyle())
+        ]);
         setCategories(cats || []);
         setBanners(bans || []);
+        setLayout(sectionLayout);
+        setGridStyle(gridData);
       } catch (err) {
         console.error("Home data fetch error:", err);
       } finally {
@@ -109,9 +121,9 @@ export default function Index() {
 
   // Helper for Category Icons
   const getCategoryIcon = (cat: string) => {
-    const customCat = categories.find(c => c.title === cat);
-    if (customCat?.icon_url) {
-      return <img src={customCat.icon_url} alt="" className="w-8 h-8 object-contain" />;
+    const customCat = categories.find(c => c.name === cat);
+    if (customCat?.image_url) {
+      return <img src={customCat.image_url} alt="" className="w-8 h-8 object-contain" />;
     }
     const normalized = normalizeCategory(cat);
     return CATEGORY_ICONS[normalized] || "📦";
@@ -136,7 +148,7 @@ export default function Index() {
     // Header
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text(STORE_DETAILS.name, 40, y, { align: "center" });
+    doc.text(theme.storeName || STORE_DETAILS.name, 40, y, { align: "center" });
     
     y += 5;
     doc.setFontSize(7);
@@ -498,6 +510,178 @@ export default function Index() {
   const finalTotal = cartTotal - welfareDiscount;
   const memberId = user ? `NM-MEM-${(user.id || "").slice(0, 4).toUpperCase()}` : null;
 
+  const renderSection = (sectionId: string) => {
+    const config = layout.find(s => s.id === sectionId);
+    if (config && !config.visible) return null;
+
+    switch (sectionId) {
+      case 'hero':
+        return (
+          <div key="hero" className={`${isAdminMode ? 'pt-[116px]' : 'pt-0'} mb-8`}>
+            <HeroBanner onBannerClick={handleBannerClick} />
+          </div>
+        );
+      case 'highlights':
+        return <Highlights key="highlights" />;
+      case 'flash_sale':
+        return <FlashSaleBanner key="flash_sale" />;
+      case 'categories':
+        return sortedCategories.length > 0 && (
+          <div key="categories" className="mb-12">
+            <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+              <LayoutGrid size={18} className="text-primary" /> Shop by Category
+            </h3>
+            <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${gridStyle.categoryColumns}, minmax(0, 1fr))` }}>
+              {sortedCategories.map(catName => {
+                const cat = categories.find(c => c.name === catName);
+                return (
+                  <motion.button whileTap={{ scale: 0.94 }} key={catName}
+                    onClick={() => { setSelectedCat(catName); setSelectedBrand(null); setQuery(""); }}
+                    className="p-4 rounded-[24px] bg-white border border-gray-100 flex flex-col items-center gap-3 transition-all group hover:border-primary hover:shadow-xl"
+                    style={cat?.bg_color ? { backgroundColor: cat.bg_color + '10' } : {}}
+                  >
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-gray-50 text-3xl group-hover:scale-110 transition-transform shadow-sm">
+                      {getCategoryIcon(catName)}
+                    </div>
+                    <span className="font-black text-black uppercase text-[10px] tracking-widest text-center leading-tight">{catName}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      case 'flat_50':
+        return flat50.length > 0 && (
+          <DiscountTabs 
+            key="flat_50"
+            flat33={[]} 
+            flat50={flat50} 
+            total50={total50}
+            total33={0}
+            hasMore50={hasMore50}
+            hasMore33={false}
+            loadMore50={loadMore50}
+            loadMore33={() => {}}
+            onAddToCart={addToCart} 
+            onQuickEdit={handleQuickEdit}
+          />
+        );
+      case 'flat_33':
+        return flat33.length > 0 && (
+          <DiscountTabs 
+            key="flat_33"
+            flat33={flat33} 
+            flat50={[]} 
+            total50={0}
+            total33={total33}
+            hasMore50={false}
+            hasMore33={hasMore33}
+            loadMore50={() => {}}
+            loadMore33={loadMore33}
+            onAddToCart={addToCart} 
+            onQuickEdit={handleQuickEdit}
+          />
+        );
+      case 'products':
+        return (
+          <div key="products">
+            {/* Dynamic Category-wise Product Sections */}
+            {sortedCategories.slice(0, 6).map(cat => {
+              const catProducts = allProducts
+                .filter(p => p.category === cat && !HIDDEN_CATS.includes(p.category))
+                .sort((a, b) => {
+                  const aHasImg = !!a.imageUrl && a.imageUrl.length > 5;
+                  const bHasImg = !!b.imageUrl && b.imageUrl.length > 5;
+                  if (aHasImg && !bHasImg) return -1;
+                  if (!aHasImg && bHasImg) return 1;
+                  return a.name.localeCompare(b.name);
+                })
+                .slice(0, 6);
+              if (catProducts.length === 0) return null;
+              return (
+                <div key={cat} className="mb-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-black text-foreground text-base uppercase tracking-tight flex items-center gap-2">
+                      <span className="text-lg">{getCategoryIcon(cat)}</span> {cat}
+                    </h3>
+                    <button onClick={() => { setSelectedCat(cat); setQuery(""); }}
+                      className="text-[10px] font-bold uppercase text-primary flex items-center gap-1 hover:underline">
+                      View All <ChevronRight size={12} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    {catProducts.map((p, idx) => (
+                      <motion.div key={`${p.barcode}-${idx}`}
+                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                        className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
+                        onClick={() => navigate(`/product/${productSlug(p)}`)}
+                      >
+                        <div className="relative h-24 bg-secondary/30">
+                          <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
+                          {p.badge && (
+                            <span className="absolute top-1 left-1 bg-primary text-white text-[7px] font-black px-1.5 py-0.5 rounded-lg shadow-sm z-10 animate-pulse">
+                              {p.badge}
+                            </span>
+                          )}
+                          {p.discount > 0 && (
+                            <span className="absolute top-1 right-1 bg-destructive text-white text-[8px] font-black px-2 py-0.5 rounded-lg shadow-sm">
+                              {p.discount}% OFF
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-2 flex flex-col flex-1">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="bg-primary/10 text-primary text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+                              {p.category}
+                            </span>
+                            <span className={`text-[7px] font-bold flex items-center gap-0.5 ${p.stock && p.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+                              <Star size={8} className="fill-current" /> {p.stock && p.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
+                            </span>
+                          </div>
+                          <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
+                          <div className="flex items-baseline gap-2 mt-1">
+                            <span className="text-xl font-black text-primary">₹{p.price}</span>
+                            {p.mrp > p.price && (
+                              <span className="text-[10px] text-muted-foreground line-through decoration-muted-foreground/50 font-medium">₹{p.mrp}</span>
+                            )}
+                            {p.discount > 0 && (
+                              <span className="text-[10px] font-bold text-destructive ml-auto">
+                                {p.discount}% OFF
+                              </span>
+                            )}
+                          </div>
+                          {p.save > 0 && p.stock && p.stock > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
+                          <div className="flex gap-1.5 mt-auto pt-2">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
+                              disabled={!p.stock || p.stock <= 0}
+                              className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
+                              {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
+                            </button>
+                            {isAdminMode && (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleQuickEdit(p); }}
+                                className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-black transition-all shadow-md active:scale-95"
+                                title="Quick Edit Product"
+                              >
+                                <Edit3 size={14} strokeWidth={2.5} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   const placeOrder = async () => {
      try {
        const { data: { session } } = await supabase.auth.getSession();
@@ -543,7 +727,7 @@ export default function Index() {
       );
 
       const itemsText = cart.map(c => `- ${c.name} (x${c.qty}): ₹${c.saleRate * c.qty}`).join("\n");
-      let text = `*New Order from NM MART* 🛒\n\n🆔 *Order ID:* ${orderId}\n📦 *Items:*\n${itemsText}\n\n💰 *Subtotal:* ₹${cartTotal}`;
+      let text = `*New Order from ${theme.storeName || 'NM MART'}* 🛒\n\n🆔 *Order ID:* ${orderId}\n📦 *Items:*\n${itemsText}\n\n💰 *Subtotal:* ₹${cartTotal}`;
       
       if (welfareDiscount > 0) {
         text += `\n🌟 *Welfare Discount (5%):* -₹${welfareDiscount}`;
@@ -726,8 +910,7 @@ export default function Index() {
           </div>
         </div>
       )}
-      <FlashSaleBanner />
-
+      
       {/* Sticky Header with Logo */}
       <header className={`sticky z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300 ${isAdminMode ? 'top-[52px]' : 'top-0'}`}>
         <div className="max-w-7xl mx-auto flex items-center gap-3 px-3 py-2.5">
@@ -886,10 +1069,12 @@ export default function Index() {
         )}
       </AnimatePresence>
 
-      {/* Hero Banner */}
-      <div className={`${isAdminMode ? 'pt-[116px]' : 'pt-0'}`}>
-        <HeroBanner onBannerClick={handleBannerClick} />
-      </div>
+      {/* Dynamic Layout Sections */}
+      {!selectedCat && !selectedBrand && !query && (
+        <div className="flex flex-col">
+          {layout.map(section => renderSection(section.id))}
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -907,51 +1092,9 @@ export default function Index() {
           </div>
         ) : (
           <>
-            {/* Home View */}
+            {/* Home View Sections that are NOT part of layout (e.g. Brand) */}
             {!selectedCat && !selectedBrand && !query && (
               <>
-                {/* Discount Collections Tabs (50% & 33%) - MOVED TO TOP */}
-                {(flat50.length > 0 || flat33.length > 0) && (
-                  <DiscountTabs 
-                    flat33={flat33} 
-                    flat50={flat50} 
-                    total50={total50}
-                    total33={total33}
-                    hasMore50={hasMore50}
-                    hasMore33={hasMore33}
-                    loadMore50={loadMore50}
-                    loadMore33={loadMore33}
-                    onAddToCart={addToCart} 
-                    onQuickEdit={handleQuickEdit}
-                  />
-                )}
-
-                {/* Shop by Category Section */}
-                {sortedCategories.length > 0 && (
-                  <div className="mb-12">
-                    <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
-                      <LayoutGrid size={18} className="text-primary" /> Shop by Category
-                    </h3>
-                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                      {sortedCategories.map(catName => {
-                        const cat = categories.find(c => c.title === catName);
-                        return (
-                          <motion.button whileTap={{ scale: 0.94 }} key={catName}
-                            onClick={() => { setSelectedCat(catName); setSelectedBrand(null); setQuery(""); }}
-                            className="p-4 rounded-[24px] bg-white border border-gray-100 flex flex-col items-center gap-3 transition-all group hover:border-[#CC0000] hover:shadow-xl"
-                            style={cat?.bg_color ? { backgroundColor: cat.bg_color + '10' } : {}}
-                          >
-                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-gray-50 text-3xl group-hover:scale-110 transition-transform shadow-sm">
-                              {getCategoryIcon(catName)}
-                            </div>
-                            <span className="font-black text-black uppercase text-[10px] tracking-widest text-center leading-tight">{catName}</span>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
                 {/* Shop by Brand Section */}
                 {brands.length > 0 && (
                   <div className="mb-12">
@@ -969,97 +1112,6 @@ export default function Index() {
                     </div>
                   </div>
                 )}
-
-                {/* Dynamic Category-wise Product Sections */}
-                {sortedCategories.slice(0, 6).map(cat => {
-                  const catProducts = allProducts
-                    .filter(p => p.category === cat && !HIDDEN_CATS.includes(p.category))
-                    .sort((a, b) => {
-                      const aHasImg = !!a.imageUrl && a.imageUrl.length > 5;
-                      const bHasImg = !!b.imageUrl && b.imageUrl.length > 5;
-                      
-                      if (aHasImg && !bHasImg) return -1;
-                      if (!aHasImg && bHasImg) return 1;
-                      
-                      return a.name.localeCompare(b.name);
-                    })
-                    .slice(0, 6);
-                  if (catProducts.length === 0) return null;
-                  return (
-                    <div key={cat} className="mb-10">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-black text-foreground text-base uppercase tracking-tight flex items-center gap-2">
-                          <span className="text-lg">{getCategoryIcon(cat)}</span> {cat}
-                        </h3>
-                        <button onClick={() => { setSelectedCat(cat); setQuery(""); }}
-                          className="text-[10px] font-bold uppercase text-primary flex items-center gap-1 hover:underline">
-                          View All <ChevronRight size={12} />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                        {catProducts.map((p, idx) => (
-                          <motion.div key={`${p.barcode}-${idx}`}
-                            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                            className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
-                            onClick={() => navigate(`/product/${productSlug(p)}`)}
-                          >
-                            <div className="relative h-24 bg-secondary/30">
-                              <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
-                              {p.discount > 0 && (
-                                <span className="absolute top-1 right-1 bg-destructive text-white text-[8px] font-black px-2 py-0.5 rounded-lg shadow-sm">
-                                  {p.discount}% OFF
-                                </span>
-                              )}
-                            </div>
-                            <div className="p-2 flex flex-col flex-1">
-                              <div className="flex items-center justify-between mb-1.5">
-                                <span className="bg-primary/10 text-primary text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
-                                  {p.category}
-                                </span>
-                                <span className={`text-[7px] font-bold flex items-center gap-0.5 ${p.stock && p.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
-                                  <Star size={8} className="fill-current" /> {p.stock && p.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
-                                </span>
-                              </div>
-                              <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
-                              <div className="flex items-baseline gap-2 mt-1">
-                                <span className="text-xl font-black text-primary">₹{p.price}</span>
-                                {p.mrp > p.price && (
-                                  <span className="text-[10px] text-muted-foreground line-through decoration-muted-foreground/50 font-medium">₹{p.mrp}</span>
-                                )}
-                                {p.discount > 0 && (
-                                  <span className="text-[10px] font-bold text-destructive ml-auto">
-                                    {p.discount}% OFF
-                                  </span>
-                                )}
-                              </div>
-                              {p.save > 0 && p.stock && p.stock > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
-                              {(p.price === 0) && (
-                                <span className="text-[8px] font-bold text-amber-500 mt-1">🕐 Pre-order for Tomorrow Delivery</span>
-                              )}
-                              <div className="flex gap-1.5 mt-auto pt-2">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
-                                  disabled={!p.stock || p.stock <= 0}
-                                  className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
-                                  {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
-                                </button>
-                                {isAdminMode && (
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); handleQuickEdit(p); }}
-                                    className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-black transition-all shadow-md active:scale-95"
-                                    title="Quick Edit Product"
-                                  >
-                                    <Edit3 size={14} strokeWidth={2.5} />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
               </>
             )}
 
@@ -1107,6 +1159,11 @@ export default function Index() {
                       >
                         <div className="relative h-28 bg-secondary/30">
                           <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
+                          {p.badge && (
+                            <span className="absolute top-2 left-2 bg-primary text-white text-[8px] font-black px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">
+                              {p.badge}
+                            </span>
+                          )}
                           {p.discount > 0 && (
                             <span className="absolute top-2 right-2 bg-destructive text-white text-[9px] font-black px-2 py-1 rounded-lg shadow-md">
                               {p.discount}% OFF

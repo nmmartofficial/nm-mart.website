@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS public.admin_config (
 CREATE TABLE IF NOT EXISTS public.website_banners (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     image_url TEXT NOT NULL,
-    whatsapp_link TEXT,
+    title TEXT,
+    link TEXT,
+    active BOOLEAN DEFAULT true,
     display_order INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -30,9 +32,9 @@ ALTER TABLE public.admin_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.website_banners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 
--- Policies for admin_config (Admin only)
-CREATE POLICY "Allow Admin Read admin_config" ON public.admin_config
-    FOR SELECT TO authenticated USING (true);
+-- Policies for admin_config (Allow public select for login check)
+CREATE POLICY "Allow Public Read admin_config" ON public.admin_config
+    FOR SELECT USING (true);
 
 -- Policies for website_banners (Public read, Admin all)
 CREATE POLICY "Allow Public Read banners" ON public.website_banners

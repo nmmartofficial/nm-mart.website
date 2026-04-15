@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { 
-  Search, Loader2, Edit2, Check, X, ChevronLeft, ChevronRight, AlertCircle, Package
+  Search, Loader2, Edit2, Check, X, ChevronLeft, ChevronRight, AlertCircle, Package, Eye, EyeOff
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ const InventoryTab = () => {
   const [editingBarcode, setEditingBarcode] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState("");
   const [editStock, setEditStock] = useState("");
+  const [editBadge, setEditBadge] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -42,7 +43,6 @@ const InventoryTab = () => {
       setTotalCount(count || 0);
     } catch (err: any) {
       console.error("Error fetching products:", err);
-      toast.error("Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -57,6 +57,7 @@ const InventoryTab = () => {
     setEditingBarcode(product.barcode);
     setEditPrice(String(product.salerate || product.Rate || 0));
     setEditStock(String(product.stock_quantity || product.OpStock || 0));
+    setEditBadge(product.badge || "");
   };
 
   const cancelEditing = () => {
@@ -72,6 +73,7 @@ const InventoryTab = () => {
         .update({
           salerate: Number(editPrice),
           stock_quantity: Number(editStock),
+          badge: editBadge,
           updated_at: new Date().toISOString()
         })
         .eq('barcode', barcode);
@@ -86,6 +88,21 @@ const InventoryTab = () => {
       toast.error("Failed to update product");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const toggleVisibility = async (barcode: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ is_visible: !currentStatus })
+        .eq('barcode', barcode);
+
+      if (error) throw error;
+      setProducts(products.map(p => p.barcode === barcode ? { ...p, is_visible: !currentStatus } : p));
+      toast.success(currentStatus ? "Product hidden" : "Product visible");
+    } catch (err: any) {
+      toast.error("Update failed");
     }
   };
 
@@ -155,7 +172,7 @@ const InventoryTab = () => {
                 </tr>
               ) : (
                 products.map((product) => (
-                  <tr key={product.barcode} className="hover:bg-gray-50/50 transition-colors">
+                  <tr key={product.barcode} className={`hover:bg-gray-50/50 transition-colors ${!product.is_visible ? 'opacity-60 grayscale' : ''}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
@@ -168,6 +185,15 @@ const InventoryTab = () => {
                         <div>
                           <p className="font-black text-sm uppercase italic leading-tight">{product.name}</p>
                           <p className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{product.barcode}</p>
+                          {editingBarcode === product.barcode && (
+                            <input 
+                              type="text"
+                              placeholder="Badge (e.g. Sale, New)"
+                              className="mt-2 w-full bg-white border border-primary rounded-lg px-2 py-1 font-bold text-[10px] outline-none"
+                              value={editBadge}
+                              onChange={(e) => setEditBadge(e.target.value)}
+                            />
+                          )}
                         </div>
                       </div>
                     </td>
@@ -175,19 +201,19 @@ const InventoryTab = () => {
                       {editingBarcode === product.barcode ? (
                         <input 
                           type="number"
-                          className="w-24 bg-white border border-[#CC0000] rounded-lg px-2 py-1 text-center font-bold text-sm outline-none"
+                          className="w-24 bg-white border border-primary rounded-lg px-2 py-1 text-center font-bold text-sm outline-none"
                           value={editPrice}
                           onChange={(e) => setEditPrice(e.target.value)}
                         />
                       ) : (
-                        <span className="font-black text-sm text-[#CC0000]">₹{product.salerate || product.Rate || 0}</span>
+                        <span className="font-black text-sm text-primary">₹{product.salerate || product.Rate || 0}</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
                       {editingBarcode === product.barcode ? (
                         <input 
                           type="number"
-                          className="w-20 bg-white border border-[#CC0000] rounded-lg px-2 py-1 text-center font-bold text-sm outline-none"
+                          className="w-20 bg-white border border-primary rounded-lg px-2 py-1 text-center font-bold text-sm outline-none"
                           value={editStock}
                           onChange={(e) => setEditStock(e.target.value)}
                         />
@@ -202,30 +228,39 @@ const InventoryTab = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {editingBarcode === product.barcode ? (
-                        <div className="flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => saveEdit(product.barcode)}
-                            disabled={saving}
-                            className="p-2 bg-green-500 text-white rounded-lg hover:bg-black transition-all shadow-sm"
-                          >
-                            {saving ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
-                          </button>
-                          <button 
-                            onClick={cancelEditing}
-                            className="p-2 bg-gray-100 text-gray-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ) : (
+                      <div className="flex items-center justify-end gap-2">
                         <button 
-                          onClick={() => startEditing(product)}
-                          className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-[#CC0000] hover:text-white transition-all"
+                          onClick={() => toggleVisibility(product.barcode, product.is_visible)}
+                          className={`p-2 rounded-xl transition-all ${product.is_visible ? 'bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white' : 'bg-primary text-white hover:bg-black'}`}
+                          title={product.is_visible ? "Hide Product" : "Show Product"}
                         >
-                          <Edit2 size={16} />
+                          {product.is_visible ? <Eye size={16} /> : <EyeOff size={16} />}
                         </button>
-                      )}
+                        {editingBarcode === product.barcode ? (
+                          <>
+                            <button 
+                              onClick={() => saveEdit(product.barcode)}
+                              disabled={saving}
+                              className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all"
+                            >
+                              {saving ? <Loader2 className="animate-spin" size="16" /> : <Check size={16} />}
+                            </button>
+                            <button 
+                              onClick={cancelEditing}
+                              className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
+                            >
+                              <X size={16} />
+                            </button>
+                          </>
+                        ) : (
+                          <button 
+                            onClick={() => startEditing(product)}
+                            className="p-2 bg-gray-50 text-gray-500 rounded-xl hover:bg-black hover:text-white transition-all"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

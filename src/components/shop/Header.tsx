@@ -4,17 +4,32 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { WA_NUMBER } from "@/lib/store-utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/lib/ThemeProvider";
 
-const LOGO_URL = "/nm-mart-logo.png";
 const SLOGAN = "Shop More, Save More";
 
 const Header = () => {
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [profileName, setProfileName] = useState<string>("");
   const [welfareCard, setWelfareCard] = useState<{ number: string; active: boolean; points: number } | null>(null);
   const [showWelfareModal, setShowWelfareModal] = useState(false);
   const [showGoldenCard, setShowGoldenCard] = useState(false);
+
+  // Helper to split store name for styling
+  const renderStoreName = () => {
+    const name = theme.storeName || "NM MART";
+    const parts = name.split(" ");
+    if (parts.length > 1) {
+      return (
+        <>
+          {parts[0]} <span className="text-primary">{parts.slice(1).join(" ")}</span>
+        </>
+      );
+    }
+    return <span className="text-primary">{name}</span>;
+  };
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -103,11 +118,15 @@ const Header = () => {
       <div className="bg-white p-3 md:p-4 flex justify-between items-center border-b border-primary/10">
         <Link to="/" className="flex items-center gap-3 md:gap-4 group no-underline shrink-0">
           <div className="bg-primary p-2 md:p-3 rounded-xl md:rounded-2xl shadow-sm group-hover:scale-110 transition-transform duration-300">
-            <ShoppingCart className="text-white w-5 h-5 md:w-6 md:h-6" />
+            {theme.storeLogo ? (
+              <img src={theme.storeLogo} alt="Logo" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
+            ) : (
+              <ShoppingCart className="text-white w-5 h-5 md:w-6 md:h-6" />
+            )}
           </div>
           <div className="flex flex-col">
             <h1 className="text-xl md:text-3xl font-black text-black leading-none italic uppercase tracking-tighter">
-              NM <span className="text-primary">MART</span>
+              {renderStoreName()}
             </h1>
             <p className="text-[7px] md:text-[9px] font-black text-gray-400 tracking-[0.2em] md:tracking-[0.3em] uppercase mt-0.5 md:mt-1 italic">
               {SLOGAN}
@@ -187,7 +206,7 @@ const Header = () => {
               
               {/* Logo */}
               <div className="absolute top-8 right-10 flex flex-col items-end">
-                <h2 className="text-2xl font-black italic text-yellow-900 tracking-tighter leading-none">NM <span className="text-black">MART</span></h2>
+                <h2 className="text-2xl font-black italic text-yellow-900 tracking-tighter leading-none">{renderStoreName()}</h2>
                 <p className="text-[8px] font-bold text-yellow-800 uppercase tracking-widest">Welfare Member</p>
               </div>
 

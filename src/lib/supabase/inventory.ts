@@ -55,15 +55,20 @@ export async function getProductByBarcode(barcode: string) {
  * Fetches all products.
  */
 export async function getAllProducts() {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .order('updated_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('updated_at', { ascending: false });
 
-  if (error) {
-    console.error("Supabase Get All Products Error:", error);
-    throw error;
+    if (error) {
+      console.error("Supabase Get All Products Error:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("Get All Products Error:", err);
+    return [];
   }
-
-  return data;
 }
