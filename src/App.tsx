@@ -21,7 +21,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import Admin from "@/pages/Admin";
 import DeliveryDashboard from "@/pages/Delivery";
 
-const ADMIN_EMAIL = "nmmartofficial@gmail.com";
+const ADMIN_EMAIL = "nmmart07@gmail.com";
 
 function AdminRoute() {
   const [loading, setLoading] = useState(true);

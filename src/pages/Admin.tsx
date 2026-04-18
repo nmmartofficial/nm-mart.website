@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase/client";
 
 import InventoryTab from "@/components/admin/InventoryTab";
 import OrdersTab from "@/components/admin/OrdersTab";
@@ -21,8 +22,8 @@ const Admin = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("inventory");
 
-  const handleLogout = () => {
-    localStorage.removeItem("nm_admin_session");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/login");
     toast.info("Logged out from Admin Panel");
   };

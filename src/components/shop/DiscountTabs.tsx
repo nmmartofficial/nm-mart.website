@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Zap, Flame, Edit3 } from "lucide-react";
 import { Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "./ProductImageDisplay";
+import { supabase } from "@/lib/supabase/client";
 
 interface Props {
   flat33: Product[];
@@ -22,13 +23,29 @@ const DiscountTabs = ({
   hasMore50, hasMore33, loadMore50, loadMore33, 
   onAddToCart, onQuickEdit
 }: Props) => {
+  const ADMIN_EMAIL = "nmmart07@gmail.com";
   const [activeTab, setActiveTab] = useState<"33" | "50">("50");
   const [isAdminMode, setIsAdminMode] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const adminSession = localStorage.getItem("nm_admin_session") === "true";
-    setIsAdminMode(adminSession);
+    let mounted = true;
+    const checkAdmin = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return;
+      setIsAdminMode(data.session?.user?.email?.toLowerCase() === ADMIN_EMAIL);
+    };
+    checkAdmin();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setIsAdminMode(session?.user?.email?.toLowerCase() === ADMIN_EMAIL);
+    });
+
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const products = activeTab === "50" ? flat50 : flat33;

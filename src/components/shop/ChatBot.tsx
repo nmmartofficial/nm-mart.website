@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, X, ShoppingCart, SendHorizontal, Trash2 } from 'lucide-react';
+import { supabase } from "@/lib/supabase/client";
 
 interface ChatMessage {
   text: string;
@@ -8,21 +9,31 @@ interface ChatMessage {
 }
 
 const ChatBot = () => {
+  const ADMIN_EMAIL = "nmmart07@gmail.com";
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [input, setInput] = useState('');
 
   useEffect(() => {
-    // Check if user is admin
-    const adminSession = localStorage.getItem("nm_admin_session") === "true";
-    setIsAdmin(adminSession);
+    let mounted = true;
 
-    // Listen for storage changes to update admin status
-    const handleStorageChange = () => {
-      setIsAdmin(localStorage.getItem("nm_admin_session") === "true");
+    const checkAdmin = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return;
+      setIsAdmin(data.session?.user?.email?.toLowerCase() === ADMIN_EMAIL);
     };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+
+    checkAdmin();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setIsAdmin(session?.user?.email?.toLowerCase() === ADMIN_EMAIL);
+    });
+
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const [products, setProducts] = useState<{ name: string; saleRate: string; img: string }[]>([]);

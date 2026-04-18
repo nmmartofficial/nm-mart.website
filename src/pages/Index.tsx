@@ -40,6 +40,7 @@ import ProductCard from "@/components/shop/ProductCard";
 const LOGO_URL = "/nm-mart-logo.png";
 const SLOGAN = "Shop More, Save More";
 const ITEMS_PER_PAGE = 40;
+const ADMIN_EMAIL = "nmmart07@gmail.com";
 
 /* ─── Voice Search Hook ─── */
 function useVoiceSearch(onResult: (t: string) => void) {
@@ -287,13 +288,11 @@ export default function Index() {
   const [isScanning, setIsScanning] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [scannedProduct, setScannedProduct] = useState<any>(null);
-  const [isAdminMode, setIsAdminMode] = useState(() => {
-    return localStorage.getItem("nm_admin_session") === "true";
-  });
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const quickEditImageRef = useRef<HTMLInputElement>(null);
+  const isAdminMode = user?.email?.toLowerCase() === ADMIN_EMAIL;
 
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
   const orders = useMemo(() => getOrderHistory(), []);
@@ -1055,10 +1054,10 @@ export default function Index() {
               <Database size={12} className="group-hover:rotate-12 transition-transform" /> Inventory
             </Link>
             <button 
-              onClick={() => {
-                localStorage.removeItem("nm_admin_session");
-                setIsAdminMode(false);
-                toast.info("Admin Mode Disabled");
+              onClick={async () => {
+                await supabase.auth.signOut();
+                setUser(null);
+                toast.info("Signed out from admin account");
               }}
               className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-all"
             >

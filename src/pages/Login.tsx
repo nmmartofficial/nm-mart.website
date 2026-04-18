@@ -7,6 +7,7 @@ import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 
 const SLOGAN = "Shop More, Save More";
+const ADMIN_EMAIL = "nmmart07@gmail.com";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -69,9 +70,7 @@ const Login = () => {
         });
         if (error) throw error;
         
-        // Check if user is admin
-        if (email === "nmmartofficial@gmail.com") {
-          localStorage.setItem("nm_admin_session", "true");
+        if (data.user?.email?.toLowerCase() === ADMIN_EMAIL) {
           toast.success("Admin Login successful!");
           navigate("/admin");
         } else {

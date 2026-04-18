@@ -21,8 +21,6 @@ const DeliveryDashboard = () => {
   const ADMIN_PASS = "NMMART2026";
 
   useEffect(() => {
-    const session = localStorage.getItem("nm_admin_session");
-    if (session === "true") setIsAuthenticated(true);
     if (isAuthenticated) fetchOrders();
   }, [isAuthenticated]);
 
@@ -47,7 +45,6 @@ const DeliveryDashboard = () => {
   const handleLogin = () => {
     if (password === ADMIN_PASS) {
       setIsAuthenticated(true);
-      localStorage.setItem("nm_admin_session", "true");
       toast.success("Welcome back, Admin!");
     } else {
       toast.error("Invalid Admin PIN");
@@ -56,7 +53,6 @@ const DeliveryDashboard = () => {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem("nm_admin_session");
     toast.info("Logged out from Admin Dashboard");
   };
 
