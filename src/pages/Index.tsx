@@ -17,6 +17,7 @@ import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import { useTheme } from "@/lib/ThemeProvider";
+import { fetchActiveBanners } from "@/lib/supabase";
 import { 
   productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, 
   addLoyaltyPoints, getLoyaltyPoints, OrderRecord, normalizeCategory, getOrderHistory,
@@ -40,6 +41,15 @@ import ProductCard from "@/components/shop/ProductCard";
 
 const ITEMS_PER_PAGE = 40;
 const ADMIN_EMAIL = "nmmart07@gmail.com";
+const FALLBACK_BANNERS = [
+  { id: "fallback-1", image_url: "https://images.unsplash.com/photo-1584473457493-17c4f8d8fcb8?auto=format&fit=crop&w=1400&q=80", title: "Premium Kaaju Offers", subtitle: "Fresh stock at best rates", whatsapp_link: "", active: true, display_order: 0 },
+  { id: "fallback-2", image_url: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1400&q=80", title: "Personal Care Deals", subtitle: "Daily essentials with extra savings", whatsapp_link: "", active: true, display_order: 1 },
+  { id: "fallback-3", image_url: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80", title: "Grocery Mega Sale", subtitle: "Stock up your home in one go", whatsapp_link: "", active: true, display_order: 2 },
+  { id: "fallback-4", image_url: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=1400&q=80", title: "Snacks & Munchies", subtitle: "Top picks for your tea-time", whatsapp_link: "", active: true, display_order: 3 },
+  { id: "fallback-5", image_url: "https://images.unsplash.com/photo-1497534446932-c925b458314e?auto=format&fit=crop&w=1400&q=80", title: "Beverages Combo", subtitle: "Cool drinks and juices", whatsapp_link: "", active: true, display_order: 4 },
+  { id: "fallback-6", image_url: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&w=1400&q=80", title: "Household Essentials", subtitle: "Everything for your home", whatsapp_link: "", active: true, display_order: 5 },
+  { id: "fallback-7", image_url: "https://images.unsplash.com/photo-1519682577862-22b62b24e493?auto=format&fit=crop&w=1400&q=80", title: "Festival Savings", subtitle: "Special seasonal discounts", whatsapp_link: "", active: true, display_order: 6 },
+];
 
 const DEFAULT_HOME_LAYOUT: SectionLayout[] = [
   { id: "hero", name: "Hero Banner", order: 0, visible: true },
@@ -120,6 +130,7 @@ const HIDDEN_CATS: string[] = [];
 export default function Index() {
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const [banners, setBanners] = useState<any[]>([]);
   const [layout, setLayout] = useState<SectionLayout[]>(DEFAULT_HOME_LAYOUT);
   const [gridStyle, setGridStyle] = useState({ categoryColumns: 6, productColumns: 4 });
   const [homeLoading, setHomeLoading] = useState(true);
@@ -128,16 +139,18 @@ export default function Index() {
     const fetchHomeData = async () => {
       setHomeLoading(true);
       try {
-        const { data: bans } = await supabase.from('website_banners').select('*').eq('active', true).order('display_order');
-        const [sectionLayout, gridData] = await Promise.all([
+        const [fetched, sectionLayout, gridData] = await Promise.all([
+          fetchActiveBanners(),
           getSectionLayout(),
           import("@/lib/storeConfig").then(m => m.getGridStyle())
         ]);
-        
+
+        setBanners(fetched.length > 0 ? fetched : FALLBACK_BANNERS);
         setLayout(mergeHomeLayout(sectionLayout));
         setGridStyle(gridData);
       } catch (err) {
         console.error("Home data fetch error:", err);
+        setBanners(FALLBACK_BANNERS);
       } finally {
         setHomeLoading(false);
       }
@@ -607,7 +620,11 @@ export default function Index() {
       case 'hero':
         return (
           <div key="hero" className={`${isAdminMode ? 'pt-[116px]' : 'pt-20 md:pt-24'} mb-8 relative z-0`}>
-            <HeroBanner onBannerClick={handleBannerClick} />
+            <HeroBanner
+              onBannerClick={handleBannerClick}
+              banners={banners}
+              loading={homeLoading}
+            />
           </div>
         );
       case 'highlights':

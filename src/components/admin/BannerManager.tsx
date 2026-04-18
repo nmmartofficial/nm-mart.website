@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { 
-  Plus, Trash2, Link as LinkIcon, Image as ImageIcon, Loader2, Copy, Check, Eye, EyeOff
+  Plus, Trash2, Image as ImageIcon, Loader2, Copy, Check, Eye, EyeOff, ArrowUp, ArrowDown
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { persistBannerOrder, WebsiteBanner } from "@/lib/supabase";
 import { toast } from "sonner";
 import { WA_NUMBER } from "@/lib/store-utils";
 
 const BannerManager = () => {
-  const [banners, setBanners] = useState<any[]>([]);
+  const [banners, setBanners] = useState<WebsiteBanner[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [reordering, setReordering] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,7 +27,11 @@ const BannerManager = () => {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      setBanners(data || []);
+      const normalized = (data || []).map((banner: any, index: number) => ({
+        ...banner,
+        display_order: typeof banner.display_order === "number" ? banner.display_order : index,
+      }));
+      setBanners(normalized);
     } catch (err: any) {
       console.error("Failed to load banners:", err);
     } finally {
@@ -89,10 +95,38 @@ const BannerManager = () => {
       const { error } = await supabase.from('website_banners').delete().eq('id', id);
       if (error) throw error;
 
+      await normalizeDisplayOrder();
       toast.success("Banner removed");
       fetchBanners();
     } catch (err: any) {
       toast.error("Delete failed");
+    }
+  };
+
+  const normalizeDisplayOrder = async () => {
+    const ordered = [...banners]
+      .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+      .map((banner, index) => ({ ...banner, display_order: index }));
+    await persistBannerOrder(ordered);
+  };
+
+  const moveBanner = async (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= banners.length) return;
+
+    const updated = [...banners].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    [updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]];
+    const normalized = updated.map((banner, idx) => ({ ...banner, display_order: idx }));
+    setBanners(normalized);
+    setReordering(true);
+    try {
+      await persistBannerOrder(normalized);
+      toast.success("Banner order updated");
+    } catch (err) {
+      toast.error("Failed to update order");
+      fetchBanners();
+    } finally {
+      setReordering(false);
     }
   };
 
@@ -128,7 +162,7 @@ const BannerManager = () => {
           <div>
             <h3 className="text-xl font-black italic uppercase text-black">Banner Manager</h3>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              Live on Homepage (6-7 Recommended)
+              Total Banners: {banners.length} (Add as many as needed)
             </p>
           </div>
         </div>
@@ -150,10 +184,35 @@ const BannerManager = () => {
             <p className="text-gray-400 font-bold italic">No banners uploaded yet.</p>
           </div>
         ) : (
-          banners.map((banner) => (
+          banners
+            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+            .map((banner, index) => (
             <div key={banner.id} className={`group bg-white border border-gray-100 rounded-[32px] overflow-hidden shadow-sm hover:shadow-xl transition-all relative ${!banner.active ? 'opacity-60 grayscale' : ''}`}>
               <div className="aspect-[21/9] w-full bg-gray-100 overflow-hidden">
                 <img src={banner.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              </div>
+              <div className="px-4 pt-4 flex items-center justify-between">
+                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  Preview #{index + 1}
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => moveBanner(index, "up")}
+                    disabled={index === 0 || reordering}
+                    className="p-2 rounded-lg bg-gray-50 text-gray-500 hover:bg-primary hover:text-white disabled:opacity-40 transition-all"
+                    title="Move up"
+                  >
+                    <ArrowUp size={14} />
+                  </button>
+                  <button
+                    onClick={() => moveBanner(index, "down")}
+                    disabled={index === banners.length - 1 || reordering}
+                    className="p-2 rounded-lg bg-gray-50 text-gray-500 hover:bg-primary hover:text-white disabled:opacity-40 transition-all"
+                    title="Move down"
+                  >
+                    <ArrowDown size={14} />
+                  </button>
+                </div>
               </div>
               
               <div className="p-4 flex items-center justify-between gap-3">

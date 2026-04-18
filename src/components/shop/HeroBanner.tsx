@@ -1,37 +1,20 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
 import { useTheme } from "@/lib/ThemeProvider";
 
 interface HeroBannerProps {
   onBannerClick?: (link: { type: string, value: string }) => void;
+  banners?: any[];
+  loading?: boolean;
 }
 
-const HeroBanner = ({ onBannerClick }: HeroBannerProps) => {
+const HeroBanner = ({ onBannerClick, banners: incomingBanners = [], loading = false }: HeroBannerProps) => {
   const { theme } = useTheme();
-  const [banners, setBanners] = useState<any[]>([]);
   const [current, setCurrent] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchBanners = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('website_banners')
-          .select('*')
-          .eq('active', true)
-          .order('display_order', { ascending: true });
-        
-        if (error) throw error;
-        setBanners(data || []);
-      } catch (err) {
-        console.error("Error fetching banners:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBanners();
-  }, []);
+  const banners = useMemo(
+    () => [...incomingBanners].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)),
+    [incomingBanners]
+  );
 
   const next = useCallback(() => {
     if (banners.length === 0) return;
@@ -48,6 +31,10 @@ const HeroBanner = ({ onBannerClick }: HeroBannerProps) => {
     const t = setInterval(next, 5000); // 5 seconds for auto-slide
     return () => clearInterval(t);
   }, [next, banners.length]);
+
+  useEffect(() => {
+    if (current > banners.length - 1) setCurrent(0);
+  }, [banners.length, current]);
 
   if (loading) {
     return (
@@ -68,6 +55,9 @@ const HeroBanner = ({ onBannerClick }: HeroBannerProps) => {
   }
 
   const banner = banners[current];
+  const bannerImage =
+    banner?.image_url ||
+    "https://images.unsplash.com/photo-1584473457409-ceb6b7d6a0b5?auto=format&fit=crop&w=1400&q=80";
   const textPositionClass =
     theme.bannerTextPosition === "center"
       ? "items-center text-center"
@@ -88,7 +78,7 @@ const HeroBanner = ({ onBannerClick }: HeroBannerProps) => {
     >
       <div className="aspect-[21/9] w-full bg-gray-100">
         <img 
-          src={banner.image_url} 
+          src={bannerImage} 
           alt="" 
           className="w-full h-full object-cover transition-opacity duration-700"
         />
