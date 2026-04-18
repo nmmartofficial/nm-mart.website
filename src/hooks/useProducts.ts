@@ -16,7 +16,7 @@ export function useProducts() {
   const [allCategories, setAllCategories] = useState<string[]>([]);
 
   const mapProduct = (item: any): Product => {
-    // ─── STRICT SYNC.CJS MAPPING ───
+    // Single source from sync script columns.
     const barcode = String(item.RawCodeNew || "").trim();
     const name = String(item.RawName || "Unknown Product").trim();
     const mrp = Number(item.MRP || 0);
@@ -50,9 +50,12 @@ export function useProducts() {
       const { data, error } = await supabase
         .from('products')
         .select('ItemGroupName')
+        .not('RawCodeNew', 'is', null)
         .gt('OpStock', 0)
         .not('ItemGroupName', 'is', null);
       
+      if (error) throw error;
+
       if (data) {
         const uniqueCats = [...new Set(data.map((item: any) => 
           normalizeCategory(item.ItemGroupName)
@@ -158,7 +161,6 @@ export function useProducts() {
 
   useEffect(() => {
     fetchProducts();
-    fetchAllCategories();
   }, []);
 
   const loadMore = () => {

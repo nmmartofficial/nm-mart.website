@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   LayoutDashboard, ShoppingBag, Users, BarChart3, Settings, 
   Package, Layout as LayoutIcon, LogOut, ChevronRight,
   Database, Bell, MessageSquare, Heart, Gift
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 import InventoryTab from "@/components/admin/InventoryTab";
@@ -21,22 +20,6 @@ import WelfareTab from "@/components/admin/WelfareTab";
 const Admin = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("inventory");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      // ─── HARD BYPASS FOR ADMIN ───
-      const { data: { session } } = await supabase.auth.getSession();
-      const adminEmail = "nmmartofficial@gmail.com";
-      
-      if (session?.user?.email === adminEmail) {
-        setLoading(false);
-      } else {
-        navigate("/login");
-      }
-    };
-    checkAuth();
-  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("nm_admin_session");
@@ -55,8 +38,6 @@ const Admin = () => {
     { id: "analytics", label: "Analytics", icon: BarChart3, color: "text-cyan-500", bg: "bg-cyan-50" },
     { id: "settings", label: "Store Settings", icon: Settings, color: "text-gray-500", bg: "bg-gray-50" },
   ];
-
-  if (loading) return null;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col lg:flex-row">

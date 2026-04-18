@@ -13,6 +13,7 @@ export interface Product {
   discount: number;
   save: number;
   stock?: number;
+  badge?: string;
 }
 
 export interface CartItem extends Product {

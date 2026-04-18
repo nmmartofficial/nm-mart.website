@@ -31,11 +31,11 @@ const InventoryTab = () => {
         .select('*', { count: 'exact' });
 
       if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,barcode.eq.${searchQuery}`);
+        query = query.or(`RawName.ilike.%${searchQuery}%,RawCodeNew.eq.${searchQuery}`);
       }
 
       const { data, count, error } = await query
-        .order('name', { ascending: true })
+        .order('RawName', { ascending: true })
         .range((page - 1) * pageSize, page * pageSize - 1);
 
       if (error) throw error;
@@ -54,9 +54,9 @@ const InventoryTab = () => {
   };
 
   const startEditing = (product: any) => {
-    setEditingBarcode(product.barcode);
-    setEditPrice(String(product.salerate || product.Rate || 0));
-    setEditStock(String(product.stock_quantity || product.OpStock || 0));
+    setEditingBarcode(product.RawCodeNew);
+    setEditPrice(String(product.Rate || 0));
+    setEditStock(String(product.OpStock || 0));
     setEditBadge(product.badge || "");
   };
 
@@ -64,23 +64,38 @@ const InventoryTab = () => {
     setEditingBarcode(null);
   };
 
-  const saveEdit = async (barcode: string) => {
+  const saveEdit = async (rawCodeNew: string) => {
     setSaving(true);
     try {
-      // SAFE MODE: Only update salerate and stock_quantity
+      const current = products.find((product) => product.RawCodeNew === rawCodeNew);
+      if (!current) {
+        throw new Error("Product not found");
+      }
+
+      const { error: syncError } = await supabase
+        .from('sync_back')
+        .insert([{
+          RawCodeNew: rawCodeNew,
+          NewRate: Number(editPrice),
+          NewName: String(current.RawName || "").trim(),
+          status: 'pending'
+        }]);
+
+      if (syncError) throw syncError;
+
       const { error } = await supabase
         .from('products')
         .update({
-          salerate: Number(editPrice),
-          stock_quantity: Number(editStock),
+          Rate: Number(editPrice),
+          OpStock: Number(editStock),
           badge: editBadge,
           updated_at: new Date().toISOString()
         })
-        .eq('barcode', barcode);
+        .eq('RawCodeNew', rawCodeNew);
 
       if (error) throw error;
 
-      toast.success("Product updated safely!");
+      toast.success("Update queued for POS sync.");
       setEditingBarcode(null);
       fetchProducts();
     } catch (err: any) {
@@ -91,15 +106,15 @@ const InventoryTab = () => {
     }
   };
 
-  const toggleVisibility = async (barcode: string, currentStatus: boolean) => {
+  const toggleVisibility = async (rawCodeNew: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
         .from('products')
         .update({ is_visible: !currentStatus })
-        .eq('barcode', barcode);
+        .eq('RawCodeNew', rawCodeNew);
 
       if (error) throw error;
-      setProducts(products.map(p => p.barcode === barcode ? { ...p, is_visible: !currentStatus } : p));
+      setProducts(products.map(p => p.RawCodeNew === rawCodeNew ? { ...p, is_visible: !currentStatus } : p));
       toast.success(currentStatus ? "Product hidden" : "Product visible");
     } catch (err: any) {
       toast.error("Update failed");
@@ -172,7 +187,7 @@ const InventoryTab = () => {
                 </tr>
               ) : (
                 products.map((product) => (
-                  <tr key={product.barcode} className={`hover:bg-gray-50/50 transition-colors ${!product.is_visible ? 'opacity-60 grayscale' : ''}`}>
+                  <tr key={product.RawCodeNew} className={`hover:bg-gray-50/50 transition-colors ${!product.is_visible ? 'opacity-60 grayscale' : ''}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
@@ -183,9 +198,9 @@ const InventoryTab = () => {
                           )}
                         </div>
                         <div>
-                          <p className="font-black text-sm uppercase italic leading-tight">{product.name}</p>
-                          <p className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{product.barcode}</p>
-                          {editingBarcode === product.barcode && (
+                          <p className="font-black text-sm uppercase italic leading-tight">{product.RawName}</p>
+                          <p className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{product.RawCodeNew}</p>
+                          {editingBarcode === product.RawCodeNew && (
                             <input 
                               type="text"
                               placeholder="Badge (e.g. Sale, New)"
@@ -198,7 +213,7 @@ const InventoryTab = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      {editingBarcode === product.barcode ? (
+                      {editingBarcode === product.RawCodeNew ? (
                         <input 
                           type="number"
                           className="w-24 bg-white border border-primary rounded-lg px-2 py-1 text-center font-bold text-sm outline-none"
@@ -206,11 +221,11 @@ const InventoryTab = () => {
                           onChange={(e) => setEditPrice(e.target.value)}
                         />
                       ) : (
-                        <span className="font-black text-sm text-primary">₹{product.salerate || product.Rate || 0}</span>
+                        <span className="font-black text-sm text-primary">₹{product.Rate || 0}</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      {editingBarcode === product.barcode ? (
+                      {editingBarcode === product.RawCodeNew ? (
                         <input 
                           type="number"
                           className="w-20 bg-white border border-primary rounded-lg px-2 py-1 text-center font-bold text-sm outline-none"
@@ -220,15 +235,15 @@ const InventoryTab = () => {
                       ) : (
                         <div className="flex flex-col items-center gap-1">
                           <span className={`text-xs font-black px-3 py-1 rounded-full uppercase italic ${
-                            (product.stock_quantity || product.OpStock || 0) > 10 
+                            (product.OpStock || 0) > 10 
                             ? "bg-green-50 text-green-600" 
-                            : (product.stock_quantity || product.OpStock || 0) <= 5
+                            : (product.OpStock || 0) <= 5
                             ? "bg-red-500 text-white animate-pulse"
                             : "bg-red-50 text-red-600"
                           }`}>
-                            {product.stock_quantity || product.OpStock || 0} In Stock
+                            {product.OpStock || 0} In Stock
                           </span>
-                          {(product.stock_quantity || product.OpStock || 0) <= 5 && (
+                          {(product.OpStock || 0) <= 5 && (
                             <span className="text-[8px] font-black text-red-600 uppercase tracking-tighter">Low Stock Alert!</span>
                           )}
                         </div>
@@ -237,16 +252,16 @@ const InventoryTab = () => {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button 
-                          onClick={() => toggleVisibility(product.barcode, product.is_visible)}
+                          onClick={() => toggleVisibility(product.RawCodeNew, product.is_visible)}
                           className={`p-2 rounded-xl transition-all ${product.is_visible ? 'bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white' : 'bg-primary text-white hover:bg-black'}`}
                           title={product.is_visible ? "Hide Product" : "Show Product"}
                         >
                           {product.is_visible ? <Eye size={16} /> : <EyeOff size={16} />}
                         </button>
-                        {editingBarcode === product.barcode ? (
+                        {editingBarcode === product.RawCodeNew ? (
                           <>
                             <button 
-                              onClick={() => saveEdit(product.barcode)}
+                              onClick={() => saveEdit(product.RawCodeNew)}
                               disabled={saving}
                               className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all"
                             >

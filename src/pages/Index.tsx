@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/lib/ThemeProvider";
 import { 
   productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, 
-  addLoyaltyPoints, getLoyaltyPoints, OrderRecord, normalizeCategory,
+  addLoyaltyPoints, getLoyaltyPoints, OrderRecord, normalizeCategory, getOrderHistory,
   STORE_DETAILS, calculateTaxes, calculateDeliveryFee
 } from "@/lib/store-utils";
 import { getSectionLayout, SectionLayout } from "@/lib/storeConfig";
@@ -97,10 +97,6 @@ export default function Index() {
   const [homeLoading, setHomeLoading] = useState(true);
 
   useEffect(() => {
-    // ─── HARD RESET: Clear any redirect loops/storage ───
-    localStorage.removeItem("redirect_url");
-    localStorage.removeItem("nm_admin_session"); // Clean old session flags
-    
     const fetchHomeData = async () => {
       setHomeLoading(true);
       try {
@@ -300,6 +296,7 @@ export default function Index() {
   const quickEditImageRef = useRef<HTMLInputElement>(null);
 
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
+  const orders = useMemo(() => getOrderHistory(), []);
 
   const startScanner = () => {
     if (scannerRef.current) return;
@@ -317,8 +314,7 @@ export default function Index() {
             return { width: size, height: size / 2 }; // Rectangular for barcodes
           },
           aspectRatio: 1.0,
-          disableFlip: true,
-          rememberLastUsedCamera: true
+          disableFlip: true
         },
         (decodedText) => {
           setQuery(decodedText);
@@ -362,8 +358,18 @@ export default function Index() {
         const p = {
           id: data.RawCodeNew,
           name: data.RawName,
+          mrp: Number(data.MRP || 0),
+          price: Number(data.Rate || 0),
+          saleRate: Number(data.Rate || 0),
+          category: normalizeCategory(data.ItemGroupName || "GENERAL"),
+          brand: "Local",
+          subCategory: "",
           barcode: data.RawCodeNew,
-          category: normalizeCategory(data.ItemGroupName || "GENERAL")
+          imageUrl: data.image_url || "",
+          discount: Number(data.discountPerc || 0),
+          save: Math.max(0, Number(data.MRP || 0) - Number(data.Rate || 0)),
+          stock: Number(data.OpStock || 0),
+          badge: data.badge || ""
         };
         navigate(`/product/${productSlug(p)}`);
       } else {
@@ -559,7 +565,7 @@ export default function Index() {
     switch (sectionId) {
       case 'hero':
         return (
-          <div key="hero" className={`${isAdminMode ? 'pt-[116px]' : 'pt-0'} mb-8`}>
+          <div key="hero" className={`${isAdminMode ? 'pt-[116px]' : 'pt-0'} mb-8 relative z-0`}>
             <HeroBanner onBannerClick={handleBannerClick} />
           </div>
         );
@@ -577,7 +583,7 @@ export default function Index() {
         );
       case 'categories':
         return sortedCategories.length > 0 && (
-          <div key="categories" className="mb-12 max-w-7xl mx-auto px-4 w-full relative z-[999]">
+          <div key="categories" className="mb-12 max-w-7xl mx-auto px-4 w-full relative z-[30]">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <LayoutGrid size={18} className="text-primary" /> Shop by Category
             </h3>
@@ -1237,6 +1243,12 @@ export default function Index() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {loading ? (
           <div className="space-y-12">
+            <div className="flex flex-col items-center justify-center py-16">
+              <LoaderIcon className="animate-spin text-primary" size={34} />
+              <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                Loading products...
+              </p>
+            </div>
             {/* Category Skeleton */}
             <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
               {[1, 2, 3, 4, 5, 6].map(i => (

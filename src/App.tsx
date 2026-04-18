@@ -1,8 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/lib/ThemeProvider";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { initializeDefaultConfig } from "@/lib/storeConfig";
+import { supabase } from "@/lib/supabase/client";
 
 // Pages
 import Index from "@/pages/Index";
@@ -19,6 +20,50 @@ import ResetPassword from "@/pages/ResetPassword";
 // Admin Pages
 import Admin from "@/pages/Admin";
 import DeliveryDashboard from "@/pages/Delivery";
+
+const ADMIN_EMAIL = "nmmartofficial@gmail.com";
+
+function AdminRoute() {
+  const [loading, setLoading] = useState(true);
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const checkAdmin = async () => {
+      const { data } = await supabase.auth.getSession();
+      const isAdmin = data.session?.user?.email?.toLowerCase() === ADMIN_EMAIL;
+      if (mounted) {
+        setAllowed(Boolean(isAdmin));
+        setLoading(false);
+      }
+    };
+
+    checkAdmin();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      const isAdmin = session?.user?.email?.toLowerCase() === ADMIN_EMAIL;
+      setAllowed(Boolean(isAdmin));
+      setLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return allowed ? <Admin /> : <Navigate to="/login" replace />;
+}
 
 function App() {
   useEffect(() => {
@@ -43,7 +88,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Admin Routes */}
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={<AdminRoute />} />
           <Route path="/delivery" element={<DeliveryDashboard />} />
         </Routes>
       </Router>
