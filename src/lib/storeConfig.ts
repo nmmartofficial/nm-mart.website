@@ -13,6 +13,9 @@ export interface ThemeConfig {
   secondaryColor: string;
   storeName: string;
   storeLogo: string;
+  announcementText: string;
+  announcementVisible: boolean;
+  fontFamily: string;
 }
 
 export interface SectionLayout {
@@ -44,16 +47,22 @@ const DEFAULT_CONFIG: Record<string, any> = {
     primaryColor: "#CC0000",
     secondaryColor: "#D4AF37",
     storeName: "NM Mart",
-    storeLogo: "/nm-mart-logo.png"
+    storeLogo: "/nm-mart-logo.png",
+    announcementText: "Free Delivery on orders above ₹1499!",
+    announcementVisible: true,
+    fontFamily: "Inter"
   },
   layout: [
     { id: "hero", name: "Hero Banner", order: 0, visible: true },
     { id: "highlights", name: "Highlights (Stories)", order: 1, visible: true },
     { id: "categories", name: "Categories", order: 2, visible: true },
     { id: "flash_sale", name: "Flash Sale", order: 3, visible: true },
-    { id: "flat_50", name: "Flat 50% Off", order: 4, visible: true },
-    { id: "flat_33", name: "Flat 33% Off", order: 5, visible: true },
-    { id: "products", name: "All Products", order: 6, visible: true }
+    { id: "weekly_deals", name: "Weekly Deals", order: 4, visible: true },
+    { id: "fresh_deals", name: "Fresh Deals", order: 5, visible: true },
+    { id: "buy_again", name: "Buy Again", order: 6, visible: true },
+    { id: "munafa_mela", name: "Munafa Mela", order: 7, visible: true },
+    { id: "brands", name: "Shop by Brand", order: 8, visible: true },
+    { id: "products", name: "All Products", order: 9, visible: true }
   ],
   highlights: [],
   offers: {
@@ -64,6 +73,11 @@ const DEFAULT_CONFIG: Record<string, any> = {
   gridStyle: {
     categoryColumns: 6,
     productColumns: 4
+  },
+  pincodes: ["212207", "212201", "212216"],
+  loyalty: {
+    enabled: true,
+    spendPerPoint: 100
   }
 };
 

@@ -218,13 +218,20 @@ const InventoryTab = () => {
                           onChange={(e) => setEditStock(e.target.value)}
                         />
                       ) : (
-                        <span className={`text-xs font-black px-3 py-1 rounded-full uppercase italic ${
-                          (product.stock_quantity || product.OpStock || 0) > 10 
-                          ? "bg-green-50 text-green-600" 
-                          : "bg-red-50 text-red-600"
-                        }`}>
-                          {product.stock_quantity || product.OpStock || 0} In Stock
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`text-xs font-black px-3 py-1 rounded-full uppercase italic ${
+                            (product.stock_quantity || product.OpStock || 0) > 10 
+                            ? "bg-green-50 text-green-600" 
+                            : (product.stock_quantity || product.OpStock || 0) <= 5
+                            ? "bg-red-500 text-white animate-pulse"
+                            : "bg-red-50 text-red-600"
+                          }`}>
+                            {product.stock_quantity || product.OpStock || 0} In Stock
+                          </span>
+                          {(product.stock_quantity || product.OpStock || 0) <= 5 && (
+                            <span className="text-[8px] font-black text-red-600 uppercase tracking-tighter">Low Stock Alert!</span>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">

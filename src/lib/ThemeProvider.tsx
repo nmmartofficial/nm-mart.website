@@ -16,18 +16,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     storeLogo: "/nm-mart-logo.png"
   });
 
-  const refreshTheme = async () => {
-    const config = await getThemeConfig();
-    setTheme(config);
-    applyTheme(config.primaryColor);
-  };
-
-  const applyTheme = (color: string) => {
+  const applyTheme = (color: string, font: string = "Inter") => {
     // Inject CSS variables
     document.documentElement.style.setProperty('--primary-hex', color);
     
-    // If you use HSL in Tailwind, you might need to convert hex to HSL
-    // For simplicity, we'll use a data attribute or style tag
+    // Set Font
+    document.documentElement.style.fontFamily = font;
+    
     const styleId = 'dynamic-theme-style';
     let styleTag = document.getElementById(styleId) as HTMLStyleElement;
     if (!styleTag) {
@@ -39,7 +34,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     styleTag.innerHTML = `
       :root {
         --primary-dynamic: ${color};
+        --font-dynamic: ${font}, sans-serif;
       }
+      body { font-family: var(--font-dynamic); }
       .bg-primary { background-color: ${color} !important; }
       .text-primary { color: ${color} !important; }
       .border-primary { border-color: ${color} !important; }
@@ -47,6 +44,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .hover\\:text-primary:hover { color: ${color} !important; }
       .focus\\:border-primary:focus { border-color: ${color} !important; }
     `;
+  };
+
+  const refreshTheme = async () => {
+    const config = await getThemeConfig();
+    setTheme(config);
+    applyTheme(config.primaryColor, config.fontFamily);
   };
 
   useEffect(() => {

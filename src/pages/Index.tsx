@@ -136,6 +136,7 @@ export default function Index() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [payMethod, setPayMethod] = useState<"card" | "upi" | "netbanking">("upi");
+  const [pincode, setPincode] = useState("");
 
   const generatePDFBill = (orderId: string, items: any[], subtotal: number, discount: number, delivery: number, total: number, customer: any) => {
     const doc = new jsPDF({
@@ -497,11 +498,33 @@ export default function Index() {
     
     if (query) {
       const q = query.toLowerCase();
-      // Searching through RawName and RawCodeNew columns (mapped as name and barcode)
+      // Searching through RawName, RawCodeNew, and tags
       list = list.filter(p => 
         p.name.toLowerCase().includes(q) || 
-        p.barcode.toLowerCase().includes(q)
+        p.barcode.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (p as any).brand?.toLowerCase().includes(q) ||
+        (p as any).subCategory?.toLowerCase().includes(q)
       );
+      
+      // Prioritize matches: Name starts with query > Name contains query > Category matches
+      list.sort((a, b) => {
+        const aName = a.name.toLowerCase();
+        const bName = b.name.toLowerCase();
+        const aStarts = aName.startsWith(q);
+        const bStarts = bName.startsWith(q);
+        
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        
+        const aCat = a.category.toLowerCase() === q;
+        const bCat = b.category.toLowerCase() === q;
+        
+        if (aCat && !bCat) return -1;
+        if (!aCat && bCat) return 1;
+        
+        return 0;
+      });
     }
     return list;
   }, [allProducts, selectedCat, selectedBrand, query]);
@@ -583,6 +606,78 @@ export default function Index() {
             onAddToCart={addToCart} 
             onQuickEdit={handleQuickEdit}
           />
+        );
+      case 'weekly_deals':
+        return (
+          <div key="weekly_deals" className="mb-12">
+            <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+              <Star size={18} className="text-primary" /> Weekly Deals
+            </h3>
+            {/* We can use ProductGrid or a custom filtered list here */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {allProducts.filter(p => p.badge?.toLowerCase().includes('weekly')).slice(0, 6).map(p => (
+                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+              ))}
+            </div>
+          </div>
+        );
+      case 'fresh_deals':
+        return (
+          <div key="fresh_deals" className="mb-12">
+            <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+              <Star size={18} className="text-primary" /> Fresh Deals
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {allProducts.filter(p => p.category?.toLowerCase().includes('fresh') || p.badge?.toLowerCase().includes('fresh')).slice(0, 6).map(p => (
+                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+              ))}
+            </div>
+          </div>
+        );
+      case 'munafa_mela':
+        return (
+          <div key="munafa_mela" className="mb-12">
+            <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+              <Star size={18} className="text-primary" /> Munafa Mela
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {allProducts.filter(p => p.discount >= 40).slice(0, 6).map(p => (
+                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+              ))}
+            </div>
+          </div>
+        );
+      case 'buy_again':
+        // Frequently purchased items
+        const buyAgainItems = orders.flatMap(o => o.items).slice(0, 6);
+        return buyAgainItems.length > 0 && (
+          <div key="buy_again" className="mb-12">
+            <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+              <Clock size={18} className="text-primary" /> Buy It Again
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {buyAgainItems.map((p, idx) => (
+                <ProductCard key={`${p.barcode}-${idx}`} product={p} onAddToCart={addToCart} />
+              ))}
+            </div>
+          </div>
+        );
+      case 'brands':
+        return brands.length > 0 && (
+          <div key="brands" className="mb-12">
+            <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+              <Star size={18} className="text-primary" /> Shop by Brand
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {brands.map(brand => (
+                <motion.button whileTap={{ scale: 0.95 }} key={brand}
+                  onClick={() => { setSelectedBrand(brand); setSelectedCat(null); setQuery(""); }}
+                  className="px-5 py-2.5 rounded-full bg-card border border-border text-[10px] font-black uppercase tracking-widest hover:border-primary hover:text-primary transition-all shadow-sm">
+                  {brand}
+                </motion.button>
+              ))}
+            </div>
+          </div>
         );
       case 'products':
         return (
@@ -752,6 +847,7 @@ export default function Index() {
         landmark: orderCustomerData.landmark || "",
         payment_method: payMethod,
         transaction_id: payMethod === 'upi' ? transactionId : null,
+        pincode: pincode,
         created_at: new Date().toISOString()
       };
       
@@ -769,9 +865,14 @@ export default function Index() {
       
       // Update points in database
       if (user) {
+        const { data: profile } = await supabase.from('profiles').select('loyalty_points').eq('id', user.id).single();
+        const currentPoints = profile?.loyalty_points || 0;
         await supabase
           .from('profiles')
-          .update({ points_balance: (welfareCard?.points || 0) + pointsEarned })
+          .update({ 
+            loyalty_points: currentPoints + pointsEarned,
+            points_balance: currentPoints + pointsEarned // Sync both for compatibility
+          })
           .eq('id', user.id);
       }
 
@@ -882,6 +983,22 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
+      {/* Dynamic Announcement Bar */}
+      {theme.announcementVisible && theme.announcementText && (
+        <div className="bg-primary text-white py-2 px-4 relative overflow-hidden">
+          <div className="flex animate-marquee whitespace-nowrap">
+            <span className="text-[10px] md:text-xs font-black uppercase tracking-[2px] italic mx-4">
+              {theme.announcementText}
+            </span>
+            <span className="text-[10px] md:text-xs font-black uppercase tracking-[2px] italic mx-4">
+              {theme.announcementText}
+            </span>
+            <span className="text-[10px] md:text-xs font-black uppercase tracking-[2px] italic mx-4">
+              {theme.announcementText}
+            </span>
+          </div>
+        </div>
+      )}
       {/* Admin Mode Bar */}
       {isAdminMode && (
         <div className="bg-black text-white py-3 px-6 flex items-center justify-between sticky top-0 z-[60] border-b border-white/20 shadow-2xl">
@@ -1409,6 +1526,8 @@ export default function Index() {
         transactionId={transactionId}
         setTransactionId={setTransactionId}
         placeOrder={placeOrder}
+        pincode={pincode}
+        setPincode={setPincode}
       />
 
       <WelfareModals 

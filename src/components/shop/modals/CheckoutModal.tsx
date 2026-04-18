@@ -1,6 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Star, CreditCard, QrCode, Send, Building2, Truck, ShieldCheck } from "lucide-react";
+import { X, Star, CreditCard, QrCode, Send, Building2, Truck, ShieldCheck, MapPin, CheckCircle2, Loader2 } from "lucide-react";
 import { UPI_ID, calculateDeliveryFee } from "@/lib/store-utils";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface CheckoutModalProps {
   checkoutOpen: boolean;
@@ -15,6 +18,8 @@ interface CheckoutModalProps {
   transactionId: string;
   setTransactionId: (v: string) => void;
   placeOrder: () => void;
+  pincode: string;
+  setPincode: (v: string) => void;
 }
 
 const CheckoutModal = ({
@@ -29,10 +34,38 @@ const CheckoutModal = ({
   setPayMethod,
   transactionId,
   setTransactionId,
-  placeOrder
+  placeOrder,
+  pincode,
+  setPincode
 }: CheckoutModalProps) => {
   const deliveryFee = calculateDeliveryFee(cartTotal);
   const totalWithDelivery = finalTotal + deliveryFee;
+  const [pincodeVerified, setPincodeVerified] = useState(false);
+  const [verifyingPincode, setVerifyingPincode] = useState(false);
+  const [pincodeError, setPincodeError] = useState("");
+
+  const verifyPincode = async () => {
+    if (!pincode || pincode.length !== 6) {
+      setPincodeError("Enter valid 6-digit pincode");
+      return;
+    }
+    setVerifyingPincode(true);
+    setPincodeError("");
+    try {
+      const { data } = await supabase.from('store_config').select('value').eq('key', 'pincodes').maybeSingle();
+      const validPincodes = data?.value || ["212207", "212201", "212216"];
+      if (validPincodes.includes(pincode)) {
+        setPincodeVerified(true);
+        toast.success("Delivery available in your area!");
+      } else {
+        setPincodeError("Delivery not available at this pincode");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setVerifyingPincode(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -65,6 +98,41 @@ const CheckoutModal = ({
                   <div className="bg-green-500 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest">Active</div>
                 </div>
               )}
+
+              {/* Pincode Validator Module */}
+              <div className="bg-gray-50 border border-gray-100 rounded-3xl p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-black text-[10px] text-gray-400 uppercase tracking-[2px] italic">Delivery Pincode</h3>
+                  {pincodeVerified && <span className="flex items-center gap-1 text-[8px] font-black text-green-600 uppercase tracking-widest bg-green-50 px-2 py-1 rounded-full"><CheckCircle2 size={10} /> Serviceable</span>}
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input 
+                      type="text" 
+                      maxLength={6}
+                      placeholder="Enter Pincode (e.g. 212207)"
+                      className={`w-full bg-white border ${pincodeError ? 'border-red-500' : 'border-gray-200'} rounded-xl py-3 pl-10 pr-4 text-sm font-bold outline-none focus:border-primary transition-all`}
+                      value={pincode}
+                      onChange={(e) => {
+                        setPincode(e.target.value.replace(/\D/g, ''));
+                        setPincodeVerified(false);
+                        setPincodeError("");
+                      }}
+                    />
+                  </div>
+                  <button 
+                    onClick={verifyPincode}
+                    disabled={verifyingPincode || pincodeVerified}
+                    className={`px-6 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${
+                      pincodeVerified ? 'bg-green-500 text-white' : 'bg-black text-white hover:bg-primary'
+                    }`}
+                  >
+                    {verifyingPincode ? <Loader2 className="animate-spin" size={14} /> : (pincodeVerified ? 'Verified' : 'Check')}
+                  </button>
+                </div>
+                {pincodeError && <p className="text-[9px] font-bold text-red-500 mt-2 ml-1 uppercase tracking-tighter">{pincodeError}</p>}
+              </div>
 
               {/* Order Summary Brief */}
               <div className="bg-gray-50 rounded-3xl p-6 mb-8 border border-gray-100">
