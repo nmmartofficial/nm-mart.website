@@ -162,6 +162,10 @@ export default function Index() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [payMethod, setPayMethod] = useState<"card" | "upi" | "netbanking">("upi");
   const [pincode, setPincode] = useState("");
+  const [offersOpen, setOffersOpen] = useState<{ flat50: boolean; flat33: boolean }>({
+    flat50: false,
+    flat33: false,
+  });
 
   const generatePDFBill = (orderId: string, items: any[], subtotal: number, discount: number, delivery: number, total: number, customer: any) => {
     const doc = new jsPDF({
@@ -646,33 +650,77 @@ export default function Index() {
         );
       case 'flat_50':
         return flat50.length > 0 && (
-          <div key="flat_50" className="mb-12 max-w-7xl mx-auto px-4 py-4 w-full rounded-3xl" style={getSectionBgStyle("flat_50")}>
-            <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
-              <Star size={18} className="text-primary" /> 50% OFF Offers
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {flat50.map(p => (
-                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
-              ))}
-            </div>
-            {hasMore50 && (
-              <button onClick={loadMore50} className="mt-4 text-primary font-bold text-xs uppercase border-b border-primary">View More</button>
+          <div key="flat_50" className="mb-8 max-w-7xl mx-auto px-4 w-full">
+            <button
+              type="button"
+              onClick={() => setOffersOpen(s => ({ ...s, flat50: !s.flat50 }))}
+              className="w-full flex items-center justify-between bg-white border border-gray-100 rounded-3xl px-6 py-5 shadow-sm hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shadow-sm">
+                  <Star size={18} className="text-white fill-current" />
+                </div>
+                <div className="text-left">
+                  <div className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Offers Folder</div>
+                  <div className="text-base md:text-lg font-black uppercase tracking-tight text-black">50% OFF Offers</div>
+                </div>
+              </div>
+              <div className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">
+                {offersOpen.flat50 ? "Hide" : "Open"}
+              </div>
+            </button>
+
+            {offersOpen.flat50 && (
+              <div className="mt-4 bg-white border border-gray-100 rounded-3xl p-4 shadow-sm" style={getSectionBgStyle("flat_50")}>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {flat50.map(p => (
+                    <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+                  ))}
+                </div>
+                {hasMore50 && (
+                  <button onClick={loadMore50} className="mt-4 text-primary font-bold text-xs uppercase border-b border-primary">
+                    View More
+                  </button>
+                )}
+              </div>
             )}
           </div>
         );
       case 'flat_33':
         return flat33.length > 0 && (
-          <div key="flat_33" className="mb-12 max-w-7xl mx-auto px-4 py-4 w-full rounded-3xl" style={getSectionBgStyle("flat_33")}>
-            <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
-              <Star size={18} className="text-primary" /> 33% OFF Offers
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {flat33.map(p => (
-                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
-              ))}
-            </div>
-            {hasMore33 && (
-              <button onClick={loadMore33} className="mt-4 text-primary font-bold text-xs uppercase border-b border-primary">View More</button>
+          <div key="flat_33" className="mb-8 max-w-7xl mx-auto px-4 w-full">
+            <button
+              type="button"
+              onClick={() => setOffersOpen(s => ({ ...s, flat33: !s.flat33 }))}
+              className="w-full flex items-center justify-between bg-white border border-gray-100 rounded-3xl px-6 py-5 shadow-sm hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shadow-sm">
+                  <Star size={18} className="text-white fill-current" />
+                </div>
+                <div className="text-left">
+                  <div className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Offers Folder</div>
+                  <div className="text-base md:text-lg font-black uppercase tracking-tight text-black">33% OFF Offers</div>
+                </div>
+              </div>
+              <div className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">
+                {offersOpen.flat33 ? "Hide" : "Open"}
+              </div>
+            </button>
+
+            {offersOpen.flat33 && (
+              <div className="mt-4 bg-white border border-gray-100 rounded-3xl p-4 shadow-sm" style={getSectionBgStyle("flat_33")}>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {flat33.map(p => (
+                    <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+                  ))}
+                </div>
+                {hasMore33 && (
+                  <button onClick={loadMore33} className="mt-4 text-primary font-bold text-xs uppercase border-b border-primary">
+                    View More
+                  </button>
+                )}
+              </div>
             )}
           </div>
         );
