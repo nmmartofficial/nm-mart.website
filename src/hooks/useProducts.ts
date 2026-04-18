@@ -158,6 +158,7 @@ export function useProducts() {
 
   useEffect(() => {
     fetchProducts();
+    fetchAllCategories();
   }, []);
 
   const loadMore = () => {

@@ -35,6 +35,7 @@ import CartDrawer from "@/components/shop/modals/CartDrawer";
 import CheckoutModal from "@/components/shop/modals/CheckoutModal";
 import OrdersModal from "@/components/shop/modals/OrdersModal";
 import Highlights from "@/components/shop/Highlights";
+import ProductCard from "@/components/shop/ProductCard";
 
 const LOGO_URL = "/nm-mart-logo.png";
 const SLOGAN = "Shop More, Save More";
@@ -103,7 +104,19 @@ export default function Index() {
         if (catError) console.error("Categories fetch error:", catError);
         console.log('Categories found in Supabase (categories table):', cats);
         
-        const { data: bans } = await supabase.from('website_banners').select('*').eq('active', true).order('display_order');
+        // Handle banners with a fallback to empty array to prevent 400 crash
+        let bans = [];
+        try {
+          const { data, error: banError } = await supabase.from('website_banners').select('*').eq('active', true).order('display_order');
+          if (banError) {
+            console.warn("Website banners table may not exist or query failed:", banError.message);
+          } else {
+            bans = data || [];
+          }
+        } catch (e) {
+          console.warn("Banners fetch crashed, using empty array fallback");
+        }
+
         const [sectionLayout, gridData] = await Promise.all([
           getSectionLayout(),
           import("@/lib/storeConfig").then(m => m.getGridStyle())
@@ -114,7 +127,7 @@ export default function Index() {
         console.log('Processed visible categories from table:', visibleCats);
         setCategories(visibleCats);
         
-        setBanners(bans || []);
+        setBanners(bans);
         setLayout(sectionLayout);
         setGridStyle(gridData);
       } catch (err) {
