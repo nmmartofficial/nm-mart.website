@@ -25,8 +25,14 @@ const Admin = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const session = localStorage.getItem("nm_admin_session");
-      if (session !== "true") {
+      // Local development bypass OR admin session check
+      const isAdmin = localStorage.getItem("nm_admin_session") === "true";
+      const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      const adminEmail = "nmmartofficial@gmail.com"; // Your admin email
+      
+      if (!isAdmin && !isLocal && session?.user?.email !== adminEmail) {
         navigate("/login");
       }
       setLoading(false);

@@ -95,7 +95,7 @@ export default function Index() {
       try {
         const { data: cats, error: catError } = await supabase.from('categories').select('*').order('display_order');
         if (catError) console.error("Categories fetch error:", catError);
-        console.log('Categories found in Supabase:', cats);
+        console.log('Categories found in Supabase (categories table):', cats);
         
         const { data: bans } = await supabase.from('website_banners').select('*').eq('active', true).order('display_order');
         const [sectionLayout, gridData] = await Promise.all([
@@ -104,9 +104,8 @@ export default function Index() {
         ]);
         
         // Show ALL categories from DB. Only hide if is_visible is explicitly false.
-        // If is_visible is NULL or true, it will be shown.
         const visibleCats = cats?.filter(c => c.is_visible !== false) || [];
-        console.log('Processed visible categories:', visibleCats);
+        console.log('Processed visible categories from table:', visibleCats);
         setCategories(visibleCats);
         
         setBanners(bans || []);
@@ -451,16 +450,21 @@ export default function Index() {
 
   // Filter out Bedsheets, sort priority categories first
   const sortedCategories = useMemo(() => {
-    // If we have custom categories from DB, use them first
+    // 1. If we have custom categories from DB, use them first
     if (categories && categories.length > 0) {
       const dbCats = categories.map(c => c.name || c.title).filter(Boolean);
-      console.log('Sorted categories from DB:', dbCats);
       return dbCats;
     }
-    const filtered = posCategories.filter(c => !HIDDEN_CATS.includes(c));
-    const priority = filtered.filter(c => PRIORITY_CATS.includes(c));
-    const rest = filtered.filter(c => !PRIORITY_CATS.includes(c));
-    return [...priority, ...rest];
+    
+    // 2. Fallback to categories derived from products table (Live Mapping)
+    if (posCategories && posCategories.length > 0) {
+      const filtered = posCategories.filter(c => !HIDDEN_CATS.includes(c));
+      const priority = filtered.filter(c => PRIORITY_CATS.includes(c));
+      const rest = filtered.filter(c => !PRIORITY_CATS.includes(c));
+      return [...priority, ...rest];
+    }
+
+    return [];
   }, [categories, posCategories]);
 
   const handleBannerClick = (link: { type: string, value: string }) => {
@@ -571,7 +575,7 @@ export default function Index() {
         );
       case 'categories':
         return sortedCategories.length > 0 && (
-          <div key="categories" className="mb-12 max-w-7xl mx-auto px-4 w-full">
+          <div key="categories" className="mb-12 max-w-7xl mx-auto px-4 w-full relative z-[20]">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <LayoutGrid size={18} className="text-primary" /> Shop by Category
             </h3>
@@ -596,35 +600,35 @@ export default function Index() {
         );
       case 'flat_50':
         return flat50.length > 0 && (
-          <DiscountTabs 
-            key="flat_50"
-            flat33={[]} 
-            flat50={flat50} 
-            total50={total50}
-            total33={0}
-            hasMore50={hasMore50}
-            hasMore33={false}
-            loadMore50={loadMore50}
-            loadMore33={() => {}}
-            onAddToCart={addToCart} 
-            onQuickEdit={handleQuickEdit}
-          />
+          <div key="flat_50" className="mb-12 max-w-7xl mx-auto px-4 w-full">
+            <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+              <Star size={18} className="text-primary" /> 50% OFF Offers
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {flat50.map(p => (
+                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+              ))}
+            </div>
+            {hasMore50 && (
+              <button onClick={loadMore50} className="mt-4 text-primary font-bold text-xs uppercase border-b border-primary">View More</button>
+            )}
+          </div>
         );
       case 'flat_33':
         return flat33.length > 0 && (
-          <DiscountTabs 
-            key="flat_33"
-            flat33={flat33} 
-            flat50={[]} 
-            total50={0}
-            total33={total33}
-            hasMore50={false}
-            hasMore33={hasMore33}
-            loadMore50={() => {}}
-            loadMore33={loadMore33}
-            onAddToCart={addToCart} 
-            onQuickEdit={handleQuickEdit}
-          />
+          <div key="flat_33" className="mb-12 max-w-7xl mx-auto px-4 w-full">
+            <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
+              <Star size={18} className="text-primary" /> 33% OFF Offers
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {flat33.map(p => (
+                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+              ))}
+            </div>
+            {hasMore33 && (
+              <button onClick={loadMore33} className="mt-4 text-primary font-bold text-xs uppercase border-b border-primary">View More</button>
+            )}
+          </div>
         );
       case 'weekly_deals':
         return (
@@ -974,6 +978,7 @@ export default function Index() {
     if (!editingProduct) return;
     setEditLoading(true);
     try {
+      // 1. Update main products table
       const { error } = await supabase
         .from('products')
         .update({
@@ -988,7 +993,19 @@ export default function Index() {
         .eq('RawCodeNew', editingProduct.barcode);
 
       if (error) throw error;
-      toast.success("Product updated instantly!");
+
+      // 2. Reverse Sync: Insert into sync_back table for POS update
+      await supabase
+        .from('sync_back')
+        .insert([{
+          RawCodeNew: editingProduct.barcode,
+          NewRate: Number(editingProduct.salePrice),
+          NewName: editingProduct.name,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        }]);
+
+      toast.success("Product updated instantly & queued for POS sync!");
       setEditingProduct(null);
       // Refresh to show changes
       window.location.reload(); 

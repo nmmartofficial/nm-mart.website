@@ -68,12 +68,19 @@ export function useProducts() {
 
   const fetchDiscountedProducts = async (type: 50 | 33, offset = 0) => {
     try {
-      const { data, error, count } = await supabase
+      let query = supabase
         .from('products')
         .select('*', { count: 'exact' })
-        .eq('discountPerc', type)
         .gt('OpStock', 0)
-        .neq('is_visible', false)
+        .neq('is_visible', false);
+      
+      if (type === 50) {
+        query = query.gte('discountPerc', 50);
+      } else {
+        query = query.gte('discountPerc', 33).lt('discountPerc', 50);
+      }
+
+      const { data, error, count } = await query
         .order('image_url', { ascending: false, nullsFirst: false })
         .order('RawName', { ascending: true })
         .range(offset, offset + 11);
