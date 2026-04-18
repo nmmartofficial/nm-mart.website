@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
-import { User, Package, MapPin, LogOut, Star, Loader2, Save, Phone as PhoneIcon, ChevronRight } from "lucide-react";
+import { User, Package, MapPin, LogOut, Star, Loader2, Save, Smartphone, ChevronRight, Map } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { OrderRecord, WA_NUMBER } from "@/lib/store-utils";
@@ -132,7 +132,7 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-black flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FFFAF5] text-black flex flex-col font-sans">
       <Header />
       
       <main className="flex-1 py-12 px-4 md:px-6">
@@ -159,36 +159,38 @@ const UserProfile = () => {
           <div className="grid lg:grid-cols-3 gap-10">
             {/* Left Column - Profile Details */}
             <div className="lg:col-span-1 space-y-8">
-              <div className="bg-white border border-gray-100 p-10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] space-y-10">
+              <div className="bg-white p-10 rounded-3xl shadow-lg shadow-orange-500/10 space-y-10">
                 {/* Premium Profile Header */}
                 <div className="text-center">
-                  <div className="mx-auto w-32 h-32 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-700 shadow-lg overflow-hidden flex items-center justify-center text-white ring-4 ring-orange-100">
+                  <div className="mx-auto w-28 h-28 rounded-full bg-gray-100 shadow-lg overflow-hidden flex items-center justify-center text-orange-500">
                     {profile.avatar_url ? (
                       <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <User size={44} />
+                      <User size={40} />
                     )}
                   </div>
 
-                  <h3 className="mt-5 text-2xl font-black italic uppercase tracking-tight text-black leading-none">
-                    {profile.name || "NM Member"}
-                  </h3>
+                  {profile.name ? (
+                    <h3 className="mt-5 text-2xl font-black italic uppercase tracking-tight text-black leading-none">
+                      {profile.name}
+                    </h3>
+                  ) : null}
 
                   <div className="mt-4 flex justify-center">
-                    <div className="px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-orange-600 border border-orange-200 shadow-[0_10px_25px_rgba(249,115,22,0.25)] ring-2 ring-orange-100">
+                    <div className="px-6 py-2 rounded-full bg-gradient-to-r from-orange-400 to-yellow-500 shadow-md">
                       <div className="flex items-center gap-2">
-                        <Star size={14} className="text-amber-900 fill-current" />
-                        <span className="text-[10px] font-black uppercase tracking-[3px] text-white drop-shadow">
-                          Total Points: {profile.points}
+                        <Star size={16} className="text-yellow-100 fill-current" />
+                        <span className="text-[11px] font-medium uppercase tracking-[3px] text-white drop-shadow">
+                          TOTAL POINTS: {profile.points}
                         </span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-7">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-orange-600 tracking-[2px] ml-1">Profile Photo URL</label>
+                <div className="space-y-8">
+                  <div className="space-y-3">
+                    <label className="text-[13px] font-bold text-[#333] ml-1">Profile Photo URL</label>
                     <div className="relative">
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 text-orange-500">
                         <User size={16} />
@@ -198,65 +200,63 @@ const UserProfile = () => {
                         value={profile.avatar_url}
                         onChange={e => setProfile({ ...profile, avatar_url: e.target.value })}
                         placeholder="PASTE IMAGE URL"
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold text-sm placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-200/70 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
+                        className="w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-3 pl-7 pr-2 outline-none font-bold text-sm placeholder:text-gray-400 focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-orange-600 tracking-[2px] ml-1">Full Name</label>
-                    <div className="relative">
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 text-orange-500">
-                        <User size={16} />
-                      </div>
+                  <div className="space-y-3">
+                    <label className="text-[13px] font-bold text-[#333] ml-1">Full Name</label>
+                    <div className="flex items-center">
+                      <User size={20} className="text-orange-500 mr-2" />
                       <input
                         type="text"
                         value={profile.name}
                         onChange={e => setProfile({ ...profile, name: e.target.value })}
                         placeholder="ENTER NAME"
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold uppercase text-sm placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-200/70 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
+                        className="flex-1 bg-transparent border-0 border-b-2 border-[#EEEEEE] py-3 pr-2 outline-none font-bold uppercase text-sm placeholder:text-gray-400 focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-orange-600 tracking-[2px] ml-1">Phone Number</label>
-                    <div className="relative">
-                      <PhoneIcon className="absolute left-0 top-1/2 -translate-y-1/2 text-orange-500" size={16} />
+                  <div className="space-y-3">
+                    <label className="text-[13px] font-bold text-[#333] ml-1">Phone Number</label>
+                    <div className="flex items-center">
+                      <Smartphone size={20} className="text-orange-500 mr-2" />
                       <input
                         type="tel"
                         value={profile.phone}
                         onChange={e => setProfile({ ...profile, phone: e.target.value })}
                         placeholder="PHONE NUMBER"
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold text-sm placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-200/70 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
+                        className="flex-1 bg-transparent border-0 border-b-2 border-[#EEEEEE] py-3 pr-2 outline-none font-bold text-sm placeholder:text-gray-400 focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-orange-600 tracking-[2px] ml-1">Delivery Address</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-0 top-4 text-orange-500" size={16} />
+                  <div className="space-y-3">
+                    <label className="text-[13px] font-bold text-[#333] ml-1">Delivery Address</label>
+                    <div className="flex items-start">
+                      <MapPin size={20} className="text-orange-500 mr-2 mt-3" />
                       <textarea
                         value={profile.address}
                         onChange={e => setProfile({ ...profile, address: e.target.value })}
                         placeholder="FULL ADDRESS IN MANJHANPUR"
                         rows={3}
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold uppercase text-sm resize-none placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-200/70 focus:shadow-[0_14px_28px_-20px_rgba(249,115,22,0.9)] transition-all"
+                        className="flex-1 bg-transparent border-0 border-b-2 border-[#EEEEEE] py-3 pr-2 outline-none font-bold uppercase text-sm resize-none placeholder:text-gray-400 focus:border-[#FF8800] focus:shadow-[0_18px_30px_-24px_rgba(255,136,0,0.95)] transition-all"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-orange-600 tracking-[2px] ml-1">Landmark (Optional)</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-0 top-1/2 -translate-y-1/2 text-orange-500" size={16} />
+                  <div className="space-y-3">
+                    <label className="text-[13px] font-bold text-[#333] ml-1">Landmark (Optional)</label>
+                    <div className="flex items-center">
+                      <Map size={20} className="text-orange-500 mr-2" />
                       <input
                         type="text"
                         value={profile.landmark}
                         onChange={e => setProfile({ ...profile, landmark: e.target.value })}
                         placeholder="NEAR BY PLACE"
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold uppercase text-sm placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-200/70 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
+                        className="flex-1 bg-transparent border-0 border-b-2 border-[#EEEEEE] py-3 pr-2 outline-none font-bold uppercase text-sm placeholder:text-gray-400 focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
                       />
                     </div>
                   </div>
@@ -264,11 +264,11 @@ const UserProfile = () => {
                   <button 
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full py-5 rounded-2xl font-black uppercase tracking-[2px] shadow-lg flex items-center justify-center gap-3 italic transition-all bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 hover:animate-bounce active:scale-[0.99]"
+                    className="w-full py-5 rounded-full font-black uppercase tracking-[3px] shadow-lg flex items-center justify-center italic transition-all bg-gradient-to-r from-[#FF7F00] to-[#FFD700] hover:shadow-xl active:animate-bounce active:shadow-2xl"
                   >
                     {saving ? <Loader2 className="animate-spin" size={18} /> : (
                       <>
-                        <Save size={18} /> Update Profile
+                        UPDATE PROFILE <Save size={18} className="ml-2" />
                       </>
                     )}
                   </button>
