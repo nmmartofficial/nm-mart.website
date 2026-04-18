@@ -63,13 +63,21 @@ const Login = () => {
           }
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ 
+        const { data, error } = await supabase.auth.signInWithPassword({ 
           email, 
           password 
         });
         if (error) throw error;
-        toast.success("Login successful!");
-        navigate("/");
+        
+        // Check if user is admin
+        if (email === "nmmartofficial@gmail.com") {
+          localStorage.setItem("nm_admin_session", "true");
+          toast.success("Admin Login successful!");
+          navigate("/admin");
+        } else {
+          toast.success("Login successful!");
+          navigate("/");
+        }
       }
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");

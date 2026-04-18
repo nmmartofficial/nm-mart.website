@@ -57,12 +57,14 @@ const DEFAULT_CONFIG: Record<string, any> = {
     { id: "categories", name: "Categories", order: 1, visible: true },
     { id: "highlights", name: "Highlights (Stories)", order: 2, visible: true },
     { id: "flash_sale", name: "Flash Sale", order: 3, visible: true },
-    { id: "weekly_deals", name: "Weekly Deals", order: 4, visible: true },
-    { id: "fresh_deals", name: "Fresh Deals", order: 5, visible: true },
-    { id: "buy_again", name: "Buy Again", order: 6, visible: true },
-    { id: "munafa_mela", name: "Munafa Mela", order: 7, visible: true },
-    { id: "brands", name: "Shop by Brand", order: 8, visible: true },
-    { id: "products", name: "All Products", order: 9, visible: true }
+    { id: "flat_50", name: "50% OFF Offers", order: 4, visible: true },
+    { id: "flat_33", name: "33% OFF Offers", order: 5, visible: true },
+    { id: "weekly_deals", name: "Weekly Deals", order: 6, visible: true },
+    { id: "fresh_deals", name: "Fresh Deals", order: 7, visible: true },
+    { id: "buy_again", name: "Buy Again", order: 8, visible: true },
+    { id: "munafa_mela", name: "Munafa Mela", order: 9, visible: true },
+    { id: "brands", name: "Shop by Brand", order: 10, visible: true },
+    { id: "products", name: "All Products", order: 11, visible: true }
   ],
   highlights: [],
   offers: {
@@ -135,7 +137,10 @@ export async function setThemeConfig(config: Partial<ThemeConfig>): Promise<bool
 
 export async function getSectionLayout(): Promise<SectionLayout[]> {
   const layout = await getStoreConfig('homepage_layout');
-  return layout || DEFAULT_CONFIG.layout;
+  if (!layout || !Array.isArray(layout) || layout.length === 0) {
+    return DEFAULT_CONFIG.layout;
+  }
+  return layout;
 }
 
 export async function setSectionLayout(layout: SectionLayout[]): Promise<boolean> {

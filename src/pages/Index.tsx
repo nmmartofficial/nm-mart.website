@@ -85,7 +85,13 @@ export default function Index() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
-  const [layout, setLayout] = useState<SectionLayout[]>([]);
+  const [layout, setLayout] = useState<SectionLayout[]>([
+    { id: "hero", name: "Hero Banner", order: 0, visible: true },
+    { id: "categories", name: "Categories", order: 1, visible: true },
+    { id: "flat_50", name: "50% OFF Offers", order: 2, visible: true },
+    { id: "flat_33", name: "33% OFF Offers", order: 3, visible: true },
+    { id: "products", name: "All Products", order: 4, visible: true }
+  ]);
   const [gridStyle, setGridStyle] = useState({ categoryColumns: 6, productColumns: 4 });
   const [homeLoading, setHomeLoading] = useState(true);
 
@@ -1230,8 +1236,6 @@ export default function Index() {
       {/* Dynamic Layout Sections */}
       {!selectedCat && !selectedBrand && !query && (
         <div className="flex flex-col relative z-10">
-          {/* Force categories right below banner if layout is missing or categories not in it */}
-          {layout.length === 0 && renderSection('categories')}
           {layout.map(section => renderSection(section.id))}
         </div>
       )}
