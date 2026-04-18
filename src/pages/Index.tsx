@@ -42,6 +42,29 @@ const SLOGAN = "Shop More, Save More";
 const ITEMS_PER_PAGE = 40;
 const ADMIN_EMAIL = "nmmart07@gmail.com";
 
+const DEFAULT_HOME_LAYOUT: SectionLayout[] = [
+  { id: "hero", name: "Hero Banner", order: 0, visible: true },
+  { id: "categories", name: "Categories", order: 1, visible: true },
+  { id: "flat_50", name: "50% OFF Offers", order: 2, visible: true },
+  { id: "flat_33", name: "33% OFF Offers", order: 3, visible: true },
+  { id: "products", name: "All Products", order: 4, visible: true },
+];
+
+function mergeHomeLayout(remote: SectionLayout[] | null | undefined): SectionLayout[] {
+  const base = DEFAULT_HOME_LAYOUT;
+  const safeRemote = Array.isArray(remote) ? remote : [];
+
+  const byId = new Map<string, SectionLayout>();
+  for (const s of safeRemote) {
+    if (s?.id) byId.set(s.id, s);
+  }
+  for (const s of base) {
+    if (!byId.has(s.id)) byId.set(s.id, s);
+  }
+
+  return [...byId.values()].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
 /* ─── Voice Search Hook ─── */
 function useVoiceSearch(onResult: (t: string) => void) {
   const [listening, setListening] = useState(false);
@@ -87,13 +110,7 @@ export default function Index() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
-  const [layout, setLayout] = useState<SectionLayout[]>([
-    { id: "hero", name: "Hero Banner", order: 0, visible: true },
-    { id: "categories", name: "Categories", order: 1, visible: true },
-    { id: "flat_50", name: "50% OFF Offers", order: 2, visible: true },
-    { id: "flat_33", name: "33% OFF Offers", order: 3, visible: true },
-    { id: "products", name: "All Products", order: 4, visible: true }
-  ]);
+  const [layout, setLayout] = useState<SectionLayout[]>(DEFAULT_HOME_LAYOUT);
   const [gridStyle, setGridStyle] = useState({ categoryColumns: 6, productColumns: 4 });
   const [homeLoading, setHomeLoading] = useState(true);
 
@@ -108,7 +125,7 @@ export default function Index() {
         ]);
         
         setBanners(bans || []);
-        setLayout(sectionLayout);
+        setLayout(mergeHomeLayout(sectionLayout));
         setGridStyle(gridData);
       } catch (err) {
         console.error("Home data fetch error:", err);
@@ -457,6 +474,10 @@ export default function Index() {
 
   // Filter out Bedsheets, sort priority categories first
   const sortedCategories = useMemo(() => {
+    console.debug("[Home] categories debug", {
+      customCategoriesCount: categories?.length ?? 0,
+      posCategoriesCount: posCategories?.length ?? 0,
+    });
     // 1. If we have custom categories from DB, use them first
     if (categories && categories.length > 0) {
       const dbCats = categories.map(c => c.name || c.title).filter(Boolean);
