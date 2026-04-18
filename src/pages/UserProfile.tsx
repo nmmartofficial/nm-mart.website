@@ -215,7 +215,7 @@ const UserProfile = () => {
           <div className="grid lg:grid-cols-3 gap-10">
             {/* Left Column - Profile Details */}
             <div className="lg:col-span-1 space-y-8">
-              <div className="bg-white p-10 rounded-3xl shadow-lg shadow-orange-500/10 space-y-10">
+              <div className="bg-white p-10 rounded-3xl shadow-2xl space-y-10">
                 {/* Premium Profile Header */}
                 <div className="text-center">
                   <button
@@ -254,71 +254,100 @@ const UserProfile = () => {
                   ) : null}
 
                   <div className="mt-4 flex justify-center">
-                    <div className="px-6 py-2 rounded-full bg-gradient-to-r from-orange-400 to-yellow-500 shadow-md">
-                      <div className="flex items-center gap-2">
-                        <Star size={16} className="text-yellow-100 fill-current" />
-                        <span className="text-[11px] font-medium uppercase tracking-[3px] text-white drop-shadow">
-                          TOTAL POINTS: {profile.points}
-                        </span>
-                      </div>
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 via-orange-500 to-yellow-400 shadow-[0_18px_40px_rgba(255,140,0,0.35)] flex flex-col items-center justify-center animate-pulse">
+                      <Star size={18} className="text-yellow-100 fill-current drop-shadow" />
+                      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.22em] text-white/95">Points</div>
+                      <div className="text-2xl font-black text-white leading-none drop-shadow">{profile.points}</div>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-8">
-                  <div className="space-y-3">
-                    <label className="text-[13px] font-bold text-[#333] ml-1">Full Name</label>
-                    <div className="flex items-center">
-                      <User size={20} className="text-orange-500 mr-2" />
-                      <input
-                        type="text"
-                        value={profile.name}
-                        onChange={e => setProfile({ ...profile, name: e.target.value })}
-                        placeholder="ENTER NAME"
-                        className="flex-1 bg-transparent border-0 border-b-2 border-[#EEEEEE] py-3 pr-2 outline-none font-bold uppercase text-sm placeholder:text-gray-400 focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
-                      />
+                  <div className="relative">
+                    <div className="flex items-center gap-2">
+                      <User size={18} className="text-orange-500" />
+                      <div className="relative flex-1">
+                        <input
+                          id="profile_full_name"
+                          type="text"
+                          value={profile.name}
+                          onChange={e => setProfile({ ...profile, name: e.target.value })}
+                          placeholder=" "
+                          className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold uppercase text-sm focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
+                        />
+                        <label
+                          htmlFor="profile_full_name"
+                          className="absolute left-0 top-1/2 -translate-y-1/2 text-sm font-bold text-[#333] transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-orange-600 peer-not-placeholder-shown:top-1.5 peer-not-placeholder-shown:text-[11px]"
+                        >
+                          Full Name
+                        </label>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[13px] font-bold text-[#333] ml-1">Phone Number</label>
-                    <div className="flex items-center">
-                      <Smartphone size={20} className="text-orange-500 mr-2" />
-                      <input
-                        type="tel"
-                        value={profile.phone}
-                        onChange={e => setProfile({ ...profile, phone: e.target.value })}
-                        placeholder="PHONE NUMBER"
-                        className="flex-1 bg-transparent border-0 border-b-2 border-[#EEEEEE] py-3 pr-2 outline-none font-bold text-sm placeholder:text-gray-400 focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
-                      />
+                  <div className="relative">
+                    <div className="flex items-center gap-2">
+                      <Smartphone size={18} className="text-orange-500" />
+                      <div className="relative flex-1">
+                        <input
+                          id="profile_phone"
+                          type="tel"
+                          value={profile.phone}
+                          onChange={e => setProfile({ ...profile, phone: e.target.value })}
+                          placeholder=" "
+                          className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold text-sm focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
+                        />
+                        <label
+                          htmlFor="profile_phone"
+                          className="absolute left-0 top-1/2 -translate-y-1/2 text-sm font-bold text-[#333] transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-orange-600 peer-not-placeholder-shown:top-1.5 peer-not-placeholder-shown:text-[11px]"
+                        >
+                          Phone Number
+                        </label>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[13px] font-bold text-[#333] ml-1">Delivery Address</label>
-                    <div className="flex items-start">
-                      <MapPin size={20} className="text-orange-500 mr-2 mt-3" />
-                      <textarea
-                        value={profile.address}
-                        onChange={e => setProfile({ ...profile, address: e.target.value })}
-                        placeholder="FULL ADDRESS IN MANJHANPUR"
-                        rows={3}
-                        className="flex-1 bg-transparent border-0 border-b-2 border-[#EEEEEE] py-3 pr-2 outline-none font-bold uppercase text-sm resize-none placeholder:text-gray-400 focus:border-[#FF8800] focus:shadow-[0_18px_30px_-24px_rgba(255,136,0,0.95)] transition-all"
-                      />
+                  <div className="relative">
+                    <div className="flex items-start gap-2">
+                      <MapPin size={18} className="text-orange-500 mt-4" />
+                      <div className="relative flex-1">
+                        <textarea
+                          id="profile_address"
+                          value={profile.address}
+                          onChange={e => setProfile({ ...profile, address: e.target.value })}
+                          placeholder=" "
+                          rows={3}
+                          className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold uppercase text-sm resize-none focus:border-[#FF8800] focus:shadow-[0_18px_30px_-24px_rgba(255,136,0,0.95)] transition-all"
+                        />
+                        <label
+                          htmlFor="profile_address"
+                          className="absolute left-0 top-6 -translate-y-1/2 text-sm font-bold text-[#333] transition-all peer-placeholder-shown:top-6 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-[11px] peer-focus:text-orange-600 peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:text-[11px]"
+                        >
+                          Delivery Address
+                        </label>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[13px] font-bold text-[#333] ml-1">Landmark (Optional)</label>
-                    <div className="flex items-center">
-                      <Map size={20} className="text-orange-500 mr-2" />
-                      <input
-                        type="text"
-                        value={profile.landmark}
-                        onChange={e => setProfile({ ...profile, landmark: e.target.value })}
-                        placeholder="NEAR BY PLACE"
-                        className="flex-1 bg-transparent border-0 border-b-2 border-[#EEEEEE] py-3 pr-2 outline-none font-bold uppercase text-sm placeholder:text-gray-400 focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
-                      />
+                  <div className="relative">
+                    <div className="flex items-center gap-2">
+                      <Map size={18} className="text-orange-500" />
+                      <div className="relative flex-1">
+                        <input
+                          id="profile_landmark"
+                          type="text"
+                          value={profile.landmark}
+                          onChange={e => setProfile({ ...profile, landmark: e.target.value })}
+                          placeholder=" "
+                          className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold uppercase text-sm focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
+                        />
+                        <label
+                          htmlFor="profile_landmark"
+                          className="absolute left-0 top-1/2 -translate-y-1/2 text-sm font-bold text-[#333] transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-orange-600 peer-not-placeholder-shown:top-1.5 peer-not-placeholder-shown:text-[11px]"
+                        >
+                          Landmark (Optional)
+                        </label>
+                      </div>
                     </div>
                   </div>
 

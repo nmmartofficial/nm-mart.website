@@ -1,4 +1,4 @@
-import { ShoppingCart, Mail, MapPin, User, Search, Package, Star, X, Gift, CreditCard, MessageCircle } from "lucide-react";
+import { ShoppingCart, Mail, MapPin, User, Package, Star, X, Gift, MessageCircle, Menu, HelpCircle, LogOut, ChevronRight, ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
@@ -17,6 +17,7 @@ const Header = () => {
   const [welfareCard, setWelfareCard] = useState<{ number: string; active: boolean; points: number } | null>(null);
   const [showWelfareModal, setShowWelfareModal] = useState(false);
   const [showGoldenCard, setShowGoldenCard] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Helper to split store name for styling
   const renderStoreName = () => {
@@ -96,8 +97,14 @@ const Header = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setDrawerOpen(false);
+    navigate("/");
+  };
+
   return (
-    <header className="flex flex-col w-full z-50 sticky top-0 shadow-sm">
+    <header className="w-full z-50 sticky top-0">
       {/* Top Thin Bar - Hidden on mobile to save space */}
       <div className="hidden md:flex bg-[#f8f9fa] text-gray-500 py-2.5 px-6 justify-between items-center text-[9px] font-black uppercase tracking-[3px] border-b border-gray-100">
         <div className="flex items-center gap-6">
@@ -115,82 +122,171 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Main Header - White background */}
-      <div className="bg-white p-3 md:p-4 flex justify-between items-center border-b border-primary/10">
-        <Link to="/" className="flex items-center gap-3 md:gap-4 group no-underline shrink-0">
-          <div className="bg-primary p-2 md:p-3 rounded-xl md:rounded-2xl shadow-sm group-hover:scale-110 transition-transform duration-300">
-            {theme.storeLogo ? (
-              <img src={theme.storeLogo} alt="Logo" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
-            ) : (
-              <ShoppingCart className="text-white w-5 h-5 md:w-6 md:h-6" />
-            )}
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-xl md:text-3xl font-black text-black leading-none italic uppercase tracking-tighter">
-              {renderStoreName()}
-            </h1>
-            <p className="text-[7px] md:text-[9px] font-black text-gray-400 tracking-[0.2em] md:tracking-[0.3em] uppercase mt-0.5 md:mt-1 italic">
-              {SLOGAN}
-            </p>
-          </div>
-        </Link>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-1.5 md:gap-4">
-          {user ? (
-            <Link 
-              to="/profile" 
-              className="flex items-center gap-2 md:gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-100 px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl transition-all group"
-            >
-              <div className="w-6 h-6 md:w-8 md:h-8 bg-primary rounded-full flex items-center justify-center text-white font-black">
-                <User className="w-3 h-3 md:w-4 md:h-4" />
-              </div>
-              <div className="hidden md:flex flex-col items-start leading-none">
-                <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
-                  Welcome, {profileName.split(' ')[0] || 'User'}
-                </span>
-                <span className="text-xs text-black font-bold truncate max-w-[100px]">Dashboard</span>
+      {/* Glass Navbar */}
+      <div className="backdrop-blur-[10px] bg-white/80 border-b border-white/60">
+        <div className="p-3 md:p-4 flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link to="/" className="flex items-center gap-3 no-underline shrink-0">
+              <div className="bg-primary p-2 md:p-3 rounded-xl md:rounded-2xl shadow-sm">
+                {theme.storeLogo ? (
+                  <img src={theme.storeLogo} alt="Logo" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
+                ) : (
+                  <ShoppingCart className="text-white w-5 h-5 md:w-6 md:h-6" />
+                )}
               </div>
             </Link>
-          ) : (
-            <Link 
-              to="/login" 
-              className="bg-gray-50 text-black border border-gray-100 px-4 md:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl font-black text-[9px] md:text-[10px] uppercase shadow-sm hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-1.5 md:gap-2 italic"
-            >
-              <User className="w-3 h-3 md:w-3.5 md:h-3.5" /> Sign In
-            </Link>
-          )}
 
-          {/* Welfare Card Button */}
-          {welfareCard?.active ? (
-            <button 
-              onClick={handleWelfareClick}
-              className="flex items-center gap-1 bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border border-yellow-600 px-2 md:px-3 py-1.5 rounded-lg md:rounded-xl hover:shadow-lg transition-all group shadow-sm animate-pulse-glow"
-            >
-              <Star className="w-3 h-3 md:w-3.5 md:h-3.5 text-yellow-800 fill-current" />
-              <div className="flex flex-col items-start leading-none">
-                <span className="text-[7px] md:text-[8px] font-black uppercase tracking-tighter text-yellow-900">Active</span>
-                <span className="text-[9px] md:text-[10px] font-black text-black hidden sm:inline">{profileName.split(' ')[0] || "Active"}</span>
-              </div>
-            </button>
-          ) : (
-            <button 
-              onClick={handleWelfareClick}
-              className="flex items-center gap-1 bg-white border border-black px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl hover:bg-black hover:text-white transition-all group shadow-sm"
-            >
-              <Star className="w-3 h-3 md:w-3.5 md:h-3.5 text-black group-hover:text-white fill-current" />
-              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-tighter text-black group-hover:text-white hidden sm:inline">Welfare</span>
-            </button>
-          )}
-          
-          <Link 
-            to="/contact" 
-            className="bg-primary text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase shadow-sm hover:bg-black hover:scale-105 active:scale-95 transition-all flex items-center gap-2 italic hidden md:flex"
+            <div className="min-w-0">
+              {user ? (
+                <button
+                  type="button"
+                  onClick={() => navigate("/profile")}
+                  className="text-left leading-tight"
+                >
+                  <div className="text-[10px] md:text-xs font-semibold text-gray-500">
+                    Hello, <span className="text-black">{profileName?.split(" ")[0] || "Member"}</span>
+                  </div>
+                  <div className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.22em] text-primary italic truncate max-w-[220px]">
+                    {SLOGAN}
+                  </div>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate("/login")}
+                  className="text-left leading-tight"
+                >
+                  <div className="text-[10px] md:text-xs font-semibold text-gray-500">Hello,</div>
+                  <div className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.22em] text-primary italic">
+                    Login
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            className="p-3 rounded-2xl bg-white/70 border border-white/60 shadow-sm hover:shadow-md transition-all"
+            aria-label="Open menu"
           >
-             Contact Us
-          </Link>
+            <Menu className="text-black" size={20} />
+          </button>
         </div>
       </div>
+
+      {/* Right Drawer */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            <motion.button
+              type="button"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDrawerOpen(false)}
+              className="fixed inset-0 z-[90] bg-black/50"
+              aria-label="Close menu overlay"
+            />
+
+            <motion.aside
+              initial={{ x: 420 }}
+              animate={{ x: 0 }}
+              exit={{ x: 420 }}
+              transition={{ type: "spring", stiffness: 260, damping: 28 }}
+              className="fixed top-0 right-0 h-full w-[320px] max-w-[86vw] z-[91] bg-white shadow-2xl"
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">NM MART</div>
+                  <div className="mt-1 text-base font-black text-black">
+                    {user ? `Hello, ${profileName?.split(" ")[0] || "Member"}` : "Welcome"}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(false)}
+                  className="p-2 rounded-xl hover:bg-gray-50 transition-colors"
+                  aria-label="Close menu"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-4 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => { setDrawerOpen(false); navigate("/profile"); }}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-orange-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3 font-bold text-sm text-black">
+                    <User className="text-orange-500" size={18} /> My Profile
+                  </span>
+                  <ChevronRight size={18} className="text-gray-300" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setDrawerOpen(false); navigate("/tracker"); }}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-orange-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3 font-bold text-sm text-black">
+                    <Package className="text-orange-500" size={18} /> My Orders
+                  </span>
+                  <ChevronRight size={18} className="text-gray-300" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setDrawerOpen(false); handleWelfareClick(); }}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-orange-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3 font-bold text-sm text-black">
+                    <ShieldCheck className="text-orange-500" size={18} /> Welfare Card
+                  </span>
+                  <ChevronRight size={18} className="text-gray-300" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setDrawerOpen(false); navigate("/contact"); }}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-orange-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3 font-bold text-sm text-black">
+                    <HelpCircle className="text-orange-500" size={18} /> Help
+                  </span>
+                  <ChevronRight size={18} className="text-gray-300" />
+                </button>
+
+                {user ? (
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-red-50 transition-colors"
+                  >
+                    <span className="flex items-center gap-3 font-bold text-sm text-red-600">
+                      <LogOut className="text-red-600" size={18} /> Logout
+                    </span>
+                    <ChevronRight size={18} className="text-red-300" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setDrawerOpen(false); navigate("/login"); }}
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-orange-50 transition-colors"
+                  >
+                    <span className="flex items-center gap-3 font-bold text-sm text-black">
+                      <User className="text-orange-500" size={18} /> Login
+                    </span>
+                    <ChevronRight size={18} className="text-gray-300" />
+                  </button>
+                )}
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Welfare Card Modals */}
       <AnimatePresence>
