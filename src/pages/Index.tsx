@@ -9,7 +9,7 @@ import {
   Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift,
   ChevronRight, User as UserIcon, CreditCard, ScanBarcode,
   Edit3, Save, Loader2 as LoaderIcon, Image as ImageIcon, Upload,
-  Database, LogOut
+  Database, LogOut, Clock
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase/client";
@@ -29,7 +29,7 @@ import ChatBot from "@/components/shop/ChatBot";
 import Footer from "@/components/shop/Footer";
 import FlashSaleBanner from "@/components/shop/FlashSaleBanner";
 import DiscountTabs from "@/components/shop/DiscountTabs";
-import WelfareModals from "@/components/shop/modals/WelfareModals";
+import WelfareModal from "@/components/shop/modals/WelfareModal";
 import CartDrawer from "@/components/shop/modals/CartDrawer";
 import CheckoutModal from "@/components/shop/modals/CheckoutModal";
 import OrdersModal from "@/components/shop/modals/OrdersModal";
@@ -98,6 +98,7 @@ export default function Index() {
           getSectionLayout(),
           import("@/lib/storeConfig").then(m => m.getGridStyle())
         ]);
+        // Robust filtering: Only hide if explicitly set to false
         setCategories(cats?.filter(c => c.is_visible !== false) || []);
         setBanners(bans || []);
         setLayout(sectionLayout);
@@ -547,12 +548,20 @@ export default function Index() {
           </div>
         );
       case 'highlights':
-        return <Highlights key="highlights" />;
+        return (
+          <div key="highlights" className="mb-8 max-w-7xl mx-auto w-full">
+            <Highlights />
+          </div>
+        );
       case 'flash_sale':
-        return <FlashSaleBanner key="flash_sale" />;
+        return (
+          <div key="flash_sale" className="mb-12 max-w-7xl mx-auto px-4 w-full">
+            <FlashSaleBanner />
+          </div>
+        );
       case 'categories':
         return sortedCategories.length > 0 && (
-          <div key="categories" className="mb-12">
+          <div key="categories" className="mb-12 max-w-7xl mx-auto px-4 w-full">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <LayoutGrid size={18} className="text-primary" /> Shop by Category
             </h3>
@@ -609,7 +618,7 @@ export default function Index() {
         );
       case 'weekly_deals':
         return (
-          <div key="weekly_deals" className="mb-12">
+          <div key="weekly_deals" className="mb-12 max-w-7xl mx-auto px-4 w-full">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> Weekly Deals
             </h3>
@@ -623,7 +632,7 @@ export default function Index() {
         );
       case 'fresh_deals':
         return (
-          <div key="fresh_deals" className="mb-12">
+          <div key="fresh_deals" className="mb-12 max-w-7xl mx-auto px-4 w-full">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> Fresh Deals
             </h3>
@@ -636,7 +645,7 @@ export default function Index() {
         );
       case 'munafa_mela':
         return (
-          <div key="munafa_mela" className="mb-12">
+          <div key="munafa_mela" className="mb-12 max-w-7xl mx-auto px-4 w-full">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> Munafa Mela
             </h3>
@@ -651,7 +660,7 @@ export default function Index() {
         // Frequently purchased items
         const buyAgainItems = orders.flatMap(o => o.items).slice(0, 6);
         return buyAgainItems.length > 0 && (
-          <div key="buy_again" className="mb-12">
+          <div key="buy_again" className="mb-12 max-w-7xl mx-auto px-4 w-full">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Clock size={18} className="text-primary" /> Buy It Again
             </h3>
@@ -664,7 +673,7 @@ export default function Index() {
         );
       case 'brands':
         return brands.length > 0 && (
-          <div key="brands" className="mb-12">
+          <div key="brands" className="mb-12 max-w-7xl mx-auto px-4 w-full">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> Shop by Brand
             </h3>

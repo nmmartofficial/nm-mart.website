@@ -54,8 +54,8 @@ const DEFAULT_CONFIG: Record<string, any> = {
   },
   layout: [
     { id: "hero", name: "Hero Banner", order: 0, visible: true },
-    { id: "highlights", name: "Highlights (Stories)", order: 1, visible: true },
-    { id: "categories", name: "Categories", order: 2, visible: true },
+    { id: "categories", name: "Categories", order: 1, visible: true },
+    { id: "highlights", name: "Highlights (Stories)", order: 2, visible: true },
     { id: "flash_sale", name: "Flash Sale", order: 3, visible: true },
     { id: "weekly_deals", name: "Weekly Deals", order: 4, visible: true },
     { id: "fresh_deals", name: "Fresh Deals", order: 5, visible: true },
