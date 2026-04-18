@@ -598,19 +598,19 @@ export default function Index() {
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <LayoutGrid size={18} className="text-primary" /> Shop by Category
             </h3>
-            <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${gridStyle.categoryColumns}, minmax(0, 1fr))` }}>
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {sortedCategories.map(catName => {
                 const cat = categories.find(c => (c.name || c.title) === catName);
                 return (
                   <motion.button whileTap={{ scale: 0.94 }} key={catName}
                     onClick={() => { setSelectedCat(catName); setSelectedBrand(null); setQuery(""); }}
-                    className="p-4 rounded-[24px] bg-white border border-gray-100 flex flex-col items-center gap-3 transition-all group hover:border-primary hover:shadow-xl"
+                    className="p-3 md:p-4 rounded-[20px] md:rounded-[24px] bg-white border border-gray-100 flex flex-col items-center gap-2 md:gap-3 transition-all group hover:border-primary hover:shadow-xl shadow-sm"
                     style={cat?.bg_color ? { backgroundColor: cat.bg_color + '10' } : {}}
                   >
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-gray-50 text-3xl group-hover:scale-110 transition-transform shadow-sm">
+                    <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center bg-gray-50 text-2xl md:text-3xl group-hover:scale-110 transition-transform shadow-sm">
                       {getCategoryIcon(catName)}
                     </div>
-                    <span className="font-black text-black uppercase text-[10px] tracking-widest text-center leading-tight">{catName}</span>
+                    <span className="font-black text-black uppercase text-[8px] md:text-[10px] tracking-widest text-center leading-tight">{catName}</span>
                   </motion.button>
                 );
               })}
@@ -997,24 +997,8 @@ export default function Index() {
     if (!editingProduct) return;
     setEditLoading(true);
     try {
-      // 1. Update main products table
-      const { error } = await supabase
-        .from('products')
-        .update({
-          RawName: editingProduct.name,
-          ItemGroupName: editingProduct.category,
-          MRP: Number(editingProduct.mrp),
-          Rate: Number(editingProduct.salePrice),
-          OpStock: Number(editingProduct.stock),
-          image_url: editingProduct.imageUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('RawCodeNew', editingProduct.barcode);
-
-      if (error) throw error;
-
-      // 2. Reverse Sync: Insert into sync_back table for POS update
-      await supabase
+      // ─── REVERSE SYNC: Save to sync_back table for POS update ───
+      const { error: syncError } = await supabase
         .from('sync_back')
         .insert([{
           RawCodeNew: editingProduct.barcode,
@@ -1024,13 +1008,26 @@ export default function Index() {
           created_at: new Date().toISOString()
         }]);
 
-      toast.success("Product updated instantly & queued for POS sync!");
+      if (syncError) throw syncError;
+
+      // Also update local UI state/main table for instant feedback
+      const { error: localError } = await supabase
+        .from('products')
+        .update({
+          RawName: editingProduct.name,
+          Rate: Number(editingProduct.salePrice),
+          updated_at: new Date().toISOString()
+        })
+        .eq('RawCodeNew', editingProduct.barcode);
+
+      if (localError) console.warn("Local update failed, but sync_back queued:", localError);
+
+      toast.success("POS Sync Queued Successfully!");
       setEditingProduct(null);
-      // Refresh to show changes
-      window.location.reload(); 
+      // Optional: window.location.reload(); 
     } catch (err) {
-      console.error("Quick edit failed", err);
-      toast.error("Update failed");
+      console.error("Sync back failed", err);
+      toast.error("POS Sync failed");
     } finally {
       setEditLoading(false);
     }

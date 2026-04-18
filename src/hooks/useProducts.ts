@@ -16,31 +16,27 @@ export function useProducts() {
   const [allCategories, setAllCategories] = useState<string[]>([]);
 
   const mapProduct = (item: any): Product => {
-    const normalizedCat = normalizeCategory(item.ItemGroupName || item.category || "GENERAL");
-    const mrp = Number(item.MRP || item.mrp || 0);
-    const discount = Number(item.discountPerc || item.discount || 0);
-    
-    // Auto-calculate rate based on discount if present
-    let rate = Number(item.Rate || item.salerate || item.saleRate || 0);
-    if (discount > 0 && mrp > 0) {
-      rate = Math.round(mrp - (mrp * (discount / 100)));
-    }
+    // ─── STRICT SYNC.CJS MAPPING ───
+    const barcode = String(item.RawCodeNew || "").trim();
+    const name = String(item.RawName || "Unknown Product").trim();
+    const mrp = Number(item.MRP || 0);
+    const rate = Number(item.Rate || 0);
+    const imageUrl = item.image_url || "";
+    const category = normalizeCategory(item.ItemGroupName || "GENERAL");
+    const discount = Number(item.discountPerc || 0);
+    const stock = Number(item.OpStock || 0);
 
-    const barcode = String(item.RawCodeNew || item.barcode || "").trim();
-    const stock = Number(item.OpStock || item.stock_quantity || item.stock || 0);
-    const name = String(item.RawName || item.name || "Unknown Product").trim();
-    
     return {
       id: barcode,
       name: name,
       price: rate,
       saleRate: rate,
-      category: normalizedCat,
+      category: category,
       mrp: mrp,
       barcode: barcode,
       brand: String(item.brand || "Local").trim(),
       subCategory: String(item.sub_category || "").trim(),
-      imageUrl: item.image_url || item.image || "",
+      imageUrl: imageUrl,
       discount: discount,
       stock: stock,
       save: Math.max(0, Math.round(mrp - rate)),
@@ -50,19 +46,23 @@ export function useProducts() {
 
   const fetchAllCategories = async () => {
     try {
+      // ─── SOURCE: ItemGroupName from products table ───
       const { data, error } = await supabase
         .from('products')
-        .select('ItemGroupName, category')
-        .gt('OpStock', 0);
+        .select('ItemGroupName')
+        .gt('OpStock', 0)
+        .not('ItemGroupName', 'is', null);
       
       if (data) {
         const uniqueCats = [...new Set(data.map((item: any) => 
-          normalizeCategory(item.ItemGroupName || item.category)
+          normalizeCategory(item.ItemGroupName)
         ))].filter(c => c && c.length > 1);
+        
+        console.log('Categories derived from ItemGroupName:', uniqueCats);
         setAllCategories(uniqueCats);
       }
     } catch (err) {
-      console.error("Error fetching all categories:", err);
+      console.error("Error deriving categories:", err);
     }
   };
 
