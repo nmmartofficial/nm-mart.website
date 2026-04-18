@@ -19,7 +19,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8f9fa] text-black font-sans">
+    <div className="min-h-screen flex flex-col bg-[#FFFAF5] text-black font-sans">
       <Header />
       
       <main className="flex-1 py-20 px-6">

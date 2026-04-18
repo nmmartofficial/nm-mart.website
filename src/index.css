@@ -61,6 +61,16 @@
 }
 
 @layer utilities {
+  .nm-card {
+    @apply bg-white border border-gray-100 rounded-3xl shadow-card;
+  }
+  .nm-btn-gradient {
+    @apply text-white font-black uppercase tracking-widest rounded-full shadow-lg transition-all active:scale-95;
+    background: linear-gradient(90deg, #ff7f00 0%, #ffd700 100%);
+  }
+  .nm-chip {
+    @apply px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm transition-all active:scale-95;
+  }
   .gradient-brand {
     background: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
   }

@@ -4,7 +4,7 @@ import { ShoppingCart, ShieldCheck, Truck, Users, Award, TrendingUp, Database, C
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-black flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FFFAF5] text-black flex flex-col font-sans">
       <Header />
       
       <main className="flex-1">

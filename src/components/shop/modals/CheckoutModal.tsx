@@ -43,6 +43,9 @@ const CheckoutModal = ({
   const [pincodeVerified, setPincodeVerified] = useState(false);
   const [verifyingPincode, setVerifyingPincode] = useState(false);
   const [pincodeError, setPincodeError] = useState("");
+  const deliveryEtaLabel = pincodeVerified
+    ? "Estimated delivery: Today (2–4 hrs)"
+    : "Enter pincode to see delivery ETA";
 
   const verifyPincode = async () => {
     if (!pincode || pincode.length !== 6) {
@@ -80,6 +83,12 @@ const CheckoutModal = ({
                 <div>
                   <h2 className="text-2xl font-black text-black uppercase italic tracking-tighter">Final <span className="text-primary">Checkout</span></h2>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 italic">Secure Payment Gateway</p>
+                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-100">
+                    <Truck size={12} className="text-orange-600" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-orange-700 italic">
+                      {deliveryEtaLabel}
+                    </span>
+                  </div>
                 </div>
                 <button onClick={() => setCheckoutOpen(false)} className="p-2 hover:bg-gray-50 rounded-xl transition-colors"><X size={20} /></button>
               </div>
@@ -157,6 +166,9 @@ const CheckoutModal = ({
                     <div>
                       <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Grand Total</p>
                       <p className="text-3xl font-black text-primary italic leading-none tracking-tighter">₹{totalWithDelivery}</p>
+                      <p className="mt-2 text-[9px] font-bold uppercase tracking-widest text-gray-500 italic">
+                        {deliveryEtaLabel}
+                      </p>
                     </div>
                     <div className="flex items-center gap-1 text-green-600 font-black text-[8px] uppercase tracking-widest bg-green-50 px-2 py-1 rounded-lg">
                       <ShieldCheck size={10} /> Secure
