@@ -25,20 +25,13 @@ const Admin = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // 1. Check for manual bypass session
-      const isAdminSession = localStorage.getItem("nm_admin_session") === "true";
-      
-      // 2. Check for local dev
-      const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      
-      // 3. Check Supabase session
+      // ─── HARD BYPASS FOR ADMIN ───
       const { data: { session } } = await supabase.auth.getSession();
       const adminEmail = "nmmartofficial@gmail.com";
       
-      if (isAdminSession || isLocal || session?.user?.email === adminEmail) {
+      if (session?.user?.email === adminEmail) {
         setLoading(false);
       } else {
-        // If not admin, send to login
         navigate("/login");
       }
     };

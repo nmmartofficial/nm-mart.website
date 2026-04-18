@@ -97,37 +97,20 @@ export default function Index() {
   const [homeLoading, setHomeLoading] = useState(true);
 
   useEffect(() => {
+    // ─── HARD RESET: Clear any redirect loops/storage ───
+    localStorage.removeItem("redirect_url");
+    localStorage.removeItem("nm_admin_session"); // Clean old session flags
+    
     const fetchHomeData = async () => {
       setHomeLoading(true);
       try {
-        const { data: cats, error: catError } = await supabase.from('categories').select('*').order('display_order');
-        if (catError) console.error("Categories fetch error:", catError);
-        console.log('Categories found in Supabase (categories table):', cats);
-        
-        // Handle banners with a fallback to empty array to prevent 400 crash
-        let bans = [];
-        try {
-          const { data, error: banError } = await supabase.from('website_banners').select('*').eq('active', true).order('display_order');
-          if (banError) {
-            console.warn("Website banners table may not exist or query failed:", banError.message);
-          } else {
-            bans = data || [];
-          }
-        } catch (e) {
-          console.warn("Banners fetch crashed, using empty array fallback");
-        }
-
+        const { data: bans } = await supabase.from('website_banners').select('*').eq('active', true).order('display_order');
         const [sectionLayout, gridData] = await Promise.all([
           getSectionLayout(),
           import("@/lib/storeConfig").then(m => m.getGridStyle())
         ]);
         
-        // Show ALL categories from DB. Only hide if is_visible is explicitly false.
-        const visibleCats = cats?.filter(c => c.is_visible !== false) || [];
-        console.log('Processed visible categories from table:', visibleCats);
-        setCategories(visibleCats);
-        
-        setBanners(bans);
+        setBanners(bans || []);
         setLayout(sectionLayout);
         setGridStyle(gridData);
       } catch (err) {
@@ -594,7 +577,7 @@ export default function Index() {
         );
       case 'categories':
         return sortedCategories.length > 0 && (
-          <div key="categories" className="mb-12 max-w-7xl mx-auto px-4 w-full relative z-[20]">
+          <div key="categories" className="mb-12 max-w-7xl mx-auto px-4 w-full relative z-[999]">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <LayoutGrid size={18} className="text-primary" /> Shop by Category
             </h3>
