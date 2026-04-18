@@ -93,14 +93,22 @@ export default function Index() {
     const fetchHomeData = async () => {
       setHomeLoading(true);
       try {
-        const { data: cats } = await supabase.from('categories').select('*').order('display_order');
+        const { data: cats, error: catError } = await supabase.from('categories').select('*').order('display_order');
+        if (catError) console.error("Categories fetch error:", catError);
+        console.log('Categories found in Supabase:', cats);
+        
         const { data: bans } = await supabase.from('website_banners').select('*').eq('active', true).order('display_order');
         const [sectionLayout, gridData] = await Promise.all([
           getSectionLayout(),
           import("@/lib/storeConfig").then(m => m.getGridStyle())
         ]);
-        // Robust filtering: Only hide if explicitly set to false
-        setCategories(cats?.filter(c => c.is_visible !== false) || []);
+        
+        // Show ALL categories from DB. Only hide if is_visible is explicitly false.
+        // If is_visible is NULL or true, it will be shown.
+        const visibleCats = cats?.filter(c => c.is_visible !== false) || [];
+        console.log('Processed visible categories:', visibleCats);
+        setCategories(visibleCats);
+        
         setBanners(bans || []);
         setLayout(sectionLayout);
         setGridStyle(gridData);
@@ -445,8 +453,9 @@ export default function Index() {
   const sortedCategories = useMemo(() => {
     // If we have custom categories from DB, use them first
     if (categories && categories.length > 0) {
-      // Handle both 'name' and 'title' columns
-      return categories.map(c => c.name || c.title).filter(Boolean);
+      const dbCats = categories.map(c => c.name || c.title).filter(Boolean);
+      console.log('Sorted categories from DB:', dbCats);
+      return dbCats;
     }
     const filtered = posCategories.filter(c => !HIDDEN_CATS.includes(c));
     const priority = filtered.filter(c => PRIORITY_CATS.includes(c));
@@ -1203,7 +1212,9 @@ export default function Index() {
 
       {/* Dynamic Layout Sections */}
       {!selectedCat && !selectedBrand && !query && (
-        <div className="flex flex-col">
+        <div className="flex flex-col relative z-10">
+          {/* Force categories right below banner if layout is missing or categories not in it */}
+          {layout.length === 0 && renderSection('categories')}
           {layout.map(section => renderSection(section.id))}
         </div>
       )}
