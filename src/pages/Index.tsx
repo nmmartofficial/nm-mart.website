@@ -7,9 +7,9 @@ import "jspdf-autotable";
 import {
   ShoppingCart, Search, X, MessageCircle,
   Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift,
-  ChevronRight, User as UserIcon, CreditCard, ScanBarcode,
+  ChevronRight, ScanBarcode,
   Edit3, Save, Loader2 as LoaderIcon, Image as ImageIcon, Upload,
-  Database, LogOut, Clock, Truck, ShieldCheck
+  Database, LogOut, Clock
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase/client";
@@ -25,6 +25,7 @@ import {
 import { getSectionLayout, SectionLayout } from "@/lib/storeConfig";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import HeroBanner from "@/components/shop/HeroBanner";
+import Navbar from "@/components/Navbar";
 import ChatBot from "@/components/shop/ChatBot";
 import Footer from "@/components/shop/Footer";
 import FlashSaleBanner from "@/components/shop/FlashSaleBanner";
@@ -37,8 +38,6 @@ import OrdersModal from "@/components/shop/modals/OrdersModal";
 import Highlights from "@/components/shop/Highlights";
 import ProductCard from "@/components/shop/ProductCard";
 
-const LOGO_URL = "/nm-mart-logo.png";
-const SLOGAN = "Shop More, Save More";
 const ITEMS_PER_PAGE = 40;
 const ADMIN_EMAIL = "nmmart07@gmail.com";
 
@@ -121,8 +120,6 @@ const HIDDEN_CATS: string[] = [];
 export default function Index() {
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<any[]>([]);
-  const [banners, setBanners] = useState<any[]>([]);
   const [layout, setLayout] = useState<SectionLayout[]>(DEFAULT_HOME_LAYOUT);
   const [gridStyle, setGridStyle] = useState({ categoryColumns: 6, productColumns: 4 });
   const [homeLoading, setHomeLoading] = useState(true);
@@ -137,7 +134,6 @@ export default function Index() {
           import("@/lib/storeConfig").then(m => m.getGridStyle())
         ]);
         
-        setBanners(bans || []);
         setLayout(mergeHomeLayout(sectionLayout));
         setGridStyle(gridData);
       } catch (err) {
@@ -159,11 +155,6 @@ export default function Index() {
 
   // Helper for Category Icons
   const getCategoryIcon = (cat: string) => {
-    const customCat = categories.find(c => (c.name || c.title) === cat);
-    const imageUrl = customCat?.image_url || customCat?.icon_url;
-    if (imageUrl) {
-      return <img src={imageUrl} alt="" className="w-8 h-8 object-contain" />;
-    }
     const normalized = normalizeCategory(cat);
     return CATEGORY_ICONS[normalized] || "📦";
   };
@@ -502,17 +493,7 @@ export default function Index() {
 
   // Filter out Bedsheets, sort priority categories first
   const sortedCategories = useMemo(() => {
-    console.debug("[Home] categories debug", {
-      customCategoriesCount: categories?.length ?? 0,
-      posCategoriesCount: posCategories?.length ?? 0,
-    });
-    // 1. If we have custom categories from DB, use them first
-    if (categories && categories.length > 0) {
-      const dbCats = categories.map(c => c.name || c.title).filter(Boolean);
-      return dbCats;
-    }
-    
-    // 2. Fallback to categories derived from products table (Live Mapping)
+    // Categories are derived live from products table mapping.
     if (posCategories && posCategories.length > 0) {
       const filtered = posCategories.filter(c => !HIDDEN_CATS.includes(c));
       const priority = filtered.filter(c => PRIORITY_CATS.includes(c));
@@ -521,7 +502,7 @@ export default function Index() {
     }
 
     return [];
-  }, [categories, posCategories]);
+  }, [posCategories]);
 
   const handleBannerClick = (link: { type: string, value: string }) => {
     if (link.type === 'category') {
@@ -625,41 +606,8 @@ export default function Index() {
     switch (sectionId) {
       case 'hero':
         return (
-          <div key="hero" className={`${isAdminMode ? 'pt-[116px]' : 'pt-0'} mb-8 relative z-0`}>
+          <div key="hero" className={`${isAdminMode ? 'pt-[116px]' : 'pt-20 md:pt-24'} mb-8 relative z-0`}>
             <HeroBanner onBannerClick={handleBannerClick} />
-
-            {/* Trust Strip */}
-            <div className="mt-5 max-w-7xl mx-auto px-4">
-              <div className="grid grid-cols-3 gap-3 bg-white/80 backdrop-blur-md border border-orange-100 rounded-3xl p-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600">
-                    <Truck size={18} />
-                  </div>
-                  <div className="leading-tight">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">Fast Delivery</div>
-                    <div className="text-[11px] font-bold text-black">Same day*</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-yellow-50 border border-yellow-200 flex items-center justify-center text-yellow-700">
-                    <ShieldCheck size={18} />
-                  </div>
-                  <div className="leading-tight">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">Secure Payments</div>
-                    <div className="text-[11px] font-bold text-black">UPI / Card</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-green-700">
-                    <Clock size={18} />
-                  </div>
-                  <div className="leading-tight">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">Support</div>
-                    <div className="text-[11px] font-bold text-black">9 AM–9 PM</div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         );
       case 'highlights':
@@ -682,7 +630,6 @@ export default function Index() {
             </h3>
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {sortedCategories.map(catName => {
-                const cat = categories.find(c => (c.name || c.title) === catName);
                 return (
                   <motion.button whileTap={{ scale: 0.94 }} key={catName}
                     onClick={() => { setSelectedCat(catName); setSelectedBrand(null); setQuery(""); }}
@@ -693,7 +640,6 @@ export default function Index() {
                         ? "bg-white border-2 border-primary/25"
                         : "bg-white border-gray-100"
                     }`}
-                    style={cat?.bg_color ? { backgroundColor: cat.bg_color + '10' } : {}}
                   >
                     <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center bg-gray-50 text-2xl md:text-3xl group-hover:scale-110 transition-transform shadow-sm">
                       {getCategoryIcon(catName)}
@@ -1219,83 +1165,10 @@ export default function Index() {
         </div>
       )}
       
-      {/* Sticky Header with Logo */}
-      <header className={`sticky z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300 ${isAdminMode ? 'top-[40px]' : 'top-0'}`}>
-        <div className="max-w-7xl mx-auto flex items-center gap-3 px-3 py-2.5">
-          {/* Logo - Hidden in Admin Mode as requested */}
-          {!isAdminMode ? (
-            <a href="/" className="flex items-center gap-2 shrink-0">
-              <img src={LOGO_URL} alt="NM Mart" className="w-10 h-10 rounded-xl shadow-md" />
-              <div className="hidden sm:block">
-                <h1 className="text-base font-black tracking-tight leading-none text-black italic uppercase">NM <span className="text-primary">MART</span></h1>
-                <p className="text-[7px] uppercase tracking-[0.15em] text-gray-400 font-bold italic">{SLOGAN}</p>
-              </div>
-            </a>
-          ) : (
-            <div className="flex items-center gap-2 shrink-0">
-               <h1 className="text-sm font-black italic uppercase text-black">ADMIN <span className="text-primary">VIEW</span></h1>
-            </div>
-          )}
-
-          <div className="flex-1" />
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {user ? (
-              <button 
-                onClick={() => navigate("/profile")} 
-                className="flex items-center gap-2 bg-secondary text-foreground px-3 py-2 rounded-lg border border-border hover:border-sky-blue transition-all group"
-              >
-                <UserIcon size={14} className="text-sky-blue" />
-                <span className="text-[9px] font-bold uppercase hidden md:inline">My Profile</span>
-              </button>
-            ) : (
-              <button onClick={() => navigate("/login")}
-                className="text-[9px] font-bold bg-primary text-primary-foreground px-3 py-2 rounded-lg hover:bg-primary/90 transition-all uppercase flex items-center gap-1">
-                <CreditCard size={12} /> Login
-              </button>
-            )}
-
-            {/* Welfare Card Button */}
-            {welfareCard?.active ? (
-              <button 
-                onClick={() => setShowGoldenCard(true)}
-                className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-2 border-yellow-600 px-2.5 py-1.5 rounded-xl hover:shadow-lg transition-all group shadow-sm animate-pulse-glow"
-              >
-                <Star size={14} className="text-yellow-800 fill-current" />
-                <div className="flex flex-col items-start leading-none">
-                  <span className="text-[8px] font-black uppercase tracking-tighter text-yellow-900">Active Card</span>
-                  <span className="text-[9px] font-black text-black hidden sm:inline">{user?.user_metadata?.full_name?.split(' ')[0] || "Active"}</span>
-                </div>
-              </button>
-            ) : (
-              <button 
-                onClick={() => setShowWelfareModal(true)}
-                className="flex items-center gap-1.5 bg-white border-2 border-black px-2.5 py-1.5 rounded-xl hover:bg-black hover:text-white transition-all group shadow-sm"
-              >
-                <Star size={14} className="text-black group-hover:text-white fill-current" />
-                <span className="text-[9px] font-black uppercase tracking-tighter text-black group-hover:text-white hidden sm:inline">Welfare Card</span>
-              </button>
-            )}
-
-            <button onClick={() => setShowOrders(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors" title="Orders">
-              <Package size={18} />
-            </button>
-
-            <button onClick={() => setCartOpen(true)} className="relative p-2 hover:bg-secondary rounded-lg transition-colors">
-              <ShoppingCart size={20} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 gradient-sky-blue text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Search Section - Professional & Prominent */}
-      <div className={`sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 ${isAdminMode ? 'top-[116px]' : 'top-[64px]'}`}>
+      <div className={`sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 ${isAdminMode ? 'top-[112px]' : 'top-[72px]'}`}>
         <div className="max-w-5xl mx-auto">
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 rounded-3xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>

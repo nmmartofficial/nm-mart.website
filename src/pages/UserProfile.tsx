@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "@/components/shop/Header";
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/shop/Footer";
 import { User, Package, MapPin, LogOut, Star, Loader2, Save, Smartphone, ChevronRight, Map, Camera } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
@@ -189,10 +189,10 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen bg-[#FFFAF5] text-black flex flex-col font-sans">
-      <Header />
+      <Navbar />
       
       <main className="flex-1 py-12 px-4 md:px-6">
-        <div className="max-w-7xl mx-auto space-y-10">
+        <div className="max-w-7xl mx-auto space-y-8">
           
           {/* Dashboard Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -212,7 +212,7 @@ const UserProfile = () => {
             </button>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-10">
+          <div className="grid lg:grid-cols-3 gap-8">
             {/* Left Column - Profile Details */}
             <div className="lg:col-span-1 space-y-8">
               <div className="bg-white p-10 rounded-3xl shadow-2xl space-y-10">
