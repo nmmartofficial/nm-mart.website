@@ -130,7 +130,7 @@ const Admin = () => {
           </div>
         </header>
 
-        <div className="max-w-7xl">
+        <div className="w-full">
           {activeTab === "inventory" && <InventoryTab />}
           {activeTab === "orders" && <OrdersTab />}
           {activeTab === "analytics" && <AnalyticsTab />}

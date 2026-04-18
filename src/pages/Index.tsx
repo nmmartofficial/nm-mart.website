@@ -92,13 +92,13 @@ export default function Index() {
     const fetchHomeData = async () => {
       setHomeLoading(true);
       try {
-        const { data: cats } = await supabase.from('categories').select('*').neq('is_visible', false).order('display_order');
+        const { data: cats } = await supabase.from('categories').select('*').order('display_order');
         const { data: bans } = await supabase.from('website_banners').select('*').eq('active', true).order('display_order');
         const [sectionLayout, gridData] = await Promise.all([
           getSectionLayout(),
           import("@/lib/storeConfig").then(m => m.getGridStyle())
         ]);
-        setCategories(cats || []);
+        setCategories(cats?.filter(c => c.is_visible !== false) || []);
         setBanners(bans || []);
         setLayout(sectionLayout);
         setGridStyle(gridData);
@@ -1001,20 +1001,17 @@ export default function Index() {
       )}
       {/* Admin Mode Bar */}
       {isAdminMode && (
-        <div className="bg-black text-white py-3 px-6 flex items-center justify-between sticky top-0 z-[60] border-b border-white/20 shadow-2xl">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-red-600 animate-pulse shadow-[0_0_12px_rgba(220,38,38,0.9)]"></div>
-              <h2 className="text-sm font-black uppercase tracking-[4px] italic text-white">ADMIN MODE ACTIVE</h2>
-            </div>
-            <div className="hidden lg:flex items-center gap-3 bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Inventory Control Enabled</span>
+        <div className="bg-black text-white py-2 px-6 flex items-center justify-between sticky top-0 z-[60] border-b border-white/20 shadow-2xl">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.9)]"></div>
+              <h2 className="text-[10px] font-black uppercase tracking-[3px] italic text-white">NM MART CONTROL CENTER</h2>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
-            <Link to="/admin" className="flex items-center gap-2 bg-primary text-white px-6 py-2 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 group">
-              <Database size={14} className="group-hover:rotate-12 transition-transform" /> Return to Inventory
+            <Link to="/admin" className="flex items-center gap-2 bg-primary text-white px-4 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 group">
+              <Database size={12} className="group-hover:rotate-12 transition-transform" /> Inventory
             </Link>
             <button 
               onClick={() => {
@@ -1022,25 +1019,31 @@ export default function Index() {
                 setIsAdminMode(false);
                 toast.info("Admin Mode Disabled");
               }}
-              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-all px-4 py-2 rounded-2xl border border-white/10 hover:border-red-500/50"
+              className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-all"
             >
-              Exit Mode
+              Exit
             </button>
           </div>
         </div>
       )}
       
       {/* Sticky Header with Logo */}
-      <header className={`sticky z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300 ${isAdminMode ? 'top-[52px]' : 'top-0'}`}>
+      <header className={`sticky z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300 ${isAdminMode ? 'top-[40px]' : 'top-0'}`}>
         <div className="max-w-7xl mx-auto flex items-center gap-3 px-3 py-2.5">
-          {/* Logo */}
-          <a href="/" className="flex items-center gap-2 shrink-0">
-            <img src={LOGO_URL} alt="NM Mart" className="w-10 h-10 rounded-xl shadow-md" />
-            <div className="hidden sm:block">
-              <h1 className="text-base font-black tracking-tight leading-none text-black italic uppercase">NM <span className="text-primary">MART</span></h1>
-              <p className="text-[7px] uppercase tracking-[0.15em] text-gray-400 font-bold italic">{SLOGAN}</p>
+          {/* Logo - Hidden in Admin Mode as requested */}
+          {!isAdminMode ? (
+            <a href="/" className="flex items-center gap-2 shrink-0">
+              <img src={LOGO_URL} alt="NM Mart" className="w-10 h-10 rounded-xl shadow-md" />
+              <div className="hidden sm:block">
+                <h1 className="text-base font-black tracking-tight leading-none text-black italic uppercase">NM <span className="text-primary">MART</span></h1>
+                <p className="text-[7px] uppercase tracking-[0.15em] text-gray-400 font-bold italic">{SLOGAN}</p>
+              </div>
+            </a>
+          ) : (
+            <div className="flex items-center gap-2 shrink-0">
+               <h1 className="text-sm font-black italic uppercase text-black">ADMIN <span className="text-primary">VIEW</span></h1>
             </div>
-          </a>
+          )}
 
           <div className="flex-1" />
 
@@ -1360,7 +1363,9 @@ export default function Index() {
         <MessageCircle size={24} />
       </a>
 
-      <ChatBot />
+      {/* Modals & Chatbot */}
+      {!isAdminMode && <ChatBot />}
+      <WelfareModal isOpen={showWelfareModal} onClose={() => setShowWelfareModal(false)} />
 
       {/* Back to Top */}
       <AnimatePresence>
