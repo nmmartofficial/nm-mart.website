@@ -11,11 +11,24 @@ export interface StoreConfig {
 export interface ThemeConfig {
   primaryColor: string;
   secondaryColor: string;
+  presetName?: string;
   storeName: string;
   storeLogo: string;
   announcementText: string;
   announcementVisible: boolean;
   fontFamily: string;
+  bannerRadius?: number;
+  categoryCardStyle?: "soft" | "glass" | "bold";
+  bannerTextPosition?: "left" | "center" | "right";
+  bannerCtaStyle?: "solid" | "outline" | "pill";
+  productCardStyle?: "compact" | "premium" | "offer";
+  sectionBackgrounds?: Record<string, string>;
+  festiveSchedule?: {
+    enabled: boolean;
+    startDate?: string;
+    endDate?: string;
+    presetName?: string;
+  };
 }
 
 export interface SectionLayout {
@@ -46,11 +59,30 @@ const DEFAULT_CONFIG: Record<string, any> = {
   theme: {
     primaryColor: "#CC0000",
     secondaryColor: "#D4AF37",
+    presetName: "NM Classic",
     storeName: "NM Mart",
     storeLogo: "/nm-mart-logo.png",
     announcementText: "Free Delivery on orders above ₹1499!",
     announcementVisible: true,
-    fontFamily: "Inter"
+    fontFamily: "Inter",
+    bannerRadius: 0,
+    categoryCardStyle: "soft",
+    bannerTextPosition: "left",
+    bannerCtaStyle: "solid",
+    productCardStyle: "compact",
+    sectionBackgrounds: {
+      categories: "",
+      flat_50: "",
+      flat_33: "",
+      brands: "",
+      products: ""
+    },
+    festiveSchedule: {
+      enabled: false,
+      startDate: "",
+      endDate: "",
+      presetName: "Festive"
+    }
   },
   layout: [
     { id: "hero", name: "Hero Banner", order: 0, visible: true },
@@ -127,7 +159,10 @@ export async function setStoreConfig(key: string, value: any): Promise<boolean> 
 
 export async function getThemeConfig(): Promise<ThemeConfig> {
   const theme = await getStoreConfig('theme');
-  return theme || DEFAULT_CONFIG.theme;
+  return {
+    ...DEFAULT_CONFIG.theme,
+    ...(theme || {})
+  };
 }
 
 export async function setThemeConfig(config: Partial<ThemeConfig>): Promise<boolean> {
@@ -138,9 +173,14 @@ export async function setThemeConfig(config: Partial<ThemeConfig>): Promise<bool
 export async function getSectionLayout(): Promise<SectionLayout[]> {
   const layout = await getStoreConfig('homepage_layout');
   if (!layout || !Array.isArray(layout) || layout.length === 0) {
-    return DEFAULT_CONFIG.layout;
+    return DEFAULT_CONFIG.layout.map((section) =>
+      section.id === "categories" ? { ...section, visible: true } : section
+    );
   }
-  return layout;
+  // Hard safety: categories menu should never disappear from homepage.
+  return layout.map((section: SectionLayout) =>
+    section.id === "categories" ? { ...section, visible: true } : section
+  );
 }
 
 export async function setSectionLayout(layout: SectionLayout[]): Promise<boolean> {

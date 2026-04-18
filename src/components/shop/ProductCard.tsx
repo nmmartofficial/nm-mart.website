@@ -3,9 +3,19 @@ import { MessageCircle, ShoppingCart, Star } from "lucide-react";
 import { Product, productSlug, WA_NUMBER } from "@/lib/store-utils";
 import ProductImageDisplay from "./ProductImageDisplay";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@/lib/ThemeProvider";
 
 const ProductCard = ({ product, onAddToCart }: { product: Product, onAddToCart: (p: Product) => void }) => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const productStyle = theme.productCardStyle || "compact";
+  const cardClass =
+    productStyle === "premium"
+      ? "rounded-2xl border-2 border-primary/20 shadow-xl"
+      : productStyle === "offer"
+      ? "rounded-xl border border-destructive/30"
+      : "rounded-xl border border-border";
+  const imageHeightClass = productStyle === "premium" ? "h-32" : productStyle === "offer" ? "h-24" : "h-28";
   
   // व्हाट्सएप लिंक (NM Mart Order)
   const whatsappLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
@@ -16,10 +26,10 @@ const ProductCard = ({ product, onAddToCart }: { product: Product, onAddToCart: 
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
+      className={`bg-card ${cardClass} overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer`}
       onClick={() => navigate(`/product/${productSlug(product)}`)}
     >
-      <div className="relative h-28 bg-secondary/30">
+      <div className={`relative ${imageHeightClass} bg-secondary/30`}>
         <ProductImageDisplay imageUrl={product.imageUrl} name={product.name} />
         {product.badge && (
           <span className="absolute top-2 left-2 bg-primary text-white text-[8px] font-black px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">

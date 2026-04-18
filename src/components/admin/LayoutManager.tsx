@@ -46,6 +46,10 @@ const LayoutManager = () => {
 
   const toggleVisibility = (index: number) => {
     const newLayout = [...layout];
+    if (newLayout[index].id === "categories") {
+      toast.info("Categories section is mandatory and always visible.");
+      return;
+    }
     newLayout[index].visible = !newLayout[index].visible;
     setLayout(newLayout);
   };
@@ -125,8 +129,11 @@ const LayoutManager = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => toggleVisibility(index)}
-                className={`p-2 rounded-xl transition-all ${section.visible ? 'bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white' : 'bg-primary text-white hover:bg-black'}`}
-                title={section.visible ? "Hide Section" : "Show Section"}
+                disabled={section.id === "categories"}
+                className={`p-2 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                  section.visible ? 'bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white' : 'bg-primary text-white hover:bg-black'
+                }`}
+                title={section.id === "categories" ? "Categories cannot be hidden" : (section.visible ? "Hide Section" : "Show Section")}
               >
                 {section.visible ? <Eye size={16} /> : <EyeOff size={16} />}
               </button>

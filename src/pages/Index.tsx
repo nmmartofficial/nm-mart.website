@@ -556,10 +556,22 @@ export default function Index() {
   const welfareDiscount = welfareCard?.active ? Math.round(cartTotal * 0.05) : 0;
   const finalTotal = cartTotal - welfareDiscount;
   const memberId = user ? `NM-MEM-${(user.id || "").slice(0, 4).toUpperCase()}` : null;
+  const productCardStyle = theme.productCardStyle || "compact";
+  const productCardClass =
+    productCardStyle === "premium"
+      ? "bg-card rounded-2xl border-2 border-primary/20 overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
+      : productCardStyle === "offer"
+      ? "bg-card rounded-xl border border-destructive/30 overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
+      : "bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer";
+  const productImageClass = productCardStyle === "premium" ? "relative h-32 bg-secondary/30" : "relative h-28 bg-secondary/30";
+  const getSectionBgStyle = (sectionId: string) => {
+    const color = theme.sectionBackgrounds?.[sectionId];
+    return color ? { backgroundColor: color } : undefined;
+  };
 
   const renderSection = (sectionId: string) => {
     const config = layout.find(s => s.id === sectionId);
-    if (config && !config.visible) return null;
+    if (config && !config.visible && sectionId !== "categories") return null;
 
     switch (sectionId) {
       case 'hero':
@@ -582,7 +594,7 @@ export default function Index() {
         );
       case 'categories':
         return sortedCategories.length > 0 && (
-          <div key="categories" className="mb-12 max-w-7xl mx-auto px-4 w-full relative z-[30]">
+          <div key="categories" className="mb-12 max-w-7xl mx-auto px-4 py-4 w-full relative z-[30] rounded-3xl" style={getSectionBgStyle("categories")}>
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <LayoutGrid size={18} className="text-primary" /> Shop by Category
             </h3>
@@ -592,7 +604,13 @@ export default function Index() {
                 return (
                   <motion.button whileTap={{ scale: 0.94 }} key={catName}
                     onClick={() => { setSelectedCat(catName); setSelectedBrand(null); setQuery(""); }}
-                    className="p-3 md:p-4 rounded-[20px] md:rounded-[24px] bg-white border border-gray-100 flex flex-col items-center gap-2 md:gap-3 transition-all group hover:border-primary hover:shadow-xl shadow-sm"
+                    className={`p-3 md:p-4 rounded-[20px] md:rounded-[24px] border flex flex-col items-center gap-2 md:gap-3 transition-all group hover:border-primary hover:shadow-xl shadow-sm ${
+                      theme.categoryCardStyle === "glass"
+                        ? "bg-white/70 backdrop-blur-md border-white/50"
+                        : theme.categoryCardStyle === "bold"
+                        ? "bg-white border-2 border-primary/25"
+                        : "bg-white border-gray-100"
+                    }`}
                     style={cat?.bg_color ? { backgroundColor: cat.bg_color + '10' } : {}}
                   >
                     <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center bg-gray-50 text-2xl md:text-3xl group-hover:scale-110 transition-transform shadow-sm">
@@ -607,7 +625,7 @@ export default function Index() {
         );
       case 'flat_50':
         return flat50.length > 0 && (
-          <div key="flat_50" className="mb-12 max-w-7xl mx-auto px-4 w-full">
+          <div key="flat_50" className="mb-12 max-w-7xl mx-auto px-4 py-4 w-full rounded-3xl" style={getSectionBgStyle("flat_50")}>
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> 50% OFF Offers
             </h3>
@@ -623,7 +641,7 @@ export default function Index() {
         );
       case 'flat_33':
         return flat33.length > 0 && (
-          <div key="flat_33" className="mb-12 max-w-7xl mx-auto px-4 w-full">
+          <div key="flat_33" className="mb-12 max-w-7xl mx-auto px-4 py-4 w-full rounded-3xl" style={getSectionBgStyle("flat_33")}>
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> 33% OFF Offers
             </h3>
@@ -694,7 +712,7 @@ export default function Index() {
         );
       case 'brands':
         return brands.length > 0 && (
-          <div key="brands" className="mb-12 max-w-7xl mx-auto px-4 w-full">
+          <div key="brands" className="mb-12 max-w-7xl mx-auto px-4 py-4 w-full rounded-3xl" style={getSectionBgStyle("brands")}>
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> Shop by Brand
             </h3>
@@ -711,7 +729,7 @@ export default function Index() {
         );
       case 'products':
         return (
-          <div key="products">
+          <div key="products" className="rounded-3xl px-2 py-2" style={getSectionBgStyle("products")}>
             {/* Dynamic Category-wise Product Sections */}
             {sortedCategories.slice(0, 6).map(cat => {
               const catProducts = allProducts
@@ -740,10 +758,10 @@ export default function Index() {
                     {catProducts.map((p, idx) => (
                       <motion.div key={`${p.barcode}-${idx}`}
                         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                        className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
+                        className={productCardClass}
                         onClick={() => navigate(`/product/${productSlug(p)}`)}
                       >
-                        <div className="relative h-24 bg-secondary/30">
+                        <div className={productImageClass}>
                           <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
                           {p.badge && (
                             <span className="absolute top-1 left-1 bg-primary text-white text-[7px] font-black px-1.5 py-0.5 rounded-lg shadow-sm z-10 animate-pulse">
@@ -1322,10 +1340,10 @@ export default function Index() {
                       <motion.div key={`${p.barcode}-${idx}`}
                         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(idx * 0.01, 0.2) }}
-                        className="bg-card rounded-xl border border-border overflow-hidden group hover:border-primary/50 hover:shadow-glow transition-all flex flex-col cursor-pointer"
+                        className={productCardClass}
                         onClick={() => navigate(`/product/${productSlug(p)}`)}
                       >
-                        <div className="relative h-28 bg-secondary/30">
+                        <div className={productImageClass}>
                           <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
                           {p.badge && (
                             <span className="absolute top-2 left-2 bg-primary text-white text-[8px] font-black px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">

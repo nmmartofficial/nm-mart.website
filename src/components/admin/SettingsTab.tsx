@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings, Palette, Save, Loader2, Type, Megaphone, Upload, Trash2 } from "lucide-react";
+import { Settings, Palette, Save, Loader2, Type, Megaphone, Upload, CalendarClock, LayoutTemplate } from "lucide-react";
 import { toast } from "sonner";
 import { getThemeConfig, setThemeConfig, ThemeConfig } from "@/lib/storeConfig";
 import { useTheme } from "@/lib/ThemeProvider";
 import { supabase } from "@/lib/supabase/client";
 
 const THEME_PRESETS = [
-  { name: "NM Red", primary: "#CC0000" },
-  { name: "Sky Blue", primary: "#0EA5E9" },
-  { name: "Forest Green", primary: "#10B981" },
-  { name: "NM Gold", primary: "#D4AF37" },
-  { name: "Purple", primary: "#8B5CF6" },
-  { name: "Pink", primary: "#EC4899" },
+  { name: "NM Classic", primary: "#CC0000", secondary: "#D4AF37" },
+  { name: "Sky Fresh", primary: "#0EA5E9", secondary: "#E0F2FE" },
+  { name: "Forest", primary: "#10B981", secondary: "#D1FAE5" },
+  { name: "Royal", primary: "#8B5CF6", secondary: "#EDE9FE" },
+  { name: "Festive", primary: "#F97316", secondary: "#FFEDD5" },
+  { name: "Luxury", primary: "#111827", secondary: "#F3F4F6" },
 ];
 
 const FONTS = ["Inter", "Poppins", "Roboto", "Montserrat", "Open Sans"];
@@ -25,11 +25,30 @@ const SettingsTab = () => {
   const [theme, setTheme] = useState<ThemeConfig>({
     primaryColor: "#CC0000",
     secondaryColor: "#D4AF37",
+    presetName: "NM Classic",
     storeName: "NM Mart",
     storeLogo: "/nm-mart-logo.png",
     announcementText: "Free Delivery on orders above ₹1499!",
     announcementVisible: true,
-    fontFamily: "Inter"
+    fontFamily: "Inter",
+    bannerRadius: 0,
+    categoryCardStyle: "soft",
+    bannerTextPosition: "left",
+    bannerCtaStyle: "solid",
+    productCardStyle: "compact",
+    sectionBackgrounds: {
+      categories: "",
+      flat_50: "",
+      flat_33: "",
+      brands: "",
+      products: ""
+    },
+    festiveSchedule: {
+      enabled: false,
+      startDate: "",
+      endDate: "",
+      presetName: "Festive"
+    }
   });
 
   useEffect(() => {
@@ -212,9 +231,14 @@ const SettingsTab = () => {
                   {THEME_PRESETS.map((preset) => (
                     <button
                       key={preset.name}
-                      onClick={() => setTheme(prev => ({ ...prev, primaryColor: preset.primary }))}
+                      onClick={() => setTheme(prev => ({ 
+                        ...prev, 
+                        presetName: preset.name,
+                        primaryColor: preset.primary,
+                        secondaryColor: preset.secondary
+                      }))}
                       className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all ${
-                        theme.primaryColor === preset.primary ? "border-primary bg-primary/5" : "border-gray-100 hover:border-primary"
+                        theme.presetName === preset.name ? "border-primary bg-primary/5" : "border-gray-100 hover:border-primary"
                       }`}
                     >
                       <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: preset.primary }} />
@@ -222,6 +246,116 @@ const SettingsTab = () => {
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Secondary Accent Color</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={theme.secondaryColor}
+                  onChange={(e) => setTheme(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                  className="w-12 h-12 rounded-xl border border-gray-200 cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={theme.secondaryColor}
+                  onChange={(e) => setTheme(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                  className="flex-1 bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-3 font-bold text-xs outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Banner Corner Radius</label>
+              <input
+                type="range"
+                min={0}
+                max={36}
+                step={2}
+                value={theme.bannerRadius || 0}
+                onChange={(e) => setTheme(prev => ({ ...prev, bannerRadius: Number(e.target.value) }))}
+                className="w-full"
+              />
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">
+                Current: {theme.bannerRadius || 0}px
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Category Card Style</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(["soft", "glass", "bold"] as const).map((style) => (
+                  <button
+                    key={style}
+                    onClick={() => setTheme(prev => ({ ...prev, categoryCardStyle: style }))}
+                    className={`py-2 rounded-xl border text-[10px] font-black uppercase tracking-wide transition-all ${
+                      theme.categoryCardStyle === style
+                        ? "border-primary bg-primary text-white"
+                        : "border-gray-100 bg-gray-50 text-gray-500 hover:border-primary"
+                    }`}
+                  >
+                    {style}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Product Card Template</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(["compact", "premium", "offer"] as const).map((style) => (
+                  <button
+                    key={style}
+                    onClick={() => setTheme(prev => ({ ...prev, productCardStyle: style }))}
+                    className={`py-2 rounded-xl border text-[10px] font-black uppercase tracking-wide transition-all ${
+                      theme.productCardStyle === style
+                        ? "border-primary bg-primary text-white"
+                        : "border-gray-100 bg-gray-50 text-gray-500 hover:border-primary"
+                    }`}
+                  >
+                    {style}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Banner Text Position</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(["left", "center", "right"] as const).map((pos) => (
+                  <button
+                    key={pos}
+                    onClick={() => setTheme(prev => ({ ...prev, bannerTextPosition: pos }))}
+                    className={`py-2 rounded-xl border text-[10px] font-black uppercase tracking-wide transition-all ${
+                      theme.bannerTextPosition === pos
+                        ? "border-primary bg-primary text-white"
+                        : "border-gray-100 bg-gray-50 text-gray-500 hover:border-primary"
+                    }`}
+                  >
+                    {pos}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Banner CTA Button Style</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(["solid", "outline", "pill"] as const).map((style) => (
+                  <button
+                    key={style}
+                    onClick={() => setTheme(prev => ({ ...prev, bannerCtaStyle: style }))}
+                    className={`py-2 rounded-xl border text-[10px] font-black uppercase tracking-wide transition-all ${
+                      theme.bannerCtaStyle === style
+                        ? "border-primary bg-primary text-white"
+                        : "border-gray-100 bg-gray-50 text-gray-500 hover:border-primary"
+                    }`}
+                  >
+                    {style}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -249,6 +383,114 @@ const SettingsTab = () => {
               </div>
               <p className="text-[8px] text-gray-400 font-bold uppercase italic px-1">Tip: Use emojis to make it professional 🚀</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary"><LayoutTemplate size={20} /></div>
+            <h4 className="text-lg font-black italic uppercase">Section Background Engine</h4>
+          </div>
+          {(["categories", "flat_50", "flat_33", "brands", "products"] as const).map((sectionId) => (
+            <div key={sectionId} className="grid grid-cols-[120px_56px_1fr] gap-3 items-center">
+              <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">{sectionId}</label>
+              <input
+                type="color"
+                value={theme.sectionBackgrounds?.[sectionId] || "#ffffff"}
+                onChange={(e) =>
+                  setTheme((prev) => ({
+                    ...prev,
+                    sectionBackgrounds: { ...(prev.sectionBackgrounds || {}), [sectionId]: e.target.value }
+                  }))
+                }
+                className="w-12 h-10 rounded-lg border border-gray-200"
+              />
+              <input
+                type="text"
+                value={theme.sectionBackgrounds?.[sectionId] || ""}
+                placeholder="#ffffff"
+                onChange={(e) =>
+                  setTheme((prev) => ({
+                    ...prev,
+                    sectionBackgrounds: { ...(prev.sectionBackgrounds || {}), [sectionId]: e.target.value }
+                  }))
+                }
+                className="bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-3 font-bold text-xs outline-none focus:border-primary"
+              />
+            </div>
+          ))}
+          <p className="text-[8px] text-gray-400 font-bold uppercase">Leave blank to use default background.</p>
+        </div>
+
+        <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary"><CalendarClock size={20} /></div>
+            <h4 className="text-lg font-black italic uppercase">Festival Auto Theme Scheduler</h4>
+          </div>
+          <div className="flex items-center justify-between bg-gray-50 rounded-2xl p-3 border border-gray-100">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Scheduler</span>
+            <button
+              onClick={() =>
+                setTheme((prev) => ({
+                  ...prev,
+                  festiveSchedule: { ...(prev.festiveSchedule || {}), enabled: !prev.festiveSchedule?.enabled }
+                }))
+              }
+              className={`px-3 py-1 rounded-full text-[8px] font-black uppercase ${
+                theme.festiveSchedule?.enabled ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700"
+              }`}
+            >
+              {theme.festiveSchedule?.enabled ? "Enabled" : "Disabled"}
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[9px] font-black uppercase text-gray-400">Start Date</label>
+              <input
+                type="date"
+                value={theme.festiveSchedule?.startDate || ""}
+                onChange={(e) =>
+                  setTheme((prev) => ({
+                    ...prev,
+                    festiveSchedule: { ...(prev.festiveSchedule || {}), startDate: e.target.value }
+                  }))
+                }
+                className="mt-1 w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-3 font-bold text-xs outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="text-[9px] font-black uppercase text-gray-400">End Date</label>
+              <input
+                type="date"
+                value={theme.festiveSchedule?.endDate || ""}
+                onChange={(e) =>
+                  setTheme((prev) => ({
+                    ...prev,
+                    festiveSchedule: { ...(prev.festiveSchedule || {}), endDate: e.target.value }
+                  }))
+                }
+                className="mt-1 w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-3 font-bold text-xs outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-[9px] font-black uppercase text-gray-400">Preset during Schedule</label>
+            <select
+              value={theme.festiveSchedule?.presetName || "Festive"}
+              onChange={(e) =>
+                setTheme((prev) => ({
+                  ...prev,
+                  festiveSchedule: { ...(prev.festiveSchedule || {}), presetName: e.target.value }
+                }))
+              }
+              className="mt-1 w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-3 font-bold text-xs outline-none focus:border-primary"
+            >
+              {THEME_PRESETS.map((preset) => (
+                <option key={preset.name} value={preset.name}>{preset.name}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
