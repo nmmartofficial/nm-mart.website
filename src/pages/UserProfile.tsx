@@ -132,7 +132,7 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-black flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50 text-black flex flex-col font-sans">
       <Header />
       
       <main className="flex-1 py-12 px-4 md:px-6">
@@ -159,10 +159,10 @@ const UserProfile = () => {
           <div className="grid lg:grid-cols-3 gap-10">
             {/* Left Column - Profile Details */}
             <div className="lg:col-span-1 space-y-8">
-              <div className="bg-white border border-gray-100 p-8 rounded-[32px] shadow-[0_10px_30px_rgba(0,0,0,0.06)] space-y-10">
+              <div className="bg-white border border-gray-100 p-10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] space-y-10">
                 {/* Premium Profile Header */}
                 <div className="text-center">
-                  <div className="mx-auto w-28 h-28 rounded-[28px] bg-gradient-to-br from-orange-500 to-orange-700 shadow-lg overflow-hidden flex items-center justify-center text-white ring-4 ring-orange-100">
+                  <div className="mx-auto w-32 h-32 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-700 shadow-lg overflow-hidden flex items-center justify-center text-white ring-4 ring-orange-100">
                     {profile.avatar_url ? (
                       <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -175,19 +175,22 @@ const UserProfile = () => {
                   </h3>
 
                   <div className="mt-4 flex justify-center">
-                    <div className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-orange-600 shadow-md border border-orange-200">
-                      <span className="text-[10px] font-black uppercase tracking-[3px] text-white">
-                        Total Points: {profile.points}
-                      </span>
+                    <div className="px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-orange-600 border border-orange-200 shadow-[0_10px_25px_rgba(249,115,22,0.25)] ring-2 ring-orange-100">
+                      <div className="flex items-center gap-2">
+                        <Star size={14} className="text-amber-900 fill-current" />
+                        <span className="text-[10px] font-black uppercase tracking-[3px] text-white drop-shadow">
+                          Total Points: {profile.points}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-7">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Profile Photo URL</label>
+                    <label className="text-[10px] font-black uppercase text-orange-600 tracking-[2px] ml-1">Profile Photo URL</label>
                     <div className="relative">
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-300">
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 text-orange-500">
                         <User size={16} />
                       </div>
                       <input
@@ -195,15 +198,15 @@ const UserProfile = () => {
                         value={profile.avatar_url}
                         onChange={e => setProfile({ ...profile, avatar_url: e.target.value })}
                         placeholder="PASTE IMAGE URL"
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold text-sm focus:border-orange-500 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
+                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold text-sm placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-200/70 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Full Name</label>
+                    <label className="text-[10px] font-black uppercase text-orange-600 tracking-[2px] ml-1">Full Name</label>
                     <div className="relative">
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-300">
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 text-orange-500">
                         <User size={16} />
                       </div>
                       <input
@@ -211,49 +214,49 @@ const UserProfile = () => {
                         value={profile.name}
                         onChange={e => setProfile({ ...profile, name: e.target.value })}
                         placeholder="ENTER NAME"
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold uppercase text-sm focus:border-orange-500 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
+                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold uppercase text-sm placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-200/70 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Phone Number</label>
+                    <label className="text-[10px] font-black uppercase text-orange-600 tracking-[2px] ml-1">Phone Number</label>
                     <div className="relative">
-                      <PhoneIcon className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                      <PhoneIcon className="absolute left-0 top-1/2 -translate-y-1/2 text-orange-500" size={16} />
                       <input
                         type="tel"
                         value={profile.phone}
                         onChange={e => setProfile({ ...profile, phone: e.target.value })}
                         placeholder="PHONE NUMBER"
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold text-sm focus:border-orange-500 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
+                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold text-sm placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-200/70 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Delivery Address</label>
+                    <label className="text-[10px] font-black uppercase text-orange-600 tracking-[2px] ml-1">Delivery Address</label>
                     <div className="relative">
-                      <MapPin className="absolute left-0 top-4 text-gray-300" size={16} />
+                      <MapPin className="absolute left-0 top-4 text-orange-500" size={16} />
                       <textarea
                         value={profile.address}
                         onChange={e => setProfile({ ...profile, address: e.target.value })}
                         placeholder="FULL ADDRESS IN MANJHANPUR"
                         rows={3}
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold uppercase text-sm resize-none focus:border-orange-500 focus:shadow-[0_14px_28px_-20px_rgba(249,115,22,0.9)] transition-all"
+                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold uppercase text-sm resize-none placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-200/70 focus:shadow-[0_14px_28px_-20px_rgba(249,115,22,0.9)] transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Landmark (Optional)</label>
+                    <label className="text-[10px] font-black uppercase text-orange-600 tracking-[2px] ml-1">Landmark (Optional)</label>
                     <div className="relative">
-                      <MapPin className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                      <MapPin className="absolute left-0 top-1/2 -translate-y-1/2 text-orange-500" size={16} />
                       <input
                         type="text"
                         value={profile.landmark}
                         onChange={e => setProfile({ ...profile, landmark: e.target.value })}
                         placeholder="NEAR BY PLACE"
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold uppercase text-sm focus:border-orange-500 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
+                        className="w-full bg-transparent border-0 border-b-2 border-gray-100 py-3 pl-7 pr-2 outline-none font-bold uppercase text-sm placeholder:text-gray-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-200/70 focus:shadow-[0_10px_25px_-15px_rgba(249,115,22,0.9)] transition-all"
                       />
                     </div>
                   </div>
@@ -261,7 +264,7 @@ const UserProfile = () => {
                   <button 
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full py-4 rounded-2xl font-black uppercase tracking-[2px] shadow-lg flex items-center justify-center gap-3 italic transition-all bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 active:scale-[0.99]"
+                    className="w-full py-5 rounded-2xl font-black uppercase tracking-[2px] shadow-lg flex items-center justify-center gap-3 italic transition-all bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 hover:animate-bounce active:scale-[0.99]"
                   >
                     {saving ? <Loader2 className="animate-spin" size={18} /> : (
                       <>
