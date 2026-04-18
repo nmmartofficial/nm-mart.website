@@ -20,10 +20,11 @@ CREATE TABLE IF NOT EXISTS public.website_banners (
 -- Create categories table
 CREATE TABLE IF NOT EXISTS public.categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL,
-    icon_url TEXT,
+    name TEXT NOT NULL,
+    image_url TEXT,
     bg_color TEXT DEFAULT '#FFFFFF',
     display_order INTEGER DEFAULT 0,
+    is_visible BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

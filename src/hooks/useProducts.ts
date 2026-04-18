@@ -52,15 +52,13 @@ export function useProducts() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('ItemGroupName')
-        .gt('OpStock', 0)
-        .not('ItemGroupName', 'is', null)
-        .neq('ItemGroupName', '')
-        .neq('ItemGroupName', ' ');
-      
+        .select('ItemGroupName, category')
+        .gt('OpStock', 0);
       
       if (data) {
-        const uniqueCats = [...new Set(data.map((item: any) => normalizeCategory(item.ItemGroupName)))].filter(c => c && c.length > 1);
+        const uniqueCats = [...new Set(data.map((item: any) => 
+          normalizeCategory(item.ItemGroupName || item.category)
+        ))].filter(c => c && c.length > 1);
         setAllCategories(uniqueCats);
       }
     } catch (err) {

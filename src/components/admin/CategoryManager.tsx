@@ -76,7 +76,8 @@ const CategoryManager = () => {
           name: title,
           image_url: iconUrl,
           bg_color: bgColor,
-          display_order: categories.length
+          display_order: categories.length,
+          is_visible: true
         }]);
 
       if (error) throw error;
@@ -205,13 +206,13 @@ const CategoryManager = () => {
           categories.map((cat) => (
             <div key={cat.id} className={`group bg-white border border-gray-100 rounded-[32px] p-6 text-center relative hover:shadow-xl transition-all ${!cat.is_visible ? 'opacity-60 grayscale' : ''}`} style={{ backgroundColor: cat.bg_color + '10' }}>
               <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-2xl shadow-sm flex items-center justify-center overflow-hidden">
-                {cat.image_url ? (
-                  <img src={cat.image_url} alt={cat.name} className="w-10 h-10 object-contain" />
+                {(cat.image_url || cat.icon_url) ? (
+                  <img src={cat.image_url || cat.icon_url} alt={cat.name || cat.title} className="w-10 h-10 object-contain" />
                 ) : (
                   <Grid size={24} className="text-gray-200" />
                 )}
               </div>
-              <h4 className="font-black text-xs uppercase italic tracking-tight mb-4">{cat.name}</h4>
+              <h4 className="font-black text-xs uppercase italic tracking-tight mb-4">{cat.name || cat.title}</h4>
               
               <div className="absolute -top-2 -right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
                 <button 

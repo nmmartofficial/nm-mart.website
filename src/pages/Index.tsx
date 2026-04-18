@@ -121,9 +121,10 @@ export default function Index() {
 
   // Helper for Category Icons
   const getCategoryIcon = (cat: string) => {
-    const customCat = categories.find(c => c.name === cat);
-    if (customCat?.image_url) {
-      return <img src={customCat.image_url} alt="" className="w-8 h-8 object-contain" />;
+    const customCat = categories.find(c => (c.name || c.title) === cat);
+    const imageUrl = customCat?.image_url || customCat?.icon_url;
+    if (imageUrl) {
+      return <img src={imageUrl} alt="" className="w-8 h-8 object-contain" />;
     }
     const normalized = normalizeCategory(cat);
     return CATEGORY_ICONS[normalized] || "📦";
@@ -440,8 +441,9 @@ export default function Index() {
   // Filter out Bedsheets, sort priority categories first
   const sortedCategories = useMemo(() => {
     // If we have custom categories from DB, use them first
-    if (categories.length > 0) {
-      return categories.map(c => c.name);
+    if (categories && categories.length > 0) {
+      // Handle both 'name' and 'title' columns
+      return categories.map(c => c.name || c.title).filter(Boolean);
     }
     const filtered = posCategories.filter(c => !HIDDEN_CATS.includes(c));
     const priority = filtered.filter(c => PRIORITY_CATS.includes(c));
@@ -533,7 +535,7 @@ export default function Index() {
             </h3>
             <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${gridStyle.categoryColumns}, minmax(0, 1fr))` }}>
               {sortedCategories.map(catName => {
-                const cat = categories.find(c => c.name === catName);
+                const cat = categories.find(c => (c.name || c.title) === catName);
                 return (
                   <motion.button whileTap={{ scale: 0.94 }} key={catName}
                     onClick={() => { setSelectedCat(catName); setSelectedBrand(null); setQuery(""); }}

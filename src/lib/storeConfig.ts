@@ -120,12 +120,12 @@ export async function setThemeConfig(config: Partial<ThemeConfig>): Promise<bool
 }
 
 export async function getSectionLayout(): Promise<SectionLayout[]> {
-  const layout = await getStoreConfig('layout');
+  const layout = await getStoreConfig('homepage_layout');
   return layout || DEFAULT_CONFIG.layout;
 }
 
 export async function setSectionLayout(layout: SectionLayout[]): Promise<boolean> {
-  return setStoreConfig('layout', layout);
+  return setStoreConfig('homepage_layout', layout);
 }
 
 export async function getHighlights(): Promise<HighlightItem[]> {
