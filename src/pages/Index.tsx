@@ -30,6 +30,7 @@ import Footer from "@/components/shop/Footer";
 import FlashSaleBanner from "@/components/shop/FlashSaleBanner";
 import DiscountTabs from "@/components/shop/DiscountTabs";
 import WelfareModal from "@/components/shop/modals/WelfareModal";
+import WelfareModals from "@/components/shop/modals/WelfareModals";
 import CartDrawer from "@/components/shop/modals/CartDrawer";
 import CheckoutModal from "@/components/shop/modals/CheckoutModal";
 import OrdersModal from "@/components/shop/modals/OrdersModal";
@@ -1547,8 +1548,6 @@ export default function Index() {
       <WelfareModals 
         showGoldenCard={showGoldenCard}
         setShowGoldenCard={setShowGoldenCard}
-        showWelfareModal={showWelfareModal}
-        setShowWelfareModal={setShowWelfareModal}
         welfareCard={welfareCard}
         user={user}
       />
