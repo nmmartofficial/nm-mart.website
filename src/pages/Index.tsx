@@ -44,9 +44,9 @@ const ADMIN_EMAIL = "nmmart07@gmail.com";
 
 const DEFAULT_HOME_LAYOUT: SectionLayout[] = [
   { id: "hero", name: "Hero Banner", order: 0, visible: true },
-  { id: "categories", name: "Categories", order: 1, visible: true },
-  { id: "flat_50", name: "50% OFF Offers", order: 2, visible: true },
-  { id: "flat_33", name: "33% OFF Offers", order: 3, visible: true },
+  { id: "flat_50", name: "50% OFF Offers", order: 1, visible: true },
+  { id: "flat_33", name: "33% OFF Offers", order: 2, visible: true },
+  { id: "categories", name: "Categories", order: 3, visible: true },
   { id: "products", name: "All Products", order: 4, visible: true },
 ];
 
@@ -60,6 +60,19 @@ function mergeHomeLayout(remote: SectionLayout[] | null | undefined): SectionLay
   }
   for (const s of base) {
     if (!byId.has(s.id)) byId.set(s.id, s);
+  }
+
+  // Force key section ordering so offers stay above categories
+  const forcedOrder: Record<string, number> = {
+    hero: 0,
+    flat_50: 1,
+    flat_33: 2,
+    categories: 3,
+    products: 4,
+  };
+  for (const [id, order] of Object.entries(forcedOrder)) {
+    const existing = byId.get(id);
+    if (existing) byId.set(id, { ...existing, order });
   }
 
   return [...byId.values()].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -654,15 +667,19 @@ export default function Index() {
             <button
               type="button"
               onClick={() => setOffersOpen(s => ({ ...s, flat50: !s.flat50 }))}
-              className="w-full flex items-center justify-between bg-white border border-gray-100 rounded-3xl px-6 py-5 shadow-sm hover:shadow-md transition-all"
+              className="w-full flex items-center justify-between rounded-3xl px-6 py-5 shadow-lg hover:shadow-xl transition-all border border-orange-200 bg-gradient-to-r from-orange-50 via-white to-yellow-50 relative overflow-hidden"
             >
+              <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_20%_20%,rgba(255,153,0,0.18),transparent_55%),radial-gradient(circle_at_85%_30%,rgba(255,215,0,0.18),transparent_55%)]" />
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shadow-sm">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shadow-sm animate-pulse">
                   <Star size={18} className="text-white fill-current" />
                 </div>
                 <div className="text-left">
-                  <div className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Offers Folder</div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-500">Hot Deals Folder</div>
                   <div className="text-base md:text-lg font-black uppercase tracking-tight text-black">50% OFF Offers</div>
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">
+                    Tap to open • {flat50.length} items
+                  </div>
                 </div>
               </div>
               <div className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">
@@ -692,15 +709,19 @@ export default function Index() {
             <button
               type="button"
               onClick={() => setOffersOpen(s => ({ ...s, flat33: !s.flat33 }))}
-              className="w-full flex items-center justify-between bg-white border border-gray-100 rounded-3xl px-6 py-5 shadow-sm hover:shadow-md transition-all"
+              className="w-full flex items-center justify-between rounded-3xl px-6 py-5 shadow-lg hover:shadow-xl transition-all border border-orange-200 bg-gradient-to-r from-orange-50 via-white to-yellow-50 relative overflow-hidden"
             >
+              <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_20%_20%,rgba(255,153,0,0.18),transparent_55%),radial-gradient(circle_at_85%_30%,rgba(255,215,0,0.18),transparent_55%)]" />
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shadow-sm">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center shadow-sm animate-pulse">
                   <Star size={18} className="text-white fill-current" />
                 </div>
                 <div className="text-left">
-                  <div className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Offers Folder</div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-500">Hot Deals Folder</div>
                   <div className="text-base md:text-lg font-black uppercase tracking-tight text-black">33% OFF Offers</div>
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">
+                    Tap to open • {flat33.length} items
+                  </div>
                 </div>
               </div>
               <div className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">
