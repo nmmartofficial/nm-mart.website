@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
-import { User, Package, MapPin, LogOut, Star, Loader2, Save, Smartphone, ChevronRight, Map } from "lucide-react";
+import { User, Package, MapPin, LogOut, Star, Loader2, Save, Smartphone, ChevronRight, Map, Camera } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { OrderRecord, WA_NUMBER } from "@/lib/store-utils";
@@ -11,8 +11,11 @@ const UserProfile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   
   const [profile, setProfile] = useState({
     name: "",
@@ -83,6 +86,59 @@ const UserProfile = () => {
       toast.error("Failed to load profile");
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+    };
+  }, [avatarPreviewUrl]);
+
+  const handleAvatarPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+    const localUrl = URL.createObjectURL(file);
+    setAvatarPreviewUrl(localUrl);
+
+    setAvatarUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `${user.id}/profile.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type, cacheControl: "3600" });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = urlData?.publicUrl;
+      if (!publicUrl) throw new Error("Failed to get public URL");
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+      toast.success("Profile photo updated");
+    } catch (err: any) {
+      console.error("Avatar upload failed:", err);
+      toast.error(err?.message || "Failed to upload profile photo");
+      setAvatarPreviewUrl(null);
+    } finally {
+      setAvatarUploading(false);
+      if (e.target) e.target.value = "";
     }
   };
 
@@ -162,13 +218,34 @@ const UserProfile = () => {
               <div className="bg-white p-10 rounded-3xl shadow-lg shadow-orange-500/10 space-y-10">
                 {/* Premium Profile Header */}
                 <div className="text-center">
-                  <div className="mx-auto w-28 h-28 rounded-full bg-gray-100 shadow-lg overflow-hidden flex items-center justify-center text-orange-500">
-                    {profile.avatar_url ? (
-                      <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="relative mx-auto w-28 h-28 rounded-full bg-gray-100 shadow-lg overflow-hidden flex items-center justify-center text-orange-500 focus:outline-none"
+                    title="Change profile photo"
+                    disabled={avatarUploading}
+                  >
+                    {(avatarPreviewUrl || profile.avatar_url) ? (
+                      <img src={avatarPreviewUrl || profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <User size={40} />
                     )}
-                  </div>
+                    <span className="absolute bottom-2 right-2 w-9 h-9 rounded-full bg-white shadow-lg flex items-center justify-center border border-orange-100">
+                      {avatarUploading ? (
+                        <Loader2 className="animate-spin text-orange-500" size={18} />
+                      ) : (
+                        <Camera className="text-orange-500" size={18} />
+                      )}
+                    </span>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarPick}
+                      disabled={avatarUploading}
+                    />
+                  </button>
 
                   {profile.name ? (
                     <h3 className="mt-5 text-2xl font-black italic uppercase tracking-tight text-black leading-none">
@@ -189,22 +266,6 @@ const UserProfile = () => {
                 </div>
 
                 <div className="space-y-8">
-                  <div className="space-y-3">
-                    <label className="text-[13px] font-bold text-[#333] ml-1">Profile Photo URL</label>
-                    <div className="relative">
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 text-orange-500">
-                        <User size={16} />
-                      </div>
-                      <input
-                        type="text"
-                        value={profile.avatar_url}
-                        onChange={e => setProfile({ ...profile, avatar_url: e.target.value })}
-                        placeholder="PASTE IMAGE URL"
-                        className="w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-3 pl-7 pr-2 outline-none font-bold text-sm placeholder:text-gray-400 focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
-                      />
-                    </div>
-                  </div>
-
                   <div className="space-y-3">
                     <label className="text-[13px] font-bold text-[#333] ml-1">Full Name</label>
                     <div className="flex items-center">

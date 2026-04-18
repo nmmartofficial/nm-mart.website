@@ -19,6 +19,7 @@ const HeroBanner = ({ onBannerClick }: HeroBannerProps) => {
         const { data, error } = await supabase
           .from('website_banners')
           .select('*')
+          .eq('active', true)
           .order('display_order', { ascending: true });
         
         if (error) throw error;
@@ -48,10 +49,20 @@ const HeroBanner = ({ onBannerClick }: HeroBannerProps) => {
     return () => clearInterval(t);
   }, [next, banners.length]);
 
-  if (loading || banners.length === 0) {
+  if (loading) {
     return (
       <div className="w-full aspect-[21/9] bg-gray-100 animate-pulse flex items-center justify-center">
         <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest italic">Loading Banners...</p>
+      </div>
+    );
+  }
+
+  if (banners.length === 0) {
+    return (
+      <div className="w-full aspect-[21/9] bg-gradient-to-br from-orange-50 via-white to-yellow-50 border border-orange-100 flex items-center justify-center rounded-[32px]">
+        <p className="text-[10px] font-black uppercase text-orange-400 tracking-widest italic">
+          No offers right now
+        </p>
       </div>
     );
   }
