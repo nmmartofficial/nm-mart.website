@@ -41,6 +41,14 @@ const ProductCard = ({ product, onAddToCart }: { product: Product, onAddToCart: 
             {product.discount}% OFF
           </span>
         )}
+
+        {!product.stock || product.stock <= 0 ? (
+          <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+            <span className="bg-white/90 text-black text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
+              Out of stock
+            </span>
+          </div>
+        ) : null}
       </div>
 
       <div className="p-3 flex flex-col flex-1">
@@ -65,7 +73,12 @@ const ProductCard = ({ product, onAddToCart }: { product: Product, onAddToCart: 
         </div>
 
         {product.save > 0 && product.stock && product.stock > 0 && (
-          <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{product.save}</span>
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-[8px] font-bold text-[hsl(var(--success))]">Save ₹{product.save}</span>
+            <span className="text-[8px] font-black uppercase tracking-widest bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] px-2 py-0.5 rounded-full">
+              Best Deal
+            </span>
+          </div>
         )}
 
         <div className="flex flex-col gap-1.5 mt-auto pt-2">

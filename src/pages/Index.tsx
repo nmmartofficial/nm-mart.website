@@ -9,7 +9,7 @@ import {
   Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift,
   ChevronRight, User as UserIcon, CreditCard, ScanBarcode,
   Edit3, Save, Loader2 as LoaderIcon, Image as ImageIcon, Upload,
-  Database, LogOut, Clock
+  Database, LogOut, Clock, Truck, ShieldCheck
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase/client";
@@ -179,6 +179,17 @@ export default function Index() {
     flat50: false,
     flat33: false,
   });
+  const openOffersAndScroll = (which: "flat50" | "flat33" | "both") => {
+    setOffersOpen(prev => ({
+      flat50: which === "flat50" || which === "both" ? true : prev.flat50,
+      flat33: which === "flat33" || which === "both" ? true : prev.flat33,
+    }));
+    requestAnimationFrame(() => {
+      const id =
+        which === "flat50" ? "offers-50" : which === "flat33" ? "offers-33" : "offers-50";
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   const generatePDFBill = (orderId: string, items: any[], subtotal: number, discount: number, delivery: number, total: number, customer: any) => {
     const doc = new jsPDF({
@@ -616,6 +627,39 @@ export default function Index() {
         return (
           <div key="hero" className={`${isAdminMode ? 'pt-[116px]' : 'pt-0'} mb-8 relative z-0`}>
             <HeroBanner onBannerClick={handleBannerClick} />
+
+            {/* Trust Strip */}
+            <div className="mt-5 max-w-7xl mx-auto px-4">
+              <div className="grid grid-cols-3 gap-3 bg-white/80 backdrop-blur-md border border-orange-100 rounded-3xl p-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600">
+                    <Truck size={18} />
+                  </div>
+                  <div className="leading-tight">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">Fast Delivery</div>
+                    <div className="text-[11px] font-bold text-black">Same day*</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-yellow-50 border border-yellow-200 flex items-center justify-center text-yellow-700">
+                    <ShieldCheck size={18} />
+                  </div>
+                  <div className="leading-tight">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">Secure Payments</div>
+                    <div className="text-[11px] font-bold text-black">UPI / Card</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-green-700">
+                    <Clock size={18} />
+                  </div>
+                  <div className="leading-tight">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">Support</div>
+                    <div className="text-[11px] font-bold text-black">9 AM–9 PM</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         );
       case 'highlights':
@@ -663,7 +707,7 @@ export default function Index() {
         );
       case 'flat_50':
         return flat50.length > 0 && (
-          <div key="flat_50" className="mb-8 max-w-7xl mx-auto px-4 w-full">
+          <div key="flat_50" id="offers-50" className="mb-8 max-w-7xl mx-auto px-4 w-full scroll-mt-32">
             <button
               type="button"
               onClick={() => setOffersOpen(s => ({ ...s, flat50: !s.flat50 }))}
@@ -705,7 +749,7 @@ export default function Index() {
         );
       case 'flat_33':
         return flat33.length > 0 && (
-          <div key="flat_33" className="mb-8 max-w-7xl mx-auto px-4 w-full">
+          <div key="flat_33" id="offers-33" className="mb-8 max-w-7xl mx-auto px-4 w-full scroll-mt-32">
             <button
               type="button"
               onClick={() => setOffersOpen(s => ({ ...s, flat33: !s.flat33 }))}
@@ -1314,6 +1358,35 @@ export default function Index() {
           </div>
         </div>
       </div>
+
+      {/* Quick Action Chips */}
+      {!selectedCat && !selectedBrand && !query && (
+        <div className="max-w-7xl mx-auto px-4 pt-4">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => openOffersAndScroll("both")}
+              className="px-5 py-2.5 rounded-full bg-gradient-to-r from-orange-500 to-yellow-400 text-white text-[10px] font-black uppercase tracking-widest shadow-md hover:shadow-lg active:scale-95 transition-all"
+            >
+              Today Deals
+            </button>
+            <button
+              type="button"
+              onClick={() => openOffersAndScroll("flat50")}
+              className="px-5 py-2.5 rounded-full bg-white border border-orange-200 text-orange-600 text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md active:scale-95 transition-all"
+            >
+              50% OFF
+            </button>
+            <button
+              type="button"
+              onClick={() => openOffersAndScroll("flat33")}
+              className="px-5 py-2.5 rounded-full bg-white border border-orange-200 text-orange-600 text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md active:scale-95 transition-all"
+            >
+              33% OFF
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Barcode Scanner Overlay */}
       <AnimatePresence>
