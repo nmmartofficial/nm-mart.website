@@ -11,10 +11,13 @@ export function useProducts() {
   const [totalCount, setTotalCount] = useState(0);
   const [flat50, setFlat50] = useState<Product[]>([]);
   const [flat33, setFlat33] = useState<Product[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [total50, setTotal50] = useState(0);
   const [total33, setTotal33] = useState(0);
+  const [totalFeatured, setTotalFeatured] = useState(0);
   const [hasMore50, setHasMore50] = useState(false);
   const [hasMore33, setHasMore33] = useState(false);
+  const [hasMoreFeatured, setHasMoreFeatured] = useState(false);
   const [allCategories, setAllCategories] = useState<string[]>([]);
 
   const mapProduct = (item: any): Product => {
@@ -75,6 +78,35 @@ export function useProducts() {
     }
   };
 
+  const fetchFeaturedProducts = async (offset = 0) => {
+    try {
+      const { data, error, count } = await supabase
+        .from('products')
+        .select('*', { count: 'exact' })
+        .gt('OpStock', 0)
+        .neq('is_visible', false)
+        .eq('is_featured', true)
+        .order('image_url', { ascending: false, nullsFirst: false })
+        .order('RawName', { ascending: true })
+        .range(offset, offset + 11);
+
+      if (error) throw error;
+
+      if (data) {
+        const mapped = data.map(mapProduct);
+        if (offset === 0) {
+          setFeaturedProducts(mapped);
+          setTotalFeatured(count || 0);
+        } else {
+          setFeaturedProducts(prev => [...prev, ...mapped]);
+        }
+        setHasMoreFeatured(data.length === 12);
+      }
+    } catch (err) {
+      console.error("Featured Fetch Error:", err);
+    }
+  };
+
   const fetchDiscountedProducts = async (type: 50 | 33, offset = 0) => {
     try {
       // Storefront: in-stock only (OpStock > 0). Admin Inventory uses its own queries.
@@ -126,6 +158,7 @@ export function useProducts() {
     try {
       if (offset === 0) {
         setLoading(true);
+        fetchFeaturedProducts(0);
         fetchDiscountedProducts(50, 0);
         fetchDiscountedProducts(33, 0);
         fetchAllCategories();
@@ -188,6 +221,12 @@ export function useProducts() {
     }
   };
 
+  const loadMoreFeatured = () => {
+    if (hasMoreFeatured) {
+      fetchFeaturedProducts(featuredProducts?.length || 0);
+    }
+  };
+
   const categories = useMemo(() => 
     (allCategories || []).length > 0 ? allCategories : [...new Set((allProducts || []).map(p => p?.category).filter(Boolean))],
     [allProducts, allCategories]
@@ -202,8 +241,9 @@ export function useProducts() {
 
   return { 
     allProducts, loading, categories, brands, 
-    flat33, flat50, hasMore, loadMore, totalCount,
-    total50, total33, hasMore50, hasMore33, loadMore50, loadMore33,
+    flat33, flat50, featuredProducts, hasMore, loadMore, totalCount,
+    total50, total33, totalFeatured, hasMore50, hasMore33, hasMoreFeatured,
+    loadMore50, loadMore33, loadMoreFeatured,
     refetchProducts,
   };
 }

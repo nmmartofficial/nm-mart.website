@@ -55,10 +55,11 @@ const FALLBACK_BANNERS = [
 
 const DEFAULT_HOME_LAYOUT: SectionLayout[] = [
   { id: "hero", name: "Hero Banner", order: 0, visible: true },
-  { id: "flat_50", name: "50% OFF Offers", order: 1, visible: true },
-  { id: "flat_33", name: "33% OFF Offers", order: 2, visible: true },
-  { id: "categories", name: "Categories", order: 3, visible: true },
-  { id: "products", name: "All Products", order: 4, visible: true },
+  { id: "featured", name: "Munafa Deals", order: 1, visible: true },
+  { id: "flat_50", name: "50% OFF Offers", order: 2, visible: true },
+  { id: "flat_33", name: "33% OFF Offers", order: 3, visible: true },
+  { id: "categories", name: "Categories", order: 4, visible: true },
+  { id: "products", name: "All Products", order: 5, visible: true },
 ];
 
 function mergeHomeLayout(remote: SectionLayout[] | null | undefined): SectionLayout[] {
@@ -76,10 +77,11 @@ function mergeHomeLayout(remote: SectionLayout[] | null | undefined): SectionLay
   // Force key section ordering so offers stay above categories
   const forcedOrder: Record<string, number> = {
     hero: 0,
-    flat_50: 1,
-    flat_33: 2,
-    categories: 3,
-    products: 4,
+    featured: 1,
+    flat_50: 2,
+    flat_33: 3,
+    categories: 4,
+    products: 5,
   };
   for (const [id, order] of Object.entries(forcedOrder)) {
     const existing = byId.get(id);
@@ -162,8 +164,9 @@ export default function Index() {
 
   const { 
     allProducts, loading: productsLoading, brands, categories: posCategories,
-    flat33, flat50, hasMore, loadMore, totalCount,
-    total50, total33, hasMore50, hasMore33, loadMore50, loadMore33,
+    flat33, flat50, featuredProducts, hasMore, loadMore, totalCount,
+    total50, total33, totalFeatured, hasMore50, hasMore33, hasMoreFeatured, 
+    loadMore50, loadMore33, loadMoreFeatured,
     refetchProducts,
   } = useProducts();
   const loading = productsLoading || homeLoading;
@@ -633,6 +636,48 @@ export default function Index() {
             />
           </div>
         );
+      case 'featured':
+        return (featuredProducts?.length || 0) > 0 && (
+          <div key="featured" id="featured-deals" className="mb-8 max-w-7xl mx-auto px-4 w-full scroll-mt-32">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-black flex items-center justify-center shadow-xl shadow-primary/20 rotate-3">
+                  <Star size={24} className="text-white fill-current animate-pulse" />
+                </div>
+                <div className="text-left">
+                  <div className="text-[10px] font-black uppercase tracking-[0.3em] text-primary leading-none mb-1">Exclusive Offers</div>
+                  <h3 className="text-2xl font-black italic uppercase leading-none text-black tracking-tight">Munafa Deals</h3>
+                </div>
+              </div>
+              <div className="hidden md:flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100">
+                <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Live Updates</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {featuredProducts?.map(p => (
+                <ProductCard 
+                  key={p?.barcode} 
+                  product={p} 
+                  onAddToCart={addToCart} 
+                  showAdminQuickEdit={isAdminMode} 
+                  onAdminQuickEdit={handleQuickEdit} 
+                />
+              ))}
+            </div>
+            {hasMoreFeatured && (
+              <div className="mt-8 flex justify-center">
+                <button 
+                  onClick={loadMoreFeatured} 
+                  className="px-8 py-3 rounded-2xl border-2 border-primary text-primary font-black uppercase italic text-[10px] tracking-widest hover:bg-primary hover:text-white transition-all active:scale-95"
+                >
+                  View More Munafa Deals
+                </button>
+              </div>
+            )}
+          </div>
+        );
       case 'highlights':
         return (
           <div key="highlights" className="mb-8 max-w-7xl mx-auto w-full">
@@ -675,7 +720,7 @@ export default function Index() {
           </div>
         );
       case 'flat_50':
-        return flat50.length > 0 && (
+        return (flat50?.length || 0) > 0 && (
           <div key="flat_50" id="offers-50" className="mb-8 max-w-7xl mx-auto px-4 w-full scroll-mt-32">
             <button
               type="button"
@@ -691,7 +736,7 @@ export default function Index() {
                   <div className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-500">Hot Deals Folder</div>
                   <div className="text-base md:text-lg font-black uppercase tracking-tight text-black">50% OFF Offers</div>
                   <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">
-                    Tap to open • {flat50.length} items
+                    Tap to open • {flat50?.length || 0} items
                   </div>
                 </div>
               </div>
@@ -703,7 +748,7 @@ export default function Index() {
             {offersOpen.flat50 && (
               <div className="mt-4 bg-white border border-gray-100 rounded-3xl p-4 shadow-sm" style={getSectionBgStyle("flat_50")}>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {flat50.map(p => (
+                  {flat50?.map(p => (
                     <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
                   ))}
                 </div>
@@ -717,7 +762,7 @@ export default function Index() {
           </div>
         );
       case 'flat_33':
-        return flat33.length > 0 && (
+        return (flat33?.length || 0) > 0 && (
           <div key="flat_33" id="offers-33" className="mb-8 max-w-7xl mx-auto px-4 w-full scroll-mt-32">
             <button
               type="button"
@@ -733,7 +778,7 @@ export default function Index() {
                   <div className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-500">Hot Deals Folder</div>
                   <div className="text-base md:text-lg font-black uppercase tracking-tight text-black">33% OFF Offers</div>
                   <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">
-                    Tap to open • {flat33.length} items
+                    Tap to open • {flat33?.length || 0} items
                   </div>
                 </div>
               </div>
@@ -745,7 +790,7 @@ export default function Index() {
             {offersOpen.flat33 && (
               <div className="mt-4 bg-white border border-gray-100 rounded-3xl p-4 shadow-sm" style={getSectionBgStyle("flat_33")}>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {flat33.map(p => (
+                  {flat33?.map(p => (
                     <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
                   ))}
                 </div>
@@ -792,7 +837,7 @@ export default function Index() {
               <Star size={18} className="text-primary" /> Munafa Mela
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {(allProducts || []).filter(p => (Number(p?.stock) > 0) && p?.discount >= 40).slice(0, 6).map(p => (
+              {(allProducts || []).filter(p => (Number(p?.stock) > 0) && (p?.discount || 0) >= 40).slice(0, 6).map(p => (
                 <ProductCard key={p?.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
@@ -802,30 +847,30 @@ export default function Index() {
         const fromOrders = (orders || []).flatMap((o) => o?.items || []);
         const buyAgainItems = fromOrders
           .map((item: any) => (allProducts || []).find((ap) => ap?.barcode === item?.barcode))
-          .filter((p): p is NonNullable<typeof p> => Boolean(p && Number(p?.stock) > 0))
+          .filter((p): p is NonNullable<typeof p> => Boolean(p && Number(p?.stock || 0) > 0))
           .filter((p, i, arr) => arr.findIndex((x) => x?.barcode === p?.barcode) === i)
           .slice(0, 6);
-        return buyAgainItems.length > 0 && (
+        return (buyAgainItems?.length || 0) > 0 && (
           <div key="buy_again" className="mb-12 max-w-7xl mx-auto px-4 w-full">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Clock size={18} className="text-primary" /> Buy It Again
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {buyAgainItems.map((p, idx) => (
-                <ProductCard key={`${p.barcode}-${idx}`} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
+              {buyAgainItems?.map((p, idx) => (
+                <ProductCard key={`${p?.barcode}-${idx}`} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
           </div>
         );
       }
       case 'brands':
-        return (brands || []).length > 0 && (
+        return (brands?.length || 0) > 0 && (
           <div key="brands" className="mb-12 max-w-7xl mx-auto px-4 py-4 w-full rounded-3xl" style={getSectionBgStyle("brands")}>
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> Shop by Brand
             </h3>
             <div className="flex flex-wrap gap-2">
-              {(brands || []).map(brand => (
+              {brands?.map(brand => (
                 <motion.button whileTap={{ scale: 0.95 }} key={brand}
                   onClick={() => { setSelectedBrand(brand); setSelectedCat(null); setQuery(""); }}
                   className="px-5 py-2.5 rounded-full bg-card border border-border text-[10px] font-black uppercase tracking-widest hover:border-primary hover:text-primary transition-all shadow-sm">
@@ -841,16 +886,16 @@ export default function Index() {
             {/* Dynamic Category-wise Product Sections */}
             {(sortedCategories || []).slice(0, 6).map(cat => {
               const catProducts = (allProducts || [])
-                .filter(p => Number(p?.stock) > 0 && p?.category === cat && !HIDDEN_CATS.includes(p?.category))
+                .filter(p => Number(p?.stock || 0) > 0 && p?.category === cat && !HIDDEN_CATS.includes(p?.category))
                 .sort((a, b) => {
-                  const aHasImg = !!a.imageUrl && a.imageUrl.length > 5;
-                  const bHasImg = !!b.imageUrl && b.imageUrl.length > 5;
+                  const aHasImg = !!a?.imageUrl && (a?.imageUrl?.length || 0) > 5;
+                  const bHasImg = !!b?.imageUrl && (b?.imageUrl?.length || 0) > 5;
                   if (aHasImg && !bHasImg) return -1;
                   if (!aHasImg && bHasImg) return 1;
-                  return a.name.localeCompare(b.name);
+                  return (a?.name || "").localeCompare(b?.name || "");
                 })
                 .slice(0, 6);
-              if (catProducts.length === 0) return null;
+              if ((catProducts?.length || 0) === 0) return null;
               return (
                 <div key={cat} className="mb-10">
                   <div className="flex items-center justify-between mb-4">
@@ -863,22 +908,22 @@ export default function Index() {
                     </button>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {catProducts.map((p, idx) => (
-                      <motion.div key={`${p.barcode}-${idx}`}
+                    {catProducts?.map((p, idx) => (
+                      <motion.div key={`${p?.barcode}-${idx}`}
                         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                         className={productCardClass}
                         onClick={() => navigate(`/product/${productSlug(p)}`)}
                       >
                         <div className={`${productImageClass} relative`}>
-                          <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
-                          {p.badge && (
+                          <ProductImageDisplay imageUrl={p?.imageUrl} name={p?.name} />
+                          {p?.badge && (
                             <span className="absolute top-1 left-1 bg-primary text-white text-[7px] font-black px-1.5 py-0.5 rounded-lg shadow-sm z-10 animate-pulse">
-                              {p.badge}
+                              {p?.badge}
                             </span>
                           )}
-                          {p.discount > 0 && (
+                          {(p?.discount || 0) > 0 && (
                             <span className="absolute top-1 right-1 bg-destructive text-white text-[8px] font-black px-2 py-0.5 rounded-lg shadow-sm">
-                              {p.discount}% OFF
+                              {p?.discount}% OFF
                             </span>
                           )}
                           {isAdminMode && (
@@ -899,31 +944,31 @@ export default function Index() {
                         <div className="p-2 flex flex-col flex-1">
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="bg-primary/10 text-primary text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
-                              {p.category}
+                              {p?.category}
                             </span>
-                            <span className={`text-[7px] font-bold flex items-center gap-0.5 ${p.stock && p.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
-                              <Star size={8} className="fill-current" /> {p.stock && p.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
+                            <span className={`text-[7px] font-bold flex items-center gap-0.5 ${p?.stock && p?.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+                              <Star size={8} className="fill-current" /> {p?.stock && p?.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
                             </span>
                           </div>
-                          <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p.name}</h3>
+                          <h3 className="font-semibold text-[10px] text-foreground uppercase leading-tight h-7 overflow-hidden mb-1">{p?.name}</h3>
                           <div className="flex items-baseline gap-2 mt-1">
-                            <span className="text-xl font-black text-primary">₹{p.price}</span>
-                            {p.mrp > p.price && (
-                              <span className="text-[10px] text-muted-foreground line-through decoration-muted-foreground/50 font-medium">₹{p.mrp}</span>
+                            <span className="text-xl font-black text-primary">₹{p?.price}</span>
+                            {(p?.mrp || 0) > (p?.price || 0) && (
+                              <span className="text-[10px] text-muted-foreground line-through decoration-muted-foreground/50 font-medium">₹{p?.mrp}</span>
                             )}
-                            {p.discount > 0 && (
+                            {(p?.discount || 0) > 0 && (
                               <span className="text-[10px] font-bold text-destructive ml-auto">
-                                {p.discount}% OFF
+                                {p?.discount}% OFF
                               </span>
                             )}
                           </div>
-                          {p.save > 0 && p.stock && p.stock > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
+                          {(p?.save || 0) > 0 && p?.stock && p?.stock > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p?.save}</span>}
                           <div className="mt-auto pt-2">
                             <button 
-                              onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
-                              disabled={!p.stock || p.stock <= 0}
-                              className={`w-full py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
-                              {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
+                              onClick={(e) => { e.stopPropagation(); if(p?.stock && p?.stock > 0) addToCart(p); }}
+                              disabled={!p?.stock || p?.stock <= 0}
+                              className={`w-full py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p?.stock && p?.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
+                              {p?.stock && p?.stock > 0 ? "Add to Cart" : "Out of Stock"}
                             </button>
                           </div>
                         </div>
