@@ -11,24 +11,51 @@ export interface StoreConfig {
 export interface ThemeConfig {
   primaryColor: string;
   secondaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  highlightColor: string;
+  accentColor?: string;
   presetName?: string;
   storeName: string;
   storeLogo: string;
   announcementText: string;
   announcementVisible: boolean;
   fontFamily: string;
+  headingFont?: string;
+  bodyFont?: string;
+  fontSizeBase?: number;
+  letterSpacing?: string;
+  lineHeight?: number;
   bannerRadius?: number;
+  cardRadius?: number;
+  buttonRadius?: number;
   categoryCardStyle?: "soft" | "glass" | "bold";
   bannerTextPosition?: "left" | "center" | "right";
   bannerCtaStyle?: "solid" | "outline" | "pill";
   productCardStyle?: "compact" | "premium" | "offer";
+  headerStyle?: "classic" | "minimal" | "modern" | "centered";
+  footerStyle?: "simple" | "detailed" | "modern";
+  buttonStyle?: "flat" | "gradient" | "outline" | "shadow";
   sectionBackgrounds?: Record<string, string>;
+  customCss?: string;
+  animationsEnabled?: boolean;
+  animationSpeed?: "slow" | "normal" | "fast";
+  shadowStyle?: "none" | "soft" | "bold" | "glow";
+  isDraft?: boolean;
+  eventMode?: "normal" | "festival" | "sale";
   festiveSchedule?: {
     enabled: boolean;
     startDate?: string;
     endDate?: string;
     presetName?: string;
   };
+}
+
+export interface ThemePreset {
+  id: string;
+  name: string;
+  config: ThemeConfig;
+  isSystem?: boolean;
 }
 
 export interface SectionLayout {
@@ -59,17 +86,37 @@ const DEFAULT_CONFIG: Record<string, any> = {
   theme: {
     primaryColor: "#CC0000",
     secondaryColor: "#D4AF37",
+    backgroundColor: "#FFFFFF",
+    textColor: "#000000",
+    highlightColor: "#FF0000",
+    accentColor: "#FBBF24",
     presetName: "NM Classic",
     storeName: "NM Mart",
     storeLogo: "/nm-mart-logo.png",
     announcementText: "Free Delivery on orders above ₹1499!",
     announcementVisible: true,
     fontFamily: "Inter",
-    bannerRadius: 0,
+    headingFont: "Inter",
+    bodyFont: "Inter",
+    fontSizeBase: 14,
+    letterSpacing: "0em",
+    lineHeight: 1.5,
+    bannerRadius: 16,
+    cardRadius: 12,
+    buttonRadius: 8,
     categoryCardStyle: "soft",
     bannerTextPosition: "left",
     bannerCtaStyle: "solid",
     productCardStyle: "compact",
+    headerStyle: "classic",
+    footerStyle: "simple",
+    buttonStyle: "flat",
+    customCss: "",
+    animationsEnabled: true,
+    animationSpeed: "normal",
+    shadowStyle: "soft",
+    isDraft: false,
+    eventMode: "normal",
     sectionBackgrounds: {
       categories: "",
       flat_50: "",
@@ -157,17 +204,44 @@ export async function setStoreConfig(key: string, value: any): Promise<boolean> 
   }
 }
 
-export async function getThemeConfig(): Promise<ThemeConfig> {
-  const theme = await getStoreConfig('theme');
+export async function getThemeConfig(draft = false): Promise<ThemeConfig> {
+  const theme = await getStoreConfig(draft ? 'theme_draft' : 'theme');
   return {
     ...DEFAULT_CONFIG.theme,
     ...(theme || {})
   };
 }
 
-export async function setThemeConfig(config: Partial<ThemeConfig>): Promise<boolean> {
-  const current = await getThemeConfig();
-  return setStoreConfig('theme', { ...current, ...config });
+export async function setThemeConfig(config: Partial<ThemeConfig>, draft = false): Promise<boolean> {
+  const current = await getThemeConfig(draft);
+  return setStoreConfig(draft ? 'theme_draft' : 'theme', { ...current, ...config });
+}
+
+export async function publishTheme(): Promise<boolean> {
+  const draft = await getThemeConfig(true);
+  return setThemeConfig(draft, false);
+}
+
+export async function getThemePresets(): Promise<ThemePreset[]> {
+  const presets = await getStoreConfig('theme_presets');
+  return presets || [];
+}
+
+export async function saveThemePreset(preset: ThemePreset): Promise<boolean> {
+  const presets = await getThemePresets();
+  const index = presets.findIndex(p => p.id === preset.id);
+  if (index >= 0) {
+    presets[index] = preset;
+  } else {
+    presets.push(preset);
+  }
+  return setStoreConfig('theme_presets', presets);
+}
+
+export async function deleteThemePreset(id: string): Promise<boolean> {
+  const presets = await getThemePresets();
+  const filtered = presets.filter(p => p.id !== id);
+  return setStoreConfig('theme_presets', filtered);
 }
 
 export async function getSectionLayout(): Promise<SectionLayout[]> {

@@ -7,21 +7,28 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/lib/ThemeProvider";
 import { supabase } from "@/lib/supabase/client";
 
+import { ThemeConfig } from "@/lib/storeConfig";
+
 const ADMIN_STORE_EMAIL = "nmmart07@gmail.com";
 
-const ProductCard = ({
-  product,
-  onAddToCart,
-  showAdminQuickEdit: _showAdminQuickEdit,
-  onAdminQuickEdit,
-}: {
+interface ProductCardProps {
   product: Product;
   onAddToCart: (p: Product) => void;
   showAdminQuickEdit?: boolean;
   onAdminQuickEdit?: (p: Product) => void;
-}) => {
+  theme?: ThemeConfig;
+}
+
+const ProductCard = ({
+  product,
+  onAddToCart,
+  showAdminQuickEdit,
+  onAdminQuickEdit,
+  theme: propsTheme,
+}: ProductCardProps) => {
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  const { theme: storeTheme } = useTheme();
+  const theme = propsTheme || storeTheme;
   const [isAdminEditor, setIsAdminEditor] = useState(false);
 
   useEffect(() => {
@@ -38,17 +45,28 @@ const ProductCard = ({
   }, []);
 
   const productStyle = theme.productCardStyle || "compact";
+  const buttonStyle = theme.buttonStyle || "flat";
+
   const cardClass =
     productStyle === "premium"
-      ? "rounded-2xl border-2 border-primary/20 shadow-xl"
+      ? "rounded-2xl border-2 border-primary/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all bg-white"
       : productStyle === "offer"
-        ? "rounded-xl border border-destructive/30"
-        : "rounded-xl border border-border";
+        ? "rounded-xl border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-colors"
+        : "rounded-xl border border-border bg-white hover:border-primary/30 transition-colors";
+
+  const buttonClass = `w-full py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 disabled:grayscale ${
+    buttonStyle === "gradient"
+      ? "bg-gradient-to-br from-primary to-primary/80 text-white border-none shadow-md"
+      : buttonStyle === "outline"
+        ? "bg-transparent border-2 border-primary text-primary hover:bg-primary hover:text-white"
+        : buttonStyle === "shadow"
+          ? "bg-primary text-white shadow-[0_4px_14px_0_rgba(0,0,0,0.2)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.23)]"
+          : "bg-primary text-white hover:bg-black"
+  }`;
+
   const imageHeightClass = productStyle === "premium" ? "h-32" : productStyle === "offer" ? "h-24" : "h-28";
 
-  const whatsappLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
-    `Hi NM Mart! I'd like to buy:\n\n🛒 Product: ${product.name}\n🆔 Barcode: ${product.barcode}\n💰 Price: ₹${product.price}\n\nPlease confirm my order. Thank you!`
-  )}`;
+  const whatsappLink = `https://wa.me/917081154604?text=${encodeURIComponent(`Hi NM Mart, I want to buy: ${product.name} (Code: ${product.barcode}) for ₹${product.price}`)}`;
 
   const showPen = isAdminEditor && typeof onAdminQuickEdit === "function";
 
@@ -138,11 +156,7 @@ const ProductCard = ({
               if (product.stock && product.stock > 0) onAddToCart(product);
             }}
             disabled={!product.stock || product.stock <= 0}
-            className={`flex w-full items-center justify-center gap-2 rounded-lg py-1.5 text-[9px] font-bold uppercase transition-colors ${
-              product.stock && product.stock > 0
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "cursor-not-allowed bg-muted text-muted-foreground"
-            }`}
+            className={buttonClass}
           >
             <ShoppingCart size={12} />
             {product.stock && product.stock > 0 ? "Add to Cart" : "Out of Stock"}

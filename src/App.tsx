@@ -19,11 +19,13 @@ import ResetPassword from "@/pages/ResetPassword";
 
 // Admin Pages
 import Admin from "@/pages/Admin";
+import Customize from "@/pages/admin/Customize";
+import Dashboard from "@/pages/admin/Dashboard";
 import DeliveryDashboard from "@/pages/Delivery";
 
 const ADMIN_EMAIL = "nmmart07@gmail.com";
 
-function AdminRoute() {
+function AdminRoute({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
 
@@ -62,7 +64,7 @@ function AdminRoute() {
     );
   }
 
-  return allowed ? <Admin /> : <Navigate to="/login" replace />;
+  return allowed ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function App() {
@@ -88,8 +90,10 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Admin Routes */}
-          <Route path="/admin" element={<AdminRoute />} />
-          <Route path="/delivery" element={<DeliveryDashboard />} />
+          <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+          <Route path="/admin/customize" element={<AdminRoute><Customize /></AdminRoute>} />
+          <Route path="/admin/dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
+          <Route path="/delivery" element={<AdminRoute><DeliveryDashboard /></AdminRoute>} />
         </Routes>
       </Router>
     </ThemeProvider>

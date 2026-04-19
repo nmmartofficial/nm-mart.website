@@ -39,6 +39,8 @@ const Admin = () => {
   };
 
   const menuItems = [
+    { id: "dashboard", label: "Analytics", icon: BarChart3, color: "text-cyan-500", bg: "bg-cyan-50", action: () => navigate("/admin/dashboard") },
+    { id: "customize", label: "Live Customizer", icon: Palette, color: "text-rose-500", bg: "bg-rose-50", action: () => navigate("/admin/customize") },
     { id: "inventory", label: "Inventory", icon: Package, color: "text-blue-500", bg: "bg-blue-50" },
     { id: "orders", label: "Orders", icon: ShoppingBag, color: "text-green-500", bg: "bg-green-50" },
     { id: "categories", label: "Categories", icon: LayoutIcon, color: "text-purple-500", bg: "bg-purple-50" },
@@ -46,7 +48,6 @@ const Admin = () => {
     { id: "highlights", label: "Highlights", icon: Gift, color: "text-amber-500", bg: "bg-amber-50" },
     { id: "layout", label: "Homepage Layout", icon: Database, color: "text-indigo-500", bg: "bg-indigo-50" },
     { id: "welfare", label: "Loyalty & Welfare", icon: Users, color: "text-pink-500", bg: "bg-pink-50" },
-    { id: "analytics", label: "Analytics", icon: BarChart3, color: "text-cyan-500", bg: "bg-cyan-50" },
     { id: "settings", label: "Store Settings", icon: Settings, color: "text-gray-500", bg: "bg-gray-50" },
   ];
 
@@ -90,7 +91,7 @@ const Admin = () => {
             <button
               key={item.id}
               type="button"
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => item.action ? item.action() : setActiveTab(item.id)}
               className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-tight transition-all ${
                 activeTab === item.id
                   ? "bg-primary text-white shadow-md shadow-primary/25"
@@ -123,7 +124,7 @@ const Admin = () => {
             <button
               key={item.id}
               type="button"
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => item.action ? item.action() : setActiveTab(item.id)}
               className={`group flex w-full items-center justify-between rounded-2xl p-3.5 transition-all ${
                 activeTab === item.id
                   ? "translate-x-1 bg-primary text-white shadow-lg shadow-primary/20"

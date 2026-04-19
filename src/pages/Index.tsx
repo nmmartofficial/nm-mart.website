@@ -131,15 +131,25 @@ const CATEGORY_ICONS: Record<string, string> = {
 const PRIORITY_CATS = ["SOAP", "SNACKS", "SPICES"].map(normalizeCategory);
 const HIDDEN_CATS: string[] = [];
 
-export default function Index() {
-  const { theme } = useTheme();
+interface IndexProps {
+  previewTheme?: ThemeConfig;
+  previewLayout?: SectionLayout[];
+}
+
+export default function Index({ previewTheme, previewLayout }: IndexProps) {
+  const { theme: storeTheme } = useTheme();
+  const theme = previewTheme || storeTheme;
   const navigate = useNavigate();
   const [banners, setBanners] = useState<any[]>([]);
-  const [layout, setLayout] = useState<SectionLayout[]>(DEFAULT_HOME_LAYOUT);
+  const [layout, setLayout] = useState<SectionLayout[]>(previewLayout || DEFAULT_HOME_LAYOUT);
   const [gridStyle, setGridStyle] = useState({ categoryColumns: 6, productColumns: 4 });
   const [homeLoading, setHomeLoading] = useState(true);
 
   useEffect(() => {
+    if (previewLayout) {
+      setLayout(previewLayout);
+      return;
+    }
     const fetchHomeData = async () => {
       setHomeLoading(true);
       try {
@@ -160,7 +170,7 @@ export default function Index() {
       }
     };
     fetchHomeData();
-  }, []);
+  }, [previewLayout]);
 
   const { 
     allProducts, loading: productsLoading, brands, categories: posCategories,
@@ -344,6 +354,7 @@ export default function Index() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [scannedProduct, setScannedProduct] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const quickEditImageRef = useRef<HTMLInputElement>(null);
@@ -1290,7 +1301,7 @@ export default function Index() {
         </div>
       )}
       
-      <Navbar />
+      <Navbar theme={theme} setIsAiChatOpen={setIsAiChatOpen} />
 
       {/* Search Section - Professional & Prominent */}
       <div className={`sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 ${isAdminMode ? 'top-[112px]' : 'top-[72px]'}`}>
@@ -1594,7 +1605,7 @@ export default function Index() {
       </a>
 
       {/* Modals & Chatbot */}
-      {!isAdminMode && <ChatBot />}
+      <ChatBot isOpen={isAiChatOpen} setIsOpen={setIsAiChatOpen} />
       <WelfareModal isOpen={showWelfareModal} onClose={() => setShowWelfareModal(false)} />
 
       {/* Back to Top */}

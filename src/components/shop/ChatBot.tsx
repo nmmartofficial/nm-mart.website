@@ -8,9 +8,13 @@ interface ChatMessage {
   options?: { name: string; saleRate: string; img: string }[];
 }
 
-const ChatBot = () => {
+interface ChatBotProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
+const ChatBot = ({ isOpen, setIsOpen }: ChatBotProps) => {
   const ADMIN_EMAIL = "nmmart07@gmail.com";
-  const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [input, setInput] = useState('');
 
@@ -101,49 +105,41 @@ const ChatBot = () => {
     setInput('');
   };
 
-  if (isAdmin) return null;
+  if (isAdmin || !isOpen) return null;
 
   return (
-    <div className="fixed bottom-24 right-4 z-[9999]">
-      <button 
-        onClick={() => setIsOpen(!isOpen)} 
-        className="bg-primary text-primary-foreground p-3 rounded-full shadow-2xl relative hover:scale-110 transition-all active:scale-95 border-2 border-white/20 group"
-      >
-        <div className="absolute -top-12 right-0 bg-black text-white text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl border border-white/10">
-          Chat with AI
-        </div>
-        <img src="/nm-mart-logo.png" alt="NM AI" className="w-6 h-6 rounded-full" />
-        {cart.length > 0 && !isOpen && (
-          <span className="absolute -top-1 -right-1 bg-destructive text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black animate-bounce shadow-lg border border-white/20">
-            {cart.length}
-          </span>
-        )}
-      </button>
-
-      {isOpen && (
-        <div className="absolute bottom-12 right-0 w-[270px] md:w-[300px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col h-[400px] overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-300">
-          <div className="bg-primary py-2 px-3 flex justify-between items-center">
-            <h3 className="font-black text-primary-foreground text-[10px] uppercase tracking-tighter italic">NM Shopping AI</h3>
-            <div className="flex items-center gap-2">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="w-full max-w-md bg-card border border-border rounded-[32px] shadow-2xl flex flex-col h-[600px] max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="bg-primary py-4 px-6 flex justify-between items-center shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+                <MessageCircle size={24} className="text-white" />
+              </div>
+              <div>
+                <h3 className="font-black text-white text-sm uppercase tracking-wider leading-none">NM Mart AI Help</h3>
+                <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest mt-1">Online Support</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
               {cart.length > 0 && (
-                <button onClick={() => setCart([])} title="Clear Cart" className="hover:scale-110 transition-transform"><Trash2 size={12} className="text-primary-foreground/80 hover:text-white" /></button>
+                <button onClick={() => setCart([])} title="Clear Cart" className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"><Trash2 size={16} className="text-white" /></button>
               )}
-              <button onClick={() => setIsOpen(false)} className="hover:scale-110 transition-transform"><X size={14} className="text-primary-foreground/80 hover:text-white" /></button>
+              <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"><X size={18} className="text-white" /></button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2.5 scrollbar-hide bg-gray-50/30">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide bg-slate-50/50">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
-                <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-[10px] font-bold ${msg.isBot ? 'bg-white border border-gray-100 text-black shadow-sm' : 'bg-primary text-white shadow-md shadow-primary/10'}`}>
+                <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-xs font-bold ${msg.isBot ? 'bg-white border border-gray-100 text-black shadow-sm' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}>
                   <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
                   {msg.options && (
-                    <div className="mt-2 space-y-1.5 pt-1 border-t border-gray-50">
+                    <div className="mt-3 space-y-2 pt-2 border-t border-gray-100">
                       {msg.options.map((opt, j) => (
-                        <div key={j} className="flex items-center justify-between gap-2 p-1.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group border border-transparent hover:border-gray-200">
-                          <span className="flex-1 text-[9px] truncate text-gray-700">{opt.name} - ₹{opt.saleRate}</span>
-                          <button onClick={() => addToCart(opt)} className="text-primary hover:text-black transition-colors shrink-0">
-                            <ShoppingCart size={12} className="group-hover:scale-110" />
+                        <div key={j} className="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group border border-transparent hover:border-gray-200">
+                          <span className="flex-1 text-[10px] truncate text-gray-700 font-black">{opt.name} - ₹{opt.saleRate}</span>
+                          <button onClick={() => addToCart(opt)} className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shrink-0">
+                            <ShoppingCart size={14} />
                           </button>
                         </div>
                       ))}
@@ -155,34 +151,33 @@ const ChatBot = () => {
             <div ref={chatEndRef} />
           </div>
 
-          <div className="p-2.5 bg-white border-t border-border flex flex-col gap-2">
+          <div className="p-4 bg-white border-t border-border shrink-0">
             {cart.length > 0 && (
               <button 
                 onClick={sendToWhatsApp}
-                className="w-full bg-green-500 text-white py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all shadow-sm italic"
+                className="w-full bg-green-500 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all shadow-md mb-3"
               >
-                <SendHorizontal size={12} /> Order WhatsApp ({cart.length})
+                <SendHorizontal size={14} /> Send List to WhatsApp ({cart.length})
               </button>
             )}
-            <div className="flex gap-1.5 items-center">
+            <div className="flex gap-2 items-center">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Search products..."
-                className="flex-1 bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5 text-[10px] font-bold outline-none focus:border-primary transition-all placeholder:text-gray-300"
+                placeholder="Ask something or search products..."
+                className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-primary transition-all placeholder:text-gray-300"
               />
               <button 
                 onClick={handleSend}
-                className="bg-primary text-white p-1.5 rounded-lg hover:scale-105 transition-transform shadow-md"
+                className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center hover:scale-105 transition-transform shadow-lg shadow-primary/20"
               >
-                <Send size={14} />
+                <Send size={18} />
               </button>
             </div>
           </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

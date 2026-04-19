@@ -24,15 +24,35 @@ import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 import WelfareModal from "@/components/shop/modals/WelfareModal";
 
-const Navbar = () => {
+import { ThemeConfig } from "@/lib/storeConfig";
+
+interface NavbarProps {
+  theme?: ThemeConfig;
+  setIsAiChatOpen?: (isOpen: boolean) => void;
+}
+
+const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  const { theme: storeTheme } = useTheme();
+  const theme = propsTheme || storeTheme;
   const [user, setUser] = useState<any>(null);
   const [profileName, setProfileName] = useState("");
   const [welfareCard, setWelfareCard] = useState<{ number: string; active: boolean; points: number } | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showWelfareModal, setShowWelfareModal] = useState(false);
   const [showGoldenCard, setShowGoldenCard] = useState(false);
+
+  const headerStyle = theme.headerStyle || "classic";
+  
+  const headerClass = headerStyle === "modern" 
+    ? "fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 rounded-2xl border border-white/20 shadow-2xl bg-background/70 backdrop-blur-xl"
+    : headerStyle === "minimal"
+      ? "sticky top-0 z-50 bg-background/50 backdrop-blur-md border-b border-border h-14"
+      : "sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border shadow-sm";
+
+  const containerClass = headerStyle === "centered" 
+    ? "max-w-7xl mx-auto px-4 h-20 flex flex-col md:flex-row items-center justify-between"
+    : "max-w-7xl mx-auto px-4 h-full flex items-center justify-between";
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -109,8 +129,8 @@ const Navbar = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/60 bg-white/70 backdrop-blur-[10px]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
+    <header className={headerClass}>
+      <div className={containerClass}>
         <div className="flex min-w-0 items-center gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-3 text-left">
             <div className="shrink-0 rounded-2xl bg-primary p-2.5 shadow-sm">
