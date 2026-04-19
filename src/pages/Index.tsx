@@ -55,10 +55,11 @@ const FALLBACK_BANNERS = [
 
 const DEFAULT_HOME_LAYOUT: SectionLayout[] = [
   { id: "hero", name: "Hero Banner", order: 0, visible: true },
-  { id: "flat_50", name: "50% OFF Offers", order: 1, visible: true },
-  { id: "flat_33", name: "33% OFF Offers", order: 2, visible: true },
-  { id: "categories", name: "Categories", order: 3, visible: true },
-  { id: "products", name: "All Products", order: 4, visible: true },
+  { id: "featured", name: "Munafa Deals", order: 1, visible: true },
+  { id: "flat_50", name: "50% OFF Offers", order: 2, visible: true },
+  { id: "flat_33", name: "33% OFF Offers", order: 3, visible: true },
+  { id: "categories", name: "Categories", order: 4, visible: true },
+  { id: "products", name: "All Products", order: 5, visible: true },
 ];
 
 function mergeHomeLayout(remote: SectionLayout[] | null | undefined): SectionLayout[] {
@@ -76,10 +77,11 @@ function mergeHomeLayout(remote: SectionLayout[] | null | undefined): SectionLay
   // Force key section ordering so offers stay above categories
   const forcedOrder: Record<string, number> = {
     hero: 0,
-    flat_50: 1,
-    flat_33: 2,
-    categories: 3,
-    products: 4,
+    featured: 1,
+    flat_50: 2,
+    flat_33: 3,
+    categories: 4,
+    products: 5,
   };
   for (const [id, order] of Object.entries(forcedOrder)) {
     const existing = byId.get(id);
@@ -162,8 +164,9 @@ export default function Index() {
 
   const { 
     allProducts, loading: productsLoading, brands, categories: posCategories,
-    flat33, flat50, hasMore, loadMore, totalCount,
-    total50, total33, hasMore50, hasMore33, loadMore50, loadMore33,
+    flat33, flat50, featuredProducts, hasMore, loadMore, totalCount,
+    total50, total33, totalFeatured, hasMore50, hasMore33, hasMoreFeatured, 
+    loadMore50, loadMore33, loadMoreFeatured,
     refetchProducts,
   } = useProducts();
   const loading = productsLoading || homeLoading;
@@ -341,6 +344,7 @@ export default function Index() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [scannedProduct, setScannedProduct] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const quickEditImageRef = useRef<HTMLInputElement>(null);
@@ -631,6 +635,48 @@ export default function Index() {
               banners={banners}
               loading={homeLoading}
             />
+          </div>
+        );
+      case 'featured':
+        return featuredProducts.length > 0 && (
+          <div key="featured" id="featured-deals" className="mb-8 max-w-7xl mx-auto px-4 w-full scroll-mt-32">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-black flex items-center justify-center shadow-xl shadow-primary/20 rotate-3">
+                  <Star size={24} className="text-white fill-current animate-pulse" />
+                </div>
+                <div className="text-left">
+                  <div className="text-[10px] font-black uppercase tracking-[0.3em] text-primary leading-none mb-1">Exclusive Offers</div>
+                  <h3 className="text-2xl font-black italic uppercase leading-none text-black tracking-tight">Munafa Deals</h3>
+                </div>
+              </div>
+              <div className="hidden md:flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100">
+                <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Live Updates</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {featuredProducts.map(p => (
+                <ProductCard 
+                  key={p.barcode} 
+                  product={p} 
+                  onAddToCart={addToCart} 
+                  showAdminQuickEdit={isAdminMode} 
+                  onAdminQuickEdit={handleQuickEdit} 
+                />
+              ))}
+            </div>
+            {hasMoreFeatured && (
+              <div className="mt-8 flex justify-center">
+                <button 
+                  onClick={loadMoreFeatured} 
+                  className="px-8 py-3 rounded-2xl border-2 border-primary text-primary font-black uppercase italic text-[10px] tracking-widest hover:bg-primary hover:text-white transition-all active:scale-95"
+                >
+                  View More Munafa Deals
+                </button>
+              </div>
+            )}
           </div>
         );
       case 'highlights':
@@ -1186,9 +1232,11 @@ export default function Index() {
 
       if (localError) throw localError;
 
-      await refetchProducts();
       toast.success("Product updated successfully!");
       setEditingProduct(null);
+      
+      // Immediate refetch to update homepage (including Munafa Deals)
+      await refetchProducts();
     } catch (err: any) {
       logSupabaseDebug("indexQuickEdit:error", editingProduct, err);
       toast.error(getSupabaseErrorMessage(err, "Update failed"));
@@ -1243,7 +1291,7 @@ export default function Index() {
         </div>
       )}
       
-      <Navbar />
+      <Navbar setIsAiChatOpen={setIsAiChatOpen} />
 
       {/* Search Section - Professional & Prominent */}
       <div className={`sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 ${isAdminMode ? 'top-[112px]' : 'top-[72px]'}`}>
@@ -1547,7 +1595,7 @@ export default function Index() {
       </a>
 
       {/* Modals & Chatbot */}
-      {!isAdminMode && <ChatBot />}
+      <ChatBot isOpen={isAiChatOpen} setIsOpen={setIsAiChatOpen} />
       <WelfareModal isOpen={showWelfareModal} onClose={() => setShowWelfareModal(false)} />
 
       {/* Back to Top */}
