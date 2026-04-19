@@ -18,8 +18,6 @@ CREATE TABLE IF NOT EXISTS public.products (
     sub_category TEXT,
     stock_quantity NUMERIC DEFAULT 0,
     image_url TEXT,
-    unit TEXT DEFAULT 'pcs',
-    is_featured BOOLEAN DEFAULT FALSE,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
