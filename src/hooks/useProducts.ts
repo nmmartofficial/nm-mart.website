@@ -23,10 +23,12 @@ export function useProducts() {
     const name = String(item.RawName || "Unknown Product").trim();
     const mrp = Number(item.MRP || 0);
     const rate = Number(item.Rate || 0);
-    const imageUrl = item.image_url || "";
-    const category = normalizeCategory(item.ItemGroupName || "GENERAL");
-    const discount = Number(item.discountPerc || 0);
-    const stock = Number(item.OpStock || 0);
+    const imageUrl = String(item?.image_url || "").trim();
+    const category = normalizeCategory(item?.ItemGroupName || "GENERAL");
+    const discount = Number(item?.discountPerc || 0);
+    const stock = Number(item?.OpStock || 0);
+    const unit = String(item?.unit || "pcs").trim();
+    const isFeatured = Boolean(item?.is_featured);
 
     return {
       id: barcode,
@@ -36,13 +38,15 @@ export function useProducts() {
       category: category,
       mrp: mrp,
       barcode: barcode,
-      brand: String(item.brand || "Local").trim(),
-      subCategory: String(item.sub_category || "").trim(),
+      brand: String(item?.brand || "Local").trim(),
+      subCategory: String(item?.sub_category || "").trim(),
       imageUrl: imageUrl,
       discount: discount,
       stock: stock,
+      unit: unit,
+      isFeatured: isFeatured,
       save: Math.max(0, Math.round(mrp - rate)),
-      badge: item.badge || ""
+      badge: String(item?.badge || "").trim()
     };
   };
 

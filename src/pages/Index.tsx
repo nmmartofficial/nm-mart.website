@@ -12,6 +12,7 @@ import {
   Database, LogOut, Clock
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/lib/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
@@ -1078,10 +1079,13 @@ export default function Index() {
   const handleQuickEdit = (p: any) => {
     setEditingProduct({
       ...p,
-      mrp: p.mrp,
-      salePrice: p.price,
-      stock: p.stock ?? 0,
-      imageUrl: p.imageUrl || "",
+      mrp: Number(p?.mrp || 0),
+      salePrice: Number(p?.price || 0),
+      stock: Number(p?.stock || 0),
+      unit: String(p?.unit || "pcs").trim(),
+      category: normalizeCategory(p?.category || "GENERAL"),
+      isFeatured: Boolean(p?.isFeatured),
+      imageUrl: String(p?.imageUrl || "").trim(),
     });
   };
 
@@ -1127,6 +1131,15 @@ export default function Index() {
 
   const submitQuickEdit = async () => {
     if (!editingProduct) return;
+    
+    const mrp = Number(editingProduct.mrp || 0);
+    const rate = Number(editingProduct.salePrice || 0);
+    
+    if (rate > mrp) {
+      toast.error("Sale price cannot exceed MRP");
+      return;
+    }
+
     setEditLoading(true);
     try {
       const session = await getActiveSession();
@@ -1138,24 +1151,21 @@ export default function Index() {
       const { error: syncError } = await supabase
         .from('sync_back')
         .insert([{
-          RawCodeNew: editingProduct.barcode,
-          NewRate: Number(editingProduct.salePrice),
-          NewName: editingProduct.name,
+          RawCodeNew: String(editingProduct.barcode || ""),
+          NewRate: rate,
+          NewName: String(editingProduct.name || "").trim(),
           status: 'pending',
           created_at: new Date().toISOString()
         }]);
 
       if (syncError) throw syncError;
 
-      const mrp = Number(editingProduct.mrp);
-      const rate = Number(editingProduct.salePrice);
       let discountPerc = 0;
       if (mrp > 0 && rate >= 0 && rate < mrp) {
         discountPerc = Math.min(99, Math.round(100 * (1 - rate / mrp)));
       }
 
       const imageUrl = String(editingProduct.imageUrl || "").trim() || null;
-
       const opStock = Math.max(0, Math.floor(Number(editingProduct.stock ?? 0)));
 
       const { error: localError } = await supabase
@@ -1165,6 +1175,9 @@ export default function Index() {
           MRP: mrp,
           Rate: rate,
           OpStock: opStock,
+          ItemGroupName: normalizeCategory(editingProduct.category || "GENERAL"),
+          unit: String(editingProduct.unit || "pcs").trim(),
+          is_featured: Boolean(editingProduct.isFeatured),
           image_url: imageUrl,
           discountPerc,
           updated_at: new Date().toISOString(),
@@ -1174,11 +1187,11 @@ export default function Index() {
       if (localError) throw localError;
 
       await refetchProducts();
-      toast.success("Product updated.");
+      toast.success("Product updated successfully!");
       setEditingProduct(null);
     } catch (err: any) {
       logSupabaseDebug("indexQuickEdit:error", editingProduct, err);
-      toast.error(getSupabaseErrorMessage(err, "POS Sync failed"));
+      toast.error(getSupabaseErrorMessage(err, "Update failed"));
     } finally {
       setEditLoading(false);
     }
@@ -1589,10 +1602,11 @@ export default function Index() {
               </header>
 
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-8 sm:py-5">
-                <div className="space-y-5">
-                  <div className="flex justify-center">
+                <div className="space-y-6">
+                  {/* Image & Identity Row */}
+                  <div className="flex items-center gap-5">
                     <div className="relative cursor-pointer group" onClick={() => quickEditImageRef.current?.click()}>
-                      <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 transition-all group-hover:border-primary">
+                      <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 transition-all group-hover:border-primary">
                         {uploadingImage ? (
                           <LoaderIcon className="animate-spin text-primary" size={24} />
                         ) : editingProduct.imageUrl ? (
@@ -1604,65 +1618,115 @@ export default function Index() {
                       <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                         <Upload className="text-white" size={20} />
                       </div>
-                      <input 
-                        type="file" 
-                        ref={quickEditImageRef} 
-                        className="hidden" 
-                        accept="image/*" 
-                        onChange={handleQuickImageUpload} 
-                      />
+                      <input type="file" ref={quickEditImageRef} className="hidden" accept="image/*" onChange={handleQuickImageUpload} />
+                    </div>
+                    <div className="flex-1 space-y-1.5 min-w-0">
+                      <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Barcode / Code</label>
+                      <div className="flex w-full items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs font-black tracking-widest text-primary truncate">
+                        <ScanBarcode size={14} className="shrink-0" />
+                        {editingProduct?.barcode || "N/A"}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Barcode / Product Code</label>
-                    <div className="flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 p-3 text-xs font-black tracking-widest text-primary">
-                      <ScanBarcode size={14} />
-                      {editingProduct.barcode}
-                    </div>
-                  </div>
-
+                  {/* Name Field */}
                   <div className="space-y-1.5">
                     <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Product Name</label>
                     <input 
                       type="text" 
+                      placeholder="Enter product name"
                       className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs font-bold outline-none transition-all focus:border-primary"
-                      value={editingProduct.name}
+                      value={editingProduct?.name || ""}
                       onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Pricing Grid */}
+                  <div className="grid grid-cols-2 gap-4 relative">
                     <div className="space-y-1.5">
                       <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">MRP (₹)</label>
                       <input 
                         type="number" 
+                        placeholder="0.00"
                         className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm font-black outline-none transition-all focus:border-primary"
-                        value={editingProduct.mrp}
+                        value={editingProduct?.mrp || ""}
                         onChange={(e) => setEditingProduct({ ...editingProduct, mrp: e.target.value })}
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Sale Rate (₹)</label>
+                    <div className="space-y-1.5 relative">
+                      <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Sale Price (₹)</label>
                       <input 
                         type="number" 
-                        className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm font-black text-primary outline-none transition-all focus:border-primary"
-                        value={editingProduct.salePrice}
+                        placeholder="0.00"
+                        className={`w-full rounded-xl border p-3 text-sm font-black outline-none transition-all focus:border-primary ${
+                          Number(editingProduct?.salePrice) > Number(editingProduct?.mrp) 
+                            ? "border-red-500 bg-red-50 text-red-600" 
+                            : "border-gray-100 bg-gray-50 text-primary"
+                        }`}
+                        value={editingProduct?.salePrice || ""}
                         onChange={(e) => setEditingProduct({ ...editingProduct, salePrice: e.target.value })}
                       />
+                      {Number(editingProduct?.mrp) > Number(editingProduct?.salePrice) && (
+                        <div className="absolute right-2 top-[34px] bg-green-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase italic">
+                          {Math.round((1 - Number(editingProduct.salePrice) / Number(editingProduct.mrp)) * 100)}% OFF
+                        </div>
+                      )}
                     </div>
                   </div>
 
+                  {/* Category Selection */}
                   <div className="space-y-1.5">
-                    <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Stock (pieces)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm font-black outline-none transition-all focus:border-primary"
-                      value={editingProduct.stock}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, stock: e.target.value })}
+                    <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Category</label>
+                    <select 
+                      className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs font-black outline-none transition-all focus:border-primary appearance-none"
+                      value={editingProduct?.category || "GENERAL"}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    >
+                      {posCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Stock & Unit Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Op. Stock</label>
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="0"
+                        className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm font-black outline-none transition-all focus:border-primary"
+                        value={editingProduct?.stock || ""}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, stock: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Unit Type</label>
+                      <select 
+                        className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm font-black outline-none transition-all focus:border-primary appearance-none"
+                        value={editingProduct?.unit || "pcs"}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, unit: e.target.value })}
+                      >
+                        <option value="pcs">Pieces (pcs)</option>
+                        <option value="kg">Kilogram (kg)</option>
+                        <option value="gm">Gram (gm)</option>
+                        <option value="pack">Pack</option>
+                        <option value="ltr">Liter (ltr)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Feature Toggle */}
+                  <div className="flex items-center justify-between rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-black uppercase italic tracking-widest text-primary">Munafa Deal</p>
+                      <p className="text-[9px] font-bold text-gray-500">Highlight this in featured section</p>
+                    </div>
+                    <Switch 
+                      checked={Boolean(editingProduct?.isFeatured)}
+                      onCheckedChange={(val) => setEditingProduct({ ...editingProduct, isFeatured: val })}
                     />
-                    <p className="text-[9px] font-bold text-muted-foreground">0 stock hides this product on the storefront.</p>
                   </div>
                 </div>
               </div>

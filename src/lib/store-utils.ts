@@ -13,6 +13,8 @@ export interface Product {
   discount: number;
   save: number;
   stock?: number;
+  unit?: string;
+  isFeatured?: boolean;
   badge?: string;
 }
 
