@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
+import { getProductImagesBucket, getProductImageStoragePath } from "@/lib/supabase/productImagesStorage";
 import { toast } from "sonner";
 
 const InventoryTab = () => {
@@ -127,11 +128,11 @@ const InventoryTab = () => {
       let imageUrl = String(current.image_url || "").trim();
       if (editImageFile) {
         const ext = editImageFile.name.split(".").pop()?.replace(/[^a-z0-9]/gi, "") || "jpg";
-        const barcodeFolder = String(rawCodeNew).trim().replace(/\//g, "_");
-        const filePath = `${barcodeFolder}/${Date.now()}.${ext}`;
+        const bucket = getProductImagesBucket();
+        const filePath = getProductImageStoragePath(String(rawCodeNew), Date.now(), ext);
 
         const { error: uploadError } = await supabase.storage
-          .from("product-images")
+          .from(bucket)
           .upload(filePath, editImageFile, {
             cacheControl: "3600",
             upsert: true,
@@ -140,7 +141,7 @@ const InventoryTab = () => {
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(filePath);
+        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
         imageUrl = urlData.publicUrl;
       }
 
@@ -173,7 +174,15 @@ const InventoryTab = () => {
       fetchProducts();
     } catch (err: any) {
       logSupabaseDebug("inventorySave:error", { rawCodeNew, editPrice, editStock }, err);
-      toast.error(getSupabaseErrorMessage(err, "Unable to update product"));
+      const msg = getSupabaseErrorMessage(err, "Unable to update product");
+      const lower = msg.toLowerCase();
+      if (lower.includes("bucket not found") || lower.includes("not found")) {
+        toast.error(
+          `Storage: create a public "product-images" bucket (or use "${getProductImagesBucket()}" with policies), or set VITE_PRODUCT_IMAGES_BUCKET.`
+        );
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setSaving(false);
     }

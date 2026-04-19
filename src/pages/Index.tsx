@@ -18,6 +18,7 @@ import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import { useTheme } from "@/lib/ThemeProvider";
 import { fetchActiveBanners, getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
+import { getProductImagesBucket, getProductImageStoragePath } from "@/lib/supabase/productImagesStorage";
 import { 
   productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, 
   addLoyaltyPoints, getLoyaltyPoints, OrderRecord, normalizeCategory, getOrderHistory,
@@ -1083,11 +1084,12 @@ export default function Index() {
     setUploadingImage(true);
     try {
       const fileExt = file.name.split(".").pop()?.replace(/[^a-z0-9]/gi, "") || "jpg";
-      const barcodeFolder = String(editingProduct.barcode).trim().replace(/\//g, "_");
-      const filePath = `${barcodeFolder}/${Date.now()}.${fileExt}`;
+      const ts = Date.now();
+      const bucket = getProductImagesBucket();
+      const filePath = getProductImageStoragePath(String(editingProduct.barcode), ts, fileExt);
 
       const { error: uploadError } = await supabase.storage
-        .from("product-images")
+        .from(bucket)
         .upload(filePath, file, {
           upsert: true,
           contentType: file.type || "image/jpeg",
@@ -1097,14 +1099,19 @@ export default function Index() {
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from("product-images")
+        .from(bucket)
         .getPublicUrl(filePath);
 
       setEditingProduct({ ...editingProduct, imageUrl: publicUrl });
       toast.success("Image uploaded successfully!");
     } catch (err: any) {
       console.error("Image upload failed", err);
-      toast.error(err.message || "Image upload failed");
+      const msg = err?.message || "Image upload failed";
+      toast.error(
+        msg.includes("Bucket not found") || msg.includes("not found")
+          ? `Storage bucket missing. Use bucket "${getProductImagesBucket()}" or create "product-images" in Supabase and set VITE_PRODUCT_IMAGES_BUCKET.`
+          : msg
+      );
     } finally {
       setUploadingImage(false);
     }
@@ -1544,20 +1551,23 @@ export default function Index() {
         setCheckoutOpen={setCheckoutOpen}
       />
 
-      {/* Quick Edit Modal */}
+      {/* Quick Edit Modal — scrollable on small screens so content is not cut off */}
       <AnimatePresence>
         {editingProduct && (
           <>
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" 
+              className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm" 
               onClick={() => setEditingProduct(null)} 
             />
+            <div className="fixed inset-0 z-[101] flex items-end justify-center p-0 sm:items-center sm:p-4 pointer-events-none">
             <motion.div 
-              initial={{ opacity: 0, y: 50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 50, scale: 0.9 }}
-              className="fixed inset-x-4 bottom-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[400px] bg-white rounded-[32px] shadow-2xl z-[101] overflow-hidden border border-gray-100"
+              initial={{ opacity: 0, y: 40, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 40, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 380, damping: 32 }}
+              className="pointer-events-auto flex max-h-[min(92dvh,calc(100dvh-1rem))] w-full max-w-[min(100vw,28rem)] flex-col overflow-hidden rounded-t-[28px] border border-gray-100 bg-white shadow-2xl sm:max-h-[min(88dvh,40rem)] sm:rounded-[32px]"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-8">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-6 sm:px-8 sm:pb-8 sm:pt-8">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h3 className="text-xl font-black italic uppercase text-black leading-none">Quick Edit</h3>
@@ -1646,6 +1656,7 @@ export default function Index() {
                 </div>
               </div>
             </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
