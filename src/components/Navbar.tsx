@@ -125,7 +125,7 @@ const Navbar = () => {
             onClick={() => navigate(user ? "/profile" : "/login")}
             className="min-w-0 text-left"
           >
-            <p className="truncate text-lg font-black tracking-tighter text-black uppercase">
+            <p className="truncate text-lg font-blue tracking-tighter text-orange uppercase">
   NM <span className="text-primary">MART</span>
 </p>
             <p className="truncate text-[10px] font-black uppercase tracking-[0.2em] text-primary">
