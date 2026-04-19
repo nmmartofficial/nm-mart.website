@@ -541,8 +541,10 @@ export default function Index() {
   };
 
   const filtered = useMemo(() => {
-    // 100% Live data from the 'products' table using mapped columns
-    let list = allProducts.filter(p => !HIDDEN_CATS.includes(p.category));
+    // Storefront: hide out-of-stock everywhere search/category filters apply
+    let list = allProducts.filter(
+      (p) => !HIDDEN_CATS.includes(p.category) && (Number(p.stock) > 0)
+    );
     
     // Sort: Products with images first, then by name
     list = [...list].sort((a, b) => {
@@ -763,7 +765,7 @@ export default function Index() {
             </h3>
             {/* We can use ProductGrid or a custom filtered list here */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {allProducts.filter(p => p.badge?.toLowerCase().includes('weekly')).slice(0, 6).map(p => (
+              {allProducts.filter(p => (Number(p.stock) > 0) && p.badge?.toLowerCase().includes('weekly')).slice(0, 6).map(p => (
                 <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
@@ -776,7 +778,7 @@ export default function Index() {
               <Star size={18} className="text-primary" /> Fresh Deals
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {allProducts.filter(p => p.category?.toLowerCase().includes('fresh') || p.badge?.toLowerCase().includes('fresh')).slice(0, 6).map(p => (
+              {allProducts.filter(p => (Number(p.stock) > 0) && (p.category?.toLowerCase().includes('fresh') || p.badge?.toLowerCase().includes('fresh'))).slice(0, 6).map(p => (
                 <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
@@ -789,15 +791,19 @@ export default function Index() {
               <Star size={18} className="text-primary" /> Munafa Mela
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {allProducts.filter(p => p.discount >= 40).slice(0, 6).map(p => (
+              {allProducts.filter(p => (Number(p.stock) > 0) && p.discount >= 40).slice(0, 6).map(p => (
                 <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
           </div>
         );
-      case 'buy_again':
-        // Frequently purchased items
-        const buyAgainItems = orders.flatMap(o => o.items).slice(0, 6);
+      case 'buy_again': {
+        const fromOrders = orders.flatMap((o) => o.items);
+        const buyAgainItems = fromOrders
+          .map((item: any) => allProducts.find((ap) => ap.barcode === item.barcode))
+          .filter((p): p is NonNullable<typeof p> => Boolean(p && Number(p.stock) > 0))
+          .filter((p, i, arr) => arr.findIndex((x) => x.barcode === p.barcode) === i)
+          .slice(0, 6);
         return buyAgainItems.length > 0 && (
           <div key="buy_again" className="mb-12 max-w-7xl mx-auto px-4 w-full">
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
@@ -810,6 +816,7 @@ export default function Index() {
             </div>
           </div>
         );
+      }
       case 'brands':
         return brands.length > 0 && (
           <div key="brands" className="mb-12 max-w-7xl mx-auto px-4 py-4 w-full rounded-3xl" style={getSectionBgStyle("brands")}>
@@ -833,7 +840,7 @@ export default function Index() {
             {/* Dynamic Category-wise Product Sections */}
             {sortedCategories.slice(0, 6).map(cat => {
               const catProducts = allProducts
-                .filter(p => p.category === cat && !HIDDEN_CATS.includes(p.category))
+                .filter(p => Number(p.stock) > 0 && p.category === cat && !HIDDEN_CATS.includes(p.category))
                 .sort((a, b) => {
                   const aHasImg = !!a.imageUrl && a.imageUrl.length > 5;
                   const bHasImg = !!b.imageUrl && b.imageUrl.length > 5;
@@ -1073,6 +1080,7 @@ export default function Index() {
       ...p,
       mrp: p.mrp,
       salePrice: p.price,
+      stock: p.stock ?? 0,
       imageUrl: p.imageUrl || "",
     });
   };
@@ -1148,12 +1156,15 @@ export default function Index() {
 
       const imageUrl = String(editingProduct.imageUrl || "").trim() || null;
 
+      const opStock = Math.max(0, Math.floor(Number(editingProduct.stock ?? 0)));
+
       const { error: localError } = await supabase
         .from('products')
         .update({
           RawName: String(editingProduct.name || "").trim(),
           MRP: mrp,
           Rate: rate,
+          OpStock: opStock,
           image_url: imageUrl,
           discountPerc,
           updated_at: new Date().toISOString(),
@@ -1640,6 +1651,18 @@ export default function Index() {
                         onChange={(e) => setEditingProduct({ ...editingProduct, salePrice: e.target.value })}
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Stock (pieces)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm font-black outline-none transition-all focus:border-primary"
+                      value={editingProduct.stock}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, stock: e.target.value })}
+                    />
+                    <p className="text-[9px] font-bold text-muted-foreground">0 stock hides this product on the storefront.</p>
                   </div>
                 </div>
               </div>

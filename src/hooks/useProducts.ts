@@ -3,6 +3,7 @@ import { Product, normalizeCategory } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
 import { logSupabaseDebug } from "@/lib/supabase";
 
+/** Customer storefront catalog: all queries require OpStock > 0. Admin uses InventoryTab (no stock filter). */
 export function useProducts() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +73,7 @@ export function useProducts() {
 
   const fetchDiscountedProducts = async (type: 50 | 33, offset = 0) => {
     try {
+      // Storefront: in-stock only (OpStock > 0). Admin Inventory uses its own queries.
       let query = supabase
         .from('products')
         .select('*', { count: 'exact' })
