@@ -1551,7 +1551,7 @@ export default function Index() {
         setCheckoutOpen={setCheckoutOpen}
       />
 
-      {/* Quick Edit Modal — scrollable on small screens so content is not cut off */}
+      {/* Quick Edit Modal — mobile sheet; desktop: centered max-w-lg, 80vh cap, sticky header/footer + scroll body */}
       <AnimatePresence>
         {editingProduct && (
           <>
@@ -1560,38 +1560,37 @@ export default function Index() {
               className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm" 
               onClick={() => setEditingProduct(null)} 
             />
-            <div className="fixed inset-0 z-[101] flex items-end justify-center p-0 sm:items-center sm:p-4 pointer-events-none">
+            <div className="pointer-events-none fixed inset-0 z-[101] flex items-end justify-center p-0 sm:items-center sm:p-6">
             <motion.div 
               initial={{ opacity: 0, y: 40, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 40, scale: 0.98 }}
               transition={{ type: "spring", stiffness: 380, damping: 32 }}
-              className="pointer-events-auto flex max-h-[min(92dvh,calc(100dvh-1rem))] w-full max-w-[min(100vw,28rem)] flex-col overflow-hidden rounded-t-[28px] border border-gray-100 bg-white shadow-2xl sm:max-h-[min(88dvh,40rem)] sm:rounded-[32px]"
+              className="pointer-events-auto flex min-h-0 max-h-[min(92dvh,calc(100dvh-1rem))] w-full max-w-lg flex-col overflow-hidden rounded-t-[28px] border border-gray-100 bg-white shadow-2xl sm:max-h-[80vh] sm:rounded-[32px]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-6 sm:px-8 sm:pb-8 sm:pt-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="text-xl font-black italic uppercase text-black leading-none">Quick Edit</h3>
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-[2px] mt-1 italic">{editingProduct.barcode}</p>
-                  </div>
-                  <button onClick={() => setEditingProduct(null)} className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
-                    <X size={20} />
-                  </button>
+              <header className="sticky top-0 z-20 flex shrink-0 items-start justify-between gap-3 border-b border-gray-100 bg-white px-5 pb-4 pt-6 sm:px-8 sm:pb-5 sm:pt-8">
+                <div className="min-w-0">
+                  <h3 className="text-xl font-black italic uppercase leading-none text-black">Quick Edit</h3>
+                  <p className="mt-1 truncate text-[8px] font-black uppercase italic tracking-[2px] text-gray-400">{editingProduct.barcode}</p>
                 </div>
+                <button type="button" onClick={() => setEditingProduct(null)} className="shrink-0 rounded-xl p-2 transition-colors hover:bg-gray-50" aria-label="Close">
+                  <X size={20} />
+                </button>
+              </header>
 
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-8 sm:py-5">
                 <div className="space-y-5">
-                  {/* Quick Image Edit */}
-                  <div className="flex justify-center mb-4">
-                    <div className="relative group cursor-pointer" onClick={() => quickEditImageRef.current?.click()}>
-                      <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 group-hover:border-primary transition-all">
+                  <div className="flex justify-center">
+                    <div className="relative cursor-pointer group" onClick={() => quickEditImageRef.current?.click()}>
+                      <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 transition-all group-hover:border-primary">
                         {uploadingImage ? (
                           <LoaderIcon className="animate-spin text-primary" size={24} />
                         ) : editingProduct.imageUrl ? (
-                          <img src={editingProduct.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                          <img src={editingProduct.imageUrl} alt="Preview" className="h-full w-full object-cover" />
                         ) : (
                           <ImageIcon className="text-gray-300" size={24} />
                         )}
                       </div>
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity">
+                      <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                         <Upload className="text-white" size={20} />
                       </div>
                       <input 
@@ -1605,18 +1604,18 @@ export default function Index() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Barcode / Product Code</label>
-                    <div className="w-full bg-gray-100 border border-gray-200 rounded-xl p-3 text-xs font-black text-primary tracking-widest flex items-center gap-2">
+                    <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Barcode / Product Code</label>
+                    <div className="flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 p-3 text-xs font-black tracking-widest text-primary">
                       <ScanBarcode size={14} />
                       {editingProduct.barcode}
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Product Name</label>
+                    <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Product Name</label>
                     <input 
                       type="text" 
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-primary transition-all"
+                      className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs font-bold outline-none transition-all focus:border-primary"
                       value={editingProduct.name}
                       onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
                     />
@@ -1624,37 +1623,38 @@ export default function Index() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">MRP (₹)</label>
+                      <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">MRP (₹)</label>
                       <input 
                         type="number" 
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm font-black outline-none focus:border-primary transition-all"
+                        className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm font-black outline-none transition-all focus:border-primary"
                         value={editingProduct.mrp}
                         onChange={(e) => setEditingProduct({ ...editingProduct, mrp: e.target.value })}
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Sale Rate (₹)</label>
+                      <label className="ml-1 text-[9px] font-black uppercase tracking-widest text-gray-400">Sale Rate (₹)</label>
                       <input 
                         type="number" 
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm font-black outline-none focus:border-primary transition-all text-primary"
+                        className="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm font-black text-primary outline-none transition-all focus:border-primary"
                         value={editingProduct.salePrice}
                         onChange={(e) => setEditingProduct({ ...editingProduct, salePrice: e.target.value })}
                       />
                     </div>
                   </div>
-
-                  <div className="pt-4">
-                    <button 
-                      onClick={submitQuickEdit}
-                      disabled={editLoading}
-                      className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-2 italic"
-                    >
-                      {editLoading ? <LoaderIcon className="animate-spin" size={18} /> : <Save size={18} />}
-                      Update Instantly
-                    </button>
-                  </div>
                 </div>
               </div>
+
+              <footer className="sticky bottom-0 z-20 shrink-0 border-t border-gray-100 bg-white px-5 pb-8 pt-4 sm:px-8 sm:pb-10 sm:pt-5">
+                <button 
+                  type="button"
+                  onClick={submitQuickEdit}
+                  disabled={editLoading}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-xs font-black uppercase italic tracking-widest text-white shadow-lg transition-all hover:bg-black active:scale-95 disabled:opacity-60"
+                >
+                  {editLoading ? <LoaderIcon className="animate-spin" size={18} /> : <Save size={18} />}
+                  Update Instantly
+                </button>
+              </footer>
             </motion.div>
             </div>
           </>
