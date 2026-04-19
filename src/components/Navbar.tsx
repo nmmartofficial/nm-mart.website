@@ -120,8 +120,8 @@ const Navbar = () => {
               )}
             </div>
             <div className="min-w-0">
-              <p className="flex items-center gap-1.5 truncate font-black text-lg uppercase tracking-tight text-black">
-                <span className="tracking-tight">NM MART</span>
+              <p className="flex items-center gap-1.5 truncate font-black text-lg uppercase tracking-tight">
+                <span className="tracking-tight text-black">NM MART</span>
                 <span className="shrink-0 text-[0.5rem] leading-none text-emerald-500" aria-label="Live online">
                   ●
                 </span>
@@ -160,13 +160,13 @@ const Navbar = () => {
               animate={{ x: 0 }}
               exit={{ x: 420 }}
               transition={{ type: "spring", stiffness: 260, damping: 28 }}
-              className="fixed right-0 top-0 z-[91] h-full w-[330px] max-w-[88vw] border-l border-slate-200/80 bg-slate-50 shadow-2xl shadow-[rgba(15,23,42,0.4)_-28px_0_48px_-12px]"
+              className="fixed right-0 top-0 z-[91] h-full w-[330px] max-w-[88vw] border-l border-slate-200/80 bg-slate-50 shadow-[rgba(15,23,42,0.4)_-28px_0_48px_-12px]"
             >
               <div className="flex items-center justify-between border-b border-slate-200/90 bg-slate-50 p-6">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-400">Store</p>
-                  <p className="mt-1 flex items-center gap-1.5 font-black text-lg uppercase tracking-tight text-black">
-                    <span className="tracking-tight">NM MART</span>
+                  <p className="mt-1 flex items-center gap-1.5 font-black text-lg uppercase tracking-tight">
+                    <span className="tracking-tight text-black">NM MART</span>
                     <span className="shrink-0 text-[0.5rem] leading-none text-emerald-500" aria-label="Live online">
                       ●
                     </span>

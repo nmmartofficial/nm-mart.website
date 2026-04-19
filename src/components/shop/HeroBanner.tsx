@@ -9,39 +9,6 @@ interface HeroBannerProps {
   loading?: boolean;
 }
 
-const DEFAULT_PRODUCTS_HASH = "products";
-
-type BannerTarget =
-  | { mode: "router"; to: string; hash?: string }
-  | { mode: "external"; href: string };
-
-function resolveBannerTarget(banner: any): BannerTarget {
-  const raw = String(banner?.banner_link ?? banner?.link ?? "").trim();
-  if (!raw) {
-    return { mode: "router", to: "/", hash: DEFAULT_PRODUCTS_HASH };
-  }
-  if (/^https?:\/\//i.test(raw) || /^mailto:/i.test(raw) || /^tel:/i.test(raw)) {
-    return { mode: "external", href: raw };
-  }
-  if (raw.startsWith("#")) {
-    const hash = raw.slice(1) || DEFAULT_PRODUCTS_HASH;
-    return { mode: "router", to: "/", hash };
-  }
-  if (raw.startsWith("/")) {
-    const hashIdx = raw.indexOf("#");
-    if (hashIdx !== -1) {
-      const path = raw.slice(0, hashIdx) || "/";
-      const hash = raw.slice(hashIdx + 1) || undefined;
-      return { mode: "router", to: path, hash };
-    }
-    return { mode: "router", to: raw };
-  }
-  if (/^www\./i.test(raw)) {
-    return { mode: "external", href: `https://${raw}` };
-  }
-  return { mode: "router", to: `/${raw.replace(/^\/+/, "")}` };
-}
-
 const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = [], loading = false }: HeroBannerProps) => {
   const { theme } = useTheme();
   const [current, setCurrent] = useState(0);
@@ -77,10 +44,10 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
   if (loading) {
     return (
       <div
-        className={`w-full aspect-[21/9] bg-gray-100 animate-pulse flex items-center justify-center md:aspect-auto md:max-h-[400px] md:overflow-hidden ${radiusClass}`}
+        className={`flex w-full animate-pulse items-center justify-center bg-gray-100 aspect-[21/9] md:aspect-auto md:max-h-[400px] md:overflow-hidden ${radiusClass}`}
         style={radiusStyle}
       >
-        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest italic">Loading Banners...</p>
+        <p className="text-[10px] font-black uppercase italic tracking-widest text-gray-400">Loading Banners...</p>
       </div>
     );
   }
@@ -88,10 +55,10 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
   if (banners.length === 0) {
     return (
       <div
-        className={`w-full aspect-[21/9] bg-gradient-to-br from-orange-50 via-white to-yellow-50 border border-orange-100 flex items-center justify-center md:aspect-auto md:max-h-[400px] md:overflow-hidden ${bannerRadiusPx > 0 ? "" : `rounded-[32px] ${radiusClass}`}`}
+        className={`flex w-full items-center justify-center border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-yellow-50 aspect-[21/9] md:aspect-auto md:max-h-[400px] md:overflow-hidden ${bannerRadiusPx > 0 ? "" : `rounded-[32px] ${radiusClass}`}`}
         style={radiusStyle}
       >
-        <p className="text-[10px] font-black uppercase text-orange-400 tracking-widest italic">
+        <p className="text-[10px] font-black uppercase italic tracking-widest text-orange-400">
           No offers right now
         </p>
       </div>
@@ -115,8 +82,6 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
         ? "bg-green-500 text-white rounded-full px-7"
         : "bg-green-500 text-white";
 
-  const target = resolveBannerTarget(banner);
-
   const imageLinkClass =
     "absolute inset-0 z-0 block cursor-pointer overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80";
 
@@ -132,29 +97,13 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
       style={radiusStyle}
     >
       <div className={mediaShellClass}>
-        {target.mode === "external" ? (
-          <a
-            href={target.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={imageLinkClass}
-            aria-label={banner.title ? `Open offer: ${banner.title}` : "Open banner link"}
-          >
-            <img src={bannerImage} alt="" className={imageClass} />
-          </a>
-        ) : target.hash ? (
-          <Link
-            to={{ pathname: target.to, hash: target.hash }}
-            className={imageLinkClass}
-            aria-label={banner.title ? `View products: ${banner.title}` : "View products"}
-          >
-            <img src={bannerImage} alt="" className={imageClass} />
-          </Link>
-        ) : (
-          <Link to={target.to} className={imageLinkClass} aria-label={banner.title ? `Go to: ${banner.title}` : "Continue"}>
-            <img src={bannerImage} alt="" className={imageClass} />
-          </Link>
-        )}
+        <Link
+          to={{ pathname: "/", hash: "products" }}
+          className={imageLinkClass}
+          aria-label={banner.title ? `View products: ${banner.title}` : "View products"}
+        >
+          <img src={bannerImage} alt="" className={imageClass} />
+        </Link>
 
         <div
           className={`pointer-events-none absolute inset-0 z-[1] flex bg-gradient-to-r from-black/45 via-black/20 to-transparent p-6 md:p-10 ${textPositionClass}`}

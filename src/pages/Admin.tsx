@@ -1,8 +1,18 @@
 import { useState } from "react";
-import { 
-  LayoutDashboard, ShoppingBag, Users, BarChart3, Settings, 
-  Package, Layout as LayoutIcon, LogOut, ChevronRight,
-  Database, Bell, MessageSquare, Heart, Gift
+import {
+  LayoutDashboard,
+  ShoppingBag,
+  Users,
+  BarChart3,
+  Settings,
+  Package,
+  Layout as LayoutIcon,
+  LogOut,
+  ChevronRight,
+  Database,
+  Bell,
+  Heart,
+  Gift,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -41,34 +51,87 @@ const Admin = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col lg:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full lg:w-72 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-screen z-20">
-        <div className="p-8 border-b border-slate-100">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
+    <div className="relative z-[200] flex min-h-dvh min-h-screen flex-col bg-[#F8FAFC] lg:flex-row">
+      {/* Mobile / tablet: sticky top bar + horizontal tabs (does not consume full viewport height) */}
+      <header className="sticky top-0 z-[210] flex flex-shrink-0 flex-col border-b border-slate-200 bg-white shadow-sm lg:hidden">
+        <div className="flex items-center justify-between gap-2 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-md shadow-primary/20">
+              <LayoutDashboard size={18} />
+            </div>
+            <div className="min-w-0">
+              <h1 className="truncate text-sm font-black uppercase italic leading-none text-slate-900">Admin</h1>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Control Center</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-wider text-slate-900 shadow-sm"
+            >
+              Store
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-xl border border-red-100 bg-red-50 p-2 text-red-600"
+              aria-label="Sign out"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
+        <nav
+          className="flex gap-2 overflow-x-auto px-3 pb-3 pt-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          aria-label="Admin sections"
+        >
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setActiveTab(item.id)}
+              className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-tight transition-all ${
+                activeTab === item.id
+                  ? "bg-primary text-white shadow-md shadow-primary/25"
+                  : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <item.icon size={14} className={activeTab === item.id ? "text-white" : item.color} />
+              <span className="whitespace-nowrap">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      {/* Desktop sidebar */}
+      <aside className="z-[205] hidden h-screen w-72 flex-shrink-0 flex-col border-r border-slate-200 bg-white lg:flex lg:sticky lg:top-0">
+        <div className="border-b border-slate-100 p-8">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20">
               <LayoutDashboard size={20} />
             </div>
             <div>
-              <h1 className="font-black italic uppercase text-lg leading-none">Admin</h1>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Control Center</p>
+              <h1 className="text-lg font-black uppercase italic leading-none">Admin</h1>
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Control Center</p>
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
           {menuItems.map((item) => (
             <button
               key={item.id}
+              type="button"
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all group ${
-                activeTab === item.id 
-                ? "bg-primary text-white shadow-lg shadow-primary/20 translate-x-1" 
-                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              className={`group flex w-full items-center justify-between rounded-2xl p-3.5 transition-all ${
+                activeTab === item.id
+                  ? "translate-x-1 bg-primary text-white shadow-lg shadow-primary/20"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-xl transition-colors ${activeTab === item.id ? "bg-white/20" : item.bg}`}>
+                <div className={`rounded-xl p-2 transition-colors ${activeTab === item.id ? "bg-white/20" : item.bg}`}>
                   <item.icon size={18} className={activeTab === item.id ? "text-white" : item.color} />
                 </div>
                 <span className="text-sm font-bold tracking-tight">{item.label}</span>
@@ -78,12 +141,13 @@ const Admin = () => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-100">
+        <div className="border-t border-slate-100 p-4">
           <button
+            type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-red-500 hover:bg-red-50 transition-all font-bold text-sm"
+            className="flex w-full items-center gap-3 rounded-2xl p-3.5 text-sm font-bold text-red-500 transition-all hover:bg-red-50"
           >
-            <div className="p-2 bg-red-100 rounded-xl">
+            <div className="rounded-xl bg-red-100 p-2">
               <LogOut size={18} />
             </div>
             Sign Out
@@ -91,32 +155,37 @@ const Admin = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-4 lg:p-10 overflow-y-auto">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+      {/* Main content: scrollable; on mobile sits below compact nav so nothing is covered */}
+      <main className="relative z-[100] flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto p-4 pb-8 lg:z-auto lg:p-10">
+        <header className="mb-8 flex flex-col justify-between gap-4 md:mb-10 md:flex-row md:items-center">
           <div>
-            <h2 className="text-3xl font-black italic uppercase text-slate-900 leading-tight">
-              {menuItems.find(i => i.id === activeTab)?.label}
+            <h2 className="text-2xl font-black uppercase italic leading-tight text-slate-900 md:text-3xl">
+              {menuItems.find((i) => i.id === activeTab)?.label}
             </h2>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">
+            <p className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-400 md:text-sm">
               NM Mart Manjhanpur Operations
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-primary transition-all shadow-sm">
+          <div className="hidden items-center gap-3 md:flex">
+            <button
+              type="button"
+              className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-400 shadow-sm transition-all hover:text-primary"
+              aria-label="Notifications"
+            >
               <Bell size={20} />
             </button>
-            <div className="h-10 w-px bg-slate-200 mx-2 hidden md:block" />
-            <button 
+              <div className="mx-2 hidden h-10 w-px bg-slate-200 lg:block" />
+            <button
+              type="button"
               onClick={() => navigate("/")}
-              className="bg-white border border-slate-200 text-slate-900 px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:border-primary transition-all shadow-sm flex items-center gap-2"
+              className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-[10px] font-black uppercase tracking-widest text-slate-900 shadow-sm transition-all hover:border-primary"
             >
               View Store
             </button>
           </div>
         </header>
 
-        <div className="w-full">
+        <div className="w-full min-w-0">
           {activeTab === "inventory" && <InventoryTab />}
           {activeTab === "orders" && <OrdersTab />}
           {activeTab === "analytics" && <AnalyticsTab />}

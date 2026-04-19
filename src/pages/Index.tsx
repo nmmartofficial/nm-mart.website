@@ -879,7 +879,7 @@ export default function Index() {
                                 e.stopPropagation();
                                 handleQuickEdit(p);
                               }}
-                              className="absolute bottom-1.5 right-1.5 z-20 rounded-md border border-primary/30 bg-white/95 p-1 text-primary shadow-md transition-all hover:bg-primary hover:text-white"
+                              className="absolute bottom-2 right-2 z-[50] rounded-md border border-primary/40 bg-white/95 p-1 text-primary shadow-md ring-1 ring-black/5 transition-all hover:bg-primary hover:text-white"
                               title="Quick edit"
                               aria-label="Edit product"
                             >
@@ -1445,7 +1445,7 @@ export default function Index() {
                                 e.stopPropagation();
                                 handleQuickEdit(p);
                               }}
-                              className="absolute bottom-2 right-2 z-20 rounded-md border border-primary/30 bg-white/95 p-1.5 text-primary shadow-md transition-all hover:bg-primary hover:text-white"
+                              className="absolute bottom-2 right-2 z-[50] rounded-md border border-primary/40 bg-white/95 p-1.5 text-primary shadow-md ring-1 ring-black/5 transition-all hover:bg-primary hover:text-white"
                               title="Quick edit"
                               aria-label="Edit product"
                             >
