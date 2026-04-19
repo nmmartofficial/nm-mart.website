@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { 
-  Search, Loader2, Edit2, Check, X, ChevronLeft, ChevronRight, AlertCircle, Package, Eye, EyeOff
+  Search, Loader2, Edit2, Check, X, ChevronLeft, ChevronRight, AlertCircle, Package, Eye, EyeOff, ImagePlus
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
@@ -18,8 +18,11 @@ const InventoryTab = () => {
   const [editPrice, setEditPrice] = useState("");
   const [editStock, setEditStock] = useState("");
   const [editBadge, setEditBadge] = useState("");
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [sessionActive, setSessionActive] = useState(true);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -68,10 +71,32 @@ const InventoryTab = () => {
     setEditPrice(String(product.Rate || 0));
     setEditStock(String(product.OpStock || 0));
     setEditBadge(product.badge || "");
+    setEditImageFile(null);
+    setEditImagePreview(product.image_url || null);
   };
 
   const cancelEditing = () => {
+    if (editImagePreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(editImagePreview);
+    }
+    setEditImageFile(null);
+    setEditImagePreview(null);
     setEditingBarcode(null);
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
+  const onProductImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      return;
+    }
+    if (editImagePreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(editImagePreview);
+    }
+    setEditImageFile(file);
+    setEditImagePreview(URL.createObjectURL(file));
   };
 
   const saveEdit = async (rawCodeNew: string) => {
@@ -99,20 +124,51 @@ const InventoryTab = () => {
 
       if (syncError) throw syncError;
 
+      let imageUrl = String(current.image_url || "").trim();
+      if (editImageFile) {
+        const ext = editImageFile.name.split(".").pop()?.replace(/[^a-z0-9]/gi, "") || "jpg";
+        const safeCode = String(rawCodeNew).replace(/[^a-zA-Z0-9-_]/g, "_");
+        const filePath = `${safeCode}/${Date.now()}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(filePath, editImageFile, {
+            cacheControl: "3600",
+            upsert: true,
+            contentType: editImageFile.type || "image/jpeg",
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(filePath);
+        imageUrl = urlData.publicUrl;
+      }
+
+      const updatePayload: Record<string, unknown> = {
+        Rate: Number(editPrice),
+        OpStock: Number(editStock),
+        badge: editBadge,
+        updated_at: new Date().toISOString(),
+      };
+      if (editImageFile) {
+        updatePayload.image_url = imageUrl;
+      }
+
       const { error } = await supabase
         .from('products')
-        .update({
-          Rate: Number(editPrice),
-          OpStock: Number(editStock),
-          badge: editBadge,
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq('RawCodeNew', rawCodeNew);
 
       if (error) throw error;
 
-      logSupabaseDebug("inventorySave:success", { rawCodeNew, price: editPrice, stock: editStock });
-      toast.success("Update queued for POS sync.");
+      logSupabaseDebug("inventorySave:success", { rawCodeNew, price: editPrice, stock: editStock, image: Boolean(editImageFile) });
+      toast.success(editImageFile ? "Product updated with new image." : "Update queued for POS sync.");
+      if (editImagePreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(editImagePreview);
+      }
+      setEditImageFile(null);
+      setEditImagePreview(null);
+      if (imageInputRef.current) imageInputRef.current.value = "";
       setEditingBarcode(null);
       fetchProducts();
     } catch (err: any) {
@@ -179,7 +235,7 @@ const InventoryTab = () => {
       <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 items-center">
         <AlertCircle className="text-amber-500 shrink-0" size={20} />
         <p className="text-[10px] text-amber-800 font-bold uppercase tracking-wider">
-          <span className="font-black">Safe Mode Active:</span> Only Price and Stock can be edited to maintain POS synchronization.
+          <span className="font-black">Safe Mode Active:</span> Price, stock, badge, and product image can be edited; name and barcode stay synced with POS.
         </p>
       </div>
       {!sessionActive && (
@@ -230,13 +286,37 @@ const InventoryTab = () => {
                           <p className="font-black text-sm uppercase italic leading-tight">{product.RawName}</p>
                           <p className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{product.RawCodeNew}</p>
                           {editingBarcode === product.RawCodeNew && (
-                            <input 
-                              type="text"
-                              placeholder="Badge (e.g. Sale, New)"
-                              className="mt-2 w-full bg-white border border-primary rounded-lg px-2 py-1 font-bold text-[10px] outline-none"
-                              value={editBadge}
-                              onChange={(e) => setEditBadge(e.target.value)}
-                            />
+                            <div className="mt-2 space-y-2">
+                              <input 
+                                type="text"
+                                placeholder="Badge (e.g. Sale, New)"
+                                className="w-full bg-white border border-primary rounded-lg px-2 py-1 font-bold text-[10px] outline-none"
+                                value={editBadge}
+                                onChange={(e) => setEditBadge(e.target.value)}
+                              />
+                              <input
+                                ref={imageInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="sr-only"
+                                id={`product-image-${product.RawCodeNew}`}
+                                onChange={onProductImageChange}
+                              />
+                              <div className="flex flex-wrap items-center gap-2">
+                                <label
+                                  htmlFor={`product-image-${product.RawCodeNew}`}
+                                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-emerald-600 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wide text-white shadow-sm transition hover:opacity-95"
+                                >
+                                  <ImagePlus size={12} className="shrink-0" />
+                                  Photo
+                                </label>
+                                {editImagePreview && (
+                                  <div className="h-10 w-10 overflow-hidden rounded-lg border border-orange-200 bg-white shadow-sm">
+                                    <img src={editImagePreview} alt="" className="h-full w-full object-cover" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>

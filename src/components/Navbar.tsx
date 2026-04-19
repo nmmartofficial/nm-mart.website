@@ -111,27 +111,26 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 border-b border-white/60 bg-white/70 backdrop-blur-[10px]">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          <Link to="/" className="shrink-0">
-            <div className="rounded-2xl bg-primary p-2.5 shadow-sm">
+          <Link to="/" className="flex min-w-0 items-center gap-3 text-left">
+            <div className="shrink-0 rounded-2xl bg-primary p-2.5 shadow-sm">
               {theme.storeLogo ? (
                 <img src={theme.storeLogo} alt="Logo" className="h-6 w-6 object-contain" />
               ) : (
                 <ShoppingCart className="h-6 w-6 text-white" />
               )}
             </div>
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 truncate font-black text-lg uppercase tracking-tight text-black">
+                <span className="tracking-tight">NM MART</span>
+                <span className="shrink-0 text-[0.5rem] leading-none text-emerald-500" aria-label="Live online">
+                  ●
+                </span>
+              </p>
+              <p className="truncate text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-700">
+                Shop More, Save More
+              </p>
+            </div>
           </Link>
-          <button
-            type="button"
-            onClick={() => navigate(user ? "/profile" : "/login")}
-            className="min-w-0 text-left"
-          >
-            <p className="truncate text-lg font-blue tracking-tighter text-orange uppercase">
-  NM <span className="text-primary">MART</span>
-</p>
-            <p className="truncate text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-              Shop More, Save More
-            </p>
-          </button>
         </div>
 
         <button
@@ -165,9 +164,12 @@ const Navbar = () => {
             >
               <div className="flex items-center justify-between border-b border-gray-100 p-6">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-400">NM Mart</p>
-                  <p className="mt-1 text-base font-black text-black">
-                    {user ? `Hello, ${profileName?.split(" ")[0] || "Member"}` : "Welcome"}
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-400">Store</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-base font-black uppercase tracking-tight text-black">
+                    <span>NM MART</span>
+                    <span className="text-[0.45rem] leading-none text-emerald-500" aria-hidden>
+                      ●
+                    </span>
                   </p>
                 </div>
                 <button
