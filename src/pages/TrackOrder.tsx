@@ -4,6 +4,7 @@ import { Package, Truck, Search, Phone, Hash, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
+import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 
 const TrackOrder = () => {
   const [mobileNumber, setMobileNumber] = useState("");
@@ -38,8 +39,8 @@ const TrackOrder = () => {
         toast.error("No matching order found. Please check your details.");
       }
     } catch (err: any) {
-      console.error("Track order error:", err);
-      toast.error("Failed to track order");
+      logSupabaseDebug("trackOrder:error", { mobileNumber, orderId }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to track order"));
     } finally {
       setLoading(false);
     }

@@ -6,6 +6,7 @@ import {
   ChevronRight, Building2, Landmark, Map as MapIcon
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
@@ -18,6 +19,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [sessionActive, setSessionActive] = useState(true);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -32,15 +34,19 @@ const Checkout = () => {
   useEffect(() => {
     const fetchUserAndProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      setSessionActive(Boolean(session));
       if (session?.user) {
         setUser(session.user);
         
         // Fetch profile to pre-fill phone and name
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('full_name, mobile')
           .eq('id', session.user.id)
           .single();
+        if (profileError) {
+          logSupabaseDebug("checkoutProfilePrefill:error", { userId: session.user.id }, profileError);
+        }
         
         if (profile) {
           setFormData(prev => ({
@@ -58,6 +64,13 @@ const Checkout = () => {
     }
   }, [cart.length, navigate, orderSuccess]);
 
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSessionActive(Boolean(session));
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -72,6 +85,12 @@ const Checkout = () => {
 
     setLoading(true);
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const orderId = `NMM-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
       const fullAddress = `${formData.houseNo}, ${formData.street}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.pincode}`;
 
@@ -98,8 +117,8 @@ const Checkout = () => {
       clearCart();
       toast.success("Order placed successfully!");
     } catch (err: any) {
-      console.error("Order error:", err);
-      toast.error("Failed to place order. Please try again.");
+      logSupabaseDebug("checkoutOrder:error", { userId: user?.id, total: cartTotal }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to place order"));
     } finally {
       setLoading(false);
     }
@@ -341,6 +360,11 @@ const Checkout = () => {
                   </div>
 
                   <div className="h-[1px] bg-gray-100 my-6"></div>
+                {!sessionActive && (
+                  <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
+                    Please Login - order submit is disabled.
+                  </div>
+                )}
 
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -359,7 +383,7 @@ const Checkout = () => {
 
                   <button 
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !sessionActive}
                     className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] hover:bg-black transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 italic mt-8 active:scale-[0.98]"
                   >
                     {loading ? <Loader2 className="animate-spin" size={20} /> : (

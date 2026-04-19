@@ -3,7 +3,7 @@ import {
   Plus, Trash2, Image as ImageIcon, Loader2, Copy, Check, Eye, EyeOff, ArrowUp, ArrowDown
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
-import { persistBannerOrder, WebsiteBanner } from "@/lib/supabase";
+import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug, persistBannerOrder, WebsiteBanner } from "@/lib/supabase";
 import { toast } from "sonner";
 import { WA_NUMBER } from "@/lib/store-utils";
 
@@ -13,9 +13,16 @@ const BannerManager = () => {
   const [uploading, setUploading] = useState(false);
   const [reordering, setReordering] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sessionActive, setSessionActive] = useState(true);
 
   useEffect(() => {
     fetchBanners();
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSessionActive(Boolean(data.session)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSessionActive(Boolean(session)));
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   const fetchBanners = async () => {
@@ -33,7 +40,8 @@ const BannerManager = () => {
       }));
       setBanners(normalized);
     } catch (err: any) {
-      console.error("Failed to load banners:", err);
+      logSupabaseDebug("bannerFetch:error", undefined, err);
+      toast.error(getSupabaseErrorMessage(err, "Failed to load banners"));
     } finally {
       setLoading(false);
     }
@@ -45,6 +53,12 @@ const BannerManager = () => {
 
     setUploading(true);
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `banners/${fileName}`;
@@ -74,10 +88,15 @@ const BannerManager = () => {
 
       if (dbError) throw dbError;
 
+      logSupabaseDebug("bannerUpload:insertPayload", {
+        title: file.name.split(".")[0],
+        display_order: banners.length
+      });
       toast.success("Banner uploaded successfully!");
       fetchBanners();
     } catch (err: any) {
-      toast.error("Upload failed");
+      logSupabaseDebug("bannerUpload:error", undefined, err);
+      toast.error(getSupabaseErrorMessage(err, "Upload failed"));
     } finally {
       setUploading(false);
     }
@@ -85,6 +104,12 @@ const BannerManager = () => {
 
   const deleteBanner = async (id: string, url: string) => {
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       // 1. Delete from storage
       const fileName = url.split('/').pop();
       if (fileName) {
@@ -99,7 +124,8 @@ const BannerManager = () => {
       toast.success("Banner removed");
       fetchBanners();
     } catch (err: any) {
-      toast.error("Delete failed");
+      logSupabaseDebug("bannerDelete:error", { id }, err);
+      toast.error(getSupabaseErrorMessage(err, "Delete failed"));
     }
   };
 
@@ -120,10 +146,17 @@ const BannerManager = () => {
     setBanners(normalized);
     setReordering(true);
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       await persistBannerOrder(normalized);
       toast.success("Banner order updated");
-    } catch (err) {
-      toast.error("Failed to update order");
+    } catch (err: any) {
+      logSupabaseDebug("bannerReorder:error", normalized, err);
+      toast.error(getSupabaseErrorMessage(err, "Failed to update order"));
       fetchBanners();
     } finally {
       setReordering(false);
@@ -132,6 +165,12 @@ const BannerManager = () => {
 
   const toggleVisibility = async (id: string, currentStatus: boolean) => {
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const { error } = await supabase
         .from('website_banners')
         .update({ active: !currentStatus })
@@ -141,7 +180,8 @@ const BannerManager = () => {
       setBanners(banners.map(b => b.id === id ? { ...b, active: !currentStatus } : b));
       toast.success(currentStatus ? "Banner hidden" : "Banner visible");
     } catch (err: any) {
-      toast.error("Update failed");
+      logSupabaseDebug("bannerVisibility:error", { id, currentStatus }, err);
+      toast.error(getSupabaseErrorMessage(err, "Update failed"));
     }
   };
 
@@ -154,6 +194,11 @@ const BannerManager = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {!sessionActive && (
+        <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
+          Please Login - save actions are disabled.
+        </div>
+      )}
       <div className="flex items-center justify-between bg-white border border-gray-100 rounded-[32px] p-6 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-[#CC0000]/10 rounded-2xl flex items-center justify-center text-[#CC0000]">
@@ -170,7 +215,7 @@ const BannerManager = () => {
         <label className="cursor-pointer bg-[#CC0000] text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-lg flex items-center gap-2">
           {uploading ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
           Upload Banner
-          <input type="file" className="hidden" onChange={handleUpload} accept="image/*" disabled={uploading} />
+          <input type="file" className="hidden" onChange={handleUpload} accept="image/*" disabled={uploading || !sessionActive} />
         </label>
       </div>
 

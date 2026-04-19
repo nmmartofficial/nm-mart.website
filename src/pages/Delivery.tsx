@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { 
   Truck, CheckCircle2, Clock, MapPin, Loader2, Package, 
   Search, X, Printer, Phone, Map, LayoutGrid, BarChart3, 
-  LogOut, ShieldCheck, Database, RefreshCcw 
+  LogOut, ShieldCheck, Database, RefreshCcw, Lock
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -35,8 +36,8 @@ const DeliveryDashboard = () => {
       if (error) throw error;
       setOrders(data || []);
     } catch (err: any) {
-      console.error("Fetch orders error:", err);
-      toast.error("Failed to load orders");
+      logSupabaseDebug("deliveryFetchOrders:error", undefined, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to load orders"));
     } finally {
       setLoading(false);
     }
@@ -58,6 +59,11 @@ const DeliveryDashboard = () => {
 
   const markAsDelivered = async (orderId: string) => {
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        toast.error("Please login again.");
+        return;
+      }
       const { error } = await supabase
         .from("orders")
         .update({ status: "Delivered" })
@@ -67,7 +73,8 @@ const DeliveryDashboard = () => {
       toast.success(`Order ${orderId} marked as Delivered!`);
       fetchOrders();
     } catch (err: any) {
-      toast.error("Failed to update status");
+      logSupabaseDebug("deliveryMarkDelivered:error", { orderId }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to update status"));
     }
   };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Product, normalizeCategory } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
+import { logSupabaseDebug } from "@/lib/supabase";
 
 export function useProducts() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -61,7 +62,7 @@ export function useProducts() {
           normalizeCategory(item.ItemGroupName)
         ))].filter(c => c && c.length > 1);
         
-        console.log('Categories derived from ItemGroupName:', uniqueCats);
+        logSupabaseDebug("products:derivedCategories", uniqueCats);
         setAllCategories(uniqueCats);
       }
     } catch (err) {
@@ -141,7 +142,7 @@ export function useProducts() {
       if (count !== null) setTotalCount(count);
 
       if (data) {
-        console.log(`Fetched ${data.length} products from Supabase (Offset: ${offset}).`);
+        logSupabaseDebug("products:fetched", { count: data.length, offset });
         const mappedProducts: Product[] = data.map(mapProduct);
 
         if (offset === 0) {

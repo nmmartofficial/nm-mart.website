@@ -1,6 +1,7 @@
 import { Star, Search, Loader2 } from "lucide-react";
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const WelfareTab = () => {
@@ -8,11 +9,24 @@ const WelfareTab = () => {
   const [customerData, setCustomerData] = useState<any>(null);
   const [pointsToAdd, setPointsToAdd] = useState("");
   const [welfareLoading, setWelfareLoading] = useState(false);
+  const [sessionActive, setSessionActive] = useState(true);
+
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSessionActive(Boolean(data.session)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSessionActive(Boolean(session)));
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   const handleCustomerSearch = async () => {
     if (!customerSearch) return;
     setWelfareLoading(true);
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -22,7 +36,8 @@ const WelfareTab = () => {
       if (error) throw error;
       setCustomerData(data);
     } catch (err: any) {
-      console.error("Error searching customer:", err);
+      logSupabaseDebug("welfareSearch:error", { customerSearch }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to search customer"));
     } finally {
       setWelfareLoading(false);
     }
@@ -32,6 +47,12 @@ const WelfareTab = () => {
     if (!customerData || !pointsToAdd) return;
     setWelfareLoading(true);
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const newPoints = (customerData.loyalty_points || 0) + Number(pointsToAdd);
       const { error } = await supabase
         .from('profiles')
@@ -43,7 +64,8 @@ const WelfareTab = () => {
       setPointsToAdd("");
       toast.success("Points updated!");
     } catch (err: any) {
-      toast.error("Failed to update points");
+      logSupabaseDebug("welfarePoints:error", { customerId: customerData?.id, pointsToAdd }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to update points"));
     } finally {
       setWelfareLoading(false);
     }
@@ -54,6 +76,12 @@ const WelfareTab = () => {
     const newStatus = customerData.welfare_status === 'active' ? 'inactive' : 'active';
     setWelfareLoading(true);
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const { error } = await supabase
         .from('profiles')
         .update({ welfare_status: newStatus })
@@ -63,7 +91,8 @@ const WelfareTab = () => {
       setCustomerData({ ...customerData, welfare_status: newStatus });
       toast.success(`Welfare ${newStatus === 'active' ? 'activated' : 'deactivated'}`);
     } catch (err: any) {
-      toast.error("Status update failed");
+      logSupabaseDebug("welfareStatus:error", { customerId: customerData?.id, newStatus }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to update welfare status"));
     } finally {
       setWelfareLoading(false);
     }
@@ -71,6 +100,11 @@ const WelfareTab = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {!sessionActive && (
+        <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
+          Please Login - update actions are disabled.
+        </div>
+      )}
       <div className="bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm space-y-8">
         <h3 className="text-2xl font-black italic uppercase text-black flex items-center gap-3">
           <div className="bg-primary/10 p-2 rounded-lg text-primary">
@@ -129,7 +163,7 @@ const WelfareTab = () => {
                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Welfare Membership</label>
                 <button 
                   onClick={handleToggleWelfare}
-                  disabled={welfareLoading}
+                  disabled={welfareLoading || !sessionActive}
                   className={`w-full py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-sm border-2 ${
                     customerData.welfare_status === 'active'
                     ? 'bg-white text-red-500 border-red-100 hover:bg-red-50'
@@ -152,7 +186,7 @@ const WelfareTab = () => {
                   />
                   <button 
                     onClick={handleAddPoints}
-                    disabled={welfareLoading || !pointsToAdd}
+                    disabled={welfareLoading || !pointsToAdd || !sessionActive}
                     className="bg-primary text-white px-6 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-lg"
                   >
                     Update

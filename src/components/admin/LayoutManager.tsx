@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getSectionLayout, setSectionLayout, SectionLayout } from "@/lib/storeConfig";
+import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 
 const LayoutManager = () => {
   const [layout, setLayout] = useState<SectionLayout[]>([]);
@@ -61,11 +62,11 @@ const LayoutManager = () => {
       if (ok) {
         toast.success("Homepage layout updated!");
       } else {
-        toast.error("Failed to save layout");
+        toast.error("Unable to save layout");
       }
-    } catch (err) {
-      console.error("Error saving layout:", err);
-      toast.error("Error saving layout");
+    } catch (err: any) {
+      logSupabaseDebug("layoutSave:error", layout, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to save layout"));
     } finally {
       setSaving(false);
     }

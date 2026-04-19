@@ -1,14 +1,22 @@
 import { Package, RefreshCcw, Loader2, Phone, MapPin, Truck, CheckCircle2, Trash2, XCircle } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const OrdersTab = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [sessionActive, setSessionActive] = useState(true);
 
   useEffect(() => {
     fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSessionActive(Boolean(data.session)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSessionActive(Boolean(session)));
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   const fetchOrders = async () => {
@@ -30,6 +38,12 @@ const OrdersTab = () => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const { error } = await supabase
         .from('orders')
         .update({ status: newStatus })
@@ -39,7 +53,8 @@ const OrdersTab = () => {
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
       toast.success(`Order #${orderId} marked as ${newStatus}`);
     } catch (err: any) {
-      toast.error("Failed to update order status");
+      logSupabaseDebug("orderStatusUpdate:error", { orderId, newStatus }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to update order status"));
     }
   };
 
@@ -59,6 +74,11 @@ const OrdersTab = () => {
           <RefreshCcw size={20} className={ordersLoading ? "animate-spin" : ""} />
         </button>
       </div>
+      {!sessionActive && (
+        <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
+          Please Login - status updates disabled.
+        </div>
+      )}
 
       {ordersLoading ? (
         <div className="py-20 text-center space-y-4 bg-white border border-gray-100 rounded-[40px] shadow-sm">
@@ -120,6 +140,7 @@ const OrdersTab = () => {
                   <div className="flex gap-2">
                     <button 
                       onClick={() => updateOrderStatus(order.id, 'Out for Delivery')}
+                      disabled={!sessionActive}
                       className="bg-gray-50 hover:bg-orange-50 hover:text-orange-500 text-gray-400 p-3 rounded-2xl transition-all"
                       title="Mark Out for Delivery"
                     >
@@ -127,6 +148,7 @@ const OrdersTab = () => {
                     </button>
                     <button 
                       onClick={() => updateOrderStatus(order.id, 'Delivered')}
+                      disabled={!sessionActive}
                       className="bg-gray-50 hover:bg-green-50 hover:text-green-500 text-gray-400 p-3 rounded-2xl transition-all"
                       title="Mark Delivered"
                     >
@@ -134,6 +156,7 @@ const OrdersTab = () => {
                     </button>
                     <button 
                       onClick={() => updateOrderStatus(order.id, 'Cancelled')}
+                      disabled={!sessionActive}
                       className="bg-gray-50 hover:bg-red-50 hover:text-red-500 text-gray-400 p-3 rounded-2xl transition-all"
                       title="Cancel Order"
                     >

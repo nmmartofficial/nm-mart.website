@@ -3,12 +3,14 @@ import {
   Plus, Trash2, Grid, Loader2, Upload, Palette, Type, Eye, EyeOff
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const CategoryManager = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sessionActive, setSessionActive] = useState(true);
 
   // New Category State
   const [title, setTitle] = useState("");
@@ -18,6 +20,12 @@ const CategoryManager = () => {
 
   useEffect(() => {
     fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSessionActive(Boolean(data.session)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSessionActive(Boolean(session)));
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   const fetchCategories = async () => {
@@ -51,6 +59,12 @@ const CategoryManager = () => {
 
     setSaving(true);
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       let iconUrl = "";
       if (iconFile) {
         const fileExt = iconFile.name.split('.').pop();
@@ -82,6 +96,7 @@ const CategoryManager = () => {
 
       if (error) throw error;
 
+      logSupabaseDebug("categoryAdd:success", { title, bgColor });
       toast.success("Category added!");
       setTitle("");
       setBgColor("#FFFFFF");
@@ -89,7 +104,8 @@ const CategoryManager = () => {
       setPreviewUrl(null);
       fetchCategories();
     } catch (err: any) {
-      toast.error("Failed to add category");
+      logSupabaseDebug("categoryAdd:error", { title, bgColor }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to add category"));
     } finally {
       setSaving(false);
     }
@@ -97,17 +113,30 @@ const CategoryManager = () => {
 
   const deleteCategory = async (id: string) => {
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const { error } = await supabase.from('categories').delete().eq('id', id);
       if (error) throw error;
       toast.success("Category removed");
       fetchCategories();
     } catch (err: any) {
-      toast.error("Delete failed");
+      logSupabaseDebug("categoryDelete:error", { id }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to delete category"));
     }
   };
 
   const toggleVisibility = async (id: string, currentStatus: boolean) => {
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const { error } = await supabase
         .from('categories')
         .update({ is_visible: !currentStatus })
@@ -117,13 +146,19 @@ const CategoryManager = () => {
       setCategories(categories.map(c => c.id === id ? { ...c, is_visible: !currentStatus } : c));
       toast.success(currentStatus ? "Category hidden" : "Category visible");
     } catch (err: any) {
-      toast.error("Update failed");
+      logSupabaseDebug("categoryVisibility:error", { id, currentStatus }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to update category visibility"));
     }
   };
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Add Category Form */}
+      {!sessionActive && (
+        <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
+          Please Login - save actions are disabled.
+        </div>
+      )}
       <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm space-y-8">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-[#D4AF37]/10 rounded-2xl flex items-center justify-center text-[#D4AF37]">
@@ -183,7 +218,7 @@ const CategoryManager = () => {
 
           <button 
             type="submit"
-            disabled={saving}
+            disabled={saving || !sessionActive}
             className="bg-[#CC0000] text-white py-3.5 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-lg flex items-center justify-center gap-2"
           >
             {saving ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}

@@ -17,7 +17,7 @@ import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import { useTheme } from "@/lib/ThemeProvider";
-import { fetchActiveBanners } from "@/lib/supabase";
+import { fetchActiveBanners, getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { 
   productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, 
   addLoyaltyPoints, getLoyaltyPoints, OrderRecord, normalizeCategory, getOrderHistory,
@@ -926,11 +926,15 @@ export default function Index() {
 
   const placeOrder = async () => {
      try {
-       const { data: { session } } = await supabase.auth.getSession();
+       const session = await getActiveSession();
+       if (!session && user) {
+         toast.error("Please login again.");
+         return;
+       }
        let customerDetails = "";
        let orderCustomerData: any = {};
 
-      if (session) {
+      if (session?.user) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("*")
@@ -1002,8 +1006,8 @@ export default function Index() {
         .insert([orderData]);
 
       if (supabaseError) {
-        console.error("Supabase order save error:", supabaseError);
-        toast.error("Failed to save order to database, but sending via WhatsApp...");
+        logSupabaseDebug("indexPlaceOrder:orderInsert:error", orderData, supabaseError);
+        toast.error(getSupabaseErrorMessage(supabaseError, "Unable to save order"));
       }
 
       const pointsEarned = Math.floor(finalTotal / 100);
@@ -1012,13 +1016,17 @@ export default function Index() {
       if (user) {
         const { data: profile } = await supabase.from('profiles').select('loyalty_points').eq('id', user.id).single();
         const currentPoints = profile?.loyalty_points || 0;
-        await supabase
+        const { error: pointsError } = await supabase
           .from('profiles')
           .update({ 
             loyalty_points: currentPoints + pointsEarned,
             points_balance: currentPoints + pointsEarned // Sync both for compatibility
           })
           .eq('id', user.id);
+        if (pointsError) {
+          logSupabaseDebug("indexPlaceOrder:pointsUpdate:error", { userId: user.id, pointsEarned }, pointsError);
+          toast.error(getSupabaseErrorMessage(pointsError, "Unable to update loyalty points"));
+        }
       }
 
       saveOrder({
@@ -1036,9 +1044,9 @@ export default function Index() {
       setCheckoutOpen(false);
       setCartOpen(false);
       toast.success("Order placed successfully!");
-    } catch (err) {
-      console.error("Order process failed", err);
-      toast.error("Order process failed");
+    } catch (err: any) {
+      logSupabaseDebug("indexPlaceOrder:error", { cartCount: cart.length, cartTotal }, err);
+      toast.error(getSupabaseErrorMessage(err, "Order process failed"));
     }
   };
 
@@ -1100,6 +1108,11 @@ export default function Index() {
     if (!editingProduct) return;
     setEditLoading(true);
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        toast.error("Please login again.");
+        return;
+      }
       // ─── REVERSE SYNC: Save to sync_back table for POS update ───
       const { error: syncError } = await supabase
         .from('sync_back')
@@ -1128,9 +1141,9 @@ export default function Index() {
       toast.success("POS Sync Queued Successfully!");
       setEditingProduct(null);
       // Optional: window.location.reload(); 
-    } catch (err) {
-      console.error("Sync back failed", err);
-      toast.error("POS Sync failed");
+    } catch (err: any) {
+      logSupabaseDebug("indexQuickEdit:error", editingProduct, err);
+      toast.error(getSupabaseErrorMessage(err, "POS Sync failed"));
     } finally {
       setEditLoading(false);
     }

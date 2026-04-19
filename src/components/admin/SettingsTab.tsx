@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { getThemeConfig, setThemeConfig, ThemeConfig } from "@/lib/storeConfig";
 import { useTheme } from "@/lib/ThemeProvider";
 import { supabase } from "@/lib/supabase/client";
+import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 
 const THEME_PRESETS = [
   { name: "NM Classic", primary: "#CC0000", secondary: "#D4AF37" },
@@ -76,11 +77,11 @@ const SettingsTab = () => {
         toast.success("Settings saved successfully!");
         await refreshTheme();
       } else {
-        toast.error("Settings failed to save");
+        toast.error("Unable to save settings");
       }
-    } catch (err) {
-      console.error("Error saving settings:", err);
-      toast.error("Failed to save settings");
+    } catch (err: any) {
+      logSupabaseDebug("settingsSave:error", theme, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to save settings"));
     } finally {
       setSaving(false);
     }
@@ -108,9 +109,9 @@ const SettingsTab = () => {
 
       setTheme(prev => ({ ...prev, storeLogo: publicUrl }));
       toast.success("Logo uploaded!");
-    } catch (err) {
-      console.error("Logo upload error:", err);
-      toast.error("Logo upload failed");
+    } catch (err: any) {
+      logSupabaseDebug("settingsLogoUpload:error", undefined, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to upload logo"));
     } finally {
       setUploading(false);
     }

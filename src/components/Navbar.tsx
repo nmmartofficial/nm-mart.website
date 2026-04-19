@@ -19,6 +19,8 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { useTheme } from "@/lib/ThemeProvider";
 import { WA_NUMBER } from "@/lib/store-utils";
+import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
+import { toast } from "sonner";
 import WelfareModal from "@/components/shop/modals/WelfareModal";
 
 const Navbar = () => {
@@ -65,7 +67,10 @@ const Navbar = () => {
     let cardNumber = data.welfare_card_number;
     if (!cardNumber) {
       cardNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
-      await supabase.from("profiles").update({ welfare_card_number: cardNumber }).eq("id", userId);
+      const { error } = await supabase.from("profiles").update({ welfare_card_number: cardNumber }).eq("id", userId);
+      if (error) {
+        logSupabaseDebug("navbarCardNumberUpdate:error", { userId }, error);
+      }
     }
 
     setWelfareCard({
@@ -76,9 +81,15 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setDrawerOpen(false);
-    navigate("/");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setDrawerOpen(false);
+      navigate("/");
+    } catch (err: any) {
+      logSupabaseDebug("navbarLogout:error", undefined, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to logout"));
+    }
   };
 
   const handleWelfare = () => {
@@ -114,9 +125,9 @@ const Navbar = () => {
             onClick={() => navigate(user ? "/profile" : "/login")}
             className="min-w-0 text-left"
           >
-            <p className="truncate text-xs font-semibold text-gray-500">
-              Hello, <span className="text-black">{user ? (profileName?.split(" ")[0] || "Member") : "Login"}</span>
-            </p>
+            <p className="truncate text-lg font-black tracking-tighter text-black uppercase">
+  NM <span className="text-primary">MART</span>
+</p>
             <p className="truncate text-[10px] font-black uppercase tracking-[0.2em] text-primary">
               Shop More, Save More
             </p>

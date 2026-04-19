@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/shop/Footer";
 import { User, Package, MapPin, LogOut, Star, Loader2, Save, Smartphone, ChevronRight, Map, Camera } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 import { OrderRecord, WA_NUMBER } from "@/lib/store-utils";
 
@@ -12,6 +13,7 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [sessionActive, setSessionActive] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -33,10 +35,19 @@ const UserProfile = () => {
     fetchOrders();
   }, []);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSessionActive(Boolean(data.session)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSessionActive(Boolean(session)));
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
   const fetchOrders = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        toast.error("Please login again.");
+        return;
+      }
       
       const { data, error } = await supabase
         .from("orders")
@@ -47,7 +58,8 @@ const UserProfile = () => {
       if (error) throw error;
       setOrders(data || []);
     } catch (err: any) {
-      console.error("Fetch orders error:", err);
+      logSupabaseDebug("fetchOrders:error", undefined, err);
+      toast.error(getSupabaseErrorMessage(err, "Failed to load orders"));
     }
   };
 
@@ -83,7 +95,8 @@ const UserProfile = () => {
         setProfile(prev => ({ ...prev, phone: session.user.phone?.replace("+91", "") || "" }));
       }
     } catch (err: any) {
-      toast.error("Failed to load profile");
+      logSupabaseDebug("fetchProfile:error", undefined, err);
+      toast.error(getSupabaseErrorMessage(err, "Failed to load profile"));
     } finally {
       setLoading(false);
     }
@@ -133,8 +146,8 @@ const UserProfile = () => {
       setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
       toast.success("Profile photo updated");
     } catch (err: any) {
-      console.error("Avatar upload failed:", err);
-      toast.error(err?.message || "Failed to upload profile photo");
+      logSupabaseDebug("avatarUpload:error", { userId: user?.id }, err);
+      toast.error(getSupabaseErrorMessage(err, "Failed to upload profile photo"));
       setAvatarPreviewUrl(null);
     } finally {
       setAvatarUploading(false);
@@ -147,26 +160,59 @@ const UserProfile = () => {
       toast.error("Please fill in all required fields");
       return;
     }
+    if (!user?.id) {
+      toast.error("Please login again.");
+      return;
+    }
 
     setSaving(true);
     try {
-      const { error } = await supabase
+      const payload = {
+        id: user.id,
+        full_name: profile.name,
+        phone_number: profile.phone,
+        mobile: profile.phone,
+        address: profile.address,
+        landmark: profile.landmark,
+        avatar_url: profile.avatar_url,
+        updated_at: new Date().toISOString()
+      };
+      logSupabaseDebug("profileSave:payload", payload);
+
+      let { data, error } = await supabase
         .from("profiles")
-        .upsert({
-          id: user.id,
+        .upsert(payload, { onConflict: "id" })
+        .select("id")
+        .single();
+
+      // Fallback for schemas where row key is user_id
+      if (error && /user_id|id/i.test(error.message || "")) {
+        const fallbackPayload = {
+          user_id: user.id,
           full_name: profile.name,
           phone_number: profile.phone,
-          mobile: profile.phone, // Keep mobile for backward compatibility if needed
+          mobile: profile.phone,
           address: profile.address,
           landmark: profile.landmark,
           avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString()
-        });
+        };
+        logSupabaseDebug("profileSave:fallbackPayload", fallbackPayload);
+        const fallback = await supabase
+          .from("profiles")
+          .upsert(fallbackPayload as any, { onConflict: "user_id" })
+          .select("user_id")
+          .single();
+        data = fallback.data as any;
+        error = fallback.error;
+      }
 
       if (error) throw error;
-      toast.success("Profile updated successfully!");
+      logSupabaseDebug("profileSave:success", data);
+      toast.success("Profile Updated!");
     } catch (err: any) {
-      toast.error("Failed to update profile");
+      logSupabaseDebug("profileSave:error", { userId: user?.id }, err);
+      toast.error(getSupabaseErrorMessage(err, "Save failed"));
     } finally {
       setSaving(false);
     }
@@ -193,6 +239,11 @@ const UserProfile = () => {
       
       <main className="flex-1 py-12 px-4 md:px-6">
         <div className="max-w-7xl mx-auto space-y-8">
+          {!sessionActive && (
+            <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
+              Please Login - save actions are disabled.
+            </div>
+          )}
           
           {/* Dashboard Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -353,7 +404,7 @@ const UserProfile = () => {
 
                   <button 
                     onClick={handleSave}
-                    disabled={saving}
+                    disabled={saving || !sessionActive}
                     className="w-full py-5 rounded-full font-black uppercase tracking-[3px] shadow-lg flex items-center justify-center italic transition-all bg-gradient-to-r from-[#FF7F00] to-[#FFD700] hover:shadow-xl active:animate-bounce active:shadow-2xl"
                   >
                     {saving ? <Loader2 className="animate-spin" size={18} /> : (

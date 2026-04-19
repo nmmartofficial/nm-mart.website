@@ -9,7 +9,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // सामान जोड़ने का फंक्शन
   const addToCart = () => {
     setCartCount(prev => prev + 1);
-    console.log("Item added to NM MART Cart");
   };
 
   return (

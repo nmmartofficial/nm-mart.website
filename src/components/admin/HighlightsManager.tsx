@@ -3,12 +3,14 @@ import {
   Plus, Trash2, Eye, EyeOff, Loader2, Upload, Link as LinkIcon, Type, MousePointer2, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const HighlightsManager = () => {
   const [highlights, setHighlights] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sessionActive, setSessionActive] = useState(true);
 
   // New Highlight State
   const [title, setTitle] = useState("");
@@ -18,6 +20,12 @@ const HighlightsManager = () => {
 
   useEffect(() => {
     fetchHighlights();
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSessionActive(Boolean(data.session)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSessionActive(Boolean(session)));
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   const fetchHighlights = async () => {
@@ -51,6 +59,12 @@ const HighlightsManager = () => {
 
     setSaving(true);
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const fileExt = iconFile.name.split('.').pop();
       const fileName = `highlight_${Date.now()}.${fileExt}`;
       const filePath = `highlights/${fileName}`;
@@ -79,6 +93,7 @@ const HighlightsManager = () => {
 
       if (error) throw error;
 
+      logSupabaseDebug("highlightAdd:success", { title, link });
       toast.success("Highlight added!");
       setTitle("");
       setLink("");
@@ -86,8 +101,8 @@ const HighlightsManager = () => {
       setPreviewUrl(null);
       fetchHighlights();
     } catch (err: any) {
-      console.error("Error adding highlight:", err);
-      toast.error("Failed to add highlight");
+      logSupabaseDebug("highlightAdd:error", { title, link }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to add highlight"));
     } finally {
       setSaving(false);
     }
@@ -95,6 +110,12 @@ const HighlightsManager = () => {
 
   const toggleVisibility = async (id: string, currentStatus: boolean) => {
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const { error } = await supabase
         .from('highlights')
         .update({ is_visible: !currentStatus })
@@ -104,7 +125,8 @@ const HighlightsManager = () => {
       setHighlights(highlights.map(h => h.id === id ? { ...h, is_visible: !currentStatus } : h));
       toast.success(currentStatus ? "Highlight hidden" : "Highlight visible");
     } catch (err: any) {
-      toast.error("Update failed");
+      logSupabaseDebug("highlightVisibility:error", { id, currentStatus }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to update highlight visibility"));
     }
   };
 
@@ -112,6 +134,12 @@ const HighlightsManager = () => {
     if (!confirm("Delete this highlight?")) return;
     
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       // 1. Delete from DB
       const { error } = await supabase.from('highlights').delete().eq('id', id);
       if (error) throw error;
@@ -125,7 +153,8 @@ const HighlightsManager = () => {
       toast.success("Highlight removed");
       fetchHighlights();
     } catch (err: any) {
-      toast.error("Delete failed");
+      logSupabaseDebug("highlightDelete:error", { id }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to delete highlight"));
     }
   };
 
@@ -142,6 +171,12 @@ const HighlightsManager = () => {
     setHighlights(newHighlights);
 
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       // Update DB for both swapped items
       const updates = newHighlights.map((h, idx) => ({
         id: h.id,
@@ -154,15 +189,20 @@ const HighlightsManager = () => {
           .update({ display_order: update.display_order })
           .eq('id', update.id);
       }
-    } catch (err) {
-      console.error("Order update failed:", err);
-      toast.error("Failed to update order");
+    } catch (err: any) {
+      logSupabaseDebug("highlightOrder:error", newHighlights, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to update highlight order"));
       fetchHighlights(); // Revert
     }
   };
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {!sessionActive && (
+        <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
+          Please Login - save actions are disabled.
+        </div>
+      )}
       {/* Add Highlight Form */}
       <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm space-y-8">
         <div className="flex items-center gap-4">
@@ -217,7 +257,7 @@ const HighlightsManager = () => {
             </div>
             <button 
               type="submit"
-              disabled={saving}
+              disabled={saving || !sessionActive}
               className="bg-primary text-white h-[46px] px-8 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-lg flex items-center justify-center gap-2"
             >
               {saving ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}

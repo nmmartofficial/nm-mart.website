@@ -3,6 +3,7 @@ import {
   Search, Loader2, Edit2, Check, X, ChevronLeft, ChevronRight, AlertCircle, Package, Eye, EyeOff
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const InventoryTab = () => {
@@ -18,10 +19,19 @@ const InventoryTab = () => {
   const [editStock, setEditStock] = useState("");
   const [editBadge, setEditBadge] = useState("");
   const [saving, setSaving] = useState(false);
+  const [sessionActive, setSessionActive] = useState(true);
 
   useEffect(() => {
     fetchProducts();
   }, [page, searchQuery]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSessionActive(Boolean(data.session)));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSessionActive(Boolean(session));
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -67,6 +77,12 @@ const InventoryTab = () => {
   const saveEdit = async (rawCodeNew: string) => {
     setSaving(true);
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const current = products.find((product) => product.RawCodeNew === rawCodeNew);
       if (!current) {
         throw new Error("Product not found");
@@ -95,12 +111,13 @@ const InventoryTab = () => {
 
       if (error) throw error;
 
+      logSupabaseDebug("inventorySave:success", { rawCodeNew, price: editPrice, stock: editStock });
       toast.success("Update queued for POS sync.");
       setEditingBarcode(null);
       fetchProducts();
     } catch (err: any) {
-      console.error("Save error:", err);
-      toast.error("Failed to update product");
+      logSupabaseDebug("inventorySave:error", { rawCodeNew, editPrice, editStock }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to update product"));
     } finally {
       setSaving(false);
     }
@@ -108,6 +125,12 @@ const InventoryTab = () => {
 
   const toggleVisibility = async (rawCodeNew: string, currentStatus: boolean) => {
     try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
       const { error } = await supabase
         .from('products')
         .update({ is_visible: !currentStatus })
@@ -117,7 +140,8 @@ const InventoryTab = () => {
       setProducts(products.map(p => p.RawCodeNew === rawCodeNew ? { ...p, is_visible: !currentStatus } : p));
       toast.success(currentStatus ? "Product hidden" : "Product visible");
     } catch (err: any) {
-      toast.error("Update failed");
+      logSupabaseDebug("inventoryVisibility:error", { rawCodeNew, currentStatus }, err);
+      toast.error(getSupabaseErrorMessage(err, "Unable to update visibility"));
     }
   };
 
@@ -158,6 +182,11 @@ const InventoryTab = () => {
           <span className="font-black">Safe Mode Active:</span> Only Price and Stock can be edited to maintain POS synchronization.
         </p>
       </div>
+      {!sessionActive && (
+        <div className="text-[10px] font-black uppercase tracking-wider text-red-500 px-1">
+          Please Login - save actions are disabled.
+        </div>
+      )}
 
       {/* Table Section */}
       <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
@@ -262,7 +291,7 @@ const InventoryTab = () => {
                           <>
                             <button 
                               onClick={() => saveEdit(product.RawCodeNew)}
-                              disabled={saving}
+                              disabled={saving || !sessionActive}
                               className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all"
                             >
                               {saving ? <Loader2 className="animate-spin" size="16" /> : <Check size={16} />}
