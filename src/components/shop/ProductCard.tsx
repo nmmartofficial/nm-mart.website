@@ -1,11 +1,21 @@
 import { motion } from "framer-motion";
-import { MessageCircle, ShoppingCart, Star } from "lucide-react";
+import { MessageCircle, ShoppingCart, Star, Pen } from "lucide-react";
 import { Product, productSlug, WA_NUMBER } from "@/lib/store-utils";
 import ProductImageDisplay from "./ProductImageDisplay";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/lib/ThemeProvider";
 
-const ProductCard = ({ product, onAddToCart }: { product: Product, onAddToCart: (p: Product) => void }) => {
+const ProductCard = ({
+  product,
+  onAddToCart,
+  showAdminQuickEdit,
+  onAdminQuickEdit,
+}: {
+  product: Product;
+  onAddToCart: (p: Product) => void;
+  showAdminQuickEdit?: boolean;
+  onAdminQuickEdit?: (p: Product) => void;
+}) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const productStyle = theme.productCardStyle || "compact";
@@ -40,6 +50,21 @@ const ProductCard = ({ product, onAddToCart }: { product: Product, onAddToCart: 
           <span className="absolute top-2 right-2 bg-destructive text-white text-[9px] font-black px-2 py-1 rounded-lg shadow-md">
             {product.discount}% OFF
           </span>
+        )}
+
+        {showAdminQuickEdit && onAdminQuickEdit && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdminQuickEdit(product);
+            }}
+            className="absolute bottom-2 right-2 z-20 rounded-lg border border-primary/30 bg-white/95 p-1.5 text-primary shadow-md transition-all hover:bg-primary hover:text-white"
+            title="Quick edit"
+            aria-label="Edit product"
+          >
+            <Pen size={13} strokeWidth={2.5} />
+          </button>
         )}
 
         {!product.stock || product.stock <= 0 ? (

@@ -7,6 +7,9 @@ export type WebsiteBanner = {
   title?: string;
   subtitle?: string;
   whatsapp_link?: string;
+  /** Optional: internal path, hash (e.g. #products), or full URL (DB column may be `banner_link` or legacy `link`) */
+  banner_link?: string | null;
+  link?: string | null;
   active: boolean;
   display_order: number;
 };

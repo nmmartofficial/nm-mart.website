@@ -8,7 +8,7 @@ import {
   ShoppingCart, Search, X, MessageCircle,
   Mic, MicOff, Star, LayoutGrid, ArrowUp, Package, Gift,
   ChevronRight, ScanBarcode,
-  Edit3, Save, Loader2 as LoaderIcon, Image as ImageIcon, Upload,
+  Pen, Save, Loader2 as LoaderIcon, Image as ImageIcon, Upload,
   Database, LogOut, Clock
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -161,7 +161,8 @@ export default function Index() {
   const { 
     allProducts, loading: productsLoading, brands, categories: posCategories,
     flat33, flat50, hasMore, loadMore, totalCount,
-    total50, total33, hasMore50, hasMore33, loadMore50, loadMore33
+    total50, total33, hasMore50, hasMore33, loadMore50, loadMore33,
+    refetchProducts,
   } = useProducts();
   const loading = productsLoading || homeLoading;
   const { cart, addToCart, updateQty, removeItem, clearCart, cartTotal, cartCount, setCart } = useCart();
@@ -341,7 +342,8 @@ export default function Index() {
   const [editLoading, setEditLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const quickEditImageRef = useRef<HTMLInputElement>(null);
-  const isAdminMode = user?.email?.toLowerCase() === ADMIN_EMAIL;
+  const isAdminMode =
+    typeof user?.email === "string" && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
   const orders = useMemo(() => getOrderHistory(), []);
@@ -698,7 +700,7 @@ export default function Index() {
               <div className="mt-4 bg-white border border-gray-100 rounded-3xl p-4 shadow-sm" style={getSectionBgStyle("flat_50")}>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {flat50.map(p => (
-                    <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+                    <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
                   ))}
                 </div>
                 {hasMore50 && (
@@ -740,7 +742,7 @@ export default function Index() {
               <div className="mt-4 bg-white border border-gray-100 rounded-3xl p-4 shadow-sm" style={getSectionBgStyle("flat_33")}>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {flat33.map(p => (
-                    <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+                    <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
                   ))}
                 </div>
                 {hasMore33 && (
@@ -761,7 +763,7 @@ export default function Index() {
             {/* We can use ProductGrid or a custom filtered list here */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {allProducts.filter(p => p.badge?.toLowerCase().includes('weekly')).slice(0, 6).map(p => (
-                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
           </div>
@@ -774,7 +776,7 @@ export default function Index() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {allProducts.filter(p => p.category?.toLowerCase().includes('fresh') || p.badge?.toLowerCase().includes('fresh')).slice(0, 6).map(p => (
-                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
           </div>
@@ -787,7 +789,7 @@ export default function Index() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {allProducts.filter(p => p.discount >= 40).slice(0, 6).map(p => (
-                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} />
+                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
           </div>
@@ -802,7 +804,7 @@ export default function Index() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {buyAgainItems.map((p, idx) => (
-                <ProductCard key={`${p.barcode}-${idx}`} product={p} onAddToCart={addToCart} />
+                <ProductCard key={`${p.barcode}-${idx}`} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
           </div>
@@ -826,7 +828,7 @@ export default function Index() {
         );
       case 'products':
         return (
-          <div key="products" className="rounded-3xl px-2 py-2" style={getSectionBgStyle("products")}>
+          <div key="products" id="products" className="scroll-mt-28 rounded-3xl px-2 py-2" style={getSectionBgStyle("products")}>
             {/* Dynamic Category-wise Product Sections */}
             {sortedCategories.slice(0, 6).map(cat => {
               const catProducts = allProducts
@@ -858,7 +860,7 @@ export default function Index() {
                         className={productCardClass}
                         onClick={() => navigate(`/product/${productSlug(p)}`)}
                       >
-                        <div className={productImageClass}>
+                        <div className={`${productImageClass} relative`}>
                           <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
                           {p.badge && (
                             <span className="absolute top-1 left-1 bg-primary text-white text-[7px] font-black px-1.5 py-0.5 rounded-lg shadow-sm z-10 animate-pulse">
@@ -869,6 +871,20 @@ export default function Index() {
                             <span className="absolute top-1 right-1 bg-destructive text-white text-[8px] font-black px-2 py-0.5 rounded-lg shadow-sm">
                               {p.discount}% OFF
                             </span>
+                          )}
+                          {isAdminMode && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickEdit(p);
+                              }}
+                              className="absolute bottom-1.5 right-1.5 z-20 rounded-md border border-primary/30 bg-white/95 p-1 text-primary shadow-md transition-all hover:bg-primary hover:text-white"
+                              title="Quick edit"
+                              aria-label="Edit product"
+                            >
+                              <Pen size={12} strokeWidth={2.5} />
+                            </button>
                           )}
                         </div>
                         <div className="p-2 flex flex-col flex-1">
@@ -893,22 +909,13 @@ export default function Index() {
                             )}
                           </div>
                           {p.save > 0 && p.stock && p.stock > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
-                          <div className="flex gap-1.5 mt-auto pt-2">
+                          <div className="mt-auto pt-2">
                             <button 
                               onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
                               disabled={!p.stock || p.stock <= 0}
-                              className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
+                              className={`w-full py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
                               {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
                             </button>
-                            {isAdminMode && (
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); handleQuickEdit(p); }}
-                                className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-black transition-all shadow-md active:scale-95"
-                                title="Quick Edit Product"
-                              >
-                                <Edit3 size={14} strokeWidth={2.5} />
-                              </button>
-                            )}
                           </div>
                         </div>
                       </motion.div>
@@ -1065,9 +1072,7 @@ export default function Index() {
       ...p,
       mrp: p.mrp,
       salePrice: p.price,
-      stock: p.stock || 0,
-      category: p.category || "",
-      imageUrl: p.imageUrl || ""
+      imageUrl: p.imageUrl || "",
     });
   };
 
@@ -1077,21 +1082,22 @@ export default function Index() {
 
     setUploadingImage(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${editingProduct.barcode}.${fileExt}`;
-      const filePath = `products/${fileName}`;
+      const fileExt = file.name.split(".").pop()?.replace(/[^a-z0-9]/gi, "") || "jpg";
+      const barcodeFolder = String(editingProduct.barcode).trim().replace(/\//g, "_");
+      const filePath = `${barcodeFolder}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('nm-mart-assets')
+        .from("product-images")
         .upload(filePath, file, {
           upsert: true,
-          contentType: file.type
+          contentType: file.type || "image/jpeg",
+          cacheControl: "3600",
         });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('nm-mart-assets')
+        .from("product-images")
         .getPublicUrl(filePath);
 
       setEditingProduct({ ...editingProduct, imageUrl: publicUrl });
@@ -1126,21 +1132,32 @@ export default function Index() {
 
       if (syncError) throw syncError;
 
-      // Also update local UI state/main table for instant feedback
+      const mrp = Number(editingProduct.mrp);
+      const rate = Number(editingProduct.salePrice);
+      let discountPerc = 0;
+      if (mrp > 0 && rate >= 0 && rate < mrp) {
+        discountPerc = Math.min(99, Math.round(100 * (1 - rate / mrp)));
+      }
+
+      const imageUrl = String(editingProduct.imageUrl || "").trim() || null;
+
       const { error: localError } = await supabase
         .from('products')
         .update({
-          RawName: editingProduct.name,
-          Rate: Number(editingProduct.salePrice),
-          updated_at: new Date().toISOString()
+          RawName: String(editingProduct.name || "").trim(),
+          MRP: mrp,
+          Rate: rate,
+          image_url: imageUrl,
+          discountPerc,
+          updated_at: new Date().toISOString(),
         })
         .eq('RawCodeNew', editingProduct.barcode);
 
-      if (localError) console.warn("Local update failed, but sync_back queued:", localError);
+      if (localError) throw localError;
 
-      toast.success("POS Sync Queued Successfully!");
+      await refetchProducts();
+      toast.success("Product updated.");
       setEditingProduct(null);
-      // Optional: window.location.reload(); 
     } catch (err: any) {
       logSupabaseDebug("indexQuickEdit:error", editingProduct, err);
       toast.error(getSupabaseErrorMessage(err, "POS Sync failed"));
@@ -1409,7 +1426,7 @@ export default function Index() {
                         className={productCardClass}
                         onClick={() => navigate(`/product/${productSlug(p)}`)}
                       >
-                        <div className={productImageClass}>
+                        <div className={`${productImageClass} relative`}>
                           <ProductImageDisplay imageUrl={p.imageUrl} name={p.name} />
                           {p.badge && (
                             <span className="absolute top-2 left-2 bg-primary text-white text-[8px] font-black px-2 py-1 rounded-lg shadow-md z-10 animate-pulse">
@@ -1420,6 +1437,20 @@ export default function Index() {
                             <span className="absolute top-2 right-2 bg-destructive text-white text-[9px] font-black px-2 py-1 rounded-lg shadow-md">
                               {p.discount}% OFF
                             </span>
+                          )}
+                          {isAdminMode && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickEdit(p);
+                              }}
+                              className="absolute bottom-2 right-2 z-20 rounded-md border border-primary/30 bg-white/95 p-1.5 text-primary shadow-md transition-all hover:bg-primary hover:text-white"
+                              title="Quick edit"
+                              aria-label="Edit product"
+                            >
+                              <Pen size={13} strokeWidth={2.5} />
+                            </button>
                           )}
                         </div>
                         <div className="p-3 flex flex-col flex-1">
@@ -1444,22 +1475,13 @@ export default function Index() {
                               )}
                             </div>
                             {p.save > 0 && p.stock && p.stock > 0 && <span className="text-[8px] font-bold text-[hsl(var(--success))] mt-0.5">Save ₹{p.save}</span>}
-                            <div className="flex gap-1.5 mt-auto pt-2">
+                            <div className="mt-auto pt-2">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); if(p.stock && p.stock > 0) addToCart(p); }}
                                 disabled={!p.stock || p.stock <= 0}
-                                className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
+                                className={`w-full py-1.5 rounded-lg text-[9px] font-bold uppercase transition-colors ${p.stock && p.stock > 0 ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
                                 {p.stock && p.stock > 0 ? "Add to Cart" : "Out of Stock"}
                               </button>
-                              {isAdminMode && (
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); handleQuickEdit(p); }}
-                                  className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-black transition-all shadow-md active:scale-95"
-                                  title="Quick Edit Product"
-                                >
-                                  <Edit3 size={14} strokeWidth={2.5} />
-                                </button>
-                              )}
                             </div>
                         </div>
                       </motion.div>
@@ -1590,16 +1612,6 @@ export default function Index() {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Category</label>
-                    <input 
-                      type="text" 
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-primary transition-all"
-                      value={editingProduct.category}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                    />
-                  </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">MRP (₹)</label>
@@ -1619,16 +1631,6 @@ export default function Index() {
                         onChange={(e) => setEditingProduct({ ...editingProduct, salePrice: e.target.value })}
                       />
                     </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Stock (Pieces)</label>
-                    <input 
-                      type="number" 
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm font-black outline-none focus:border-primary transition-all"
-                      value={editingProduct.stock}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, stock: e.target.value })}
-                    />
                   </div>
 
                   <div className="pt-4">

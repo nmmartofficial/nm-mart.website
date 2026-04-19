@@ -100,8 +100,8 @@ async function syncEverything() {
              * SMART SYNC LOGIC:
              * 1. If item doesn't exist on web -> PUSH IT.
              * 2. If item exists on web but data is different -> PUSH IT.
-             * 3. CRITICAL: We ALWAYS preserve 'image_url' and 'discountPerc' from web 
-             *    if they exist, because these are managed on the website.
+             * 3. CRITICAL: image_url is always set on push rows — reuse the web image when present
+             *    so upserts never clear admin-uploaded photos. Only price/stock/name come from POS.
              */
             
             // Only push if something actually changed in POS (Price or Stock)
@@ -112,6 +112,11 @@ async function syncEverything() {
                              webItem.RawName !== posItem.RawName;
 
             if (hasChanged) {
+                const existingImage =
+                    webItem && String(webItem.image_url || '').trim()
+                        ? String(webItem.image_url).trim()
+                        : null;
+
                 const pushData = {
                     RawCodeNew: barcode,
                     RawName: String(posItem.RawName).trim(),
@@ -121,13 +126,10 @@ async function syncEverything() {
                     discountPerc: webItem ? (webItem.discountPerc || 0) : Number(posItem.discountPerc || 0),
                     ItemGroupName: webItem ? (webItem.ItemGroupName || 'General') : String(posItem.ItemGroupName || 'General').trim(),
                     OpStock: Number(posItem.OpStock || 0),
-                    updated_at: new Date().toISOString()
+                    updated_at: new Date().toISOString(),
+                    // CRITICAL: always set explicitly so upsert never wipes admin-uploaded images with NULL.
+                    image_url: existingImage
                 };
-
-                // ALWAYS preserve the image_url from the web
-                if (webItem && webItem.image_url) {
-                    pushData.image_url = webItem.image_url;
-                }
 
                 toPush.push(pushData);
             }

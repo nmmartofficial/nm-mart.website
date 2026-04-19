@@ -127,8 +127,8 @@ const InventoryTab = () => {
       let imageUrl = String(current.image_url || "").trim();
       if (editImageFile) {
         const ext = editImageFile.name.split(".").pop()?.replace(/[^a-z0-9]/gi, "") || "jpg";
-        const safeCode = String(rawCodeNew).replace(/[^a-zA-Z0-9-_]/g, "_");
-        const filePath = `${safeCode}/${Date.now()}.${ext}`;
+        const barcodeFolder = String(rawCodeNew).trim().replace(/\//g, "_");
+        const filePath = `${barcodeFolder}/${Date.now()}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
           .from("product-images")

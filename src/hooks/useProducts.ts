@@ -192,9 +192,12 @@ export function useProducts() {
     [allProducts]
   );
 
+  const refetchProducts = () => fetchProducts(0);
+
   return { 
     allProducts, loading, categories, brands, 
     flat33, flat50, hasMore, loadMore, totalCount,
-    total50, total33, hasMore50, hasMore33, loadMore50, loadMore33
+    total50, total33, hasMore50, hasMore33, loadMore50, loadMore33,
+    refetchProducts,
   };
 }
