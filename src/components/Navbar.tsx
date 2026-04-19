@@ -24,7 +24,7 @@ import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 import WelfareModal from "@/components/shop/modals/WelfareModal";
 
-const Navbar = ({ setIsAiChatOpen }: { setIsAiChatOpen: (isOpen: boolean) => void }) => {
+const Navbar = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [user, setUser] = useState<any>(null);
@@ -106,7 +106,6 @@ const Navbar = ({ setIsAiChatOpen }: { setIsAiChatOpen: (isOpen: boolean) => voi
     { label: "Fast Delivery Info", icon: Truck, action: () => navigate("/delivery") },
     { label: "Secure Payments", icon: CreditCard, action: () => navigate("/contact") },
     { label: "Support", icon: Headset, action: () => navigate("/contact") },
-    { label: "NM Mart AI Help", icon: Bot, action: () => setIsAiChatOpen(true) },
   ];
 
   return (

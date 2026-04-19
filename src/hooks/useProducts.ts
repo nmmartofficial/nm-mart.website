@@ -189,12 +189,12 @@ export function useProducts() {
   };
 
   const categories = useMemo(() => 
-    allCategories.length > 0 ? allCategories : [...new Set(allProducts.map(p => p.category).filter(Boolean))],
+    (allCategories || []).length > 0 ? allCategories : [...new Set((allProducts || []).map(p => p?.category).filter(Boolean))],
     [allProducts, allCategories]
   );
 
   const brands = useMemo(() => 
-    [...new Set(allProducts.map(p => (p as any).brand).filter(Boolean))],
+    [...new Set((allProducts || []).map(p => (p as any)?.brand).filter(Boolean))],
     [allProducts]
   );
 

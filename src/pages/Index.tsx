@@ -55,11 +55,10 @@ const FALLBACK_BANNERS = [
 
 const DEFAULT_HOME_LAYOUT: SectionLayout[] = [
   { id: "hero", name: "Hero Banner", order: 0, visible: true },
-  { id: "featured", name: "Munafa Deals", order: 1, visible: true },
-  { id: "flat_50", name: "50% OFF Offers", order: 2, visible: true },
-  { id: "flat_33", name: "33% OFF Offers", order: 3, visible: true },
-  { id: "categories", name: "Categories", order: 4, visible: true },
-  { id: "products", name: "All Products", order: 5, visible: true },
+  { id: "flat_50", name: "50% OFF Offers", order: 1, visible: true },
+  { id: "flat_33", name: "33% OFF Offers", order: 2, visible: true },
+  { id: "categories", name: "Categories", order: 3, visible: true },
+  { id: "products", name: "All Products", order: 4, visible: true },
 ];
 
 function mergeHomeLayout(remote: SectionLayout[] | null | undefined): SectionLayout[] {
@@ -77,11 +76,10 @@ function mergeHomeLayout(remote: SectionLayout[] | null | undefined): SectionLay
   // Force key section ordering so offers stay above categories
   const forcedOrder: Record<string, number> = {
     hero: 0,
-    featured: 1,
-    flat_50: 2,
-    flat_33: 3,
-    categories: 4,
-    products: 5,
+    flat_50: 1,
+    flat_33: 2,
+    categories: 3,
+    products: 4,
   };
   for (const [id, order] of Object.entries(forcedOrder)) {
     const existing = byId.get(id);
@@ -164,9 +162,8 @@ export default function Index() {
 
   const { 
     allProducts, loading: productsLoading, brands, categories: posCategories,
-    flat33, flat50, featuredProducts, hasMore, loadMore, totalCount,
-    total50, total33, totalFeatured, hasMore50, hasMore33, hasMoreFeatured, 
-    loadMore50, loadMore33, loadMoreFeatured,
+    flat33, flat50, hasMore, loadMore, totalCount,
+    total50, total33, hasMore50, hasMore33, loadMore50, loadMore33,
     refetchProducts,
   } = useProducts();
   const loading = productsLoading || homeLoading;
@@ -344,7 +341,6 @@ export default function Index() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [scannedProduct, setScannedProduct] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const quickEditImageRef = useRef<HTMLInputElement>(null);
@@ -637,48 +633,6 @@ export default function Index() {
             />
           </div>
         );
-      case 'featured':
-        return featuredProducts.length > 0 && (
-          <div key="featured" id="featured-deals" className="mb-8 max-w-7xl mx-auto px-4 w-full scroll-mt-32">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-black flex items-center justify-center shadow-xl shadow-primary/20 rotate-3">
-                  <Star size={24} className="text-white fill-current animate-pulse" />
-                </div>
-                <div className="text-left">
-                  <div className="text-[10px] font-black uppercase tracking-[0.3em] text-primary leading-none mb-1">Exclusive Offers</div>
-                  <h3 className="text-2xl font-black italic uppercase leading-none text-black tracking-tight">Munafa Deals</h3>
-                </div>
-              </div>
-              <div className="hidden md:flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100">
-                <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Live Updates</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {featuredProducts.map(p => (
-                <ProductCard 
-                  key={p.barcode} 
-                  product={p} 
-                  onAddToCart={addToCart} 
-                  showAdminQuickEdit={isAdminMode} 
-                  onAdminQuickEdit={handleQuickEdit} 
-                />
-              ))}
-            </div>
-            {hasMoreFeatured && (
-              <div className="mt-8 flex justify-center">
-                <button 
-                  onClick={loadMoreFeatured} 
-                  className="px-8 py-3 rounded-2xl border-2 border-primary text-primary font-black uppercase italic text-[10px] tracking-widest hover:bg-primary hover:text-white transition-all active:scale-95"
-                >
-                  View More Munafa Deals
-                </button>
-              </div>
-            )}
-          </div>
-        );
       case 'highlights':
         return (
           <div key="highlights" className="mb-8 max-w-7xl mx-auto w-full">
@@ -812,8 +766,8 @@ export default function Index() {
             </h3>
             {/* We can use ProductGrid or a custom filtered list here */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {allProducts.filter(p => (Number(p.stock) > 0) && p.badge?.toLowerCase().includes('weekly')).slice(0, 6).map(p => (
-                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
+              {(allProducts || []).filter(p => (Number(p?.stock) > 0) && p?.badge?.toLowerCase().includes('weekly')).slice(0, 6).map(p => (
+                <ProductCard key={p?.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
           </div>
@@ -825,8 +779,8 @@ export default function Index() {
               <Star size={18} className="text-primary" /> Fresh Deals
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {allProducts.filter(p => (Number(p.stock) > 0) && (p.category?.toLowerCase().includes('fresh') || p.badge?.toLowerCase().includes('fresh'))).slice(0, 6).map(p => (
-                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
+              {(allProducts || []).filter(p => (Number(p?.stock) > 0) && (p?.category?.toLowerCase().includes('fresh') || p?.badge?.toLowerCase().includes('fresh'))).slice(0, 6).map(p => (
+                <ProductCard key={p?.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
           </div>
@@ -838,18 +792,18 @@ export default function Index() {
               <Star size={18} className="text-primary" /> Munafa Mela
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {allProducts.filter(p => (Number(p.stock) > 0) && p.discount >= 40).slice(0, 6).map(p => (
-                <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
+              {(allProducts || []).filter(p => (Number(p?.stock) > 0) && p?.discount >= 40).slice(0, 6).map(p => (
+                <ProductCard key={p?.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
             </div>
           </div>
         );
       case 'buy_again': {
-        const fromOrders = orders.flatMap((o) => o.items);
+        const fromOrders = (orders || []).flatMap((o) => o?.items || []);
         const buyAgainItems = fromOrders
-          .map((item: any) => allProducts.find((ap) => ap.barcode === item.barcode))
-          .filter((p): p is NonNullable<typeof p> => Boolean(p && Number(p.stock) > 0))
-          .filter((p, i, arr) => arr.findIndex((x) => x.barcode === p.barcode) === i)
+          .map((item: any) => (allProducts || []).find((ap) => ap?.barcode === item?.barcode))
+          .filter((p): p is NonNullable<typeof p> => Boolean(p && Number(p?.stock) > 0))
+          .filter((p, i, arr) => arr.findIndex((x) => x?.barcode === p?.barcode) === i)
           .slice(0, 6);
         return buyAgainItems.length > 0 && (
           <div key="buy_again" className="mb-12 max-w-7xl mx-auto px-4 w-full">
@@ -865,13 +819,13 @@ export default function Index() {
         );
       }
       case 'brands':
-        return brands.length > 0 && (
+        return (brands || []).length > 0 && (
           <div key="brands" className="mb-12 max-w-7xl mx-auto px-4 py-4 w-full rounded-3xl" style={getSectionBgStyle("brands")}>
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> Shop by Brand
             </h3>
             <div className="flex flex-wrap gap-2">
-              {brands.map(brand => (
+              {(brands || []).map(brand => (
                 <motion.button whileTap={{ scale: 0.95 }} key={brand}
                   onClick={() => { setSelectedBrand(brand); setSelectedCat(null); setQuery(""); }}
                   className="px-5 py-2.5 rounded-full bg-card border border-border text-[10px] font-black uppercase tracking-widest hover:border-primary hover:text-primary transition-all shadow-sm">
@@ -885,9 +839,9 @@ export default function Index() {
         return (
           <div key="products" id="products" className="scroll-mt-28 rounded-3xl px-2 py-2" style={getSectionBgStyle("products")}>
             {/* Dynamic Category-wise Product Sections */}
-            {sortedCategories.slice(0, 6).map(cat => {
-              const catProducts = allProducts
-                .filter(p => Number(p.stock) > 0 && p.category === cat && !HIDDEN_CATS.includes(p.category))
+            {(sortedCategories || []).slice(0, 6).map(cat => {
+              const catProducts = (allProducts || [])
+                .filter(p => Number(p?.stock) > 0 && p?.category === cat && !HIDDEN_CATS.includes(p?.category))
                 .sort((a, b) => {
                   const aHasImg = !!a.imageUrl && a.imageUrl.length > 5;
                   const bHasImg = !!b.imageUrl && b.imageUrl.length > 5;
@@ -1291,7 +1245,7 @@ export default function Index() {
         </div>
       )}
       
-      <Navbar setIsAiChatOpen={setIsAiChatOpen} />
+      <Navbar />
 
       {/* Search Section - Professional & Prominent */}
       <div className={`sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 ${isAdminMode ? 'top-[112px]' : 'top-[72px]'}`}>
@@ -1414,7 +1368,7 @@ export default function Index() {
       {/* Dynamic Layout Sections */}
       {!selectedCat && !selectedBrand && !query && (
         <div className="flex flex-col relative z-10">
-          {layout.map(section => renderSection(section.id))}
+          {(layout || []).map(section => renderSection(section?.id))}
         </div>
       )}
 
@@ -1595,7 +1549,7 @@ export default function Index() {
       </a>
 
       {/* Modals & Chatbot */}
-      <ChatBot isOpen={isAiChatOpen} setIsOpen={setIsAiChatOpen} />
+      {!isAdminMode && <ChatBot />}
       <WelfareModal isOpen={showWelfareModal} onClose={() => setShowWelfareModal(false)} />
 
       {/* Back to Top */}
