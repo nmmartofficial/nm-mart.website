@@ -32,9 +32,13 @@ NM Mart is a modern React + Vite storefront for a local grocery and essentials b
 
 ## Environment variables
 
-Use the values from your Supabase project in a local .env file:
+Use only the public values from your Supabase project in a local .env file:
 
 - VITE_SUPABASE_URL
 - VITE_SUPABASE_ANON_KEY
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+Do not add service role or secret keys to frontend code or browser-facing environment files.
 
 For a template, see .env.example.
