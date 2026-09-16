@@ -9,15 +9,6 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ||
                         import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
                         'sb_publishable_NOZCBGcyAm5SVWREtn9_Vw_LhynM0Py';
 
-// क्लाइंट बनाना
+// Client created from public Supabase config only.
+// This app is intended to use the existing live database without changing schema.
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-/* अब्दुल भाई, एक बात का ध्यान रखियेगा: 
-  1. Supabase Dashboard में जाइये (https://supabase.com).
-  2. SQL Editor में ये कमांड रन कीजिये ताकि सामान (Products) दिखने लगें:
-     
-     CREATE POLICY "Allow public select" ON "public"."products"
-     FOR SELECT USING (true);
-     
-  3. अगर टेबल का नाम 'Products' (P बड़ा) है, तो ऊपर 'products' की जगह 'Products' लिखें।
-*/
