@@ -2,6 +2,17 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 
+const isMissingTableError = (error: any) => {
+  const message = String(error?.message || error || "").toLowerCase();
+  return message.includes("does not exist")
+    || message.includes("schema cache")
+    || message.includes("could not find the table")
+    || message.includes("relation")
+    || message.includes("not found")
+    || message.includes("pgrst205")
+    || message.includes("pgrst301");
+};
+
 const Highlights = () => {
   const [highlights, setHighlights] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -11,17 +22,47 @@ const Highlights = () => {
   }, []);
 
   const fetchHighlights = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('highlights')
-        .select('*')
-        .eq('is_visible', true)
-        .order('display_order', { ascending: true });
+    const tableCandidates = ['highlights', 'store_highlights', 'promo_cards'];
 
-      if (error) throw error;
-      setHighlights(data || []);
+    try {
+      let lastError: any = null;
+
+      for (const tableName of tableCandidates) {
+        try {
+          const { data, error } = await supabase
+            .from(tableName)
+            .select('*');
+
+          if (!error && Array.isArray(data)) {
+            const rows = data
+              .filter((item: any) => item?.image_url || item?.image || item?.icon_url)
+              .map((item: any) => ({
+                ...item,
+                id: item.id,
+                title: item.title || item.name || 'Highlight',
+                image_url: item.image_url || item.image || item.icon_url || '',
+                link: item.link || item.url || '#',
+              }));
+
+            setHighlights(rows);
+            return;
+          }
+
+          lastError = error;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (lastError && !isMissingTableError(lastError)) {
+        console.error("Error fetching highlights:", lastError);
+      }
+      setHighlights([]);
     } catch (err) {
-      console.error("Error fetching highlights:", err);
+      if (!isMissingTableError(err)) {
+        console.error("Error fetching highlights:", err);
+      }
+      setHighlights([]);
     } finally {
       setLoading(false);
     }

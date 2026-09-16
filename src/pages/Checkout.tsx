@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const Checkout = () => {
   const navigate = useNavigate();
   const { cart, cartTotal, clearCart } = useCart();
+  const subtotal = cart.reduce((sum, item) => sum + (Number(item.saleRate ?? item.price ?? 0) * item.qty), 0);
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -369,14 +370,10 @@ const Checkout = () => {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-widest">
                       <span>Subtotal</span>
-                      <span>₹{cartTotal}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs font-bold text-green-500 uppercase tracking-widest">
-                      <span>Delivery</span>
-                      <span className="italic">FREE</span>
+                      <span>₹{subtotal}</span>
                     </div>
                     <div className="flex justify-between items-center pt-4">
-                      <span className="text-sm font-black uppercase tracking-[2px] text-black">To Pay</span>
+                      <span className="text-sm font-black uppercase tracking-[2px] text-black">Total</span>
                       <span className="text-3xl font-black text-primary italic">₹{cartTotal}</span>
                     </div>
                   </div>

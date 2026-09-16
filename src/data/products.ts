@@ -1,6 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
 
-// --- 2. PRODUCT INTERFACE ---
 export interface Product {
   barcode: string;
   name: string;
@@ -12,39 +11,35 @@ export interface Product {
   stock: string;
 }
 
-// --- 3. LIVE DATA FETCHING FUNCTION ---
-// यह फंक्शन सुपाबेस से ताजा माल उठाएगा
 export const fetchLiveProducts = async (): Promise<Product[]> => {
   try {
     const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('name', { ascending: true });
+      .from("products")
+      .select("barcode, name, mrp, salerate, discount, category, image_url, stock")
+      .gt("stock", 0)
+      .order("name", { ascending: true });
 
     if (error) {
       console.error("Error fetching products:", error.message);
       return [];
     }
 
-    return data.map((item: any) => ({
-      barcode: item.barcode,
-      name: item.name,
-      mrp: item.mrp,
-      salerate: item.salerate,
-      discount: item.discount,
-      category: item.category || 'General',
-      image: "🛍️", // फिलहाल एक डिफ़ॉल्ट इमोजी
-      stock: item.stock > 0 ? "in-stock" : "limited"
-    }));
+    return (data ?? [])
+      .map((item: any) => ({
+        barcode: String(item?.barcode ?? "").trim(),
+        name: String(item?.name ?? "").trim(),
+        mrp: Number(item?.mrp ?? 0),
+        salerate: Number(item?.salerate ?? item?.sale_rate ?? item?.price ?? 0),
+        discount: Number(item?.discount ?? item?.discount_percent ?? 0),
+        category: String(item?.category ?? "General").trim() || "General",
+        image: String(item?.image_url ?? "").trim(),
+        stock: Number(item?.stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
+      }))
+      .filter((item) => item.barcode && item.name);
   } catch (err) {
     console.error("Fetch Live Products Error:", err);
     return [];
   }
 };
 
-// --- 4. REVIEWS (इसे आप ऐसे ही रख सकते हैं) ---
-export const reviews = [
-  { name: "Priya Sharma", location: "Manjhanpur", rating: 5, text: "Best prices in the area! The home textiles quality is amazing." },
-  { name: "Rajesh Kumar", location: "Kaushambi", rating: 5, text: "NM Mart has everything I need. Fresh products." },
-  { name: "Sunita Devi", location: "Manjhanpur", rating: 5, text: "The Welfare Card membership is a game changer." },
-];
+export const reviews: Array<{ name: string; location: string; rating: number; text: string }> = [];

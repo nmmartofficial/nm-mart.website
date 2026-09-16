@@ -1,122 +1,154 @@
-import { ShoppingCart, MapPin, Mail, Clock } from "lucide-react";
+import { ArrowRight, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/lib/ThemeProvider";
 
-const SLOGAN = "Shop More, Save More";
+const SLOGAN = "SHOP MORE SAVE MORE";
+const STORE_ADDRESS = "Naya Nagar, First Dhata Road, Manjhanpur, Kaushambi, UP, PIN-212207";
+const SUPPORT_PHONE = "+91-7081154604";
+const SUPPORT_EMAIL = "support@nmmart.in";
 
 const Footer = () => {
   const { theme } = useTheme();
+  const currentYear = new Date().getFullYear();
 
-  const renderStoreName = () => {
-    const name = theme.storeName || "NM MART";
-    const parts = name.split(" ");
-    if (parts.length > 1) {
-      return (
-        <>
-          {parts[0]} <span className="text-primary">{parts.slice(1).join(" ")}</span>
-        </>
-      );
-    }
-    return <span className="text-primary">{name}</span>;
-  };
+  const quickLinks = [
+    { to: "/", label: "Home" },
+    { to: "/about", label: "About" },
+    { to: "/contact", label: "Contact" },
+    { to: "/tracker", label: "Track Order" },
+    { to: "/profile", label: "My Account" }
+  ];
+
+  const shopLinks = [
+    { to: "/", label: "Shop Home" }
+  ];
+
+  const accountLinks = [
+    { to: "/profile", label: "My Account" },
+    { to: "/tracker", label: "My Orders" },
+    { to: "/checkout", label: "Checkout" }
+  ];
 
   return (
-    <footer id="contact" className="bg-[#f8f9fa] text-black border-t border-gray-100 font-sans">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          
-          {/* Brand */}
-          <div className="space-y-6">
-            <Link to="/" className="flex items-center gap-3 no-underline group">
-              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
+    <footer className="border-t border-slate-200 bg-white text-slate-800">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-5">
+          <div className="xl:col-span-2">
+            <Link to="/" className="inline-flex items-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
                 {theme.storeLogo ? (
-                  <img src={theme.storeLogo} alt="Logo" className="w-7 h-7 object-contain" />
+                  <img src={theme.storeLogo} alt="NM Mart logo" className="h-10 w-10 object-contain" />
                 ) : (
-                  <ShoppingCart className="w-7 h-7 text-white" />
+                  <img src="/nm-mart-logo.png" alt="NM Mart logo" className="h-10 w-10 object-contain" />
                 )}
               </div>
-              <div className="flex flex-col">
-                <span className="font-black text-2xl tracking-tighter uppercase italic text-black leading-none">
-                  {renderStoreName()}
-                </span>
-                <span className="text-[8px] font-black text-black uppercase tracking-[3px] mt-1">{SLOGAN}</span>
+
+              <div>
+                <div className="text-2xl font-black uppercase tracking-[-0.08em] text-slate-900">
+                  {theme.storeName?.toUpperCase() || "NM MART"}
+                </div>
+                <div className="mt-1 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">
+                  {SLOGAN}
+                </div>
               </div>
             </Link>
-            <p className="text-[11px] text-black font-medium leading-relaxed uppercase tracking-widest italic">
-              The leading modern departmental store in Manjhanpur, providing premium quality at affordable prices.
+
+            <p className="mt-5 max-w-md text-sm leading-6 text-slate-600">
+              Bringing wholesale prices directly to the doorsteps of Manjhanpur.
             </p>
           </div>
 
-          {/* Quick Links Section */}
           <div>
-            <h4 className="font-black text-primary mb-6 text-[10px] tracking-[4px] uppercase italic flex items-center gap-2">
-              <div className="w-4 h-[1px] bg-primary/30"></div> Explore
-            </h4>
-            <div className="flex flex-col gap-4">
-              {[
-                { to: '/about', label: `About ${theme.storeName || 'NM Mart'}` },
-                { to: '/contact', label: 'Contact Support' },
-                { to: '/tracker', label: 'Track Your Order' },
-                { to: '/privacy', label: 'Privacy Policy' }
-              ].map((link) => (
-                <Link key={link.to} to={link.to} className="text-[11px] font-medium text-black hover:text-primary transition-all hover:translate-x-2 flex items-center gap-3 uppercase tracking-widest">
-                  <span className="w-1 h-1 bg-black rounded-full"></span> {link.label}
-                </Link>
+            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">
+              Quick Links
+            </h3>
+            <ul className="space-y-3 text-sm text-slate-700">
+              {quickLinks.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to} className="inline-flex items-center gap-2 transition hover:text-red-600">
+                    <ArrowRight className="h-3.5 w-3.5" />
+                    {link.label}
+                  </Link>
+                </li>
               ))}
-              
-              <Link to="/admin" className="mt-4 text-[9px] text-primary font-black uppercase tracking-[3px] border border-primary/20 px-4 py-2 rounded-xl hover:bg-primary hover:text-white transition-all text-center w-fit italic">
-                Admin Panel
-              </Link>
-            </div>
+            </ul>
           </div>
 
-          {/* Contact - मंझनपुर डिटेल्स */}
           <div>
-            <h4 className="font-black text-primary mb-6 text-[10px] tracking-[4px] uppercase italic flex items-center gap-2">
-              <div className="w-4 h-[1px] bg-primary/30"></div> Contact
-            </h4>
-            <div className="space-y-5">
-              <div className="flex items-start gap-4 group">
-                <div className="bg-white p-2 rounded-lg group-hover:bg-primary/10 transition-colors shadow-sm border border-gray-100">
-                  <MapPin className="w-4 h-4 text-primary shrink-0" />
-                </div>
-                <span className="text-[11px] text-black font-medium uppercase tracking-wider leading-relaxed">
-                  Naya Nagar, Dhata Road,<br />Manjhanpur, Kaushambi, UP
-                </span>
-              </div>
-              <div className="flex items-center gap-4 group">
-                <div className="bg-white p-2 rounded-lg group-hover:bg-primary/10 transition-colors shadow-sm border border-gray-100">
-                  <Mail className="w-4 h-4 text-primary shrink-0" />
-                </div>
-                <span className="text-[11px] text-black font-medium uppercase tracking-wider">support@nmmart.in</span>
-              </div>
-              <div className="flex items-center gap-4 group">
-                <div className="bg-white p-2 rounded-lg group-hover:bg-primary/10 transition-colors shadow-sm border border-gray-100">
-                  <Clock className="w-4 h-4 text-primary shrink-0" />
-                </div>
-                <span className="text-[11px] text-black font-medium uppercase tracking-wider italic">Daily 09 AM – 09 PM</span>
-              </div>
-            </div>
+            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">
+              Shop
+            </h3>
+            <ul className="space-y-3 text-sm text-slate-700">
+              {shopLinks.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to} className="inline-flex items-center gap-2 transition hover:text-red-600">
+                    <ArrowRight className="h-3.5 w-3.5" />
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Store Info */}
           <div>
-            <h4 className="font-black text-primary mb-6 text-[10px] tracking-[4px] uppercase italic flex items-center gap-2">
-              <div className="w-4 h-[1px] bg-primary/30"></div> Promise
-            </h4>
-            <p className="text-[11px] text-black leading-relaxed font-medium uppercase tracking-wider italic">
-              "Your trusted local partner for quality & savings. 100% purity and freshness guaranteed in every item."
-            </p>
+            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">
+              Customer Support
+            </h3>
+            <ul className="space-y-3 text-sm text-slate-700">
+              <li>
+                <a href={`tel:${SUPPORT_PHONE.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-2 transition hover:text-red-600">
+                  <Phone className="h-3.5 w-3.5" />
+                  {SUPPORT_PHONE}
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="inline-flex items-center gap-2 transition hover:text-red-600">
+                  <Mail className="h-3.5 w-3.5" />
+                  {SUPPORT_EMAIL}
+                </a>
+              </li>
+              <li>
+                <Link to="/contact" className="inline-flex items-center gap-2 transition hover:text-red-600">
+                  <ArrowRight className="h-3.5 w-3.5" />
+                  Contact us
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">
+              Account & Orders
+            </h3>
+            <ul className="space-y-3 text-sm text-slate-700">
+              {accountLinks.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to} className="inline-flex items-center gap-2 transition hover:text-red-600">
+                    <ArrowRight className="h-3.5 w-3.5" />
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="mb-2 flex items-start gap-2 text-slate-700">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                <span className="text-sm leading-6">{STORE_ADDRESS}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar with New Branding */}
-      <div className="border-t border-gray-100 py-8 bg-white">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-[10px] font-black text-black uppercase tracking-[2px] italic">
-            © 2026 {theme.storeName?.toUpperCase() || 'NM MART'} | Powered by {theme.storeName || 'NM Mart'}
-          </p>
+      <div className="border-t border-slate-200 bg-slate-50">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-center text-xs font-medium uppercase tracking-[0.2em] text-slate-600 sm:flex-row sm:text-left">
+          <p>© {currentYear} NM MART</p>
+          <div className="flex items-center gap-3">
+            <Link to="/privacy" className="transition hover:text-red-600">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

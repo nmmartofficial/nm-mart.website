@@ -63,32 +63,43 @@ export async function getActiveSession(): Promise<Session | null> {
 }
 
 export async function fetchActiveBanners(): Promise<WebsiteBanner[]> {
+  const tableCandidates = ["banners", "website_banners", "hero_banners", "banner"];
+
   try {
-    let query = supabase
-      .from("banners")
-      .select("*");
+    let lastError: any = null;
 
-    const { data, error } = await query
-      .order("sort_order", { ascending: true, nullsFirst: false });
+    for (const tableName of tableCandidates) {
+      try {
+        const { data, error } = await supabase
+          .from(tableName)
+          .select("*");
 
-    if (error) throw error;
+        if (!error && data) {
+          const banners = (data || [])
+            .filter((banner: any) => (banner?.image_url || banner?.image || banner?.banner_image) && (banner?.is_active !== false && banner?.active !== false))
+            .map((banner: any, index: number) => ({
+              id: banner.id,
+              image_url: banner.image_url || banner.image || banner.banner_image || "",
+              title: banner.title ?? banner.name ?? "NM Mart",
+              subtitle: banner.description ?? banner.subtitle ?? "",
+              whatsapp_link: banner.link_url ?? banner.whatsapp_link ?? banner.url ?? banner.link ?? null,
+              banner_link: banner.link_url ?? banner.whatsapp_link ?? banner.url ?? banner.link ?? null,
+              link: banner.link_url ?? banner.whatsapp_link ?? banner.url ?? banner.link ?? null,
+              active: banner.is_active !== false && banner.active !== false,
+              display_order: typeof banner.sort_order === "number" ? banner.sort_order : typeof banner.display_order === "number" ? banner.display_order : index,
+            }));
 
-    const banners = (data || [])
-      .filter((banner: any) => banner?.image_url && (banner?.is_active !== false))
-      .map((banner: any, index: number) => ({
-        id: banner.id,
-        image_url: banner.image_url,
-        title: banner.title ?? "NM Mart",
-        subtitle: banner.description ?? "",
-        whatsapp_link: banner.link_url ?? null,
-        banner_link: banner.link_url ?? null,
-        link: banner.link_url ?? null,
-        active: banner.is_active !== false,
-        display_order: typeof banner.sort_order === "number" ? banner.sort_order : index,
-      }));
+          logSupabaseDebug("fetchActiveBanners", { tableName, count: banners.length });
+          return banners;
+        }
 
-    logSupabaseDebug("fetchActiveBanners", { count: banners.length });
-    return banners;
+        lastError = error;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    throw lastError ?? new Error("No banner table available");
   } catch (error: any) {
     logSupabaseDebug("fetchActiveBanners:error", undefined, error);
     return [];

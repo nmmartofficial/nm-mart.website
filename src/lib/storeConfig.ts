@@ -162,32 +162,42 @@ const DEFAULT_CONFIG: Record<string, any> = {
   }
 };
 
+const isMissingConfigTableError = (error: any) => {
+  const message = String(error?.message || error || "").toLowerCase();
+  return message.includes("does not exist")
+    || message.includes("schema cache")
+    || message.includes("could not find the table")
+    || message.includes("relation")
+    || message.includes("not found")
+    || message.includes("pgrst205")
+    || message.includes("pgrst301");
+};
+
 export async function getStoreConfig(key: string): Promise<any> {
   try {
-    const { data, error } = await supabase
-      .from('app_config')
-      .select('value, key')
-      .eq('key', key)
-      .maybeSingle();
+    const candidateTables = ['app_config', 'store_config', 'site_config'];
 
-    if (error || !data) {
-      const fallback = await supabase
-        .from('store_config')
-        .select('value')
+    for (const tableName of candidateTables) {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('value, key')
         .eq('key', key)
         .maybeSingle();
 
-      if (fallback.error) {
-        console.error(`Error fetching config ${key}:`, fallback.error);
-        return DEFAULT_CONFIG[key] || null;
+      if (!error && data) {
+        return data.value ?? DEFAULT_CONFIG[key] ?? null;
       }
 
-      return fallback.data?.value ?? DEFAULT_CONFIG[key] ?? null;
+      if (error && !isMissingConfigTableError(error)) {
+        console.error(`Error getting config ${key} from ${tableName}:`, error);
+      }
     }
 
-    return data.value ?? DEFAULT_CONFIG[key] ?? null;
+    return DEFAULT_CONFIG[key] || null;
   } catch (err) {
-    console.error(`Error getting config ${key}:`, err);
+    if (!isMissingConfigTableError(err)) {
+      console.error(`Error getting config ${key}:`, err);
+    }
     return DEFAULT_CONFIG[key] || null;
   }
 }
@@ -203,13 +213,17 @@ export async function setStoreConfig(key: string, value: any): Promise<boolean> 
       }, { onConflict: 'key' });
 
     if (error) {
-      console.error(`Error saving config ${key}:`, error);
+      if (!isMissingConfigTableError(error)) {
+        console.error(`Error saving config ${key}:`, error);
+      }
       return false;
     }
 
     return true;
   } catch (err) {
-    console.error(`Error setting config ${key}:`, err);
+    if (!isMissingConfigTableError(err)) {
+      console.error(`Error setting config ${key}:`, err);
+    }
     return false;
   }
 }
@@ -299,18 +313,22 @@ export async function setGridStyle(grid: { categoryColumns: number; productColum
 }
 
 export async function initializeDefaultConfig(): Promise<void> {
-  for (const [key, value] of Object.entries(DEFAULT_CONFIG)) {
-    await getStoreConfig(key);
-    const { data } = await supabase
-      .from('store_config')
-      .select('key')
-      .eq('key', key)
-      .maybeSingle();
-
-    if (!data) {
-      await supabase
+  try {
+    for (const [key, value] of Object.entries(DEFAULT_CONFIG)) {
+      await getStoreConfig(key);
+      const { data } = await supabase
         .from('store_config')
-        .insert({ key, value });
+        .select('key')
+        .eq('key', key)
+        .maybeSingle();
+
+      if (!data) {
+        await supabase
+          .from('store_config')
+          .insert({ key, value });
+      }
     }
+  } catch (err) {
+    console.warn("Default config initialization skipped because the current live DB does not expose the expected config table.", err);
   }
 }

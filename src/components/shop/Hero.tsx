@@ -1,91 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { ShoppingCart, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, ShoppingCart } from "lucide-react";
+import { fetchActiveBanners } from "@/lib/supabase";
 
 const Hero = () => {
+  const [slides, setSlides] = useState<any[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // NM Mart Premium Banners (Bedsheets Removed)
-  const slides = [
-    {
-      title: "FRESH GROCERY",
-      subtitle: "Daily Essentials at Wholesale Rates",
-      image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200",
-      offer: "Up to 50% OFF"
-    },
-    {
-      title: "AUTHENTIC SPICES",
-      subtitle: "Pure Spices from NM Mart's Local Warehouse",
-      image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=1200",
-      offer: "Premium Quality"
-    },
-    {
-      title: "PERSONAL CARE",
-      subtitle: "Branded Soaps & Hygiene Essentials",
-      image: "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&q=80&w=1200",
-      offer: "Best Deals"
-    },
-    {
-      title: "SNACKS & BEVERAGES",
-      subtitle: "Stock up your pantry today",
-      image: "https://images.unsplash.com/photo-1534483507468-3858c4f615f3?auto=format&fit=crop&q=80&w=1200",
-      offer: "Buy More, Save More"
-    }
-  ];
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSlides = async () => {
+      try {
+        const banners = await fetchActiveBanners();
+        if (isMounted) {
+          setSlides(banners ?? []);
+          if (banners.length > 0) setCurrentSlide(0);
+        }
+      } catch (error) {
+        console.error("Error loading hero banners:", error);
+        if (isMounted) setSlides([]);
+      }
+    };
+
+    loadSlides();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
+    if (slides.length <= 1) return;
+
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
     }, 5000);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
+
+  if (!slides.length) {
+    return (
+      <section className="relative h-[420px] w-full overflow-hidden bg-black pt-20">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#111111] via-[#1f1f1f] to-[#111111]" />
+        <div className="relative flex h-full items-center justify-center px-8 text-center text-white md:px-20">
+          <div>
+            <p className="mb-3 text-xs font-black uppercase tracking-[0.35em] text-orange-300">NM Mart</p>
+            <h1 className="text-3xl font-extrabold md:text-5xl">Live banner data is loading</h1>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const slide = slides[currentSlide];
+  const image = slide?.image_url || slide?.image || slide?.banner_image || "";
 
   return (
     <section className="relative h-[500px] w-full overflow-hidden bg-black pt-20">
-      {slides.map((slide, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            index === currentSlide ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          {/* Background Image with Dark Overlay */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${slide.image})` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
-          </div>
+      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: image ? `url(${image})` : undefined }}>
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
+      </div>
 
-          {/* Text Content - Black & Sky Blue Theme */}
-          <div className="relative h-full flex flex-col justify-center px-8 md:px-20">
-            <span className="text-[#00A8E1] font-bold tracking-widest mb-4">
-              {slide.offer}
-            </span>
-            <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-4 leading-tight">
-              {slide.title}
-            </h1>
-            <p className="text-xl text-gray-300 mb-8 max-w-lg">
-              {slide.subtitle}
-            </p>
-            <div className="flex gap-4">
-              <button className="bg-[#00A8E1] text-black font-bold py-3 px-8 rounded-full flex items-center hover:bg-[#0081ad] transition shadow-lg shadow-[#00A8E1]/20">
-                Shop Now <ShoppingCart className="ml-2 w-5 h-5" />
-              </button>
-            </div>
-          </div>
+      <div className="relative flex h-full flex-col justify-center px-8 md:px-20">
+        <span className="mb-4 text-[#00A8E1] font-bold tracking-widest">
+          {slide?.title ? slide.title : "Live Store"}
+        </span>
+        <h1 className="mb-4 text-5xl font-extrabold leading-tight text-white md:text-7xl">
+          {slide?.subtitle || "NM Mart"}
+        </h1>
+        <p className="mb-8 max-w-lg text-xl text-gray-300">
+          {slide?.description || "Updated from the live database."}
+        </p>
+        <div className="flex gap-4">
+          <button className="flex items-center rounded-full bg-[#00A8E1] px-8 py-3 font-bold text-black transition hover:bg-[#0081ad] shadow-lg shadow-[#00A8E1]/20">
+            Shop Now <ShoppingCart className="ml-2 h-5 w-5" />
+          </button>
         </div>
-      ))}
+      </div>
 
-      {/* Manual Controls */}
-      <button 
-        onClick={() => setCurrentSlide(currentSlide === 0 ? slides.length-1 : currentSlide-1)}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-[#00A8E1] transition"
+      <button
+        onClick={() => setCurrentSlide(currentSlide === 0 ? slides.length - 1 : currentSlide - 1)}
+        className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition hover:bg-[#00A8E1]"
       >
         <ArrowLeft />
       </button>
-      <button 
-        onClick={() => setCurrentSlide(currentSlide === slides.length-1 ? 0 : currentSlide+1)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-[#00A8E1] transition"
+      <button
+        onClick={() => setCurrentSlide(currentSlide === slides.length - 1 ? 0 : currentSlide + 1)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition hover:bg-[#00A8E1]"
       >
         <ArrowRight />
       </button>

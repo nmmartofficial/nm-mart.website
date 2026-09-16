@@ -42,16 +42,6 @@ import Highlights from "@/components/shop/Highlights";
 import ProductCard from "@/components/shop/ProductCard";
 
 const ITEMS_PER_PAGE = 40;
-const ADMIN_EMAIL = "nmmart07@gmail.com";
-const FALLBACK_BANNERS = [
-  { id: "fallback-1", image_url: "https://images.unsplash.com/photo-1584473457493-17c4f8d8fcb8?auto=format&fit=crop&w=1400&q=80", title: "Premium Kaaju Offers", subtitle: "Fresh stock at best rates", whatsapp_link: "", active: true, display_order: 0 },
-  { id: "fallback-2", image_url: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1400&q=80", title: "Personal Care Deals", subtitle: "Daily essentials with extra savings", whatsapp_link: "", active: true, display_order: 1 },
-  { id: "fallback-3", image_url: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80", title: "Grocery Mega Sale", subtitle: "Stock up your home in one go", whatsapp_link: "", active: true, display_order: 2 },
-  { id: "fallback-4", image_url: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=1400&q=80", title: "Snacks & Munchies", subtitle: "Top picks for your tea-time", whatsapp_link: "", active: true, display_order: 3 },
-  { id: "fallback-5", image_url: "https://images.unsplash.com/photo-1497534446932-c925b458314e?auto=format&fit=crop&w=1400&q=80", title: "Beverages Combo", subtitle: "Cool drinks and juices", whatsapp_link: "", active: true, display_order: 4 },
-  { id: "fallback-6", image_url: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&w=1400&q=80", title: "Household Essentials", subtitle: "Everything for your home", whatsapp_link: "", active: true, display_order: 5 },
-  { id: "fallback-7", image_url: "https://images.unsplash.com/photo-1519682577862-22b62b24e493?auto=format&fit=crop&w=1400&q=80", title: "Festival Savings", subtitle: "Special seasonal discounts", whatsapp_link: "", active: true, display_order: 6 },
-];
 
 const DEFAULT_HOME_LAYOUT: SectionLayout[] = [
   { id: "hero", name: "Hero Banner", order: 0, visible: true },
@@ -159,12 +149,12 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
           import("@/lib/storeConfig").then(m => m.getGridStyle())
         ]);
 
-        setBanners(fetched.length > 0 ? fetched : FALLBACK_BANNERS);
+        setBanners(fetched || []);
         setLayout(mergeHomeLayout(sectionLayout));
         setGridStyle(gridData);
       } catch (err) {
         console.error("Home data fetch error:", err);
-        setBanners(FALLBACK_BANNERS);
+        setBanners([]);
       } finally {
         setHomeLoading(false);
       }
@@ -187,6 +177,8 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
     const normalized = normalizeCategory(cat);
     return CATEGORY_ICONS[normalized] || "📦";
   };
+
+  const isAdminMode = false;
 
   const [query, setQuery] = useState("");
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
@@ -358,8 +350,6 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
   const [editLoading, setEditLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const quickEditImageRef = useRef<HTMLInputElement>(null);
-  const isAdminMode =
-    typeof user?.email === "string" && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   const { listening, toggle: toggleVoice } = useVoiceSearch(t => setQuery(t));
   const orders = useMemo(() => getOrderHistory(), []);
@@ -1273,38 +1263,10 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
           </div>
         </div>
       )}
-      {/* Admin Mode Bar */}
-      {isAdminMode && (
-        <div className="bg-black text-white py-2 px-6 flex items-center justify-between sticky top-0 z-[60] border-b border-white/20 shadow-2xl">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.9)]"></div>
-              <h2 className="text-[10px] font-black uppercase tracking-[3px] italic text-white">NM MART CONTROL CENTER</h2>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Link to="/admin" className="flex items-center gap-2 bg-primary text-white px-4 py-1.5 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 group">
-              <Database size={12} className="group-hover:rotate-12 transition-transform" /> Inventory
-            </Link>
-            <button 
-              onClick={async () => {
-                await supabase.auth.signOut();
-                setUser(null);
-                toast.info("Signed out from admin account");
-              }}
-              className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-all"
-            >
-              Exit
-            </button>
-          </div>
-        </div>
-      )}
-      
       <Navbar theme={theme} setIsAiChatOpen={setIsAiChatOpen} />
 
       {/* Search Section - Professional & Prominent */}
-      <div className={`sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 ${isAdminMode ? 'top-[112px]' : 'top-[72px]'}`}>
+      <div className="sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 top-[72px]">
         <div className="max-w-5xl mx-auto">
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 rounded-3xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
@@ -1314,7 +1276,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
               </div>
               <input
                 type="text"
-                placeholder="Search over 7,358+ products in NM Mart Manjhanpur..."
+                placeholder="Search products in NM Mart..."
                 className="flex-1 bg-transparent border-none outline-none text-foreground text-base md:text-lg font-bold placeholder:text-muted-foreground/60 placeholder:font-black placeholder:uppercase placeholder:text-[10px] md:placeholder:text-xs placeholder:tracking-[2px]"
                 value={query}
                 onChange={(e) => { 

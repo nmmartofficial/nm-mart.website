@@ -417,7 +417,7 @@ const UserProfile = () => {
               </div>
             </div>
 
-            {/* Right Column - Order History */}
+            {/* Right Column - Order History and Account Actions */}
             <div className="lg:col-span-2 space-y-8">
               <div className="bg-white border border-gray-100 rounded-[40px] shadow-sm overflow-hidden">
                 <div className="p-8 border-b border-gray-50 flex items-center justify-between">
@@ -428,7 +428,7 @@ const UserProfile = () => {
                     <h3 className="text-xl font-black italic uppercase text-black">Order History</h3>
                   </div>
                   <div className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] italic">
-                    {orders.length} Recent Orders
+                    {orders.length} {orders.length === 1 ? "Recent Order" : "Recent Orders"}
                   </div>
                 </div>
 
@@ -481,61 +481,38 @@ const UserProfile = () => {
                 </div>
               </div>
 
-              {/* Loyalty Program Promo */}
-              <div className="bg-primary p-8 rounded-[40px] shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-6 text-center md:text-left">
-                  <div className="w-16 h-16 bg-white/20 rounded-3xl flex items-center justify-center text-white shadow-sm shrink-0">
-                    <Star size={32} />
+              <div className="bg-white border border-gray-100 rounded-[40px] shadow-sm p-8">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-gray-50 rounded-xl text-primary">
+                    <User size={18} />
                   </div>
-                  <div>
-                    <h4 className="text-2xl font-black italic uppercase text-white">NM Rewards</h4>
-                    <p className="font-bold text-white/80 text-xs uppercase tracking-[3px] italic mt-1">Shop more to earn bigger discounts!</p>
-                  </div>
+                  <h3 className="text-xl font-black italic uppercase text-black">Account Actions</h3>
                 </div>
-                <div className="bg-white/10 border border-white/20 px-8 py-4 rounded-2xl backdrop-blur-sm">
-                  <span className="text-[10px] font-black text-white/60 uppercase tracking-widest block mb-1">Available Points</span>
-                  <span className="text-3xl font-black text-white italic leading-none">{profile.points}</span>
-                </div>
-              </div>
 
-              {/* Welfare Card Status Section */}
-              {profile.welfare_status === 'active' ? (
-                <div className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 p-8 rounded-[40px] shadow-lg border-2 border-yellow-600 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/20 transition-all" />
-                  <div className="flex items-center gap-6 text-center md:text-left relative z-10">
-                    <div className="w-16 h-16 bg-yellow-600/20 rounded-3xl flex items-center justify-center text-yellow-900 shadow-sm shrink-0">
-                      <Star size={32} className="fill-current" />
-                    </div>
-                    <div>
-                      <h4 className="text-2xl font-black italic uppercase text-yellow-900">NM Welfare Member</h4>
-                      <p className="font-bold text-yellow-800 text-[10px] uppercase tracking-[3px] italic mt-1">Status: <span className="text-green-700">Active</span></p>
-                    </div>
-                  </div>
-                  <div className="bg-white/30 border border-yellow-600/30 px-8 py-4 rounded-2xl backdrop-blur-md relative z-10">
-                    <span className="text-[9px] font-black text-yellow-900 uppercase tracking-widest block mb-1">Card Number</span>
-                    <span className="text-xl font-black text-black italic leading-none">{profile.welfare_card_number}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-black p-8 rounded-[40px] shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12 blur-xl" />
-                  <div className="flex items-center gap-6 text-center md:text-left relative z-10">
-                    <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-yellow-400 shadow-sm shrink-0">
-                      <Star size={32} />
-                    </div>
-                    <div>
-                      <h4 className="text-2xl font-black italic uppercase text-white">Join Welfare Club</h4>
-                      <p className="font-bold text-white/60 text-[10px] uppercase tracking-[3px] italic mt-1">Get Flat 5-10% extra discount on every order!</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hi NM Mart! I'm interested in the Welfare Card membership. Please guide me on how to join.")}`, "_blank")}
-                    className="bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-xl relative z-10 italic"
+                <div className="grid gap-3 md:grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/tracker")}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
                   >
-                    Get Card Now
+                    Track Order
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/cart")}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
+                  >
+                    Cart
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/")}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
+                  >
+                    Shop Now
                   </button>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

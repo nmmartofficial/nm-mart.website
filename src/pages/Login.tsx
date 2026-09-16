@@ -1,31 +1,93 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Mail, ArrowLeft, Lock, User, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 
-const SLOGAN = "Shop More, Save More";
-const ADMIN_EMAIL = "nmmart07@gmail.com";
+export interface AuthFormInput {
+  isSignUp: boolean;
+  email: string;
+  password: string;
+  fullName?: string;
+  confirmPassword?: string;
+}
+
+export const validateAuthForm = ({
+  isSignUp,
+  email,
+  password,
+  fullName,
+  confirmPassword,
+}: AuthFormInput): string => {
+  const trimmedEmail = email.trim();
+  const trimmedPassword = password.trim();
+  const trimmedFullName = (fullName || "").trim();
+
+  if (!trimmedEmail || !trimmedPassword) {
+    return "Please enter your email and password.";
+  }
+
+  if (isSignUp) {
+    if (!trimmedFullName) {
+      return "Please enter your full name.";
+    }
+
+    if (!confirmPassword || !confirmPassword.trim()) {
+      return "Please confirm your password.";
+    }
+
+    if (trimmedPassword !== confirmPassword.trim()) {
+      return "Passwords do not match.";
+    }
+  }
+
+  return "";
+};
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const redirectIfLoggedIn = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (isMounted && session) {
+        navigate("/", { replace: true });
+      }
+    };
+
+    redirectIfLoggedIn();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted && session) {
+        navigate("/", { replace: true });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
   const handleGoogleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          redirectTo: window.location.origin
-        }
+          redirectTo: window.location.origin,
+        },
       });
       if (error) throw error;
     } catch (err: any) {
@@ -34,81 +96,98 @@ const Login = () => {
   };
 
   const handleAuth = async () => {
-    if (!email || !password) { toast.error("Please fill all fields"); return; }
-    if (isSignUp && !fullName) { toast.error("Please enter your full name"); return; }
-    
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    const trimmedName = fullName.trim();
+    const validationError = validateAuthForm({
+      isSignUp,
+      email: trimmedEmail,
+      password: trimmedPassword,
+      fullName: trimmedName,
+      confirmPassword,
+    });
+
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
     setLoading(true);
     try {
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ 
-          email, 
-          password,
+        const { data, error } = await supabase.auth.signUp({
+          email: trimmedEmail,
+          password: trimmedPassword,
           options: {
             data: {
-              full_name: fullName,
-            }
-          }
+              full_name: trimmedName,
+            },
+          },
         });
+
         if (error) throw error;
-        
-        if (data.user) {
-          // Profile is created automatically via database trigger
-          toast.success("Account created successfully! You can now start shopping.");
-          
-          // If auto-confirm is enabled in Supabase, we can sign them in immediately
-          // If not, they might still need to sign in manually if the session wasn't established
-          if (data.session) {
-            navigate("/");
-          } else {
-            setIsSignUp(false); // Move to sign in mode
-          }
+
+        if (data.session) {
+          toast.success("Account created successfully.");
+          navigate("/", { replace: true });
+          return;
         }
+
+        toast.success("Account created. Please check your email to confirm your account.");
+        setIsSignUp(false);
+        setPassword("");
+        setConfirmPassword("");
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ 
-          email, 
-          password 
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password: trimmedPassword,
         });
+
         if (error) throw error;
-        
-        if (data.user?.email?.toLowerCase() === ADMIN_EMAIL) {
-          toast.success("Admin Login successful!");
-          navigate("/admin");
-        } else {
-          toast.success("Login successful!");
-          navigate("/");
+
+        if (data.session) {
+          toast.success("Signed in successfully.");
+          navigate("/", { replace: true });
         }
       }
     } catch (err: any) {
-      toast.error(err.message || "Authentication failed");
-    } finally { setLoading(false); }
+      toast.error(err.message || "Authentication failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = async () => {
-    if (!email) { toast.error("Please enter your email address"); return; }
-    
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      toast.error("Please enter your email address.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      
+
       if (error) throw error;
-      
+
       setResetEmailSent(true);
-      toast.success("Password reset request initiated!");
+      toast.success("Password reset instructions sent.");
     } catch (err: any) {
-      toast.error(err.message || "Failed to request password reset");
-    } finally { setLoading(false); }
+      toast.error(err.message || "Failed to request password reset.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#111] flex flex-col font-sans">
       <Header />
-      
+
       <main className="flex-1 flex flex-col items-center py-12 px-4 relative">
-        {/* Back to Home Button */}
         <div className="absolute top-6 left-6 hidden md:block">
-          <button 
+          <button
             onClick={() => navigate("/")}
             className="flex items-center gap-3 bg-white border border-gray-100 px-5 py-2.5 rounded-2xl text-gray-400 hover:text-black hover:border-black transition-all shadow-sm group"
           >
@@ -117,9 +196,8 @@ const Login = () => {
           </button>
         </div>
 
-        {/* Mobile Back Button */}
         <div className="w-full max-w-[350px] mb-6 md:hidden">
-          <button 
+          <button
             onClick={() => navigate("/")}
             className="flex items-center gap-2 text-gray-400 hover:text-black transition-colors text-[11px] font-black uppercase tracking-widest italic group"
           >
@@ -130,20 +208,22 @@ const Login = () => {
           </button>
         </div>
 
-        {/* Sign In Card */}
         <div className="w-full max-w-[350px] space-y-4">
           <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
             {forgotPasswordMode ? (
               <div className="space-y-4">
-                <button 
-                  onClick={() => { setForgotPasswordMode(false); setResetEmailSent(false); }}
+                <button
+                  onClick={() => {
+                    setForgotPasswordMode(false);
+                    setResetEmailSent(false);
+                  }}
                   className="flex items-center gap-2 text-gray-400 hover:text-black transition-colors text-[10px] font-black uppercase tracking-widest mb-4"
                 >
                   <ArrowLeft size={14} /> Back to Sign In
                 </button>
-                
+
                 <h2 className="text-[28px] font-normal mb-2">Password assistance</h2>
-                
+
                 {resetEmailSent ? (
                   <div className="space-y-4">
                     <div className="bg-green-50 border border-green-100 p-4 rounded-lg flex items-start gap-3">
@@ -152,7 +232,7 @@ const Login = () => {
                         If an account exists for <b>{email}</b>, you will receive instructions shortly.
                       </p>
                     </div>
-                    <button 
+                    <button
                       onClick={() => setForgotPasswordMode(false)}
                       className="w-full bg-black text-white py-2.5 rounded shadow-sm hover:bg-gray-900 transition-all text-sm font-bold"
                     >
@@ -164,22 +244,23 @@ const Login = () => {
                     <p className="text-xs text-gray-600 leading-relaxed">
                       Enter the email address associated with your NM Mart account.
                     </p>
-                    
+
                     <div className="space-y-1">
                       <label className="text-sm font-bold block">Email</label>
-                      <input 
-                        type="email" 
-                        placeholder="Email address" 
+                      <input
+                        type="email"
+                        placeholder="Email address"
                         value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all" 
+                        onChange={(event) => setEmail(event.target.value)}
+                        className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                        autoComplete="username"
                       />
                     </div>
-                    
-                    <button 
+
+                    <button
                       onClick={handleForgotPassword}
                       disabled={loading}
-                      className="w-full bg-black text-white py-2.5 rounded shadow-sm hover:bg-gray-900 transition-all text-sm font-bold flex items-center justify-center gap-2"
+                      className="w-full bg-black text-white py-2.5 rounded shadow-sm hover:bg-gray-900 transition-all text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {loading ? <Loader2 className="animate-spin" size={16} /> : "Continue"}
                     </button>
@@ -196,52 +277,73 @@ const Login = () => {
                   {isSignUp && (
                     <div className="space-y-1">
                       <label className="text-sm font-bold block">Your name</label>
-                      <input 
-                        type="text" 
-                        placeholder="First and last name" 
+                      <input
+                        type="text"
+                        placeholder="First and last name"
                         value={fullName}
-                        onChange={e => setFullName(e.target.value)}
-                        className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all" 
+                        onChange={(event) => setFullName(event.target.value)}
+                        className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                        autoComplete="name"
                       />
                     </div>
                   )}
 
                   <div className="space-y-1">
                     <label className="text-sm font-bold block">Email</label>
-                    <input 
-                      type="email" 
-                      placeholder="Email address" 
+                    <input
+                      type="email"
+                      placeholder="Email address"
                       value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all" 
+                      onChange={(event) => setEmail(event.target.value)}
+                      className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                       autoComplete="username"
                     />
                   </div>
+
                   <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <label className="text-sm font-bold">Password</label>
-                      <button 
+                    <label className="text-sm font-bold block">Password</label>
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                      autoComplete={isSignUp ? "new-password" : "current-password"}
+                    />
+                  </div>
+
+                  {isSignUp && (
+                    <div className="space-y-1">
+                      <label className="text-sm font-bold block">Confirm password</label>
+                      <input
+                        type="password"
+                        placeholder="Confirm password"
+                        value={confirmPassword}
+                        onChange={(event) => setConfirmPassword(event.target.value)}
+                        className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                        autoComplete="new-password"
+                      />
+                    </div>
+                  )}
+
+                  {!isSignUp && (
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
                         onClick={() => setForgotPasswordMode(true)}
                         className="text-xs text-[#0066c0] hover:text-[#c45500] hover:underline"
                       >
                         Forgot your password?
                       </button>
                     </div>
-                    <input 
-                      type="password" 
-                      placeholder="Password" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all" 
-                      autoComplete="current-password"
-                    />
-                  </div>
-                  <button 
+                  )}
+
+                  <button
                     onClick={handleAuth}
                     disabled={loading}
-                    className="w-full bg-black text-white py-2.5 rounded shadow-sm hover:bg-gray-900 transition-all text-sm font-bold flex items-center justify-center gap-2"
+                    className="w-full bg-black text-white py-2.5 rounded shadow-sm hover:bg-gray-900 transition-all text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {loading ? <Loader2 className="animate-spin" size={16} /> : (isSignUp ? "Create Account" : "Sign In")}
+                    {loading ? <Loader2 className="animate-spin" size={16} /> : isSignUp ? "Create Account" : "Sign In"}
                   </button>
 
                   <div className="relative py-2 text-center">
@@ -249,8 +351,7 @@ const Login = () => {
                     <span className="relative bg-white px-2 text-xs text-gray-500 italic">or</span>
                   </div>
 
-                  {/* Solid Black Google Login Button */}
-                  <button 
+                  <button
                     onClick={handleGoogleLogin}
                     className="w-full bg-black text-white py-2.5 rounded shadow-sm hover:bg-gray-900 transition-all text-sm font-bold flex items-center justify-center gap-3 border border-black"
                   >
@@ -273,13 +374,17 @@ const Login = () => {
             <span className="relative bg-[#f8f9fa] px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest italic">New to NM Mart?</span>
           </div>
 
-          <button 
-            onClick={() => setIsSignUp(!isSignUp)}
+          <button
+            onClick={() => {
+              setIsSignUp((current) => !current);
+              setConfirmPassword("");
+              setPassword("");
+            }}
             className="w-full bg-white border border-black text-black py-2.5 rounded shadow-sm hover:bg-gray-50 transition-all text-sm font-bold"
           >
             {isSignUp ? "Already have an account? Sign in" : "Create your NM Mart account"}
           </button>
-          
+
           <div className="text-center pt-4">
             <p className="text-[10px] font-black text-black uppercase tracking-[2px] italic">
               Powered by NM Mart

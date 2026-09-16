@@ -7,6 +7,7 @@ import { logSupabaseDebug } from "@/lib/supabase";
 export function useProducts() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [flat50, setFlat50] = useState<Product[]>([]);
@@ -20,6 +21,29 @@ export function useProducts() {
   const [hasMoreFeatured, setHasMoreFeatured] = useState(false);
   const [allCategories, setAllCategories] = useState<string[]>([]);
 
+  const PRODUCT_TABLE_CANDIDATES = ["products", "product_master", "items", "catalog_products", "inventory"];
+
+  const isExpectedTableMissingError = (error: any) => {
+    const msg = String(error?.message || "").toLowerCase();
+    return msg.includes("does not exist") || msg.includes("relation") || msg.includes("not found") || msg.includes("pgrst205") || msg.includes("pgrst301");
+  };
+
+  const getProductRows = async () => {
+    let lastError: any = null;
+
+    for (const table of PRODUCT_TABLE_CANDIDATES) {
+      try {
+        const { data, error } = await supabase.from(table).select('*');
+        if (!error && data) return { data, error: null };
+        lastError = error;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    return { data: [], error: lastError };
+  };
+
   const mapProduct = (item: any): Product => {
     const barcode = String(item?.barcode || item?.RawCodeNew || item?.id || "").trim();
     const name = String(item?.name || item?.RawName || item?.itname || "Unknown Product").trim();
@@ -30,6 +54,7 @@ export function useProducts() {
     const discount = Number(item?.discount_percent ?? item?.discperc ?? item?.discountPerc ?? 0);
     const stock = Number(item?.stock ?? item?.opstock ?? item?.OpStock ?? 0);
     const unit = String(item?.unit_name || item?.unitcode || item?.unit || "pcs").trim();
+    const description = String(item?.description || item?.details || item?.short_description || item?.product_description || "").trim();
     const isFeatured = Boolean(item?.is_favourite ?? item?.isfav ?? item?.is_featured ?? false);
 
     return {
@@ -46,6 +71,7 @@ export function useProducts() {
       discount,
       stock,
       unit,
+      description: description || undefined,
       isFeatured,
       save: Math.max(0, Math.round(mrp - rate)),
       badge: String(item?.badge || "").trim()
@@ -54,9 +80,7 @@ export function useProducts() {
 
   const fetchAllCategories = async () => {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*');
+      const { data, error } = await getProductRows();
 
       if (error) throw error;
 
@@ -69,15 +93,15 @@ export function useProducts() {
         setAllCategories(uniqueCats);
       }
     } catch (err) {
-      console.error("Error deriving categories:", err);
+      if (!isExpectedTableMissingError(err)) {
+        console.error("Error deriving categories:", err);
+      }
     }
   };
 
   const fetchFeaturedProducts = async (offset = 0) => {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*');
+      const { data, error } = await getProductRows();
 
       if (error) throw error;
 
@@ -97,15 +121,15 @@ export function useProducts() {
         setHasMoreFeatured(filtered.length > offset + 12);
       }
     } catch (err) {
-      console.error("Featured Fetch Error:", err);
+      if (!isExpectedTableMissingError(err)) {
+        console.error("Featured Fetch Error:", err);
+      }
     }
   };
 
   const fetchDiscountedProducts = async (type: 50 | 33, offset = 0) => {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*');
+      const { data, error } = await getProductRows();
 
       if (error) throw error;
 
@@ -138,7 +162,9 @@ export function useProducts() {
         }
       }
     } catch (err) {
-      console.error(`Discount Fetch Error (${type}%):`, err);
+      if (!isExpectedTableMissingError(err)) {
+        console.error(`Discount Fetch Error (${type}%):`, err);
+      }
     }
   };
 
@@ -146,15 +172,14 @@ export function useProducts() {
     try {
       if (offset === 0) {
         setLoading(true);
+        setError(null);
         fetchFeaturedProducts(0);
         fetchDiscountedProducts(50, 0);
         fetchDiscountedProducts(33, 0);
         fetchAllCategories();
       }
 
-      const { data, error } = await supabase
-        .from('products')
-        .select('*');
+      const { data, error } = await getProductRows();
 
       if (error) {
         console.error("Supabase Database Error:", error);
@@ -179,7 +204,10 @@ export function useProducts() {
 
       setHasMore(filtered.length > offset + 50);
     } catch (err) {
-      console.error("Supabase Fetch Error:", err);
+      setError("Unable to load products right now.");
+      if (!isExpectedTableMissingError(err)) {
+        console.error("Supabase Fetch Error:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -226,7 +254,7 @@ export function useProducts() {
   const refetchProducts = () => fetchProducts(0);
 
   return { 
-    allProducts, loading, categories, brands, 
+    allProducts, loading, error, categories, brands, 
     flat33, flat50, featuredProducts, hasMore, loadMore, totalCount,
     total50, total33, totalFeatured, hasMore50, hasMore33, hasMoreFeatured,
     loadMore50, loadMore33, loadMoreFeatured,

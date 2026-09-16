@@ -66,9 +66,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
   }
 
   const banner = banners[current];
-  const bannerImage =
-    banner?.image_url ||
-    "https://images.unsplash.com/photo-1584473457409-ceb6b7d6a0b5?auto=format&fit=crop&w=1400&q=80";
+  const bannerImage = banner?.image_url || "";
   const textPositionClass =
     theme.bannerTextPosition === "center"
       ? "items-center text-center"
@@ -92,78 +90,89 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
     "relative aspect-[21/9] w-full overflow-hidden bg-gray-100 md:aspect-auto md:max-h-[400px] md:min-h-[200px]";
 
   return (
-    <div
-      className={`group/banner relative w-full overflow-hidden ${radiusClass}`}
-      style={radiusStyle}
-    >
-      <div className={mediaShellClass}>
-        <Link
-          to={{ pathname: "/", hash: "products" }}
-          className={imageLinkClass}
-          aria-label={banner.title ? `View products: ${banner.title}` : "View products"}
-        >
-          <img src={bannerImage} alt="" className={imageClass} />
-        </Link>
+    <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+      <div
+        className={`group/banner relative w-full overflow-hidden border border-[#f1e7dd] bg-[#f7f2ea] shadow-[0_24px_70px_-35px_rgba(15,23,42,0.4)] ${radiusClass}`}
+        style={radiusStyle}
+      >
+        <div className={mediaShellClass}>
+          <Link
+            to={{ pathname: "/", hash: "products" }}
+            className={imageLinkClass}
+            aria-label={banner.title ? `View products: ${banner.title}` : "View products"}
+          >
+            <img src={bannerImage} alt="" className={imageClass} />
+          </Link>
 
-        <div
-          className={`pointer-events-none absolute inset-0 z-[1] flex bg-gradient-to-r from-black/45 via-black/20 to-transparent p-6 md:p-10 ${textPositionClass}`}
-        >
-          <div className="max-w-xl text-white">
-            {banner.title && (
-              <h3 className="text-xl font-black uppercase tracking-tight drop-shadow-md md:text-3xl">{banner.title}</h3>
-            )}
-            {banner.subtitle && (
-              <p className="mt-2 text-xs font-bold text-white/90 md:text-sm">{banner.subtitle}</p>
-            )}
+          <div className="absolute inset-0 z-[1] bg-gradient-to-r from-[#151515]/75 via-[#151515]/30 to-transparent" />
+
+          <div
+            className={`absolute inset-0 z-[2] flex p-6 md:p-10 ${textPositionClass}`}
+          >
+            <div className="max-w-xl text-white">
+              <span className="inline-flex rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.28em] text-white/90 backdrop-blur-sm">
+                NM Mart
+              </span>
+              {banner.title && (
+                <h3 className="mt-4 text-2xl font-black uppercase leading-[0.95] tracking-[-0.05em] drop-shadow-md md:text-5xl">
+                  {banner.title}
+                </h3>
+              )}
+              {banner.subtitle && (
+                <p className="mt-3 max-w-md text-xs font-semibold uppercase tracking-[0.18em] text-white/80 md:text-sm">
+                  {banner.subtitle}
+                </p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          prev();
-        }}
-        className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-2xl bg-white/30 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/50 group-hover/banner:opacity-100"
-        aria-label="Previous banner"
-      >
-        <ChevronLeft size={24} className="text-black" />
-      </button>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          next();
-        }}
-        className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-2xl bg-white/30 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/50 group-hover/banner:opacity-100"
-        aria-label="Next banner"
-      >
-        <ChevronRight size={24} className="text-black" />
-      </button>
-
-      {banner.whatsapp_link && (
-        <a
-          href={banner.whatsapp_link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`absolute bottom-10 right-10 z-20 flex items-center gap-2 rounded-2xl px-6 py-3 text-[10px] font-black uppercase tracking-widest shadow-2xl transition-all hover:bg-black active:scale-95 ${ctaClass}`}
-          onClick={(e) => e.stopPropagation()}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            prev();
+          }}
+          className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 group-hover/banner:opacity-100"
+          aria-label="Previous banner"
         >
-          <MessageCircle size={18} /> Order via WhatsApp
-        </a>
-      )}
+          <ChevronLeft size={22} className="text-white" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            next();
+          }}
+          className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 group-hover/banner:opacity-100"
+          aria-label="Next banner"
+        >
+          <ChevronRight size={22} className="text-white" />
+        </button>
 
-      <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-        {banners.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setCurrent(i)}
-            className={`h-1.5 rounded-full transition-all ${i === current ? "w-8 bg-white shadow-sm" : "w-2 bg-white/40"}`}
-            aria-label={`Go to banner ${i + 1}`}
-          />
-        ))}
+        {banner.whatsapp_link && (
+          <a
+            href={banner.whatsapp_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`absolute bottom-8 right-8 z-20 flex items-center gap-2 rounded-full px-5 py-3 text-[9px] font-black uppercase tracking-[0.22em] shadow-[0_14px_30px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-0.5 active:scale-95 ${ctaClass}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MessageCircle size={16} /> Order Now
+          </a>
+        )}
+
+        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+          {banners.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setCurrent(i)}
+              className={`h-1.5 rounded-full transition-all ${i === current ? "w-8 bg-white shadow-sm" : "w-2 bg-white/40"}`}
+              aria-label={`Go to banner ${i + 1}`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

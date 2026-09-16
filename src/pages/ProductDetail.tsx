@@ -34,48 +34,79 @@ const ProductDetail = () => {
   useEffect(() => {
     const findProduct = async () => {
       setFetching(true);
-      // 1. Try finding in loaded products first
-      let found = allProducts.find(p => p.barcode === barcode || p.id === barcode);
-      
+
+      const queryBarcode = barcode || "";
+      let found = allProducts.find(p => p.barcode === queryBarcode || p.id === queryBarcode);
+
+      if (!found) {
+        found = allProducts.find((p) => {
+          const candidateValues = [p.name, p.barcode, p.category, p.brand].filter(Boolean);
+          return candidateValues.some(value => value && value.toString().toLowerCase().includes(queryBarcode.toLowerCase()));
+        });
+      }
+
       if (found) {
         setProduct(found);
         setFetching(false);
         return;
       }
 
-      // 2. If not found and products are loaded, fetch from Supabase
       if (!productsLoading) {
         try {
-          const { data, error } = await supabase
-            .from('products')
-            .select('*')
-            .eq('RawCodeNew', barcode)
-            .gt('OpStock', 0)
-            .maybeSingle();
+          const candidateColumns = [
+            'barcode', 'RawCodeNew', 'code', 'id', 'product_code', 'item_code'
+          ];
+          let data: any = null;
+          let error: any = null;
+
+          for (const col of candidateColumns) {
+            const response = await supabase
+              .from('products')
+              .select('*')
+              .eq(col, barcode)
+              .maybeSingle();
+
+            if (response.error) {
+              error = response.error;
+              continue;
+            }
+
+            if (response.data) {
+              data = response.data;
+              break;
+            }
+          }
+
+          if (!data && barcode) {
+            const response = await supabase
+              .from('products')
+              .select('*')
+              .or(`barcode.eq.${barcode},RawCodeNew.eq.${barcode},code.eq.${barcode},id.eq.${barcode}`)
+              .maybeSingle();
+            data = response.data;
+            error = response.error;
+          }
 
           if (data) {
-            const mrp = Number(data.MRP || data.mrp || 0);
-            const disc = Number(data.discountPerc || data.discount || 0);
-            
-            // Auto-calculate rate based on discount if present
-            let rate = Number(data.Rate || data.salerate || data.saleRate || 0);
-            if (disc > 0 && mrp > 0) {
-              rate = Math.round(mrp - (mrp * (disc / 100)));
-            }
-            
+            const mrp = Number(data.mrp ?? data.MRP ?? 0);
+            const unitRate = Number(data.sale_rate ?? data.Rate ?? data.onlinerate ?? data.restrate ?? data.salerate ?? data.saleRate ?? 0);
+            const disc = Number(data.discount_percent ?? data.discountPerc ?? data.discperc ?? data.discount ?? 0);
+            const rate = unitRate > 0 ? unitRate : (disc > 0 && mrp > 0 ? Math.round(mrp - (mrp * (disc / 100))) : mrp);
+            const stock = Number(data.stock ?? data.opstock ?? data.OpStock ?? 0);
+
             const mapped: Product = {
-              id: data.RawCodeNew,
-              name: data.RawName || "Unknown Product",
+              id: String(data.barcode || data.RawCodeNew || data.id || barcode),
+              name: String(data.name || data.RawName || data.itname || "Unknown Product").trim(),
               price: rate,
               saleRate: rate,
-              category: normalizeCategory(data.ItemGroupName || data.category || "GENERAL"),
-              mrp: mrp,
-              barcode: data.RawCodeNew,
-              brand: data.brand || "Local",
-              subCategory: data.sub_category || "",
-              imageUrl: data.image_url || "",
+              category: normalizeCategory(String(data.category_name || data.ItemGroupName || data.category || "GENERAL")),
+              mrp,
+              barcode: String(data.barcode || data.RawCodeNew || data.id || barcode),
+              brand: String(data.brand_name || data.brand || "Local").trim(),
+              subCategory: String(data.subcategory_name || data.sub_category || "").trim(),
+              imageUrl: String(data.image_url || data.picture || data.imagename || "").trim(),
               discount: disc,
-              stock: Number(data.OpStock || 0),
+              stock,
               save: Math.max(0, Math.round(mrp - rate))
             };
             setProduct(mapped);
@@ -103,6 +134,7 @@ const ProductDetail = () => {
 
   const cartItem = product ? cart.find(item => item.id === product.id) : null;
   const cartIndex = product ? cart.findIndex(item => item.id === product.id) : -1;
+  const productDescription = product?.description?.trim();
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -212,11 +244,14 @@ const ProductDetail = () => {
                   {product.name}
                 </h1>
 
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <Star key={i} size={16} className={i < 4 ? "fill-primary text-primary" : "text-gray-200"} />
-                  ))}
-                  <span className="text-[10px] font-black text-gray-400 ml-2 uppercase tracking-widest italic">Verified Quality</span>
+                <div className="flex flex-wrap items-center gap-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                  {product.brand && <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">{product.brand}</span>}
+                  {product.unit && <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">{product.unit}</span>}
+                  {product.stock !== undefined && (
+                    <span className={`rounded-full border px-2.5 py-1 ${product.stock > 0 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-700"}`}>
+                      {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -296,15 +331,17 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              {/* Product Promise */}
-              <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm">
-                <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-[3px] mb-6 italic">NM Mart Promise</h4>
-                <div className="space-y-4">
-                  <p className="text-xs font-bold text-gray-500 leading-relaxed uppercase">
-                    "This product is directly sourced from manufacturers to ensure the lowest wholesale price in Manjhanpur. 100% genuine quality guarantee."
-                  </p>
+              {productDescription ? (
+                <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm">
+                  <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-[3px] mb-4 italic">Product Details</h4>
+                  <p className="text-sm leading-7 text-slate-600">{productDescription}</p>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm">
+                  <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-[3px] mb-4 italic">Product Details</h4>
+                  <p className="text-sm leading-7 text-slate-500">No description available for this product.</p>
+                </div>
+              )}
 
               {/* Trust Badges - Mobile Only */}
               <div className="grid grid-cols-2 gap-3 md:hidden">

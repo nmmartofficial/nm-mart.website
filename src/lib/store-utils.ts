@@ -14,6 +14,7 @@ export interface Product {
   save: number;
   stock?: number;
   unit?: string;
+  description?: string;
   isFeatured?: boolean;
   badge?: string;
 }
@@ -37,7 +38,7 @@ export const ITEMS_PER_PAGE = 60;
 export const MIN_ORDER = 1499;
 export const FREE_DELIVERY_THRESHOLD = 2999;
 export const FLAT_DELIVERY_FEE = 70;
-export const LOGO_FALLBACK = "https://nmmart.in/logo.jpeg";
+export const LOGO_FALLBACK = "/nm-mart-logo.png";
 
 export const STORE_DETAILS = {
   name: "NM MART",
@@ -45,6 +46,8 @@ export const STORE_DETAILS = {
   mob: "+91-7081154604",
   gstin: "09CCFPR9966P1Z9"
 };
+
+export const SAFE_LOGO_URL = "/nm-mart-logo.png";
 
 // ─── Calculations ───
 export function calculateDeliveryFee(total: number): number {

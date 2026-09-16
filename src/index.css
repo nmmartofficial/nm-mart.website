@@ -6,88 +6,102 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 4%;
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 4%;
+    --card-foreground: 0 0% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
+    --popover-foreground: 0 0% 11%;
     --primary: 24 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 98%;
-    --secondary-foreground: 0 0% 4%;
+    --secondary: 0 0% 97%;
+    --secondary-foreground: 0 0% 11%;
     --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 42%;
     --accent: 24 100% 50%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 92%;
-    --input: 0 0% 92%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
     --ring: 24 100% 50%;
-    --radius: 1rem;
-
+    --radius: 1.1rem;
     --brand-orange: 24 100% 50%;
-    --brand-grey: 0 0% 10%;
+    --brand-grey: 0 0% 11%;
     --black-pure: 0 0% 0%;
     --success: 142 71% 45%;
     --warning: 38 92% 50%;
     --orange: 24 100% 50%;
     --navy: 222 47% 11%;
+  }
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 4%;
-    --sidebar-primary: 24 100% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 4%;
-    --sidebar-border: 0 0% 92%;
-    --sidebar-ring: 24 100% 50%;
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
     margin: 0;
-    padding: 0;
-    background: #ffffff;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgba(255, 160, 64, 0.15), transparent 25%),
+      linear-gradient(180deg, #fffdf9 0%, #f7f7f5 100%);
     color: hsl(var(--foreground));
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  #root {
     min-height: 100vh;
   }
 
   * {
     border-color: hsl(var(--border));
+    box-sizing: border-box;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: rgba(255, 140, 0, 0.2);
   }
 }
 
 @layer utilities {
   .nm-card {
-    @apply bg-white border border-gray-100 rounded-3xl shadow-card;
+    @apply border border-[#efe7dc] bg-white rounded-[28px] shadow-[0_20px_45px_-26px_rgba(15,23,42,0.22)];
   }
   .nm-btn-gradient {
-    @apply text-white font-black uppercase tracking-widest rounded-full shadow-lg transition-all active:scale-95;
-    background: linear-gradient(90deg, #ff7f00 0%, #ffd700 100%);
+    @apply rounded-full bg-gradient-to-r from-[#ff8a00] via-[#ff6a00] to-[#ff4d00] text-white font-black uppercase tracking-[0.18em] shadow-[0_18px_40px_-18px_rgba(255,110,0,0.85)] transition-all active:scale-95;
   }
   .nm-chip {
-    @apply px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm transition-all active:scale-95;
+    @apply rounded-full border border-[#f3e4d6] bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#1e1e1e] shadow-sm transition-all active:scale-95;
   }
   .gradient-brand {
-    background: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
+    background: linear-gradient(135deg, #ff9f1c 0%, #ff7a00 40%, #ff5b2e 100%);
   }
   .gradient-orange {
     background: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
   }
   .gradient-dark {
-    background: linear-gradient(135deg, #333333 0%, #000000 100%);
+    background: linear-gradient(135deg, #161616 0%, #000000 100%);
   }
   .text-brand {
     color: hsl(var(--brand-orange));
   }
   .shadow-card {
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 18px 42px -24px rgba(0, 0, 0, 0.2);
   }
   .shadow-glow {
-    box-shadow: 0 0 30px hsla(var(--brand-orange), 0.15);
+    box-shadow: 0 0 35px rgba(255, 120, 0, 0.18);
   }
 }
 
@@ -100,8 +114,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 10px hsl(var(--navy) / 0.3); }
-  50% { box-shadow: 0 0 25px hsl(var(--navy) / 0.6); }
+  0%, 100% { box-shadow: 0 0 10px hsl(var(--navy) / 0.25); }
+  50% { box-shadow: 0 0 26px hsl(var(--navy) / 0.55); }
 }
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;

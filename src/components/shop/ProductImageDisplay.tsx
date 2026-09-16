@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LOGO_FALLBACK } from "@/lib/store-utils";
+import { LOGO_FALLBACK, SAFE_LOGO_URL } from "@/lib/store-utils";
 
 interface Props {
   imageUrl?: string;
@@ -30,14 +30,20 @@ const ProductImageDisplay = ({ imageUrl, name, className = "w-full h-full object
     );
   }
 
-  // Fallback: NM Mart logo
+  // Fallback: NM Mart logo (safe local asset, then remote fallback)
   return (
     <div className="relative w-full h-full overflow-hidden">
       <img
-        src={LOGO_FALLBACK}
+        src={SAFE_LOGO_URL || LOGO_FALLBACK}
         alt={name}
         loading="lazy"
         className={`${className} transition-transform duration-500 ease-out`}
+        onError={(event) => {
+          const target = event.currentTarget as HTMLImageElement;
+          if (target.src !== LOGO_FALLBACK) {
+            target.src = LOGO_FALLBACK;
+          }
+        }}
       />
     </div>
   );

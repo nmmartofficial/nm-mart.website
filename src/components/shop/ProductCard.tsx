@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, ShoppingCart, Star, Pen } from "lucide-react";
+import { MessageCircle, ShoppingCart, Pen } from "lucide-react";
 import { Product, productSlug, WA_NUMBER } from "@/lib/store-utils";
 import ProductImageDisplay from "./ProductImageDisplay";
 import { useNavigate } from "react-router-dom";
@@ -49,54 +49,79 @@ const ProductCard = ({
 
   const cardClass =
     productStyle === "premium"
-      ? "rounded-2xl border-2 border-primary/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all bg-white"
+      ? "rounded-[26px] border border-[#f2e6da] bg-white shadow-[0_20px_45px_-26px_rgba(15,23,42,0.28)] hover:-translate-y-1 hover:shadow-[0_24px_55px_-22px_rgba(255,120,0,0.16)] transition-all"
       : productStyle === "offer"
-        ? "rounded-xl border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-colors"
-        : "rounded-xl border border-border bg-white hover:border-primary/30 transition-colors";
+        ? "rounded-[22px] border border-[#f8d4c8] bg-[#fff7f4] hover:bg-[#fff1eb] transition-colors"
+        : "rounded-[24px] border border-[#f1ece7] bg-white hover:border-[#f7c59f] transition-colors shadow-[0_12px_25px_-18px_rgba(15,23,42,0.22)]";
 
-  const buttonClass = `w-full py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 disabled:grayscale ${
+  const buttonClass = `w-full rounded-full text-[10px] font-black uppercase tracking-[0.18em] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
     buttonStyle === "gradient"
-      ? "bg-gradient-to-br from-primary to-primary/80 text-white border-none shadow-md"
+      ? "bg-gradient-to-r from-[#ff8a00] via-[#ff7200] to-[#ff5c00] py-2.5 text-white border-none shadow-[0_16px_30px_-18px_rgba(255,120,0,0.8)]"
       : buttonStyle === "outline"
-        ? "bg-transparent border-2 border-primary text-primary hover:bg-primary hover:text-white"
+        ? "border-2 border-primary bg-transparent py-2.5 text-primary hover:bg-primary hover:text-white"
         : buttonStyle === "shadow"
-          ? "bg-primary text-white shadow-[0_4px_14px_0_rgba(0,0,0,0.2)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.23)]"
-          : "bg-primary text-white hover:bg-black"
+          ? "bg-primary py-2.5 text-white shadow-[0_12px_24px_-15px_rgba(0,0,0,0.25)] hover:shadow-[0_16px_28px_-16px_rgba(0,0,0,0.35)]"
+          : "bg-[#111111] py-2.5 text-white hover:bg-[#ff7a00]"
   }`;
 
-  const imageHeightClass = productStyle === "premium" ? "h-32" : productStyle === "offer" ? "h-24" : "h-28";
+  const imageHeightClass = productStyle === "premium" ? "h-40 md:h-44" : productStyle === "offer" ? "h-32 md:h-36" : "h-36 md:h-40";
 
-  const whatsappLink = `https://wa.me/917081154604?text=${encodeURIComponent(`Hi NM Mart, I want to buy: ${product.name} (Code: ${product.barcode}) for ₹${product.price}`)}`;
+  const productName = (product?.name || "Product").trim() || "Product";
+  const productBrand = (product?.brand || "").trim();
+  const productCategory = (product?.category || "").trim();
+  const productUnit = (product?.unit || product?.subCategory || "").trim();
+  const numericPrice = Number(product?.price ?? 0);
+  const numericMrp = Number(product?.mrp ?? 0);
+  const numericStock = Number(product?.stock ?? 0);
+  const hasPrice = Number.isFinite(numericPrice) && numericPrice > 0;
+  const hasMrp = Number.isFinite(numericMrp) && numericMrp > 0;
+  const hasStock = numericStock > 0;
+  const discountPercent = useMemo(() => {
+    if (hasMrp && hasPrice && numericMrp > numericPrice) {
+      return Math.round(((numericMrp - numericPrice) / numericMrp) * 100);
+    }
+    if (Number(product?.discount) > 0) return Number(product.discount);
+    return 0;
+  }, [hasMrp, hasPrice, numericMrp, numericPrice, product?.discount]);
 
+  const whatsappLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi NM Mart, I want to buy: ${productName} (Code: ${product.barcode}) for ₹${numericPrice || product.mrp || 0}`)}`;
+  const goToProduct = () => navigate(`/product/${productSlug(product)}`);
   const showPen = isAdminEditor && typeof onAdminQuickEdit === "function";
 
+  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      goToProduct();
+    }
+  };
+
   return (
-    <motion.div
+    <motion.article
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`group/card bg-card ${cardClass} flex cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow`}
-      onClick={() => navigate(`/product/${productSlug(product)}`)}
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${productName}`}
+      onClick={goToProduct}
+      onKeyDown={handleCardKeyDown}
+      className={`group/card bg-card ${cardClass} flex h-full min-h-[360px] cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2`}
     >
-      <div className={`relative isolate ${imageHeightClass} bg-secondary/30`}>
-        <ProductImageDisplay imageUrl={product.imageUrl} name={product.name} />
-        {product.badge && (
-          <span className="absolute left-2 top-2 z-10 animate-pulse rounded-lg bg-primary px-2 py-1 text-[8px] font-black text-white shadow-md">
-            {product.badge}
-          </span>
-        )}
-        {product.discount > 0 && (
-          <span className="absolute right-2 top-2 z-10 rounded-lg bg-destructive px-2 py-1 text-[9px] font-black text-white shadow-md">
-            {product.discount}% OFF
+      <div className={`relative isolate overflow-hidden ${imageHeightClass} bg-[#f6f1ea]`}>
+        <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-cover" />
+
+        {discountPercent > 0 && (
+          <span className="absolute left-2 top-2 z-10 rounded-full bg-[#ff5a36] px-2 py-1 text-[7px] font-black uppercase tracking-[0.12em] text-white shadow-md">
+            {discountPercent}% OFF
           </span>
         )}
 
-        {!product.stock || product.stock <= 0 ? (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/35">
-            <span className="rounded-full bg-white/90 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-black">
+        {!hasStock && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/25 backdrop-blur-[1px]">
+            <span className="rounded-full bg-white/90 px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.18em] text-black">
               Out of stock
             </span>
           </div>
-        ) : null}
+        )}
 
         {showPen ? (
           <button
@@ -114,52 +139,87 @@ const ProductCard = ({
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-3">
-        <div className="mb-1.5 flex items-center justify-between">
-          <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-tighter text-primary">
-            {product.category}
-          </span>
+      <div className="flex flex-1 flex-col p-3 md:p-4">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          {productCategory ? (
+            <span className="rounded-full bg-[#fff3e9] px-2 py-1 text-[7px] font-black uppercase tracking-[0.18em] text-[#e16c00]">
+              {productCategory}
+            </span>
+          ) : (
+            <span className="h-5 w-14 rounded-full bg-slate-100" aria-hidden="true" />
+          )}
           <span
-            className={`flex items-center gap-0.5 text-[7px] font-bold ${
-              product.stock && product.stock > 0 ? "text-[hsl(var(--success))]" : "text-destructive"
+            className={`text-[7px] font-black uppercase tracking-[0.12em] ${
+              hasStock ? "text-[#0d8b48]" : "text-[#d83131]"
             }`}
           >
-            <Star size={8} className="fill-current" /> {product.stock && product.stock > 0 ? "IN STOCK" : "OUT OF STOCK"}
+            {hasStock ? "In Stock" : "Out of Stock"}
           </span>
         </div>
 
-        <h3 className="mb-1 h-7 overflow-hidden text-[10px] font-semibold uppercase leading-tight text-foreground">{product.name}</h3>
+        {productBrand && (
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">{productBrand}</p>
+        )}
 
-        <div className="mt-1 flex items-baseline gap-2">
-          <span className="text-xl font-black text-primary">₹{product.price}</span>
-          {product.mrp > product.price && (
-            <span className="text-[10px] font-medium text-muted-foreground line-through decoration-muted-foreground/50">
-              ₹{product.mrp}
-            </span>
+        <h3 className="mb-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-[#111111] line-clamp-2 break-words md:text-[0.96rem]">
+          {productName}
+        </h3>
+
+        {productUnit && (
+          <p className="mb-2 text-[9px] font-medium uppercase tracking-[0.12em] text-slate-500">{productUnit}</p>
+        )}
+
+        <div className="mt-auto pt-2">
+          <div className="flex items-end gap-2">
+            {hasPrice ? (
+              <span className="text-xl font-black leading-none tracking-[-0.05em] text-[#111111] md:text-[1.45rem]">
+                ₹{numericPrice.toLocaleString("en-IN")}
+              </span>
+            ) : (
+              <span className="text-sm font-semibold text-slate-500">Price unavailable</span>
+            )}
+
+            {hasMrp && numericMrp > numericPrice && (
+              <span className="pb-0.5 text-[10px] font-medium text-slate-500 line-through decoration-slate-400">
+                ₹{numericMrp.toLocaleString("en-IN")}
+              </span>
+            )}
+          </div>
+
+          {discountPercent > 0 && hasPrice && (
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#0a7d42]">
+              Save ₹{Math.max(0, numericMrp - numericPrice).toLocaleString("en-IN")}
+            </p>
           )}
         </div>
 
-        {product.save > 0 && product.stock && product.stock > 0 && (
-          <div className="mt-1 flex items-center justify-between">
-            <span className="text-[8px] font-bold text-[hsl(var(--success))]">Save ₹{product.save}</span>
-            <span className="rounded-full bg-[hsl(var(--success))]/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-[hsl(var(--success))]">
-              Best Deal
-            </span>
-          </div>
-        )}
-
-        <div className="mt-auto flex flex-col gap-1.5 pt-2">
+        <div className="mt-3 flex flex-col gap-2">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              if (product.stock && product.stock > 0) onAddToCart(product);
+              if (hasStock) onAddToCart(product);
             }}
-            disabled={!product.stock || product.stock <= 0}
+            disabled={!hasStock}
+            aria-label={hasStock ? `Add ${productName} to cart` : `${productName} is out of stock`}
             className={buttonClass}
           >
-            <ShoppingCart size={12} />
-            {product.stock && product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+            <span className="inline-flex items-center justify-center gap-2">
+              <ShoppingCart size={12} />
+              {hasStock ? "Add to Cart" : "Out of Stock"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              goToProduct();
+            }}
+            className="rounded-full border border-slate-200 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
+            aria-label={`View details for ${productName}`}
+          >
+            View Details
           </button>
 
           <a
@@ -167,13 +227,15 @@ const ProductCard = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#25D366] py-1.5 text-[9px] font-bold uppercase text-white shadow-md transition-all hover:bg-[#20ba5a] active:scale-95"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-2.5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-[0_16px_24px_-20px_rgba(0,0,0,0.4)] transition-all hover:bg-[#20ba5a] active:scale-95"
+            aria-label={`Order ${productName} on WhatsApp`}
           >
-            <MessageCircle className="h-3 w-3" /> Order on WhatsApp
+            <MessageCircle className="h-3.5 w-3.5" />
+            WhatsApp
           </a>
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   );
 };
 
