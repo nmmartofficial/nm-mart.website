@@ -165,17 +165,27 @@ const DEFAULT_CONFIG: Record<string, any> = {
 export async function getStoreConfig(key: string): Promise<any> {
   try {
     const { data, error } = await supabase
-      .from('store_config')
-      .select('value')
+      .from('app_config')
+      .select('value, key')
       .eq('key', key)
       .maybeSingle();
 
-    if (error) {
-      console.error(`Error fetching config ${key}:`, error);
-      return DEFAULT_CONFIG[key] || null;
+    if (error || !data) {
+      const fallback = await supabase
+        .from('store_config')
+        .select('value')
+        .eq('key', key)
+        .maybeSingle();
+
+      if (fallback.error) {
+        console.error(`Error fetching config ${key}:`, fallback.error);
+        return DEFAULT_CONFIG[key] || null;
+      }
+
+      return fallback.data?.value ?? DEFAULT_CONFIG[key] ?? null;
     }
 
-    return data?.value ?? DEFAULT_CONFIG[key] ?? null;
+    return data.value ?? DEFAULT_CONFIG[key] ?? null;
   } catch (err) {
     console.error(`Error getting config ${key}:`, err);
     return DEFAULT_CONFIG[key] || null;

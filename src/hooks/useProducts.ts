@@ -21,33 +21,32 @@ export function useProducts() {
   const [allCategories, setAllCategories] = useState<string[]>([]);
 
   const mapProduct = (item: any): Product => {
-    // Single source from sync script columns.
-    const barcode = String(item.RawCodeNew || "").trim();
-    const name = String(item.RawName || "Unknown Product").trim();
-    const mrp = Number(item.MRP || 0);
-    const rate = Number(item.Rate || 0);
-    const imageUrl = String(item?.image_url || "").trim();
-    const category = normalizeCategory(item?.ItemGroupName || "GENERAL");
-    const discount = Number(item?.discountPerc || 0);
-    const stock = Number(item?.OpStock || 0);
-    const unit = String(item?.unit || "pcs").trim();
-    const isFeatured = Boolean(item?.is_featured);
+    const barcode = String(item?.barcode || item?.RawCodeNew || item?.id || "").trim();
+    const name = String(item?.name || item?.RawName || item?.itname || "Unknown Product").trim();
+    const mrp = Number(item?.mrp ?? item?.MRP ?? 0);
+    const rate = Number(item?.sale_rate ?? item?.onlinerate ?? item?.retail_rate ?? item?.restrate ?? item?.Rate ?? 0);
+    const imageUrl = String(item?.image_url || item?.picture || item?.imagename || "").trim();
+    const category = normalizeCategory(String(item?.category_name || item?.ItemGroupName || item?.category || "GENERAL"));
+    const discount = Number(item?.discount_percent ?? item?.discperc ?? item?.discountPerc ?? 0);
+    const stock = Number(item?.stock ?? item?.opstock ?? item?.OpStock ?? 0);
+    const unit = String(item?.unit_name || item?.unitcode || item?.unit || "pcs").trim();
+    const isFeatured = Boolean(item?.is_favourite ?? item?.isfav ?? item?.is_featured ?? false);
 
     return {
       id: barcode,
-      name: name,
+      name,
       price: rate,
       saleRate: rate,
-      category: category,
-      mrp: mrp,
-      barcode: barcode,
-      brand: String(item?.brand || "Local").trim(),
-      subCategory: String(item?.sub_category || "").trim(),
-      imageUrl: imageUrl,
-      discount: discount,
-      stock: stock,
-      unit: unit,
-      isFeatured: isFeatured,
+      category,
+      mrp,
+      barcode,
+      brand: String(item?.brand_name || item?.brand || "Local").trim(),
+      subCategory: String(item?.subcategory_name || item?.sub_category || "").trim(),
+      imageUrl,
+      discount,
+      stock,
+      unit,
+      isFeatured,
       save: Math.max(0, Math.round(mrp - rate)),
       badge: String(item?.badge || "").trim()
     };
@@ -55,21 +54,17 @@ export function useProducts() {
 
   const fetchAllCategories = async () => {
     try {
-      // ─── SOURCE: ItemGroupName from products table ───
       const { data, error } = await supabase
         .from('products')
-        .select('ItemGroupName')
-        .not('RawCodeNew', 'is', null)
-        .gt('OpStock', 0)
-        .not('ItemGroupName', 'is', null);
-      
+        .select('*');
+
       if (error) throw error;
 
       if (data) {
-        const uniqueCats = [...new Set(data.map((item: any) => 
-          normalizeCategory(item.ItemGroupName)
-        ))].filter(c => c && c.length > 1);
-        
+        const uniqueCats = [...new Set(data
+          .map((item: any) => normalizeCategory(String(item?.category_name || item?.ItemGroupName || item?.category || "")))
+          .filter((c: string) => c && c.length > 1))];
+
         logSupabaseDebug("products:derivedCategories", uniqueCats);
         setAllCategories(uniqueCats);
       }
@@ -80,27 +75,26 @@ export function useProducts() {
 
   const fetchFeaturedProducts = async (offset = 0) => {
     try {
-      const { data, error, count } = await supabase
+      const { data, error } = await supabase
         .from('products')
-        .select('*', { count: 'exact' })
-        .gt('OpStock', 0)
-        .neq('is_visible', false)
-        .eq('is_featured', true)
-        .order('image_url', { ascending: false, nullsFirst: false })
-        .order('RawName', { ascending: true })
-        .range(offset, offset + 11);
+        .select('*');
 
       if (error) throw error;
 
       if (data) {
-        const mapped = data.map(mapProduct);
+        const filtered = data.filter((item: any) => {
+          const stock = Number(item?.stock ?? item?.opstock ?? item?.OpStock ?? 0);
+          return stock > 0 && (item?.is_favourite || item?.isfav || item?.is_featured === true) && item?.is_active !== false;
+        });
+
+        const mapped = filtered.slice(offset, offset + 12).map(mapProduct);
         if (offset === 0) {
           setFeaturedProducts(mapped);
-          setTotalFeatured(count || 0);
+          setTotalFeatured(filtered.length || 0);
         } else {
           setFeaturedProducts(prev => [...prev, ...mapped]);
         }
-        setHasMoreFeatured(data.length === 12);
+        setHasMoreFeatured(filtered.length > offset + 12);
       }
     } catch (err) {
       console.error("Featured Fetch Error:", err);
@@ -109,44 +103,38 @@ export function useProducts() {
 
   const fetchDiscountedProducts = async (type: 50 | 33, offset = 0) => {
     try {
-      // Storefront: in-stock only (OpStock > 0). Admin Inventory uses its own queries.
-      let query = supabase
+      const { data, error } = await supabase
         .from('products')
-        .select('*', { count: 'exact' })
-        .gt('OpStock', 0)
-        .neq('is_visible', false);
-      
-      if (type === 50) {
-        query = query.gte('discountPerc', 50);
-      } else {
-        query = query.gte('discountPerc', 33).lt('discountPerc', 50);
-      }
+        .select('*');
 
-      const { data, error, count } = await query
-        .order('image_url', { ascending: false, nullsFirst: false })
-        .order('RawName', { ascending: true })
-        .range(offset, offset + 11);
-      
       if (error) throw error;
 
       if (data) {
-        const mapped = data.map(mapProduct);
+        const filtered = data.filter((item: any) => {
+          const stock = Number(item?.stock ?? item?.opstock ?? item?.OpStock ?? 0);
+          const discount = Number(item?.discount_percent ?? item?.discperc ?? item?.discountPerc ?? 0);
+          return stock > 0 && item?.is_active !== false && (
+            type === 50 ? discount >= 50 : discount >= 33 && discount < 50
+          );
+        });
+
+        const mapped = filtered.slice(offset, offset + 12).map(mapProduct);
         if (type === 50) {
           if (offset === 0) {
             setFlat50(mapped);
-            setTotal50(count || 0);
+            setTotal50(filtered.length || 0);
           } else {
             setFlat50(prev => [...prev, ...mapped]);
           }
-          setHasMore50(data.length === 12);
+          setHasMore50(filtered.length > offset + 12);
         } else {
           if (offset === 0) {
             setFlat33(mapped);
-            setTotal33(count || 0);
+            setTotal33(filtered.length || 0);
           } else {
             setFlat33(prev => [...prev, ...mapped]);
           }
-          setHasMore33(data.length === 12);
+          setHasMore33(filtered.length > offset + 12);
         }
       }
     } catch (err) {
@@ -163,35 +151,33 @@ export function useProducts() {
         fetchDiscountedProducts(33, 0);
         fetchAllCategories();
       }
-      
-      const { data, error, count } = await supabase
+
+      const { data, error } = await supabase
         .from('products')
-        .select('*', { count: 'exact' })
-        .gt('OpStock', 0)
-        .neq('is_visible', false)
-        .order('image_url', { ascending: false, nullsFirst: false })
-        .order('RawName', { ascending: true })
-        .range(offset, offset + 49);
+        .select('*');
 
       if (error) {
         console.error("Supabase Database Error:", error);
         throw error;
       }
 
-      if (count !== null) setTotalCount(count);
+      const filtered = (data || []).filter((item: any) => {
+        const stock = Number(item?.stock ?? item?.opstock ?? item?.OpStock ?? 0);
+        return stock > 0 && item?.is_active !== false;
+      });
 
-      if (data) {
-        logSupabaseDebug("products:fetched", { count: data.length, offset });
-        const mappedProducts: Product[] = data.map(mapProduct);
+      if (filtered.length) setTotalCount(filtered.length);
 
-        if (offset === 0) {
-          setAllProducts(mappedProducts);
-        } else {
-          setAllProducts(prev => [...prev, ...mappedProducts]);
-        }
-        
-        setHasMore(data.length === 50);
+      const mappedProducts: Product[] = filtered.slice(offset, offset + 50).map(mapProduct);
+      logSupabaseDebug("products:fetched", { count: mappedProducts.length, offset });
+
+      if (offset === 0) {
+        setAllProducts(mappedProducts);
+      } else {
+        setAllProducts(prev => [...prev, ...mappedProducts]);
       }
+
+      setHasMore(filtered.length > offset + 50);
     } catch (err) {
       console.error("Supabase Fetch Error:", err);
     } finally {
