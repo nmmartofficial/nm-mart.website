@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, ShoppingCart, Pen } from "lucide-react";
-import { Product, productSlug, WA_NUMBER } from "@/lib/store-utils";
+import { ShoppingCart, Pen } from "lucide-react";
+import { Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "./ProductImageDisplay";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/lib/ThemeProvider";
@@ -65,7 +65,7 @@ const ProductCard = ({
           : "bg-[#111111] py-2.5 text-white hover:bg-[#ff7a00]"
   }`;
 
-  const imageHeightClass = productStyle === "premium" ? "h-40 md:h-44" : productStyle === "offer" ? "h-32 md:h-36" : "h-36 md:h-40";
+  const imageHeightClass = productStyle === "premium" ? "h-32 md:h-44" : productStyle === "offer" ? "h-28 md:h-36" : "h-28 md:h-40";
 
   const productName = (product?.name || "Product").trim() || "Product";
   const productBrand = (product?.brand || "").trim();
@@ -88,7 +88,6 @@ const ProductCard = ({
     ? numericMrp - numericPrice
     : 0;
 
-  const whatsappLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi NM Mart, I want to buy: ${productName} (Code: ${product.barcode}) for ₹${numericPrice || product.mrp || 0}`)}`;
   const goToProduct = () => navigate(`/product/${productSlug(product)}`);
   const showPen = isAdminEditor && typeof onAdminQuickEdit === "function";
 
@@ -108,7 +107,7 @@ const ProductCard = ({
       aria-label={`View details for ${productName}`}
       onClick={goToProduct}
       onKeyDown={handleCardKeyDown}
-      className={`group/card bg-card ${cardClass} flex h-full min-h-[360px] cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2`}
+      className={`group/card bg-card ${cardClass} flex h-full min-h-[320px] cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 md:min-h-[360px]`}
     >
       <div className={`relative isolate overflow-hidden ${imageHeightClass} bg-white`}>
         <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-3" />
@@ -143,7 +142,7 @@ const ProductCard = ({
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-3 md:p-4">
+      <div className="flex flex-1 flex-col p-2.5 md:p-4">
         <div className="mb-2 flex items-center justify-between gap-2">
           {productCategory ? (
             <span className="rounded-full bg-[#fff3e9] px-2 py-1 text-[7px] font-black uppercase tracking-[0.18em] text-[#e16c00]">
@@ -165,7 +164,7 @@ const ProductCard = ({
           <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">{productBrand}</p>
         )}
 
-        <h3 className="mb-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-[#111111] line-clamp-2 break-words md:text-[0.96rem]">
+        <h3 className="mb-2 min-h-[2rem] text-sm font-semibold leading-snug text-[#111111] line-clamp-2 break-words md:min-h-[2.5rem] md:text-[0.96rem]">
           {productName}
         </h3>
 
@@ -230,17 +229,6 @@ const ProductCard = ({
             View Details
           </button>
 
-          <a
-            href={whatsappLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-2.5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-[0_16px_24px_-20px_rgba(0,0,0,0.4)] transition-all hover:bg-[#20ba5a] active:scale-95"
-            aria-label={`Order ${productName} on WhatsApp`}
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-            WhatsApp
-          </a>
         </div>
       </div>
     </motion.article>

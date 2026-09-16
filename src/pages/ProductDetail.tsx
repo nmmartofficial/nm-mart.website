@@ -1,8 +1,8 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, MessageCircle, ShoppingCart, Star, Share2, Loader2, Package, CheckCircle2, Plus, Minus, ChevronRight } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Share2, Loader2, Package, CheckCircle2, Plus, Minus, ChevronRight } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
-import { calculateSalePrice, parseProductSlug, WA_NUMBER, normalizeCategory, Product, productSlug } from "@/lib/store-utils";
+import { calculateSalePrice, parseProductSlug, normalizeCategory, Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
@@ -143,8 +143,6 @@ const ProductDetail = () => {
     toast.success("Added to cart!");
     setTimeout(() => setAdding(false), 500);
   };
-
-  const whatsappLink = product ? `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`*I want to order:* \n📦 Product: ${product.name}\n🆔 Barcode: ${product.barcode}\n💰 Price: ₹${product.price}\n\nIs this available?`)}` : "#";
 
   if (fetching || (productsLoading && !product)) {
     return (
@@ -314,14 +312,6 @@ const ProductDetail = () => {
                     </button>
                   )}
                   
-                  <a 
-                    href={whatsappLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-3 bg-green-500 text-white py-5 rounded-2xl font-black uppercase tracking-[2px] shadow-sm hover:bg-black transition-all active:scale-[0.98] italic text-sm"
-                  >
-                    <MessageCircle size={20} /> Order on WhatsApp
-                  </a>
                   <button 
                     onClick={() => navigate("/")}
                     className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-black uppercase tracking-[2px] hover:bg-white hover:text-black border border-transparent hover:border-gray-100 transition-all text-[10px] italic"

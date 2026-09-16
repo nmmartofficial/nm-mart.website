@@ -334,7 +334,7 @@ const ShopPage = () => {
 
           <div>
             {loading ? (
-              <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 2xl:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div key={index} className="animate-pulse rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
                     <div className="mb-4 h-40 rounded-[20px] bg-slate-200" />

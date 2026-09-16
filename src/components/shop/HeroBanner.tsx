@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/lib/ThemeProvider";
 
 interface HeroBannerProps {
@@ -73,13 +73,6 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
       : theme.bannerTextPosition === "right"
         ? "items-end text-right"
         : "items-start text-left";
-  const ctaClass =
-    theme.bannerCtaStyle === "outline"
-      ? "bg-white/10 border-2 border-white text-white"
-      : theme.bannerCtaStyle === "pill"
-        ? "bg-green-500 text-white rounded-full px-7"
-        : "bg-green-500 text-white";
-
   const imageLinkClass =
     "absolute inset-0 z-0 block cursor-pointer overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80";
 
@@ -149,18 +142,6 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
         >
           <ChevronRight size={22} className="text-white" />
         </button>
-
-        {banner.whatsapp_link && (
-          <a
-            href={banner.whatsapp_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`absolute bottom-8 right-8 z-20 flex items-center gap-2 rounded-full px-5 py-3 text-[9px] font-black uppercase tracking-[0.22em] shadow-[0_14px_30px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-0.5 active:scale-95 ${ctaClass}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <MessageCircle size={16} /> Order Now
-          </a>
-        )}
 
         <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
           {banners.map((_, i) => (

@@ -247,7 +247,7 @@ export default function HomePage() {
           </div>
 
           {productsLoading ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 xl:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
                 <div key={index} className="animate-pulse rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="mb-4 h-40 rounded-[20px] bg-slate-200" />
@@ -263,7 +263,7 @@ export default function HomePage() {
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">No products available right now</p>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 xl:grid-cols-4">
               {featuredProducts.map((product) => (
                 <ProductCard
                   key={product.id || product.barcode}
@@ -284,7 +284,7 @@ export default function HomePage() {
           </div>
 
           {productsLoading ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 xl:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
                 <div key={index} className="animate-pulse rounded-[24px] border border-slate-200 bg-slate-50 p-4">
                   <div className="mb-4 h-40 rounded-[20px] bg-slate-200" />
@@ -300,7 +300,7 @@ export default function HomePage() {
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">No active offers right now</p>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 xl:grid-cols-4">
               {offerProducts.map((product) => (
                 <ProductCard
                   key={product.id || product.barcode}
