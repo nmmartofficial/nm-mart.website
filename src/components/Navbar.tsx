@@ -17,7 +17,6 @@ import {
   Star,
   Bot,
   Search,
-  Heart,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useTheme } from "@/lib/ThemeProvider";
@@ -138,7 +137,7 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
 
   const menuItems = [
     { label: "My Profile", icon: User, action: () => navigate("/profile") },
-    { label: "My Orders", icon: Package, action: () => navigate("/tracker") },
+    { label: "My Orders", icon: Package, action: () => navigate("/orders") },
     { label: "Welfare Card", icon: ShieldCheck, action: handleWelfare },
     { label: "Fast Delivery Info", icon: Truck, action: () => navigate("/delivery") },
     { label: "Secure Payments", icon: CreditCard, action: () => navigate("/contact") },
@@ -188,8 +187,9 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
           <div className="ml-auto flex items-center gap-2 md:gap-3">
             <button
               type="button"
+              aria-label={user ? "Open account" : "Login"}
               onClick={() => navigate(user ? "/profile" : "/login")}
-              className="inline-flex items-center gap-2 rounded-full border border-[#f1ddc6] bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#1e1e1e] shadow-sm transition hover:-translate-y-0.5 hover:border-[#efc28a] md:px-4"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#f1ddc6] bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#1e1e1e] shadow-sm transition hover:-translate-y-0.5 hover:border-[#efc28a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:px-4"
             >
               <User size={16} className="text-[#111111]" />
               <span className="hidden sm:inline">{user ? "Account" : "Login"}</span>
@@ -197,17 +197,9 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
 
             <button
               type="button"
-              aria-label="Wishlist"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#f1ddc6] bg-white text-[#1e1e1e] shadow-sm transition hover:-translate-y-0.5 hover:border-[#efc28a] md:h-11 md:w-11"
-              onClick={() => navigate(user ? "/profile" : "/login")}
-            >
-              <Heart size={18} className="text-[#111111]" />
-            </button>
-
-            <button
-              type="button"
               onClick={() => navigate("/cart")}
-              className="relative inline-flex items-center gap-2 rounded-full bg-[#111827] px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-[0_14px_30px_-18px_rgba(17,24,39,0.8)] transition hover:bg-[#f59e0b] md:px-4"
+              aria-label={`Cart${cartCount ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ", empty"}`}
+              className="relative inline-flex min-h-11 items-center gap-2 rounded-full bg-[#111827] px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-[0_14px_30px_-18px_rgba(17,24,39,0.8)] transition hover:bg-[#f59e0b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:px-4"
             >
               <ShoppingCart size={16} className="text-white" />
               <span className="hidden sm:inline">Cart</span>
@@ -219,7 +211,7 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f1ddc6] bg-white shadow-[0_12px_25px_-20px_rgba(0,0,0,0.3)] transition-all hover:shadow-md md:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f1ddc6] bg-white shadow-[0_12px_25px_-20px_rgba(0,0,0,0.3)] transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:hidden"
               aria-label="Open menu"
             >
               <Menu size={18} className="text-[#111111]" />

@@ -5,6 +5,7 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { getProductImagesBucket, getProductImageStoragePath } from "@/lib/supabase/productImagesStorage";
+import { normalizeProductImage } from "@/lib/imageProcessing";
 import { toast } from "sonner";
 
 const InventoryTab = () => {
@@ -86,18 +87,24 @@ const InventoryTab = () => {
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
 
-  const onProductImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onProductImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast.error("Please choose an image file.");
       return;
     }
-    if (editImagePreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(editImagePreview);
+    try {
+      const normalizedFile = await normalizeProductImage(file);
+      if (editImagePreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(editImagePreview);
+      }
+      setEditImageFile(normalizedFile);
+      setEditImagePreview(URL.createObjectURL(normalizedFile));
+    } catch (err: any) {
+      toast.error(err?.message || "Unable to process the selected image.");
+      if (imageInputRef.current) imageInputRef.current.value = "";
     }
-    setEditImageFile(file);
-    setEditImagePreview(URL.createObjectURL(file));
   };
 
   const saveEdit = async (rawCodeNew: string) => {

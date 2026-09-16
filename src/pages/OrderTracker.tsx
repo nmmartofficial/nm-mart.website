@@ -1,12 +1,46 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Search, Package, Truck, CheckCircle2, Clock, MapPin, Loader2, AlertCircle } from "lucide-react";
+import { Search, Package, Truck, CheckCircle2, Clock, MapPin, Loader2, AlertCircle, CalendarDays, CreditCard, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 
 const SLOGAN = "Shop More, Save More";
+
+const formatDate = (value: unknown) => {
+  if (!value) return null;
+  const date = new Date(String(value));
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("en-IN", { dateStyle: "long", timeStyle: "short" }).format(date);
+};
+
+const formatPaymentMethod = (value: unknown) => {
+  const labels: Record<string, string> = {
+    cod: "Cash on delivery",
+    upi: "UPI",
+    card_at_home: "Card at delivery",
+  };
+  const method = typeof value === "string" ? value.trim() : "";
+  return method ? labels[method.toLowerCase()] || method : null;
+};
+
+const statusPresentation = (status: string) => {
+  const normalized = status.toLowerCase();
+  if (normalized === "delivered") {
+    return { label: status, icon: CheckCircle2, className: "border-emerald-200 bg-emerald-50 text-emerald-700", description: "This order is marked delivered." };
+  }
+  if (normalized === "out for delivery") {
+    return { label: status, icon: Truck, className: "border-blue-200 bg-blue-50 text-blue-700", description: "This order is marked out for delivery." };
+  }
+  if (normalized === "cancelled") {
+    return { label: status, icon: XCircle, className: "border-red-200 bg-red-50 text-red-700", description: "This order is marked cancelled." };
+  }
+  if (normalized === "pending") {
+    return { label: status, icon: Clock, className: "border-amber-200 bg-amber-50 text-amber-700", description: "This order is pending processing." };
+  }
+  return { label: status, icon: Package, className: "border-slate-200 bg-slate-50 text-slate-700", description: "The latest status recorded for this order." };
+};
 
 const OrderTracker = () => {
   const location = useLocation();
@@ -41,11 +75,17 @@ const OrderTracker = () => {
     setOrder(null);
 
     try {
-      const { data, error: fetchError } = await supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      let orderQuery = supabase
         .from("orders")
         .select("*")
-        .eq("id", id)
-        .maybeSingle();
+        .eq("id", id);
+
+      if (session) {
+        orderQuery = orderQuery.eq("customer_id", session.user.id);
+      }
+
+      const { data, error: fetchError } = await orderQuery.maybeSingle();
 
       if (fetchError) throw fetchError;
 
@@ -66,36 +106,17 @@ const OrderTracker = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    const normalized = (status || "Pending").toLowerCase();
-    if (normalized.includes("delivered") || normalized.includes("complete") || normalized.includes("done")) {
-      return <CheckCircle2 className="text-green-500" />;
-    }
-    if (normalized.includes("shipping") || normalized.includes("delivery") || normalized.includes("dispatch")) {
-      return <Truck className="text-orange-500" />;
-    }
-    if (normalized.includes("packed") || normalized.includes("processing")) {
-      return <Package className="text-blue-500" />;
-    }
-    return <Clock className="text-yellow-500" />;
-  };
-
-  const getStatusProgress = (status: string) => {
-    const normalized = (status || "Pending").toLowerCase();
-    if (normalized.includes("delivered") || normalized.includes("complete") || normalized.includes("done")) return 100;
-    if (normalized.includes("shipping") || normalized.includes("delivery") || normalized.includes("dispatch")) return 75;
-    if (normalized.includes("packed") || normalized.includes("processing")) return 50;
-    return 25;
-  };
-
-  const statusText = order?.status ? String(order.status).trim() : "Pending";
+  const statusText = order?.status ? String(order.status).trim() : "";
+  const status = statusText ? statusPresentation(statusText) : null;
+  const orderDate = formatDate(order?.created_at);
+  const paymentMethod = formatPaymentMethod(order?.payment_method);
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-black flex flex-col font-sans">
       <Header />
 
       <main className="flex-1 py-12 px-4">
-        <div className="mx-auto max-w-2xl space-y-8">
+        <div className="mx-auto max-w-4xl space-y-8">
           <div className="space-y-4 text-center">
             <h1 className="text-4xl font-black uppercase italic tracking-tighter text-black md:text-5xl">
               Track Your <span className="text-primary">Order</span>
@@ -139,91 +160,58 @@ const OrderTracker = () => {
             </div>
           )}
 
-          {order && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 rounded-[40px] border border-gray-100 bg-white p-8 shadow-xl md:p-10">
-              <div className="mb-10 flex flex-col items-start justify-between gap-6 border-b border-gray-50 pb-8 md:flex-row md:items-center">
+          {order && status && (
+            <article className="animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden rounded-[32px] border border-gray-100 bg-white shadow-xl">
+              <header className="flex flex-col gap-5 border-b border-gray-100 bg-orange-50/40 p-6 md:flex-row md:items-start md:justify-between md:p-10">
                 <div>
-                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.35em] text-gray-400">Order Status</p>
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Order status</p>
                   <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-gray-50 p-2">{getStatusIcon(statusText)}</div>
-                    <span className="text-2xl font-black uppercase italic tracking-tighter text-black">{statusText}</span>
+                    <div className={`rounded-2xl border p-3 ${status.className}`}><status.icon size={24} aria-hidden="true" /></div>
+                    <div>
+                      <h2 className="text-2xl font-black uppercase italic tracking-tighter text-black">{status.label}</h2>
+                      <p className="mt-1 text-sm text-gray-500">{status.description}</p>
+                    </div>
                   </div>
                 </div>
-
-                <div className="text-left md:text-right">
-                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.35em] text-gray-400">Order ID</p>
-                  <span className="text-sm font-bold tracking-[0.18em] text-gray-600">{order.id}</span>
+                <div className="md:text-right">
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Order ID</p>
+                  <p className="break-all text-sm font-bold tracking-[0.12em] text-gray-700">{order.id}</p>
+                  {orderDate && <p className="mt-2 flex items-center gap-2 text-xs text-gray-500 md:justify-end"><CalendarDays size={14} aria-hidden="true" /> {orderDate}</p>}
                 </div>
+              </header>
+
+              <div className="grid gap-6 border-b border-gray-100 p-6 md:grid-cols-2 md:p-10">
+                {(order.shipping_address || order.landmark || order.pincode) && (
+                  <section>
+                    <h3 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400"><MapPin size={15} aria-hidden="true" /> Delivery details</h3>
+                    {order.shipping_address && <p className="text-sm font-semibold leading-6 text-gray-700">{order.shipping_address}</p>}
+                    {(order.landmark || order.pincode) && <p className="mt-1 text-xs text-gray-500">{[order.landmark && `Landmark: ${order.landmark}`, order.pincode && `Pincode: ${order.pincode}`].filter(Boolean).join(" · ")}</p>}
+                  </section>
+                )}
+                <section>
+                  <h3 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400"><CreditCard size={15} aria-hidden="true" /> Order payment</h3>
+                  {paymentMethod && <p className="text-sm font-semibold uppercase text-gray-700">{paymentMethod}</p>}
+                  {order.total !== undefined && order.total !== null && <p className="mt-2 text-2xl font-black text-primary">₹{order.total}</p>}
+                </section>
               </div>
 
-              <div className="mb-12 h-2 overflow-hidden rounded-full bg-gray-100">
-                <div
-                  className="h-full bg-primary transition-all duration-700 ease-out"
-                  style={{ width: `${getStatusProgress(statusText)}%` }}
-                  aria-label={`Order progress ${getStatusProgress(statusText)}%`}
-                />
-              </div>
-
-              <div className="grid gap-10 md:grid-cols-2">
-                <div className="space-y-6">
-                  {order.shipping_address && (
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-xl bg-gray-50 p-2.5 text-primary shadow-sm">
-                        <MapPin size={18} />
-                      </div>
-                      <div>
-                        <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Delivery Address</p>
-                        <p className="text-sm font-bold uppercase leading-relaxed text-gray-700">{order.shipping_address}</p>
-                        {order.landmark && (
-                          <p className="mt-1 text-[10px] font-bold uppercase italic text-gray-400">Landmark: {order.landmark}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {order.customer_name || order.customer_phone ? (
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-xl bg-gray-50 p-2.5 text-primary shadow-sm">
-                        <Truck size={18} />
-                      </div>
-                      <div>
-                        <p className="mb-1 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Customer Details</p>
-                        {order.customer_name && <p className="text-sm font-bold uppercase text-gray-700">{order.customer_name}</p>}
-                        {order.customer_phone && <p className="mt-1 text-xs font-bold tracking-[0.18em] text-gray-400">{order.customer_phone}</p>}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="rounded-3xl border border-gray-100 bg-gray-50 p-6">
-                  <p className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Order Summary</p>
-
-                  {Array.isArray(order.items) && order.items.length > 0 ? (
-                    <div className="space-y-3">
-                      {order.items.map((item: any, index: number) => (
-                        <div key={`${item?.name || 'item'}-${index}`} className="flex items-center justify-between gap-4 text-xs font-bold uppercase tracking-[0.12em]">
-                          <span className="text-gray-500">
-                            {item?.name || "Item"}
-                            {item?.qty !== undefined && <span className="ml-2 text-primary">x{item.qty}</span>}
-                          </span>
-                          {item?.saleRate !== undefined && item?.qty !== undefined && (
-                            <span className="text-black">₹{Number(item.saleRate) * Number(item.qty)}</span>
-                          )}
+              <section className="p-6 md:p-10" aria-labelledby="tracking-items-heading">
+                <h3 id="tracking-items-heading" className="mb-5 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400"><Package size={15} aria-hidden="true" /> Order items</h3>
+                {Array.isArray(order.items) && order.items.length > 0 ? (
+                  <div className="space-y-3">
+                    {order.items.map((item: any, index: number) => {
+                      const hasPrice = item?.saleRate !== undefined && item?.qty !== undefined;
+                      return (
+                        <div key={`${item?.name || "item"}-${index}`} className="flex items-start justify-between gap-4 border-b border-gray-100 pb-3 text-sm">
+                          <span className="min-w-0 font-semibold text-gray-600">{item?.name || ""}{item?.qty !== undefined && <span className="ml-2 text-primary">x{item.qty}</span>}</span>
+                          {hasPrice && <span className="shrink-0 font-bold text-gray-800">₹{Number(item.saleRate) * Number(item.qty)}</span>}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm font-bold uppercase text-gray-500">No item details available</p>
-                  )}
-
-                  <div className="my-4 h-px bg-gray-200" />
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">Total Amount</span>
-                    <span className="text-2xl font-black italic text-primary">₹{order.total ?? 0}</span>
+                      );
+                    })}
                   </div>
-                </div>
-              </div>
-            </div>
+                ) : <p className="text-sm text-gray-500">No item details available.</p>}
+              </section>
+            </article>
           )}
         </div>
       </main>

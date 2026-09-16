@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Phone, CreditCard, Banknote, QrCode, 
-  Loader2, CheckCircle2, ShoppingBag, Truck, ShieldCheck, 
+  Loader2, ShoppingBag, Truck, 
   ChevronRight, Building2, Landmark, Map as MapIcon
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
@@ -11,16 +11,13 @@ import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
-import { motion, AnimatePresence } from "framer-motion";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { cart, cartTotal, clearCart } = useCart();
   const subtotal = cart.reduce((sum, item) => sum + (Number(item.saleRate ?? item.price ?? 0) * item.qty), 0);
   const [loading, setLoading] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [sessionActive, setSessionActive] = useState(true);
+  const [sessionActive, setSessionActive] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -37,8 +34,6 @@ const Checkout = () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSessionActive(Boolean(session));
       if (session?.user) {
-        setUser(session.user);
-        
         // Fetch profile to pre-fill phone and name
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -60,10 +55,10 @@ const Checkout = () => {
     };
     fetchUserAndProfile();
 
-    if (cart.length === 0 && !orderSuccess) {
+    if (cart.length === 0) {
       navigate("/");
     }
-  }, [cart.length, navigate, orderSuccess]);
+  }, [cart.length, navigate]);
 
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -79,6 +74,12 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    if (cart.length === 0) {
+      toast.error("Your cart is empty.");
+      navigate("/cart");
+      return;
+    }
     if (!formData.fullName || !formData.phone || !formData.houseNo || !formData.street) {
       toast.error("Please fill in all required fields");
       return;
@@ -92,14 +93,12 @@ const Checkout = () => {
         toast.error("Please login again.");
         return;
       }
-      const orderId = `NMM-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
       const fullAddress = `${formData.houseNo}, ${formData.street}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.pincode}`;
 
-      const { error } = await supabase
+      const { data: createdOrder, error } = await supabase
         .from('orders')
         .insert({
-          id: orderId,
-          customer_id: user?.id || null,
+          customer_id: session.user.id,
           customer_name: formData.fullName,
           customer_phone: formData.phone,
           shipping_address: fullAddress,
@@ -110,56 +109,23 @@ const Checkout = () => {
           payment_method: formData.paymentMethod,
           status: 'Pending',
           created_at: new Date().toISOString()
-        });
+        })
+        .select("id")
+        .single();
 
       if (error) throw error;
+      if (!createdOrder?.id) throw new Error("The order was created but no order ID was returned.");
 
-      setOrderSuccess(true);
       clearCart();
       toast.success("Order placed successfully!");
+      navigate(`/order-confirmation/${encodeURIComponent(String(createdOrder.id))}`, { replace: true });
     } catch (err: any) {
-      logSupabaseDebug("checkoutOrder:error", { userId: user?.id, total: cartTotal }, err);
+      logSupabaseDebug("checkoutOrder:error", { total: cartTotal }, err);
       toast.error(getSupabaseErrorMessage(err, "Unable to place order"));
     } finally {
       setLoading(false);
     }
   };
-
-  if (orderSuccess) {
-    return (
-      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-6 font-sans">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="w-full max-w-md bg-white border border-gray-100 p-12 rounded-[50px] shadow-2xl text-center space-y-8"
-        >
-          <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center text-white mx-auto shadow-lg animate-bounce">
-            <CheckCircle2 size={50} />
-          </div>
-          <div className="space-y-4">
-            <h2 className="text-4xl font-black italic uppercase tracking-tighter text-black">Order <span className="text-primary">Success!</span></h2>
-            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs italic leading-relaxed">
-              Your order has been placed and is being processed. We will contact you shortly for delivery.
-            </p>
-          </div>
-          <div className="pt-4 space-y-4">
-            <button 
-              onClick={() => navigate("/")}
-              className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] hover:bg-black transition-all shadow-sm italic text-sm"
-            >
-              Continue Shopping
-            </button>
-            <button 
-              onClick={() => navigate("/tracker")}
-              className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-black uppercase tracking-[2px] hover:bg-white hover:text-black border border-transparent hover:border-gray-100 transition-all text-[10px] italic"
-            >
-              Track My Order
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-black flex flex-col font-sans">
@@ -300,29 +266,36 @@ const Checkout = () => {
               </div>
 
               {/* Payment Methods */}
-              <div className="bg-white border border-gray-100 p-8 md:p-10 rounded-[40px] shadow-sm space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary">
+              <fieldset className="bg-white border border-gray-100 p-8 md:p-10 rounded-[40px] shadow-sm space-y-8">
+                <legend className="flex items-center gap-4 text-2xl font-black italic uppercase text-black">
+                  <span className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary">
                     <CreditCard size={24} />
-                  </div>
-                  <h3 className="text-2xl font-black italic uppercase text-black">Payment Method</h3>
-                </div>
+                  </span>
+                  <span>Payment Method</span>
+                </legend>
 
                 <div className="grid md:grid-cols-3 gap-6">
                   {[
-                    { id: 'cod', label: 'Cash On Delivery', icon: Banknote, sub: 'Popular in Manjhanpur' },
-                    { id: 'upi', label: 'Pay via UPI', icon: QrCode, sub: 'PhonePe / GPay' },
-                    { id: 'card_at_home', label: 'Card at Home', icon: Truck, sub: 'Delivery Swipe Machine' },
+                    { id: 'cod', label: 'Cash On Delivery', icon: Banknote, sub: 'Pay when your order arrives' },
+                    { id: 'upi', label: 'Pay via UPI', icon: QrCode, sub: 'UPI method recorded with your order' },
+                    { id: 'card_at_home', label: 'Card at Home', icon: Truck, sub: 'Card payment at delivery' },
                   ].map((method) => (
-                    <div 
+                    <label
                       key={method.id}
-                      onClick={() => setFormData(prev => ({ ...prev, paymentMethod: method.id as any }))}
-                      className={`cursor-pointer p-6 rounded-[30px] border-2 transition-all flex flex-col items-center text-center gap-4 ${
+                      className={`relative cursor-pointer p-6 rounded-[30px] border-2 transition-all flex flex-col items-center text-center gap-4 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 ${
                         formData.paymentMethod === method.id 
                         ? "border-primary bg-primary/5 shadow-inner" 
                         : "border-gray-50 bg-gray-50/50 hover:border-primary/20"
                       }`}
                     >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={method.id}
+                        checked={formData.paymentMethod === method.id}
+                        onChange={() => setFormData(prev => ({ ...prev, paymentMethod: method.id as "cod" | "upi" | "card_at_home" }))}
+                        className="sr-only"
+                      />
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
                         formData.paymentMethod === method.id ? "bg-primary text-white" : "bg-white text-gray-300"
                       }`}>
@@ -334,10 +307,13 @@ const Checkout = () => {
                         }`}>{method.label}</p>
                         <p className="text-[9px] font-bold text-gray-400 uppercase mt-1 italic">{method.sub}</p>
                       </div>
-                    </div>
+                    </label>
                   ))}
                 </div>
-              </div>
+                <p className="text-[10px] font-semibold leading-5 text-gray-400">
+                  Select how you intend to pay. This checkout does not process or verify online payments.
+                </p>
+              </fieldset>
             </div>
 
             {/* Right: Summary & Action */}
@@ -381,9 +357,10 @@ const Checkout = () => {
                   <button 
                     type="submit"
                     disabled={loading || !sessionActive}
+                    aria-busy={loading}
                     className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] hover:bg-black transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 italic mt-8 active:scale-[0.98]"
                   >
-                    {loading ? <Loader2 className="animate-spin" size={20} /> : (
+                    {loading ? <><Loader2 className="animate-spin" size={20} /> Processing order...</> : (
                       <>
                         Place Order <ChevronRight size={20} />
                       </>
@@ -391,8 +368,7 @@ const Checkout = () => {
                   </button>
 
                   <div className="flex items-center justify-center gap-2 mt-6">
-                    <ShieldCheck size={14} className="text-green-500" />
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest italic">Secure NM Mart Payment</span>
+                    <span className="text-center text-[9px] font-black text-gray-400 uppercase tracking-widest italic">Your selected payment method will be recorded with this order.</span>
                   </div>
                 </div>
               </div>

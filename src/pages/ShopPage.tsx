@@ -315,7 +315,7 @@ const ShopPage = () => {
           <button
             type="button"
             onClick={() => setMobileFiltersOpen((open) => !open)}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Filters

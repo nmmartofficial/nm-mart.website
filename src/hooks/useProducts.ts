@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Product, normalizeCategory } from "@/lib/store-utils";
+import { calculateSalePrice, Product, normalizeCategory } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
 import { logSupabaseDebug } from "@/lib/supabase";
 
@@ -48,10 +48,11 @@ export function useProducts() {
     const barcode = String(item?.barcode || item?.RawCodeNew || item?.id || "").trim();
     const name = String(item?.name || item?.RawName || item?.itname || "Unknown Product").trim();
     const mrp = Number(item?.mrp ?? item?.MRP ?? 0);
-    const rate = Number(item?.sale_rate ?? item?.onlinerate ?? item?.retail_rate ?? item?.restrate ?? item?.Rate ?? 0);
+    const storedRate = Number(item?.sale_rate ?? item?.onlinerate ?? item?.retail_rate ?? item?.restrate ?? item?.Rate ?? 0);
     const imageUrl = String(item?.image_url || item?.picture || item?.imagename || "").trim();
     const category = normalizeCategory(String(item?.category_name || item?.ItemGroupName || item?.category || "GENERAL"));
-    const discount = Number(item?.discount_percent ?? item?.discperc ?? item?.discountPerc ?? 0);
+    const discount = Number(item?.discount_percent ?? item?.discperc ?? item?.discountPerc ?? item?.discount ?? 0);
+    const rate = calculateSalePrice(mrp, storedRate, discount);
     const stock = Number(item?.stock ?? item?.opstock ?? item?.OpStock ?? 0);
     const unit = String(item?.unit_name || item?.unitcode || item?.unit || "pcs").trim();
     const description = String(item?.description || item?.details || item?.short_description || item?.product_description || "").trim();

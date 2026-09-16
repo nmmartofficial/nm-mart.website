@@ -101,7 +101,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
             className={imageLinkClass}
             aria-label={banner.title ? `View products: ${banner.title}` : "View products"}
           >
-            <img src={bannerImage} alt="" className={imageClass} />
+            <img src={bannerImage} alt="" decoding="async" className={imageClass} />
           </Link>
 
           <div className="absolute inset-0 z-[1] bg-gradient-to-r from-[#151515]/75 via-[#151515]/30 to-transparent" />
@@ -133,7 +133,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
             e.stopPropagation();
             prev();
           }}
-          className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 group-hover/banner:opacity-100"
+          className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group-hover/banner:opacity-100"
           aria-label="Previous banner"
         >
           <ChevronLeft size={22} className="text-white" />
@@ -144,7 +144,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
             e.stopPropagation();
             next();
           }}
-          className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 group-hover/banner:opacity-100"
+          className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group-hover/banner:opacity-100"
           aria-label="Next banner"
         >
           <ChevronRight size={22} className="text-white" />
@@ -168,9 +168,9 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
               key={i}
               type="button"
               onClick={() => setCurrent(i)}
-              className={`h-1.5 rounded-full transition-all ${i === current ? "w-8 bg-white shadow-sm" : "w-2 bg-white/40"}`}
+              className={`flex min-h-11 min-w-11 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${i === current ? "bg-white/10" : "bg-transparent"}`}
               aria-label={`Go to banner ${i + 1}`}
-            />
+            ><span aria-hidden="true" className={`block h-1.5 rounded-full ${i === current ? "w-8 bg-white shadow-sm" : "w-2 bg-white/40"}`} /></button>
           ))}
         </div>
       </div>

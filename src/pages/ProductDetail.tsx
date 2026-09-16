@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, MessageCircle, ShoppingCart, Star, Share2, Loader2, Package, CheckCircle2, Plus, Minus, ChevronRight } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
-import { parseProductSlug, WA_NUMBER, normalizeCategory, Product, productSlug } from "@/lib/store-utils";
+import { calculateSalePrice, parseProductSlug, WA_NUMBER, normalizeCategory, Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
@@ -91,7 +91,7 @@ const ProductDetail = () => {
             const mrp = Number(data.mrp ?? data.MRP ?? 0);
             const unitRate = Number(data.sale_rate ?? data.Rate ?? data.onlinerate ?? data.restrate ?? data.salerate ?? data.saleRate ?? 0);
             const disc = Number(data.discount_percent ?? data.discountPerc ?? data.discperc ?? data.discount ?? 0);
-            const rate = unitRate > 0 ? unitRate : (disc > 0 && mrp > 0 ? Math.round(mrp - (mrp * (disc / 100))) : mrp);
+            const rate = calculateSalePrice(mrp, unitRate, disc);
             const stock = Number(data.stock ?? data.opstock ?? data.OpStock ?? 0);
 
             const mapped: Product = {
@@ -189,11 +189,11 @@ const ProductDetail = () => {
           <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-start">
             {/* Left: Image Card */}
             <div className="bg-white border border-gray-100 rounded-[24px] md:rounded-[40px] p-4 md:p-12 shadow-sm lg:sticky lg:top-28">
-              <div className="aspect-[4/3] md:aspect-square flex items-center justify-center overflow-hidden bg-gray-50/50 rounded-2xl md:rounded-3xl">
+              <div className="aspect-[4/3] md:aspect-square flex items-center justify-center overflow-hidden bg-white rounded-2xl md:rounded-3xl">
                 <ProductImageDisplay 
                   imageUrl={product.imageUrl} 
                   name={product.name} 
-                  className="w-full h-full object-contain hover:scale-105 transition-transform duration-500" 
+                  className="h-full w-full object-contain p-4" 
                 />
               </div>
               

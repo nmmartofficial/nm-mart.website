@@ -6,7 +6,42 @@ import { User, Package, MapPin, LogOut, Star, Loader2, Save, Smartphone, Chevron
 import { supabase } from "@/lib/supabase/client";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
-import { OrderRecord, WA_NUMBER } from "@/lib/store-utils";
+import { WA_NUMBER } from "@/lib/store-utils";
+
+export interface ProfileAddressInput {
+  name: string;
+  phone: string;
+  address: string;
+  landmark?: string;
+}
+
+export const validateCustomerProfile = ({
+  name,
+  phone,
+  address,
+}: ProfileAddressInput): string => {
+  const trimmedName = name.trim();
+  const trimmedAddress = address.trim();
+  const digits = phone.replace(/\D/g, "");
+
+  if (!trimmedName) {
+    return "Please enter your full name.";
+  }
+
+  if (!trimmedAddress) {
+    return "Please enter your delivery address.";
+  }
+
+  if (!digits) {
+    return "Please enter a valid phone number.";
+  }
+
+  if (digits.length !== 10) {
+    return "Phone number must be 10 digits.";
+  }
+
+  return "";
+};
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -15,10 +50,10 @@ const UserProfile = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [sessionActive, setSessionActive] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [orders, setOrders] = useState<OrderRecord[]>([]);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
-  
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const [profile, setProfile] = useState({
     name: "",
     phone: "",
@@ -32,7 +67,6 @@ const UserProfile = () => {
 
   useEffect(() => {
     fetchProfile();
-    fetchOrders();
   }, []);
 
   useEffect(() => {
@@ -40,28 +74,6 @@ const UserProfile = () => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSessionActive(Boolean(session)));
     return () => listener.subscription.unsubscribe();
   }, []);
-
-  const fetchOrders = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Please login again.");
-        return;
-      }
-      
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("customer_id", session.user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setOrders(data || []);
-    } catch (err: any) {
-      logSupabaseDebug("fetchOrders:error", undefined, err);
-      toast.error(getSupabaseErrorMessage(err, "Failed to load orders"));
-    }
-  };
 
   const fetchProfile = async () => {
     try {
@@ -156,24 +168,36 @@ const UserProfile = () => {
   };
 
   const handleSave = async () => {
-    if (!profile.name || !profile.phone || !profile.address) {
-      toast.error("Please fill in all required fields");
+    const validationError = validateCustomerProfile({
+      name: profile.name,
+      phone: profile.phone,
+      address: profile.address,
+      landmark: profile.landmark,
+    });
+
+    if (validationError) {
+      setSaveMessage({ type: "error", text: validationError });
+      toast.error(validationError);
       return;
     }
+
     if (!user?.id) {
-      toast.error("Please login again.");
+      const message = "Please login again.";
+      setSaveMessage({ type: "error", text: message });
+      toast.error(message);
       return;
     }
 
     setSaving(true);
     try {
+      const normalizedPhone = profile.phone.replace(/\D/g, "");
       const payload = {
         id: user.id,
-        full_name: profile.name,
-        phone_number: profile.phone,
-        mobile: profile.phone,
-        address: profile.address,
-        landmark: profile.landmark,
+        full_name: profile.name.trim(),
+        phone_number: normalizedPhone,
+        mobile: normalizedPhone,
+        address: profile.address.trim(),
+        landmark: profile.landmark.trim(),
         avatar_url: profile.avatar_url,
         updated_at: new Date().toISOString()
       };
@@ -189,11 +213,11 @@ const UserProfile = () => {
       if (error && /user_id|id/i.test(error.message || "")) {
         const fallbackPayload = {
           user_id: user.id,
-          full_name: profile.name,
-          phone_number: profile.phone,
-          mobile: profile.phone,
-          address: profile.address,
-          landmark: profile.landmark,
+          full_name: profile.name.trim(),
+          phone_number: normalizedPhone,
+          mobile: normalizedPhone,
+          address: profile.address.trim(),
+          landmark: profile.landmark.trim(),
           avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString()
         };
@@ -209,10 +233,14 @@ const UserProfile = () => {
 
       if (error) throw error;
       logSupabaseDebug("profileSave:success", data);
-      toast.success("Profile Updated!");
+      const successMessage = "Delivery details saved successfully.";
+      setSaveMessage({ type: "success", text: successMessage });
+      toast.success(successMessage);
     } catch (err: any) {
+      const message = getSupabaseErrorMessage(err, "Save failed");
+      setSaveMessage({ type: "error", text: message });
       logSupabaseDebug("profileSave:error", { userId: user?.id }, err);
-      toast.error(getSupabaseErrorMessage(err, "Save failed"));
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -242,6 +270,16 @@ const UserProfile = () => {
           {!sessionActive && (
             <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
               Please Login - save actions are disabled.
+            </div>
+          )}
+
+          {saveMessage && (
+            <div className={`rounded-2xl border px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] ${
+              saveMessage.type === "success"
+                ? "border-green-200 bg-green-50 text-green-700"
+                : "border-red-200 bg-red-50 text-red-700"
+            }`}>
+              {saveMessage.text}
             </div>
           )}
           
@@ -322,7 +360,10 @@ const UserProfile = () => {
                           id="profile_full_name"
                           type="text"
                           value={profile.name}
-                          onChange={e => setProfile({ ...profile, name: e.target.value })}
+                          onChange={e => {
+                            setSaveMessage(null);
+                            setProfile({ ...profile, name: e.target.value });
+                          }}
                           placeholder=" "
                           className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold uppercase text-sm focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
                         />
@@ -344,7 +385,10 @@ const UserProfile = () => {
                           id="profile_phone"
                           type="tel"
                           value={profile.phone}
-                          onChange={e => setProfile({ ...profile, phone: e.target.value })}
+                          onChange={e => {
+                            setSaveMessage(null);
+                            setProfile({ ...profile, phone: e.target.value });
+                          }}
                           placeholder=" "
                           className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold text-sm focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
                         />
@@ -365,7 +409,10 @@ const UserProfile = () => {
                         <textarea
                           id="profile_address"
                           value={profile.address}
-                          onChange={e => setProfile({ ...profile, address: e.target.value })}
+                          onChange={e => {
+                            setSaveMessage(null);
+                            setProfile({ ...profile, address: e.target.value });
+                          }}
                           placeholder=" "
                           rows={3}
                           className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold uppercase text-sm resize-none focus:border-[#FF8800] focus:shadow-[0_18px_30px_-24px_rgba(255,136,0,0.95)] transition-all"
@@ -388,7 +435,10 @@ const UserProfile = () => {
                           id="profile_landmark"
                           type="text"
                           value={profile.landmark}
-                          onChange={e => setProfile({ ...profile, landmark: e.target.value })}
+                          onChange={e => {
+                            setSaveMessage(null);
+                            setProfile({ ...profile, landmark: e.target.value });
+                          }}
                           placeholder=" "
                           className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold uppercase text-sm focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
                         />
@@ -419,66 +469,23 @@ const UserProfile = () => {
 
             {/* Right Column - Order History and Account Actions */}
             <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white border border-gray-100 rounded-[40px] shadow-sm overflow-hidden">
-                <div className="p-8 border-b border-gray-50 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-50 rounded-xl text-primary">
-                      <Package size={20} />
-                    </div>
+              <div className="flex flex-col gap-6 rounded-[40px] border border-orange-100 bg-white p-8 shadow-sm md:flex-row md:items-center md:justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="rounded-xl bg-orange-50 p-3 text-primary">
+                    <Package size={22} />
+                  </div>
+                  <div>
                     <h3 className="text-xl font-black italic uppercase text-black">Order History</h3>
-                  </div>
-                  <div className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] italic">
-                    {orders.length} {orders.length === 1 ? "Recent Order" : "Recent Orders"}
+                    <p className="mt-2 max-w-md text-sm leading-6 text-gray-500">View your complete order history, payment details, delivery information, and current status.</p>
                   </div>
                 </div>
-
-                <div className="divide-y divide-gray-50">
-                  {orders.length === 0 ? (
-                    <div className="py-20 text-center space-y-4">
-                      <Package className="mx-auto text-gray-100" size={60} />
-                      <p className="text-gray-400 font-black uppercase tracking-[2px] text-xs italic">No orders found yet</p>
-                      <button 
-                        onClick={() => navigate("/")}
-                        className="text-primary font-black uppercase tracking-widest text-[10px] border-b-2 border-primary hover:opacity-80"
-                      >
-                        Start Shopping →
-                      </button>
-                    </div>
-                  ) : (
-                    orders.map((order) => (
-                      <div key={order.id} className="p-8 hover:bg-gray-50/50 transition-all group">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm font-bold text-black font-mono tracking-widest">{order.id}</span>
-                              <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest italic ${
-                                order.status === 'Delivered' ? 'bg-green-50 text-green-500' : 'bg-yellow-50 text-yellow-500'
-                              }`}>
-                                {order.status}
-                              </div>
-                            </div>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">
-                              {new Date(order.created_at || "").toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </p>
-                          </div>
-                          
-                          <div className="flex items-center gap-8 w-full md:w-auto justify-between">
-                            <div className="text-right">
-                              <p className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] mb-1 leading-none">Total</p>
-                              <p className="text-2xl font-black text-primary italic leading-none">₹{order.total}</p>
-                            </div>
-                            <button 
-                              onClick={() => navigate(`/tracker?id=${order.id}`)}
-                              className="p-3 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-primary hover:border-primary/30 transition-all shadow-sm group-hover:scale-110"
-                            >
-                              <ChevronRight size={20} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/orders")}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  View My Orders <ChevronRight size={15} />
+                </button>
               </div>
 
               <div className="bg-white border border-gray-100 rounded-[40px] shadow-sm p-8">

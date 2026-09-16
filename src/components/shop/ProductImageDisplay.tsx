@@ -7,23 +7,21 @@ interface Props {
   className?: string;
 }
 
-const ProductImageDisplay = ({ imageUrl, name, className = "w-full h-full object-contain p-2" }: Props) => {
+const ProductImageDisplay = ({ imageUrl, name, className = "h-full w-full object-contain p-3" }: Props) => {
   const [failed, setFailed] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   // If we have a valid image URL and it hasn't failed, show it
   if (imageUrl && imageUrl.trim() && !failed) {
     return (
       <div 
         className="relative w-full h-full overflow-hidden"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <img
           src={imageUrl}
           alt={name}
           loading="lazy"
-          className={`${className} transition-transform duration-500 ease-out ${isHovered ? 'scale-125' : 'scale-100'}`}
+          decoding="async"
+          className={className}
           onError={() => setFailed(true)}
         />
       </div>
@@ -37,7 +35,8 @@ const ProductImageDisplay = ({ imageUrl, name, className = "w-full h-full object
         src={SAFE_LOGO_URL || LOGO_FALLBACK}
         alt={name}
         loading="lazy"
-        className={`${className} transition-transform duration-500 ease-out`}
+        decoding="async"
+        className={className}
         onError={(event) => {
           const target = event.currentTarget as HTMLImageElement;
           if (target.src !== LOGO_FALLBACK) {

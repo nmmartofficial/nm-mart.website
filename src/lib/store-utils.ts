@@ -23,6 +23,18 @@ export interface CartItem extends Product {
   qty: number;
 }
 
+export function calculateSalePrice(mrp: number, storedPrice: number, discount: number): number {
+  const validMrp = Number.isFinite(mrp) && mrp > 0;
+  const validPrice = Number.isFinite(storedPrice) && storedPrice > 0;
+  const validDiscount = Number.isFinite(discount) && discount > 0 && discount < 100;
+
+  if (validMrp && validDiscount && (!validPrice || storedPrice >= mrp)) {
+    return Math.max(0, Math.round(mrp * (1 - discount / 100)));
+  }
+
+  return validPrice ? storedPrice : validMrp ? mrp : 0;
+}
+
 export interface OrderRecord {
   id: string;
   items: CartItem[];

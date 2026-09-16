@@ -25,7 +25,7 @@ const Footer = () => {
 
   const accountLinks = [
     { to: "/profile", label: "My Account" },
-    { to: "/tracker", label: "My Orders" },
+    { to: "/orders", label: "My Orders" },
     { to: "/checkout", label: "Checkout" }
   ];
 

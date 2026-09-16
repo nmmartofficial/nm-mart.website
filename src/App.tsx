@@ -17,6 +17,12 @@ import Checkout from "@/pages/Checkout";
 import ResetPassword from "@/pages/ResetPassword";
 import ShopPage from "@/pages/ShopPage";
 import CartPage from "@/pages/CartPage";
+import Orders from "@/pages/Orders";
+import OrderDetails from "@/pages/OrderDetails";
+import OrderConfirmation from "@/pages/OrderConfirmation";
+import NotFound from "@/pages/NotFound";
+import Delivery from "@/pages/Delivery";
+import { CartProvider } from "@/hooks/useCart";
 
 function App() {
   useEffect(() => {
@@ -25,7 +31,8 @@ function App() {
 
   return (
     <ThemeProvider>
-      <Router>
+      <CartProvider>
+        <Router>
         <Toaster position="top-center" expand={false} richColors />
         <Routes>
           {/* Customer Routes */}
@@ -34,7 +41,11 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/delivery" element={<Delivery />} />
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:orderId" element={<OrderDetails />} />
+          <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
           <Route path="/tracker" element={<OrderTracker />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/products" element={<ShopPage />} />
@@ -42,9 +53,11 @@ function App() {
           <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="*" element={<NotFound />} />
 
         </Routes>
-      </Router>
+        </Router>
+      </CartProvider>
     </ThemeProvider>
   );
 }

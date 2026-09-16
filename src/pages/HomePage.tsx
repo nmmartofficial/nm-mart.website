@@ -95,13 +95,13 @@ export default function HomePage() {
                   <ChevronDown className="h-3.5 w-3.5" />
                 </button>
 
-                <div className="invisible absolute left-0 top-full z-20 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 opacity-0 shadow-[0_18px_40px_-25px_rgba(15,23,42,0.35)] transition duration-200 group-hover:visible group-hover:opacity-100">
+                <div className="invisible absolute left-0 top-full z-20 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 opacity-0 shadow-[0_18px_40px_-25px_rgba(15,23,42,0.35)] transition duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                   {liveCategories.slice(0, 8).map((category) => (
                     <button
                       key={category}
                       type="button"
                       onClick={() => handleCategoryClick(category)}
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
+                      className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
                     >
                       {category}
                     </button>
@@ -166,25 +166,25 @@ export default function HomePage() {
           <div className="flex w-full items-center gap-2 overflow-x-auto md:hidden">
             <NavLink
               to="/"
-              className={({ isActive }) => `whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
+              className={({ isActive }) => `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
             >
               Home
             </NavLink>
             <NavLink
               to="/about"
-              className={({ isActive }) => `whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
+              className={({ isActive }) => `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
             >
               About
             </NavLink>
             <NavLink
               to="/contact"
-              className={({ isActive }) => `whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
+              className={({ isActive }) => `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
             >
               Contact
             </NavLink>
             <NavLink
               to="/tracker"
-              className={({ isActive }) => `whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
+              className={({ isActive }) => `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
             >
               Tracker
             </NavLink>
