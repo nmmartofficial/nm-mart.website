@@ -46,6 +46,52 @@ export const validateAuthForm = ({
   return "";
 };
 
+export const validateRecoveryEmail = (value: string): string => {
+  const trimmedEmail = value.trim();
+
+  if (!trimmedEmail) {
+    return "Please enter your email address.";
+  }
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailPattern.test(trimmedEmail)) {
+    return "Please enter a valid email address.";
+  }
+
+  return "";
+};
+
+export interface ResetPasswordFormInput {
+  password: string;
+  confirmPassword: string;
+}
+
+export const validateResetPasswordForm = ({
+  password,
+  confirmPassword,
+}: ResetPasswordFormInput): string => {
+  const trimmedPassword = password.trim();
+
+  if (!trimmedPassword) {
+    return "Please enter a new password.";
+  }
+
+  if (!confirmPassword || !confirmPassword.trim()) {
+    return "Please confirm your new password.";
+  }
+
+  if (trimmedPassword !== confirmPassword.trim()) {
+    return "Passwords do not match.";
+  }
+
+  if (trimmedPassword.length < 6) {
+    return "Password must be at least 6 characters.";
+  }
+
+  return "";
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -159,12 +205,16 @@ const Login = () => {
 
   const handleForgotPassword = async () => {
     const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      toast.error("Please enter your email address.");
+    const validationError = validateRecoveryEmail(trimmedEmail);
+
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
 
     setLoading(true);
+    setResetEmailSent(false);
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
@@ -173,9 +223,9 @@ const Login = () => {
       if (error) throw error;
 
       setResetEmailSent(true);
-      toast.success("Password reset instructions sent.");
+      toast.success("If an account exists for this email, reset instructions will be sent shortly.");
     } catch (err: any) {
-      toast.error(err.message || "Failed to request password reset.");
+      toast.error(err.message || "Failed to request password reset. Please try again.");
     } finally {
       setLoading(false);
     }

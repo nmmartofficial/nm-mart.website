@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Lock, Loader2, CheckCircle2, ArrowLeft, ShieldAlert } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
-
-const SLOGAN = "Shop More, Save More";
+import { validateResetPasswordForm } from "@/pages/Login";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -14,48 +13,68 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   useEffect(() => {
-    // Check if we have an active session (Supabase handles the recovery token automatically)
+    let isMounted = true;
+
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        // If no session, the recovery link might have expired or is invalid
-        toast.error("Invalid or expired reset link. Please request a new one.");
-        navigate("/login");
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) throw error;
+
+        if (isMounted) {
+          setSessionReady(Boolean(session));
+          setIsCheckingSession(false);
+        }
+
+        if (!session && isMounted) {
+          toast.error("This password reset link is invalid or has expired. Please request a new one.");
+        }
+      } catch (error: any) {
+        if (isMounted) {
+          setSessionReady(false);
+          setIsCheckingSession(false);
+          toast.error(error.message || "Unable to validate the reset link.");
+        }
       }
     };
-    checkSession();
-  }, [navigate]);
 
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!password || !confirmPassword) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    checkSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleReset = async (event: FormEvent) => {
+    event.preventDefault();
+
+    const validationError = validateResetPasswordForm({
+      password,
+      confirmPassword,
+    });
+
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
 
     setLoading(true);
+
     try {
       const { error } = await supabase.auth.updateUser({
-        password: password
+        password: password.trim(),
       });
 
       if (error) throw error;
 
       setSuccess(true);
-      toast.success("Password updated successfully!");
-      setTimeout(() => navigate("/login"), 3000);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update password");
+      toast.success("Your password has been updated successfully.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update password. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -66,21 +85,62 @@ const ResetPassword = () => {
       <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
         <Header />
         <div className="flex-1 flex flex-col items-center justify-center p-4">
-          <div className="w-full max-w-[400px] bg-white p-10 rounded-2xl border border-gray-100 shadow-lg text-center space-y-6">
+          <div className="w-full max-w-[400px] bg-white p-8 rounded-2xl border border-gray-200 shadow-sm text-center space-y-6">
             <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center text-white mx-auto shadow-md">
               <CheckCircle2 size={40} />
             </div>
-            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-black">
-              Success!
-            </h2>
-            <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px] italic">
-              Your password has been updated. Redirecting to login...
-            </p>
-            <button 
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black tracking-tight text-black">Password updated</h2>
+              <p className="text-sm text-gray-600">Your new password is active. You can now sign in with it.</p>
+            </div>
+            <button
+              type="button"
               onClick={() => navigate("/login")}
-              className="w-full bg-primary text-white py-3 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-black transition-all"
+              className="w-full bg-black text-white py-3 rounded-md font-bold hover:bg-gray-900 transition-all"
             >
               Go to Login
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
+        <Header />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="w-full max-w-[380px] bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
+            <Loader2 className="mx-auto animate-spin text-black" size={32} />
+            <p className="mt-4 text-sm text-gray-600">Checking your secure reset link...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!sessionReady) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center p-4">
+          <div className="w-full max-w-[380px] bg-white p-8 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+            <div className="flex justify-center text-red-500">
+              <ShieldAlert size={40} />
+            </div>
+            <div className="space-y-2 text-center">
+              <h2 className="text-2xl font-black tracking-tight text-black">Reset link expired</h2>
+              <p className="text-sm text-gray-600">This recovery link is invalid or has already expired. Please request a new password reset email.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="w-full bg-black text-white py-3 rounded-md font-bold hover:bg-gray-900 transition-all"
+            >
+              Back to Login
             </button>
           </div>
         </div>
@@ -92,67 +152,70 @@ const ResetPassword = () => {
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#111] flex flex-col font-sans">
       <Header />
-      
+
       <div className="flex-1 flex flex-col items-center py-16 px-4">
         <div className="w-full max-w-[380px] space-y-4">
-          <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-            <button 
+          <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+            <button
+              type="button"
               onClick={() => navigate("/login")}
-              className="flex items-center gap-2 text-gray-400 hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest mb-6"
+              className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors text-[10px] font-black uppercase tracking-widest mb-6"
             >
               <ArrowLeft size={14} /> Back to Login
             </button>
 
-            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-black mb-2">
-              Reset <span className="text-primary">Password</span>
-            </h2>
-            <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] italic mb-8">
-              Enter your new secure password
-            </p>
+            <h2 className="text-2xl font-black tracking-tight text-black mb-2">Set a new password</h2>
+            <p className="text-sm text-gray-600 mb-8">Choose a strong password to finish your recovery.</p>
 
             <form onSubmit={handleReset} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">New Password</label>
+                <label htmlFor="new-password" className="text-xs font-bold uppercase tracking-[2px] text-gray-500">New password</label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                  <input 
-                    type="password" 
-                    placeholder="••••••••"
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-primary transition-all font-bold"
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    id="new-password"
+                    type="password"
+                    placeholder="Enter your new password"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(event) => setPassword(event.target.value)}
+                    autoComplete="new-password"
+                    aria-label="New password"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Confirm Password</label>
+                <label htmlFor="confirm-password" className="text-xs font-bold uppercase tracking-[2px] text-gray-500">Confirm password</label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                  <input 
-                    type="password" 
-                    placeholder="••••••••"
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-primary transition-all font-bold"
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    id="confirm-password"
+                    type="password"
+                    placeholder="Confirm your new password"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    autoComplete="new-password"
+                    aria-label="Confirm password"
                     required
                   />
                 </div>
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-primary text-white py-4 rounded-xl font-black uppercase tracking-[2px] hover:bg-black transition-all shadow-sm flex items-center justify-center gap-3 italic"
+                className="w-full bg-black text-white py-3 rounded-md font-bold hover:bg-gray-900 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {loading ? <Loader2 className="animate-spin" size={20} /> : "Update Password"}
+                {loading ? <Loader2 className="animate-spin" size={18} /> : "Update Password"}
               </button>
             </form>
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateAuthForm } from "./Login";
+import { validateAuthForm, validateRecoveryEmail, validateResetPasswordForm } from "./Login";
 
 describe("validateAuthForm", () => {
   it("requires email and password for sign in", () => {
@@ -12,5 +12,19 @@ describe("validateAuthForm", () => {
 
   it("requires a matching password confirmation when present", () => {
     expect(validateAuthForm({ isSignUp: true, email: "user@example.com", password: "secret123", confirmPassword: "secret124", fullName: "Test User" })).toBe("Passwords do not match.");
+  });
+});
+
+describe("password recovery validation", () => {
+  it("rejects empty recovery emails", () => {
+    expect(validateRecoveryEmail("")).toBe("Please enter your email address.");
+  });
+
+  it("rejects invalid recovery email formats", () => {
+    expect(validateRecoveryEmail("not-an-email")).toBe("Please enter a valid email address.");
+  });
+
+  it("requires matching passwords for reset form", () => {
+    expect(validateResetPasswordForm({ password: "secret123", confirmPassword: "secret124" })).toBe("Passwords do not match.");
   });
 });
