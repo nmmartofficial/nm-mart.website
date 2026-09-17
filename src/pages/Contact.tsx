@@ -3,6 +3,7 @@ import Footer from "@/components/shop/Footer";
 import { Phone, Mail, MapPin, Clock, Send, MessageSquare, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { STORE_DETAILS, WA_NUMBER } from "@/lib/store-utils";
 
 const Contact = () => {
   const [loading, setLoading] = useState(false);
@@ -65,7 +66,9 @@ const Contact = () => {
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Call / WhatsApp</p>
-                      <p className="font-bold text-lg text-black">+91 708 115 4604</p>
+                      <a href={`tel:+${WA_NUMBER}`} className="font-bold text-lg text-black transition hover:text-primary">
+                        {STORE_DETAILS.mob}
+                      </a>
                     </div>
                   </div>
 
@@ -98,7 +101,7 @@ const Contact = () => {
                   <p className="font-bold text-white/80 text-sm uppercase tracking-widest">Chat with us on WhatsApp now</p>
                 </div>
                 <a 
-                  href="https://wa.me/917081154604" 
+                  href={`https://wa.me/${WA_NUMBER}`}
                   target="_blank" 
                   className="bg-white text-primary px-8 py-4 rounded-2xl font-black uppercase italic text-sm hover:bg-black hover:text-white transition-all shadow-sm flex items-center gap-2"
                 >

@@ -22,7 +22,7 @@ const getNumericPrice = (value: unknown): number => {
 };
 
 const ShopPage = () => {
-  const { allProducts, loading, error, categories, brands, refetchProducts } = useProducts();
+  const { allProducts, loading, error, categories, brands, hasMore, loadMore, refetchProducts } = useProducts();
   const { addToCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -34,11 +34,11 @@ const ShopPage = () => {
   const [query, setQuery] = useState(() => searchParams.get("search") || searchParams.get("q") || "");
   const [selectedCategory, setSelectedCategory] = useState(() => {
     const category = searchParams.get("category");
-    return category && validCategorySet.has(category) ? category : "all";
+    return category || "all";
   });
   const [selectedBrand, setSelectedBrand] = useState(() => {
     const brand = searchParams.get("brand");
-    return brand && validBrandSet.has(brand) ? brand : "all";
+    return brand || "all";
   });
   const [priceMin, setPriceMin] = useState(() => searchParams.get("priceMin") || "");
   const [priceMax, setPriceMax] = useState(() => searchParams.get("priceMax") || "");
@@ -46,14 +46,15 @@ const ShopPage = () => {
     const sortValue = searchParams.get("sort");
     return (sortOptions.some((option) => option.value === sortValue) ? sortValue : "featured") as (typeof sortOptions)[number]["value"];
   });
+  const [visibleProductsCount, setVisibleProductsCount] = useState(8);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     const nextQuery = searchParams.get("search") || searchParams.get("q") || "";
     const nextCategoryParam = searchParams.get("category") || "all";
     const nextBrandParam = searchParams.get("brand") || "all";
-    const nextCategory = validCategorySet.has(nextCategoryParam) ? nextCategoryParam : "all";
-    const nextBrand = validBrandSet.has(nextBrandParam) ? nextBrandParam : "all";
+    const nextCategory = nextCategoryParam;
+    const nextBrand = nextBrandParam;
     const nextMin = searchParams.get("priceMin") || "";
     const nextMax = searchParams.get("priceMax") || "";
     const nextSort = searchParams.get("sort") || "featured";
@@ -85,6 +86,10 @@ const ShopPage = () => {
       setSearchParams(nextSearch ? `?${nextSearch}` : "", { replace: true });
     }
   }, [query, selectedCategory, selectedBrand, priceMin, priceMax, sortBy, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    setVisibleProductsCount(8);
+  }, [query, selectedCategory, selectedBrand, priceMin, priceMax, sortBy]);
 
   const filteredProducts = useMemo(() => {
     const searchValue = query.trim().toLowerCase();
@@ -144,6 +149,15 @@ const ShopPage = () => {
     setPriceMax("");
     setSortBy("featured");
     setSearchParams("", { replace: true });
+  };
+
+  const displayedProducts = filteredProducts.slice(0, visibleProductsCount);
+  const canLoadMoreProducts = visibleProductsCount < filteredProducts.length || hasMore;
+
+  const handleLoadMoreProducts = () => {
+    const nextCount = visibleProductsCount + 8;
+    if (nextCount > allProducts.length && hasMore) loadMore();
+    setVisibleProductsCount(nextCount);
   };
 
   const filterPanel = (
@@ -273,6 +287,8 @@ const ShopPage = () => {
         ? selectedBrand
         : null;
 
+  const hasCatalogSelection = selectedCategory !== "all" || selectedBrand !== "all";
+
   const statusMessage =
     !loading && !error && filteredProducts.length === 0
       ? query.trim()
@@ -321,7 +337,7 @@ const ShopPage = () => {
             Filters
           </button>
           <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
-            {filteredProducts.length} result{filteredProducts.length === 1 ? "" : "s"}
+            <span>{displayedProducts.length} result{displayedProducts.length === 1 ? "" : "s"} shown</span>
           </div>
         </div>
 
@@ -381,11 +397,29 @@ const ShopPage = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id || product.barcode} product={product} onAddToCart={addToCart} />
+              <>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+                {displayedProducts.map((product) => (
+                  <ProductCard
+                    key={product.id || product.barcode}
+                    product={product}
+                    onAddToCart={addToCart}
+                  />
                 ))}
               </div>
+              {canLoadMoreProducts && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleLoadMoreProducts}
+                    disabled={loading}
+                    className="rounded-full border border-slate-200 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {loading ? "Loading Products" : "Load More Products"}
+                  </button>
+                </div>
+              )}
+              </>
             )}
           </div>
         </div>

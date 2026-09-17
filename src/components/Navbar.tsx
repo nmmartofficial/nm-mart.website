@@ -17,6 +17,7 @@ import {
   Star,
   Bot,
   Search,
+  ChevronDown,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useTheme } from "@/lib/ThemeProvider";
@@ -44,6 +45,7 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showWelfareModal, setShowWelfareModal] = useState(false);
   const [showGoldenCard, setShowGoldenCard] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { cartCount } = useCart();
 
@@ -144,6 +146,14 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
     { label: "Support", icon: Headset, action: () => navigate("/contact") },
   ];
 
+  const accountMenuItems = [
+    { label: user ? "My Profile" : "Login", icon: User, action: () => navigate(user ? "/profile" : "/login") },
+    { label: "My Orders", icon: Package, action: () => navigate("/orders") },
+    { label: "Checkout", icon: ShoppingCart, action: () => navigate("/checkout") },
+    { label: "Track Order", icon: Truck, action: () => navigate("/tracker") },
+    { label: "Support", icon: Headset, action: () => navigate("/contact") },
+  ];
+
   return (
     <header className={headerClass}>
       <div className="mx-auto max-w-7xl px-3 py-3 md:px-5">
@@ -185,15 +195,41 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
           </div>
 
           <div className="ml-auto flex items-center gap-2 md:gap-3">
-            <button
-              type="button"
-              aria-label={user ? "Open account" : "Login"}
-              onClick={() => navigate(user ? "/profile" : "/login")}
-              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#f1ddc6] bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#1e1e1e] shadow-sm transition hover:-translate-y-0.5 hover:border-[#efc28a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:px-4"
-            >
-              <User size={16} className="text-[#111111]" />
-              <span className="hidden sm:inline">{user ? "Account" : "Login"}</span>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Open account menu"
+                aria-expanded={accountOpen}
+                onClick={() => setAccountOpen((open) => !open)}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#f1ddc6] bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#1e1e1e] shadow-sm transition hover:-translate-y-0.5 hover:border-[#efc28a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:px-4"
+              >
+                <User size={16} className="text-[#111111]" />
+                <span className="hidden sm:inline">Account</span>
+                <ChevronDown size={13} className={`hidden sm:block transition-transform ${accountOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {accountOpen && (
+                <div className="absolute right-0 top-full z-[80] mt-2 w-52 rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_20px_45px_-20px_rgba(15,23,42,0.4)]">
+                  <p className="px-3 pb-2 pt-1 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                    Account Menu
+                  </p>
+                  {accountMenuItems.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        item.action();
+                      }}
+                      className="flex min-h-10 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-700 transition hover:bg-orange-50 hover:text-slate-900"
+                    >
+                      <item.icon size={15} className="text-orange-500" />
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <button
               type="button"

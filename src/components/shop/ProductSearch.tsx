@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, ShoppingCart, Send, X, Plus, Minus, Loader2, Zap, LayoutGrid, ChevronRight } from "lucide-react";
+import { WA_NUMBER } from "@/lib/store-utils";
 
 const ProductSearch = () => {
   const [allProducts, setAllProducts] = useState<any[]>([]);
@@ -8,9 +9,10 @@ const ProductSearch = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(8);
 
   const SHEETDB_URL = "https://sheetdb.io/api/v1/n1voj7e2lp0le?sheet=Inventory";
-  const WHATSAPP_NUMBER = "917081154604";
+  const WHATSAPP_NUMBER = WA_NUMBER;
 
   useEffect(() => {
     fetch(SHEETDB_URL).then(res => res.json()).then(data => {
@@ -18,6 +20,10 @@ const ProductSearch = () => {
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    setVisibleCount(8);
+  }, [query, selectedCategory]);
 
   // Categories extraction
   const categories = [...new Set(allProducts.map((item: any) => item["Main Category"]).filter(Boolean))];
@@ -101,8 +107,9 @@ const ProductSearch = () => {
 
             {/* PRODUCT VIEW: Jab search ho ya category select ho */}
             {(isSearching || selectedCategory) && (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-in slide-in-from-bottom-4 duration-500">
-                {filteredProducts.map((item: any, idx: number) => {
+              <>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-5 xl:grid-cols-6 animate-in slide-in-from-bottom-4 duration-500">
+                {filteredProducts.slice(0, visibleCount).map((item: any, idx: number) => {
                   const mrp = Number(item["Mrp"] || 0);
                   const sale = Number(item["Sale Rate"] || 0);
                   const discount = mrp > sale ? Math.round(((mrp - sale) / mrp) * 100) : 0;
@@ -154,6 +161,14 @@ const ProductSearch = () => {
                   );
                 })}
               </div>
+              {visibleCount < filteredProducts.length && (
+                <div className="mt-6 flex justify-center">
+                  <button type="button" onClick={() => setVisibleCount((count) => count + 8)} className="rounded-full border border-blue-900 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-widest text-blue-900">
+                    Load More Products
+                  </button>
+                </div>
+              )}
+              </>
             )}
           </>
         )}

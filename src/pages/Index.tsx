@@ -656,7 +656,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 xl:grid-cols-6">
               {featuredProducts?.map(p => (
                 <ProductCard 
                   key={p?.barcode} 
@@ -748,7 +748,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
 
             {offersOpen.flat50 && (
               <div className="mt-4 bg-white border border-gray-100 rounded-3xl p-4 shadow-sm" style={getSectionBgStyle("flat_50")}>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 xl:grid-cols-6">
                   {flat50?.map(p => (
                     <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
                   ))}
@@ -790,7 +790,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
 
             {offersOpen.flat33 && (
               <div className="mt-4 bg-white border border-gray-100 rounded-3xl p-4 shadow-sm" style={getSectionBgStyle("flat_33")}>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 xl:grid-cols-6">
                   {flat33?.map(p => (
                     <ProductCard key={p.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
                   ))}
@@ -811,7 +811,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
               <Star size={18} className="text-primary" /> Weekly Deals
             </h3>
             {/* We can use ProductGrid or a custom filtered list here */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 xl:grid-cols-6">
               {(allProducts || []).filter(p => (Number(p?.stock) > 0) && p?.badge?.toLowerCase().includes('weekly')).slice(0, 6).map(p => (
                 <ProductCard key={p?.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
@@ -824,7 +824,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> Fresh Deals
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 xl:grid-cols-6">
               {(allProducts || []).filter(p => (Number(p?.stock) > 0) && (p?.category?.toLowerCase().includes('fresh') || p?.badge?.toLowerCase().includes('fresh'))).slice(0, 6).map(p => (
                 <ProductCard key={p?.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
@@ -837,7 +837,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Star size={18} className="text-primary" /> Munafa Mela
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 xl:grid-cols-6">
               {(allProducts || []).filter(p => (Number(p?.stock) > 0) && (p?.discount || 0) >= 40).slice(0, 6).map(p => (
                 <ProductCard key={p?.barcode} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
@@ -856,7 +856,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
             <h3 className="font-black text-foreground text-lg uppercase mb-5 flex items-center gap-2 tracking-tight">
               <Clock size={18} className="text-primary" /> Buy It Again
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 xl:grid-cols-6">
               {buyAgainItems?.map((p, idx) => (
                 <ProductCard key={`${p?.barcode}-${idx}`} product={p} onAddToCart={addToCart} showAdminQuickEdit={isAdminMode} onAdminQuickEdit={handleQuickEdit} />
               ))}
@@ -908,7 +908,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
                       View All <ChevronRight size={12} />
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 xl:grid-cols-6">
                     {catProducts?.map((p, idx) => (
                       <motion.div key={`${p?.barcode}-${idx}`}
                         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -1469,7 +1469,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 xl:grid-cols-6">
                     {filtered.map((p, idx) => (
                       <motion.div key={`${p.barcode}-${idx}`}
                         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}

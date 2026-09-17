@@ -1,9 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, LayoutGrid, ChevronRight } from "lucide-react";
+import { WA_NUMBER } from "@/lib/store-utils";
 
 const ProductGrid = ({ products, isLoading }: any) => {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(8);
+
+  useEffect(() => {
+    setVisibleCount(8);
+  }, [query, selectedCategory]);
 
   if (isLoading) return (
     <div className="p-20 text-center flex flex-col items-center gap-4">
@@ -69,8 +75,8 @@ const ProductGrid = ({ products, isLoading }: any) => {
             </button>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {filtered.map((item: any, idx: number) => (
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5 xl:grid-cols-6">
+            {filtered.slice(0, visibleCount).map((item: any, idx: number) => (
               <div key={idx} className="bg-white rounded-3xl p-4 shadow-sm border border-gray-50 flex flex-col relative group hover:shadow-xl transition-all">
                 <div className="h-32 mb-4 flex items-center justify-center p-2">
                   <img 
@@ -85,7 +91,7 @@ const ProductGrid = ({ products, isLoading }: any) => {
                 <h3 className="font-bold text-[10px] text-[#1A365D] uppercase h-8 overflow-hidden mb-2 leading-tight">{item["Item Name"]}</h3>
                 <p className="text-xl font-black text-[#1A365D] italic mb-4">₹{item["Sale Rate"]}</p>
                 <button 
-                  onClick={() => window.open(`https://wa.me/917081154604?text=Order: ${item["Item Name"]} - ₹${item["Sale Rate"]}`)}
+                  onClick={() => window.open(`https://wa.me/${WA_NUMBER}?text=Order: ${item["Item Name"]} - ₹${item["Sale Rate"]}`)}
                   className="w-full bg-[#25D366] text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-md flex items-center justify-center gap-2"
                 >
                   Order on WhatsApp
@@ -93,6 +99,13 @@ const ProductGrid = ({ products, isLoading }: any) => {
               </div>
             ))}
           </div>
+          {visibleCount < filtered.length && (
+            <div className="mt-6 flex justify-center">
+              <button type="button" onClick={() => setVisibleCount((count) => count + 8)} className="rounded-full border border-blue-900 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-widest text-blue-900">
+                Load More Products
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

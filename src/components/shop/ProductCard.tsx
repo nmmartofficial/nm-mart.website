@@ -17,6 +17,7 @@ interface ProductCardProps {
   showAdminQuickEdit?: boolean;
   onAdminQuickEdit?: (p: Product) => void;
   theme?: ThemeConfig;
+  className?: string;
 }
 
 const ProductCard = ({
@@ -25,6 +26,7 @@ const ProductCard = ({
   showAdminQuickEdit,
   onAdminQuickEdit,
   theme: propsTheme,
+  className = "",
 }: ProductCardProps) => {
   const navigate = useNavigate();
   const { theme: storeTheme } = useTheme();
@@ -68,8 +70,6 @@ const ProductCard = ({
   const imageHeightClass = productStyle === "premium" ? "h-32 md:h-44" : productStyle === "offer" ? "h-28 md:h-36" : "h-28 md:h-40";
 
   const productName = (product?.name || "Product").trim() || "Product";
-  const productBrand = (product?.brand || "").trim();
-  const productCategory = (product?.category || "").trim();
   const productUnit = (product?.unit || product?.subCategory || "").trim();
   const numericPrice = Number(product?.price ?? (product as Product & { selling_price?: number }).selling_price ?? product?.saleRate ?? 0);
   const numericMrp = Number(product?.mrp ?? 0);
@@ -107,7 +107,7 @@ const ProductCard = ({
       aria-label={`View details for ${productName}`}
       onClick={goToProduct}
       onKeyDown={handleCardKeyDown}
-      className={`group/card bg-card ${cardClass} flex h-full min-h-[320px] cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 md:min-h-[360px]`}
+      className={`group/card bg-card ${cardClass} flex h-full min-h-[320px] cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 md:min-h-[360px] ${className}`}
     >
       <div className={`relative isolate overflow-hidden ${imageHeightClass} bg-white`}>
         <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-3" />
@@ -144,13 +144,7 @@ const ProductCard = ({
 
       <div className="flex flex-1 flex-col p-2.5 md:p-4">
         <div className="mb-2 flex items-center justify-between gap-2">
-          {productCategory ? (
-            <span className="rounded-full bg-[#fff3e9] px-2 py-1 text-[7px] font-black uppercase tracking-[0.18em] text-[#e16c00]">
-              {productCategory}
-            </span>
-          ) : (
-            <span className="h-5 w-14 rounded-full bg-slate-100" aria-hidden="true" />
-          )}
+          <span aria-hidden="true" />
           <span
             className={`text-[7px] font-black uppercase tracking-[0.12em] ${
               hasStock ? "text-[#0d8b48]" : "text-[#d83131]"
@@ -159,10 +153,6 @@ const ProductCard = ({
             {hasStock ? "In Stock" : "Out of Stock"}
           </span>
         </div>
-
-        {productBrand && (
-          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">{productBrand}</p>
-        )}
 
         <h3 className="mb-2 min-h-[2rem] text-sm font-semibold leading-snug text-[#111111] line-clamp-2 break-words md:min-h-[2.5rem] md:text-[0.96rem]">
           {productName}
@@ -215,18 +205,6 @@ const ProductCard = ({
               <ShoppingCart size={12} />
               {hasStock ? (added ? "Added" : "Add to Cart") : "Out of Stock"}
             </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              goToProduct();
-            }}
-            className="min-h-11 rounded-full border border-slate-200 bg-white px-3 py-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
-            aria-label={`View details for ${productName}`}
-          >
-            View Details
           </button>
 
         </div>

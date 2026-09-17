@@ -44,7 +44,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
   if (loading) {
     return (
       <div
-        className={`flex w-full animate-pulse items-center justify-center bg-gray-100 aspect-[21/9] md:aspect-auto md:max-h-[400px] md:overflow-hidden ${radiusClass}`}
+        className={`flex w-full aspect-[3/1] animate-pulse items-center justify-center overflow-hidden bg-gray-100 ${radiusClass}`}
         style={radiusStyle}
       >
         <p className="text-[10px] font-black uppercase italic tracking-widest text-gray-400">Loading Banners...</p>
@@ -55,7 +55,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
   if (banners.length === 0) {
     return (
       <div
-        className={`flex w-full items-center justify-center border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-yellow-50 aspect-[21/9] md:aspect-auto md:max-h-[400px] md:overflow-hidden ${bannerRadiusPx > 0 ? "" : `rounded-[32px] ${radiusClass}`}`}
+        className={`flex w-full aspect-[3/1] items-center justify-center overflow-hidden border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-yellow-50 ${bannerRadiusPx > 0 ? "" : `rounded-[32px] ${radiusClass}`}`}
         style={radiusStyle}
       >
         <p className="text-[10px] font-black uppercase italic tracking-widest text-orange-400">
@@ -80,7 +80,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
     "h-full w-full object-cover object-center transition-transform duration-300 ease-out group-hover/banner:scale-[1.01]";
 
   const mediaShellClass =
-    "relative aspect-[21/9] w-full overflow-hidden bg-gray-100 md:aspect-auto md:max-h-[400px] md:min-h-[200px]";
+    "relative aspect-[3/1] w-full overflow-hidden bg-gray-100";
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">

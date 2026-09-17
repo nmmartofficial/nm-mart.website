@@ -44,7 +44,7 @@ export interface OrderRecord {
 }
 
 // ─── Constants ───
-export const WA_NUMBER = "917081154604";
+export const WA_NUMBER = "918282827240";
 export const UPI_ID = "paytmqr5fwdiq@ptys";
 export const ITEMS_PER_PAGE = 60;
 export const MIN_ORDER = 1499;
@@ -55,7 +55,7 @@ export const LOGO_FALLBACK = "/nm-mart-logo.png";
 export const STORE_DETAILS = {
   name: "NM MART",
   address: "Naya Nagar, First Dhata Road, Manjhanpur, Kaushambi, UP, PIN-212207",
-  mob: "+91-7081154604",
+  mob: "+91-8282827240",
   gstin: "09CCFPR9966P1Z9"
 };
 

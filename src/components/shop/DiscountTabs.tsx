@@ -26,6 +26,7 @@ const DiscountTabs = ({
   const ADMIN_EMAIL = "nmmart07@gmail.com";
   const [activeTab, setActiveTab] = useState<"33" | "50">("50");
   const [isAdminMode, setIsAdminMode] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(8);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +52,10 @@ const DiscountTabs = ({
   const products = activeTab === "50" ? flat50 : flat33;
   const hasMore = activeTab === "50" ? hasMore50 : hasMore33;
   const loadMore = activeTab === "50" ? loadMore50 : loadMore33;
+
+  useEffect(() => {
+    setVisibleCount(8);
+  }, [activeTab]);
 
   return (
     <section className="mb-12">
@@ -81,8 +86,8 @@ const DiscountTabs = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
-        {products.map((p, idx) => (
+      <div className="grid grid-cols-2 gap-3 mb-8 lg:grid-cols-5 xl:grid-cols-6">
+        {products.slice(0, visibleCount).map((p, idx) => (
           <div key={`${p.barcode}-${idx}`}
             className="bg-card rounded-xl border border-border overflow-hidden flex flex-col cursor-pointer hover:border-primary/50 hover:shadow-glow transition-all"
             onClick={() => navigate(`/product/${productSlug(p)}`)}
@@ -121,10 +126,13 @@ const DiscountTabs = ({
         ))}
       </div>
 
-      {hasMore && (
+      {(visibleCount < products.length || hasMore) && (
         <div className="flex justify-center">
           <button 
-            onClick={loadMore}
+            onClick={() => {
+              if (visibleCount + 8 > products.length && hasMore) loadMore();
+              setVisibleCount((count) => count + 8);
+            }}
             className="bg-white border-2 border-primary text-primary px-8 py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-primary hover:text-white transition-all shadow-md active:scale-95"
           >
             Load More Offers

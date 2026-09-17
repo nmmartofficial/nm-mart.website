@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, X, ShoppingCart, SendHorizontal, Trash2 } from 'lucide-react';
 import { supabase } from "@/lib/supabase/client";
+import { WA_NUMBER } from "@/lib/store-utils";
 
 interface ChatMessage {
   text: string;
@@ -87,7 +88,7 @@ const ChatBot = ({ isOpen, setIsOpen }: ChatBotProps) => {
       total += parseFloat(item.saleRate);
     });
     orderList += `--------------------------\n*Total: ₹${total}*\n--------------------------\nOrder from NM Mart Website`;
-    window.open(`https://wa.me/917081154604?text=${encodeURIComponent(orderList)}`, '_blank');
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(orderList)}`, '_blank');
   };
 
   const handleSend = () => {

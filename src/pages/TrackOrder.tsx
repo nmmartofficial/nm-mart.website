@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
+import { WA_NUMBER } from "@/lib/store-utils";
 
 const TrackOrder = () => {
   const [mobileNumber, setMobileNumber] = useState("");
@@ -158,7 +159,7 @@ const TrackOrder = () => {
 
               {/* Help text */}
               <p className="mt-8 text-center text-gray-600 text-[10px] uppercase font-bold tracking-widest">
-                Need help? <span className="text-[#D32F2F] cursor-pointer hover:underline" onClick={() => window.open(`https://wa.me/917081154604?text=Hi, I need help tracking my order.`, "_blank")}>Contact Support</span>
+                Need help? <span className="text-[#D32F2F] cursor-pointer hover:underline" onClick={() => window.open(`https://wa.me/${WA_NUMBER}?text=Hi, I need help tracking my order.`, "_blank")}>Contact Support</span>
               </p>
             </div>
           </div>

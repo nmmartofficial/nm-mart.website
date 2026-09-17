@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { ArrowRight, BadgeCheck, ChevronRight, ChevronDown, LayoutGrid, Search, ShieldCheck, ShoppingBag, Sparkles, Star, Store, Truck } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, LayoutGrid, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 import Header from "@/components/shop/Header";
@@ -8,27 +8,40 @@ import HeroBanner from "@/components/shop/HeroBanner";
 import ProductCard from "@/components/shop/ProductCard";
 import Footer from "@/components/shop/Footer";
 import { fetchActiveBanners } from "@/lib/supabase";
-
-const benefitItems = [
-  { icon: Truck, title: "Track your order", description: "Use the live order tracker to check your order status and delivery progress.", to: "/tracker" },
-  { icon: ShoppingBag, title: "Checkout flow", description: "Complete purchases through the existing checkout process built into the store.", to: "/checkout" },
-  { icon: ShieldCheck, title: "Account access", description: "Sign in and manage your profile details from the customer account area.", to: "/profile" },
-  { icon: Store, title: "Support", description: "Reach out through the contact page for store assistance and customer support.", to: "/contact" },
-];
+import { supabase } from "@/lib/supabase/client";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { allProducts, loading: productsLoading, categories, brands } = useProducts();
+  const { allProducts, loading: productsLoading, categories, brands, hasMore, loadMore } = useProducts();
   const { addToCart } = useCart();
   const [banners, setBanners] = useState<any[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
+  const [visiblePopularCount, setVisiblePopularCount] = useState(8);
+  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const liveCategories = (categories || []).filter(Boolean).slice(0, 8);
   const liveBrands = (brands || []).filter(Boolean).slice(0, 12);
-  const featuredProducts = (allProducts || []).filter((product) => Number(product.stock) > 0).slice(0, 8);
+  const productImageByCategory = useMemo(() => {
+    const images: Record<string, string> = {};
+    for (const product of allProducts || []) {
+      const key = String(product.category || "").trim().toUpperCase();
+      if (key && product.imageUrl && !images[key]) images[key] = product.imageUrl;
+    }
+    return images;
+  }, [allProducts]);
+  const productImageByBrand = useMemo(() => {
+    const images: Record<string, string> = {};
+    for (const product of allProducts || []) {
+      const key = String(product.brand || "").trim().toUpperCase();
+      if (key && product.imageUrl && !images[key]) images[key] = product.imageUrl;
+    }
+    return images;
+  }, [allProducts]);
+  const popularProducts = (allProducts || []).filter((product) => Number(product.stock) > 0);
+  const visiblePopularProducts = popularProducts.slice(0, visiblePopularCount);
   const offerProducts = (allProducts || [])
     .filter((product) => Number(product.stock) > 0 && Number(product.discount) > 0)
     .sort((a, b) => Number(b.discount) - Number(a.discount))
-    .slice(0, 4);
+    .slice(0, 2);
 
   const handleCategoryClick = (category: string) => {
     navigate(`/shop?category=${encodeURIComponent(category)}`);
@@ -36,6 +49,12 @@ export default function HomePage() {
 
   const handleBrandClick = (brand: string) => {
     navigate(`/shop?brand=${encodeURIComponent(brand)}`);
+  };
+
+  const handleLoadMorePopular = () => {
+    const nextCount = visiblePopularCount + 8;
+    if (nextCount > allProducts.length && hasMore) loadMore();
+    setVisiblePopularCount(nextCount);
   };
 
   useEffect(() => {
@@ -67,130 +86,35 @@ export default function HomePage() {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const loadCategoryImages = async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("name, image_url, is_visible")
+        .eq("is_visible", true);
+
+      if (error || !mounted) return;
+
+      const images: Record<string, string> = {};
+      for (const category of data || []) {
+        const name = String(category?.name || "").trim().toUpperCase();
+        const image = String(category?.image_url || "").trim();
+        if (name && image) images[name] = image;
+      }
+      setCategoryImages(images);
+    };
+
+    loadCategoryImages();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
-
-      <nav className="border-b border-slate-200 bg-white/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-6">
-          <div className="hidden items-center gap-2 md:flex">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                `rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition ${
-                  isActive ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`
-              }
-            >
-              Home
-            </NavLink>
-
-            {liveCategories.length > 0 ? (
-              <div className="group relative">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-                >
-                  Categories
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </button>
-
-                <div className="invisible absolute left-0 top-full z-20 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 opacity-0 shadow-[0_18px_40px_-25px_rgba(15,23,42,0.35)] transition duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                  {liveCategories.slice(0, 8).map((category) => (
-                    <button
-                      key={category}
-                      type="button"
-                      onClick={() => handleCategoryClick(category)}
-                      className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400"
-                disabled
-              >
-                Categories
-              </button>
-            )}
-
-            <NavLink
-              to="/about"
-              className={({ isActive }) =>
-                `rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition ${
-                  isActive ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`
-              }
-            >
-              About
-            </NavLink>
-
-            <NavLink
-              to="/contact"
-              className={({ isActive }) =>
-                `rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition ${
-                  isActive ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`
-              }
-            >
-              Contact
-            </NavLink>
-
-            <NavLink
-              to="/tracker"
-              className={({ isActive }) =>
-                `rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition ${
-                  isActive ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`
-              }
-            >
-              Tracker
-            </NavLink>
-
-            <NavLink
-              to="/checkout"
-              className={({ isActive }) =>
-                `rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition ${
-                  isActive ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`
-              }
-            >
-              Checkout
-            </NavLink>
-          </div>
-
-          <div className="flex w-full items-center gap-2 overflow-x-auto md:hidden">
-            <NavLink
-              to="/"
-              className={({ isActive }) => `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
-            >
-              Home
-            </NavLink>
-            <NavLink
-              to="/about"
-              className={({ isActive }) => `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
-            >
-              About
-            </NavLink>
-            <NavLink
-              to="/contact"
-              className={({ isActive }) => `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
-            >
-              Contact
-            </NavLink>
-            <NavLink
-              to="/tracker"
-              className={({ isActive }) => `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
-            >
-              Tracker
-            </NavLink>
-          </div>
-        </div>
-      </nav>
 
       <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:py-8">
         <section className="mb-8">
@@ -228,8 +152,17 @@ export default function HomePage() {
                   className="group min-h-[118px] rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:bg-orange-50 hover:shadow-[0_18px_35px_-25px_rgba(249,115,22,0.6)]"
                   aria-label={`Browse category ${category}`}
                 >
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm transition group-hover:scale-105 group-hover:text-orange-600">
-                    <LayoutGrid className="h-5 w-5" />
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white text-slate-700 shadow-sm transition group-hover:scale-105 group-hover:text-orange-600">
+                    {(categoryImages[category.toUpperCase()] || productImageByCategory[category.toUpperCase()]) ? (
+                      <img
+                        src={categoryImages[category.toUpperCase()] || productImageByCategory[category.toUpperCase()]}
+                        alt={`${category} category`}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <LayoutGrid className="h-5 w-5" />
+                    )}
                   </div>
                   <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-600 group-hover:text-slate-900">{category}</p>
                 </button>
@@ -247,8 +180,8 @@ export default function HomePage() {
           </div>
 
           {productsLoading ? (
-            <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, index) => (
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              {Array.from({ length: 8 }).map((_, index) => (
                 <div key={index} className="animate-pulse rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="mb-4 h-40 rounded-[20px] bg-slate-200" />
                   <div className="mb-2 h-3 w-20 rounded-full bg-slate-200" />
@@ -258,20 +191,36 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          ) : featuredProducts.length === 0 ? (
+          ) : popularProducts.length === 0 ? (
             <div className="flex min-h-[180px] items-center justify-center rounded-[22px] border border-dashed border-slate-200 bg-white/60">
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">No products available right now</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {featuredProducts.map((product) => (
+            <>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+                {visiblePopularProducts.map((product) => (
                 <ProductCard
                   key={product.id || product.barcode}
                   product={product}
                   onAddToCart={addToCart}
                 />
-              ))}
-            </div>
+                ))}
+              </div>
+
+              {(visiblePopularCount < popularProducts.length || hasMore) && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleLoadMorePopular}
+                    disabled={productsLoading}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {productsLoading ? "Loading Products" : "Load More Products"}
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </section>
 
@@ -284,7 +233,7 @@ export default function HomePage() {
           </div>
 
           {productsLoading ? (
-            <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
               {Array.from({ length: 4 }).map((_, index) => (
                 <div key={index} className="animate-pulse rounded-[24px] border border-slate-200 bg-slate-50 p-4">
                   <div className="mb-4 h-40 rounded-[20px] bg-slate-200" />
@@ -300,7 +249,7 @@ export default function HomePage() {
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">No active offers right now</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
               {offerProducts.map((product) => (
                 <ProductCard
                   key={product.id || product.barcode}
@@ -343,8 +292,17 @@ export default function HomePage() {
                   className="flex min-h-[112px] flex-col items-center justify-center rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:bg-orange-50"
                   aria-label={`Browse brand ${brand}`}
                 >
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-sm font-black uppercase tracking-[0.12em] text-slate-700 shadow-sm">
-                    {brand.slice(0, 2).toUpperCase()}
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white text-sm font-black uppercase tracking-[0.12em] text-slate-700 shadow-sm">
+                    {productImageByBrand[brand.toUpperCase()] ? (
+                      <img
+                        src={productImageByBrand[brand.toUpperCase()]}
+                        alt={`${brand} brand`}
+                        className="h-full w-full object-contain p-1"
+                        loading="lazy"
+                      />
+                    ) : (
+                      brand.slice(0, 2).toUpperCase()
+                    )}
                   </div>
                   <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">{brand}</p>
                 </button>
@@ -353,46 +311,6 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="mb-8 rounded-[28px] bg-slate-900 p-5 text-white shadow-[0_20px_60px_-45px_rgba(15,23,42,0.9)] md:p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-orange-300">Benefits</p>
-              <h2 className="mt-2 text-2xl font-black uppercase tracking-[-0.06em] text-white">Why Shop With NM Mart?</h2>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {benefitItems.map(({ icon: Icon, title, description, to }) => {
-              const content = (
-                <>
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-orange-300">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="mb-2 text-lg font-black uppercase tracking-[-0.05em] text-white">{title}</h3>
-                  <p className="text-sm leading-6 text-slate-300">{description}</p>
-                </>
-              );
-
-              if (to) {
-                return (
-                  <NavLink
-                    key={title}
-                    to={to}
-                    className="rounded-[24px] border border-white/10 bg-white/5 p-5 transition hover:border-orange-300/70 hover:bg-white/10"
-                  >
-                    {content}
-                  </NavLink>
-                );
-              }
-
-              return (
-                <div key={title} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
-                  {content}
-                </div>
-              );
-            })}
-          </div>
-        </section>
       </main>
 
       <Footer />

@@ -1,7 +1,8 @@
 import React from 'react';
+import { WA_NUMBER } from "@/lib/store-utils";
 
 const WhatsAppButton = () => {
-  const phoneNumber = "7081154604";
+  const phoneNumber = WA_NUMBER;
   
   return (
     // 'bottom-6' पर ताकि ये सबसे नीचे रहे
