@@ -1,10 +1,5 @@
--- Supabase SQL for products table
--- To run this:
--- 1. Go to your Supabase Dashboard (https://supabase.com/dashboard)
--- 2. Select your project: wcoymnkyqjlncztyabxc
--- 3. Open the "SQL Editor" from the left sidebar
--- 4. Click "+ New query"
--- 5. Paste this SQL and click "Run"
+-- Supabase SQL for the active products table.
+-- Run this in the SQL Editor for the project configured in .env.
 
 -- Create the products table
 CREATE TABLE IF NOT EXISTS public.products (
@@ -37,12 +32,12 @@ CREATE POLICY "Allow Service Role Upsert" ON public.products
     USING (true)
     WITH CHECK (true);
 
--- Create Authenticated Upsert Policy (if using anon/authenticated key with sync)
+-- Create Admin Auth Upsert Policy for dashboard edits
 CREATE POLICY "Allow Authenticated Upsert" ON public.products
     FOR ALL
     TO authenticated
-    USING (true)
-    WITH CHECK (true);
+    USING ((auth.jwt() ->> 'email') = 'nmmart07@gmail.com')
+    WITH CHECK ((auth.jwt() ->> 'email') = 'nmmart07@gmail.com');
 
 -- Ensure barcode is unique (already handled by PRIMARY KEY)
 -- Create index for faster searching by barcode

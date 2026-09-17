@@ -33,25 +33,22 @@ ALTER TABLE public.admin_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.website_banners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 
--- Policies for admin_config (Allow public select for login check)
-CREATE POLICY "Allow Public Read admin_config" ON public.admin_config
-    FOR SELECT USING (true);
+-- Admin credentials belong in Supabase Auth, not in a browser-readable table.
 
 -- Policies for website_banners (Public read, Admin all)
 CREATE POLICY "Allow Public Read banners" ON public.website_banners
     FOR SELECT USING (true);
 CREATE POLICY "Allow Admin All banners" ON public.website_banners
-    FOR ALL TO authenticated USING (true) WITH CHECK (true);
+    FOR ALL TO authenticated
+    USING ((auth.jwt() ->> 'email') = 'nmmart07@gmail.com')
+    WITH CHECK ((auth.jwt() ->> 'email') = 'nmmart07@gmail.com');
 
 -- Policies for categories (Public read, Admin all)
 CREATE POLICY "Allow Public Read categories" ON public.categories
     FOR SELECT USING (true);
 CREATE POLICY "Allow Admin All categories" ON public.categories
-    FOR ALL TO authenticated USING (true) WITH CHECK (true);
+    FOR ALL TO authenticated
+    USING ((auth.jwt() ->> 'email') = 'nmmart07@gmail.com')
+    WITH CHECK ((auth.jwt() ->> 'email') = 'nmmart07@gmail.com');
 
--- Add sample admin (password: nm-mart-admin-2024)
--- Note: In a real app, use a proper hash. For this project, we'll use simple check or Supabase Auth.
--- But user requested admin_config table password check.
-INSERT INTO public.admin_config (username, password_hash)
-VALUES ('admin', 'nm-mart-admin-2024')
-ON CONFLICT (username) DO NOTHING;
+-- Create the admin user in Supabase Authentication instead of storing a password here.
