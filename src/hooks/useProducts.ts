@@ -28,20 +28,22 @@ export function useProducts() {
     return msg.includes("does not exist") || msg.includes("relation") || msg.includes("not found") || msg.includes("pgrst205") || msg.includes("pgrst301");
   };
 
-  const getProductRows = async () => {
+  const getProductRows = async (range?: { from: number; to: number }) => {
     let lastError: any = null;
 
     for (const table of PRODUCT_TABLE_CANDIDATES) {
       try {
-        const { data, error } = await supabase.from(table).select('*');
-        if (!error && data) return { data, error: null };
+        let query = supabase.from(table).select('*', range ? { count: 'exact' } : undefined);
+        if (range) query = query.range(range.from, range.to);
+        const { data, error, count } = await query;
+        if (!error && data) return { data, error: null, count: count ?? null };
         lastError = error;
       } catch (err) {
         lastError = err;
       }
     }
 
-    return { data: [], error: lastError };
+    return { data: [], error: lastError, count: null };
   };
 
   const mapProduct = (item: any): Product => {
@@ -81,7 +83,7 @@ export function useProducts() {
 
   const fetchAllCategories = async () => {
     try {
-      const { data, error } = await getProductRows();
+      const { data, error, count } = await getProductRows({ from: offset, to: offset + 49 });
 
       if (error) throw error;
 
@@ -192,7 +194,7 @@ export function useProducts() {
         return stock > 0 && item?.is_active !== false;
       });
 
-      if (filtered.length) setTotalCount(filtered.length);
+      if (count !== null) setTotalCount(count);
 
       const mappedProducts: Product[] = filtered.slice(offset, offset + 50).map(mapProduct);
       logSupabaseDebug("products:fetched", { count: mappedProducts.length, offset });
@@ -203,7 +205,7 @@ export function useProducts() {
         setAllProducts(prev => [...prev, ...mappedProducts]);
       }
 
-      setHasMore(filtered.length > offset + 50);
+      setHasMore((count ?? 0) > offset + mappedProducts.length);
     } catch (err) {
       setError("Unable to load products right now.");
       if (!isExpectedTableMissingError(err)) {

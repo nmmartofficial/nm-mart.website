@@ -13,6 +13,7 @@ import {
   Bell,
   Heart,
   Gift,
+  Palette,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";

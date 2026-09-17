@@ -2,9 +2,9 @@ import { render, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import Highlights from './Highlights';
 
-const mockSupabase = {
-  from: vi.fn(),
-};
+const { mockSupabase } = vi.hoisted(() => ({
+  mockSupabase: { from: vi.fn() },
+}));
 
 vi.mock('@/lib/supabase/client', () => ({
   supabase: mockSupabase,
@@ -13,7 +13,9 @@ vi.mock('@/lib/supabase/client', () => ({
 describe('Highlights', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSupabase.from.mockImplementation(() => Promise.reject(new Error("Could not find the table 'public.feature_cards' in the schema cache")));
+    mockSupabase.from.mockImplementation(() => ({
+      select: vi.fn().mockRejectedValue(new Error("Could not find the table 'public.feature_cards' in the schema cache")),
+    }));
   });
 
   it('silently handles missing highlight tables without logging an error', async () => {

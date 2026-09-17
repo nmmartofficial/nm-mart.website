@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -94,6 +94,9 @@ export const validateResetPasswordForm = ({
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedNextPath = searchParams.get("next") || "";
+  const nextPath = requestedNextPath.startsWith("/admin") ? requestedNextPath : "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -109,7 +112,7 @@ const Login = () => {
     const redirectIfLoggedIn = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (isMounted && session) {
-        navigate("/", { replace: true });
+        navigate(nextPath, { replace: true });
       }
     };
 
@@ -117,7 +120,7 @@ const Login = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (isMounted && session) {
-        navigate("/", { replace: true });
+        navigate(nextPath, { replace: true });
       }
     });
 
@@ -125,7 +128,7 @@ const Login = () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, nextPath]);
 
   const handleGoogleLogin = async () => {
     try {
@@ -175,7 +178,7 @@ const Login = () => {
 
         if (data.session) {
           toast.success("Account created successfully.");
-          navigate("/", { replace: true });
+          navigate(nextPath, { replace: true });
           return;
         }
 
@@ -193,7 +196,7 @@ const Login = () => {
 
         if (data.session) {
           toast.success("Signed in successfully.");
-          navigate("/", { replace: true });
+          navigate(nextPath, { replace: true });
         }
       }
     } catch (err: any) {

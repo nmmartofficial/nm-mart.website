@@ -2,21 +2,28 @@ const { createClient } = require('@supabase/supabase-js');
 const sql = require('mssql');
 
 // --- NM MART CONFIGURATION ---
-const SUPABASE_URL = 'https://ydqjrtgrzetyxhcuqvoy.supabase.co';
-const SUPABASE_KEY = 'sb_secret_3MzreJNOmCAHfqczDukXIA_dCabn2rL'; 
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.');
+}
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const sqlConfig = {
-    user: 'SyncUser',         
-    password: 'nmmart07',     
-    database: 'ERP7H2627', 
-    server: 'localhost', 
+    user: process.env.SQL_SYNC_USER,
+    password: process.env.SQL_SYNC_PASSWORD,
+    database: process.env.SQL_SYNC_DATABASE,
+    server: process.env.SQL_SYNC_SERVER || 'localhost',
     options: {
         encrypt: false,                
         trustServerCertificate: true,  
         enableArithAbort: true
     }
 };
+
+if (!sqlConfig.user || !sqlConfig.password || !sqlConfig.database) {
+    throw new Error('SQL_SYNC_USER, SQL_SYNC_PASSWORD, and SQL_SYNC_DATABASE are required.');
+}
 
 /**
  * Bi-directional Sync Function: Latest Wins
