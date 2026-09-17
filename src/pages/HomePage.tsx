@@ -9,6 +9,7 @@ import ProductCard from "@/components/shop/ProductCard";
 import Footer from "@/components/shop/Footer";
 import { fetchActiveBanners } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase/client";
+import { TABLES } from "../lib/supabase/schema";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -91,9 +92,9 @@ export default function HomePage() {
 
     const loadCategoryImages = async () => {
       const { data, error } = await supabase
-        .from("categories")
-        .select("name, image_url, is_visible")
-        .eq("is_visible", true);
+        .from(TABLES.categories)
+        .select("name, image_url, is_active")
+        .eq("is_active", true);
 
       if (error || !mounted) return;
 

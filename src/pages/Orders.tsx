@@ -14,6 +14,7 @@ import {
   Truck,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { TABLES } from "../lib/supabase/schema";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/shop/Footer";
@@ -99,7 +100,7 @@ const Orders = () => {
       }
 
       const { data, error: queryError } = await supabase
-        .from("orders")
+        .from(TABLES.orders)
         .select("*")
         .eq("customer_id", session.user.id)
         .order("created_at", { ascending: false });

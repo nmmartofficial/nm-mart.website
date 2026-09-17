@@ -12,6 +12,7 @@ import {
   Truck,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { TABLES } from "../lib/supabase/schema";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
@@ -79,7 +80,7 @@ const OrderConfirmation = () => {
       }
 
       const { data, error: queryError } = await supabase
-        .from("orders")
+        .from(TABLES.orders)
         .select("id, created_at, status, total, payment_method, items")
         .eq("id", cleanedOrderId)
         .eq("customer_id", session.user.id)

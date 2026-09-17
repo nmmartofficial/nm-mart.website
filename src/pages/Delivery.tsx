@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
+import { TABLES } from "../lib/supabase/schema";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -29,7 +30,7 @@ const DeliveryDashboard = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("orders")
+        .from(TABLES.orders)
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -65,7 +66,7 @@ const DeliveryDashboard = () => {
         return;
       }
       const { error } = await supabase
-        .from("orders")
+        .from(TABLES.orders)
         .update({ status: "Delivered" })
         .eq("id", orderId);
 

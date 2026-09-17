@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
+import { TABLES } from "@/lib/supabase/schema";
 import { toast } from "sonner";
 
 const CategoryManager = () => {
@@ -32,9 +33,9 @@ const CategoryManager = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('categories')
+        .from(TABLES.categories)
         .select('*')
-        .order('display_order', { ascending: true });
+        .order('sort_order', { ascending: true });
 
       if (error) throw error;
       setCategories(data || []);
@@ -85,13 +86,12 @@ const CategoryManager = () => {
       }
 
       const { error } = await supabase
-        .from('categories')
+        .from(TABLES.categories)
         .insert([{
           name: title,
           image_url: iconUrl,
-          bg_color: bgColor,
-          display_order: categories.length,
-          is_visible: true
+          sort_order: categories.length,
+          is_active: true
         }]);
 
       if (error) throw error;
@@ -119,7 +119,7 @@ const CategoryManager = () => {
         toast.error("Please login again.");
         return;
       }
-      const { error } = await supabase.from('categories').delete().eq('id', id);
+      const { error } = await supabase.from(TABLES.categories).delete().eq('id', id);
       if (error) throw error;
       toast.success("Category removed");
       fetchCategories();
@@ -138,12 +138,12 @@ const CategoryManager = () => {
         return;
       }
       const { error } = await supabase
-        .from('categories')
-        .update({ is_visible: !currentStatus })
+        .from(TABLES.categories)
+        .update({ is_active: !currentStatus })
         .eq('id', id);
 
       if (error) throw error;
-      setCategories(categories.map(c => c.id === id ? { ...c, is_visible: !currentStatus } : c));
+      setCategories(categories.map(c => c.id === id ? { ...c, is_active: !currentStatus } : c));
       toast.success(currentStatus ? "Category hidden" : "Category visible");
     } catch (err: any) {
       logSupabaseDebug("categoryVisibility:error", { id, currentStatus }, err);
@@ -239,7 +239,7 @@ const CategoryManager = () => {
           </div>
         ) : (
           categories.map((cat) => (
-            <div key={cat.id} className={`group bg-white border border-gray-100 rounded-[32px] p-6 text-center relative hover:shadow-xl transition-all ${!cat.is_visible ? 'opacity-60 grayscale' : ''}`} style={{ backgroundColor: cat.bg_color + '10' }}>
+            <div key={cat.id} className={`group bg-white border border-gray-100 rounded-[32px] p-6 text-center relative hover:shadow-xl transition-all ${cat.is_active === false ? 'opacity-60 grayscale' : ''}`} style={{ backgroundColor: `${bgColor}10` }}>
               <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-2xl shadow-sm flex items-center justify-center overflow-hidden">
                 {(cat.image_url || cat.icon_url) ? (
                   <img src={cat.image_url || cat.icon_url} alt={cat.name || cat.title} className="w-10 h-10 object-contain" />
@@ -251,11 +251,11 @@ const CategoryManager = () => {
               
               <div className="absolute -top-2 -right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
                 <button 
-                  onClick={() => toggleVisibility(cat.id, cat.is_visible)}
-                  className={`p-2 rounded-full shadow-sm border transition-all ${cat.is_visible ? "bg-white text-primary border-primary/20" : "bg-primary text-white border-transparent"}`}
-                  title={cat.is_visible ? "Hide Category" : "Show Category"}
+                  onClick={() => toggleVisibility(cat.id, cat.is_active !== false)}
+                  className={`p-2 rounded-full shadow-sm border transition-all ${cat.is_active !== false ? "bg-white text-primary border-primary/20" : "bg-primary text-white border-transparent"}`}
+                  title={cat.is_active !== false ? "Hide Category" : "Show Category"}
                 >
-                  {cat.is_visible ? <Eye size={12} /> : <EyeOff size={12} />}
+                  {cat.is_active !== false ? <Eye size={12} /> : <EyeOff size={12} />}
                 </button>
                 <button 
                   onClick={() => deleteCategory(cat.id)}

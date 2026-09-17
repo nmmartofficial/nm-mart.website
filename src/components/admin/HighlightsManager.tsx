@@ -1,16 +1,50 @@
 import { useState, useEffect } from "react";
 import { 
-  Plus, Trash2, Eye, EyeOff, Loader2, Upload, Link as LinkIcon, Type, MousePointer2, ChevronLeft, ChevronRight
+  Plus, Trash2, Eye, EyeOff, Loader2, Upload, Link as LinkIcon, Type, MousePointer2, ChevronLeft, ChevronRight, AlertTriangle
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
+
+/**
+ * Highlights table is OPTIONAL in the authoritative Supabase schema for this project.
+ * If/when the admin provisions `public.highlights` in Supabase, this component will auto-switch to DB mode.
+ * Until then, all CRUD operations gracefully degrade to `localStorage` (browser-only, per-device persistence).
+ */
+const OPTIONAL_HIGHLIGHTS_TABLE = "highlights";
+const HIGHLIGHTS_STORAGE_KEY = "nm_mart_highlights_local";
+
+function loadLocalHighlights(): any[] {
+  try {
+    return JSON.parse(localStorage.getItem(HIGHLIGHTS_STORAGE_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalHighlights(items: any[]) {
+  try {
+    localStorage.setItem(HIGHLIGHTS_STORAGE_KEY, JSON.stringify(items));
+  } catch (e) {
+    console.error("Failed to save highlights to localStorage:", e);
+  }
+}
+
+/** Detects when the optional `highlights` table is not provisioned in the live Supabase project. */
+function isTableMissingError(err: any): boolean {
+  const msg = String(err?.message || err || "").toLowerCase();
+  return (
+    msg.includes("relation") &&
+    (msg.includes("does not exist") || msg.includes("not found"))
+  ) || String(err?.code || "") === "42P01" || msg.includes("status:404") || msg.includes("404");
+}
 
 const HighlightsManager = () => {
   const [highlights, setHighlights] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sessionActive, setSessionActive] = useState(true);
+  const [localMode, setLocalMode] = useState(false);
 
   // New Highlight State
   const [title, setTitle] = useState("");
@@ -32,14 +66,22 @@ const HighlightsManager = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('highlights')
+        .from(OPTIONAL_HIGHLIGHTS_TABLE)
         .select('*')
         .order('display_order', { ascending: true });
 
       if (error) throw error;
       setHighlights(data || []);
+      setLocalMode(false);
     } catch (err: any) {
-      console.error("Error fetching highlights:", err);
+      if (isTableMissingError(err)) {
+        const local = loadLocalHighlights();
+        setHighlights(local);
+        setLocalMode(true);
+        logSupabaseDebug("highlights:localMode", { count: local.length });
+      } else {
+        console.error("Error fetching highlights:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -69,7 +111,6 @@ const HighlightsManager = () => {
       const fileName = `highlight_${Date.now()}.${fileExt}`;
       const filePath = `highlights/${fileName}`;
 
-      // 1. Upload Icon
       const { error: uploadError } = await supabase.storage
         .from('nm-mart-assets')
         .upload(filePath, iconFile);
@@ -80,26 +121,47 @@ const HighlightsManager = () => {
         .from('nm-mart-assets')
         .getPublicUrl(filePath);
 
-      // 2. Save to DB
-      const { error } = await supabase
-        .from('highlights')
-        .insert([{
-          title,
-          image_url: publicUrl,
-          link: link || "#",
-          is_visible: true,
-          display_order: highlights.length
-        }]);
+      const newItem = {
+        id: `local_${Date.now()}`,
+        title,
+        image_url: publicUrl,
+        link: link || "#",
+        is_visible: true,
+        display_order: highlights.length,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
+      try {
+        const { error } = await supabase
+          .from(OPTIONAL_HIGHLIGHTS_TABLE)
+          .insert([{
+            title: newItem.title,
+            image_url: newItem.image_url,
+            link: newItem.link,
+            is_visible: true,
+            display_order: highlights.length
+          }]);
+        if (error) throw error;
+        setLocalMode(false);
+      } catch (dbErr: any) {
+        if (isTableMissingError(dbErr)) {
+          const local = [...loadLocalHighlights(), newItem];
+          saveLocalHighlights(local);
+          setHighlights(local);
+          setLocalMode(true);
+        } else {
+          throw dbErr;
+        }
+      }
 
-      logSupabaseDebug("highlightAdd:success", { title, link });
-      toast.success("Highlight added!");
+      logSupabaseDebug("highlightAdd:success", { title, link, localMode });
+      toast.success("Highlight added!" + (localMode ? " (Saved locally)" : ""));
       setTitle("");
       setLink("");
       setIconFile(null);
       setPreviewUrl(null);
-      fetchHighlights();
+      if (!localMode) fetchHighlights();
     } catch (err: any) {
       logSupabaseDebug("highlightAdd:error", { title, link }, err);
       toast.error(getSupabaseErrorMessage(err, "Unable to add highlight"));
@@ -116,12 +178,25 @@ const HighlightsManager = () => {
         toast.error("Please login again.");
         return;
       }
-      const { error } = await supabase
-        .from('highlights')
-        .update({ is_visible: !currentStatus })
-        .eq('id', id);
-
-      if (error) throw error;
+      try {
+        const { error } = await supabase
+          .from(OPTIONAL_HIGHLIGHTS_TABLE)
+          .update({ is_visible: !currentStatus })
+          .eq('id', id);
+        if (error) throw error;
+      } catch (dbErr: any) {
+        if (isTableMissingError(dbErr)) {
+          const local = loadLocalHighlights().map(h =>
+            h.id === id ? { ...h, is_visible: !currentStatus, updated_at: new Date().toISOString() } : h
+          );
+          saveLocalHighlights(local);
+          setLocalMode(true);
+          setHighlights(local);
+          toast.success(currentStatus ? "Highlight hidden" : "Highlight visible");
+          return;
+        }
+        throw dbErr;
+      }
       setHighlights(highlights.map(h => h.id === id ? { ...h, is_visible: !currentStatus } : h));
       toast.success(currentStatus ? "Highlight hidden" : "Highlight visible");
     } catch (err: any) {
@@ -132,7 +207,7 @@ const HighlightsManager = () => {
 
   const deleteHighlight = async (id: string, imageUrl: string) => {
     if (!confirm("Delete this highlight?")) return;
-    
+
     try {
       const session = await getActiveSession();
       if (!session) {
@@ -140,18 +215,31 @@ const HighlightsManager = () => {
         toast.error("Please login again.");
         return;
       }
-      // 1. Delete from DB
-      const { error } = await supabase.from('highlights').delete().eq('id', id);
-      if (error) throw error;
-
-      // 2. Optional: Delete from storage
-      const fileName = imageUrl.split('/').pop();
-      if (fileName) {
-        await supabase.storage.from('nm-mart-assets').remove([`highlights/${fileName}`]);
+      let deleted = false;
+      try {
+        const { error } = await supabase.from(OPTIONAL_HIGHLIGHTS_TABLE).delete().eq('id', id);
+        if (error) throw error;
+        deleted = true;
+      } catch (dbErr: any) {
+        if (isTableMissingError(dbErr)) {
+          const local = loadLocalHighlights().filter(h => h.id !== id);
+          saveLocalHighlights(local);
+          setHighlights(local);
+          setLocalMode(true);
+        } else {
+          throw dbErr;
+        }
       }
 
-      toast.success("Highlight removed");
-      fetchHighlights();
+      const fileName = imageUrl.split('/').pop();
+      if (fileName) {
+        try {
+          await supabase.storage.from('nm-mart-assets').remove([`highlights/${fileName}`]);
+        } catch (_) { /* ignore storage cleanup errors */ }
+      }
+
+      toast.success("Highlight removed" + (localMode ? " (local)" : ""));
+      if (deleted) fetchHighlights();
     } catch (err: any) {
       logSupabaseDebug("highlightDelete:error", { id }, err);
       toast.error(getSupabaseErrorMessage(err, "Unable to delete highlight"));
@@ -164,11 +252,9 @@ const HighlightsManager = () => {
 
     if (targetIndex < 0 || targetIndex >= newHighlights.length) return;
 
-    // Swap
     [newHighlights[index], newHighlights[targetIndex]] = [newHighlights[targetIndex], newHighlights[index]];
-
-    // Optimistic Update
-    setHighlights(newHighlights);
+    const reordered = newHighlights.map((h, idx) => ({ ...h, display_order: idx }));
+    setHighlights(reordered);
 
     try {
       const session = await getActiveSession();
@@ -177,22 +263,28 @@ const HighlightsManager = () => {
         toast.error("Please login again.");
         return;
       }
-      // Update DB for both swapped items
-      const updates = newHighlights.map((h, idx) => ({
-        id: h.id,
-        display_order: idx
-      }));
-
-      for (const update of updates) {
-        await supabase
-          .from('highlights')
-          .update({ display_order: update.display_order })
-          .eq('id', update.id);
+      let dbOk = true;
+      try {
+        for (const h of reordered) {
+          await supabase
+            .from(OPTIONAL_HIGHLIGHTS_TABLE)
+            .update({ display_order: h.display_order })
+            .eq('id', h.id);
+        }
+      } catch (dbErr: any) {
+        if (isTableMissingError(dbErr)) {
+          saveLocalHighlights(reordered);
+          setLocalMode(true);
+        } else {
+          dbOk = false;
+          throw dbErr;
+        }
       }
+      if (!dbOk) fetchHighlights();
     } catch (err: any) {
-      logSupabaseDebug("highlightOrder:error", newHighlights, err);
+      logSupabaseDebug("highlightOrder:error", reordered, err);
       toast.error(getSupabaseErrorMessage(err, "Unable to update highlight order"));
-      fetchHighlights(); // Revert
+      fetchHighlights();
     }
   };
 
@@ -201,6 +293,14 @@ const HighlightsManager = () => {
       {!sessionActive && (
         <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
           Please Login - save actions are disabled.
+        </div>
+      )}
+      {localMode && (
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800">
+          <AlertTriangle size={18} className="shrink-0" />
+          <div className="text-xs font-bold">
+            <strong>Local Storage Mode:</strong> The <code className="bg-amber-100 px-1 rounded">highlights</code> table was not found in Supabase. Highlights are currently saved in your browser's localStorage only.
+          </div>
         </div>
       )}
       {/* Add Highlight Form */}

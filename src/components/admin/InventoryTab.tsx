@@ -5,6 +5,14 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { getProductImagesBucket, getProductImageStoragePath } from "@/lib/supabase/productImagesStorage";
+import {
+  TABLES,
+  getProductBarcode,
+  getProductName,
+  getProductSaleRate,
+  getProductStock,
+  type DbProductRow,
+} from "@/lib/supabase/schema";
 import { normalizeProductImage } from "@/lib/imageProcessing";
 import { toast } from "sonner";
 
@@ -42,15 +50,15 @@ const InventoryTab = () => {
     setLoading(true);
     try {
       let query = supabase
-        .from('products')
+        .from(TABLES.products)
         .select('*', { count: 'exact' });
 
       if (searchQuery) {
-        query = query.or(`RawName.ilike.%${searchQuery}%,RawCodeNew.eq.${searchQuery}`);
+        query = query.or(`name.ilike.%${searchQuery}%,barcode.eq.${searchQuery}`);
       }
 
       const { data, count, error } = await query
-        .order('RawName', { ascending: true })
+        .order('name', { ascending: true })
         .range((page - 1) * pageSize, page * pageSize - 1);
 
       if (error) throw error;
@@ -68,11 +76,13 @@ const InventoryTab = () => {
     setPage(1);
   };
 
-  const startEditing = (product: any) => {
-    setEditingBarcode(product.RawCodeNew);
-    setEditPrice(String(product.Rate || 0));
-    setEditStock(String(product.OpStock || 0));
-    setEditBadge(product.badge || "");
+  const startEditing = (product: DbProductRow) => {
+    setEditingBarcode(getProductBarcode(product));
+    setEditPrice(String(getProductSaleRate(product) || 0));
+    setEditStock(String(getProductStock(product) || 0));
+    // Note: `badge` column is not yet part of the authoritative Supabase products table (kept for future use / optional UI only).
+    // Fallback safely from any present aliases otherwise empty string.
+    setEditBadge(String((product as any)?.badge ?? "").trim());
     setEditImageFile(null);
     setEditImagePreview(product.image_url || null);
   };
@@ -107,7 +117,7 @@ const InventoryTab = () => {
     }
   };
 
-  const saveEdit = async (rawCodeNew: string) => {
+  const saveEdit = async (barcode: string) => {
     setSaving(true);
     try {
       const session = await getActiveSession();
@@ -116,27 +126,16 @@ const InventoryTab = () => {
         toast.error("Please login again.");
         return;
       }
-      const current = products.find((product) => product.RawCodeNew === rawCodeNew);
+      const current = products.find((product) => getProductBarcode(product) === barcode);
       if (!current) {
         throw new Error("Product not found");
       }
-
-      const { error: syncError } = await supabase
-        .from('sync_back')
-        .insert([{
-          RawCodeNew: rawCodeNew,
-          NewRate: Number(editPrice),
-          NewName: String(current.RawName || "").trim(),
-          status: 'pending'
-        }]);
-
-      if (syncError) throw syncError;
 
       let imageUrl = String(current.image_url || "").trim();
       if (editImageFile) {
         const ext = editImageFile.name.split(".").pop()?.replace(/[^a-z0-9]/gi, "") || "jpg";
         const bucket = getProductImagesBucket();
-        const filePath = getProductImageStoragePath(String(rawCodeNew), Date.now(), ext);
+        const filePath = getProductImageStoragePath(String(barcode), Date.now(), ext);
 
         const { error: uploadError } = await supabase.storage
           .from(bucket)
@@ -153,9 +152,8 @@ const InventoryTab = () => {
       }
 
       const updatePayload: Record<string, unknown> = {
-        Rate: Number(editPrice),
-        OpStock: Number(editStock),
-        badge: editBadge,
+        sale_rate: Number(editPrice),
+        stock: Number(editStock),
         updated_at: new Date().toISOString(),
       };
       if (editImageFile) {
@@ -163,13 +161,13 @@ const InventoryTab = () => {
       }
 
       const { error } = await supabase
-        .from('products')
+        .from(TABLES.products)
         .update(updatePayload)
-        .eq('RawCodeNew', rawCodeNew);
+        .eq('barcode', barcode);
 
       if (error) throw error;
 
-      logSupabaseDebug("inventorySave:success", { rawCodeNew, price: editPrice, stock: editStock, image: Boolean(editImageFile) });
+      logSupabaseDebug("inventorySave:success", { barcode, price: editPrice, stock: editStock, image: Boolean(editImageFile) });
       toast.success(editImageFile ? "Product updated with new image." : "Update queued for POS sync.");
       if (editImagePreview?.startsWith("blob:")) {
         URL.revokeObjectURL(editImagePreview);
@@ -180,7 +178,7 @@ const InventoryTab = () => {
       setEditingBarcode(null);
       fetchProducts();
     } catch (err: any) {
-      logSupabaseDebug("inventorySave:error", { rawCodeNew, editPrice, editStock }, err);
+      logSupabaseDebug("inventorySave:error", { barcode, editPrice, editStock }, err);
       const msg = getSupabaseErrorMessage(err, "Unable to update product");
       const lower = msg.toLowerCase();
       if (lower.includes("bucket not found") || lower.includes("not found")) {
@@ -195,7 +193,7 @@ const InventoryTab = () => {
     }
   };
 
-  const toggleVisibility = async (rawCodeNew: string, currentStatus: boolean) => {
+  const toggleVisibility = async (barcode: string, currentStatus: boolean) => {
     try {
       const session = await getActiveSession();
       if (!session) {
@@ -204,15 +202,15 @@ const InventoryTab = () => {
         return;
       }
       const { error } = await supabase
-        .from('products')
-        .update({ is_visible: !currentStatus })
-        .eq('RawCodeNew', rawCodeNew);
+        .from(TABLES.products)
+        .update({ is_active: !currentStatus })
+        .eq('barcode', barcode);
 
       if (error) throw error;
-      setProducts(products.map(p => p.RawCodeNew === rawCodeNew ? { ...p, is_visible: !currentStatus } : p));
+      setProducts(products.map(p => getProductBarcode(p) === barcode ? { ...p, is_active: !currentStatus } : p));
       toast.success(currentStatus ? "Product hidden" : "Product visible");
     } catch (err: any) {
-      logSupabaseDebug("inventoryVisibility:error", { rawCodeNew, currentStatus }, err);
+      logSupabaseDebug("inventoryVisibility:error", { barcode, currentStatus }, err);
       toast.error(getSupabaseErrorMessage(err, "Unable to update visibility"));
     }
   };
@@ -251,7 +249,7 @@ const InventoryTab = () => {
       <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 items-center">
         <AlertCircle className="text-amber-500 shrink-0" size={20} />
         <p className="text-[10px] text-amber-800 font-bold uppercase tracking-wider">
-          <span className="font-black">Safe Mode Active:</span> Price, stock, badge, and product image can be edited; name and barcode stay synced with POS.
+          <span className="font-black">Safe Mode Active:</span> Price, stock, and product image are synced to Supabase. Badge input is reserved for future schema and not persisted during this sync.
         </p>
       </div>
       {!sessionActive && (
@@ -287,8 +285,12 @@ const InventoryTab = () => {
                   </td>
                 </tr>
               ) : (
-                products.map((product) => (
-                  <tr key={product.RawCodeNew} className={`hover:bg-gray-50/50 transition-colors ${!product.is_visible ? 'opacity-60 grayscale' : ''}`}>
+                products.map((product) => {
+                  const barcode = getProductBarcode(product);
+                  const isActive = product.is_active !== false;
+                  const stock = getProductStock(product);
+                  return (
+                  <tr key={barcode} className={`hover:bg-gray-50/50 transition-colors ${!isActive ? 'opacity-60 grayscale' : ''}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
@@ -299,9 +301,9 @@ const InventoryTab = () => {
                           )}
                         </div>
                         <div>
-                          <p className="font-black text-sm uppercase italic leading-tight">{product.RawName}</p>
-                          <p className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{product.RawCodeNew}</p>
-                          {editingBarcode === product.RawCodeNew && (
+                          <p className="font-black text-sm uppercase italic leading-tight">{getProductName(product)}</p>
+                          <p className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{barcode}</p>
+                          {editingBarcode === barcode && (
                             <div className="mt-2 space-y-2">
                               <input 
                                 type="text"
@@ -315,12 +317,12 @@ const InventoryTab = () => {
                                 type="file"
                                 accept="image/*"
                                 className="sr-only"
-                                id={`product-image-${product.RawCodeNew}`}
+                                id={`product-image-${barcode}`}
                                 onChange={onProductImageChange}
                               />
                               <div className="flex flex-wrap items-center gap-2">
                                 <label
-                                  htmlFor={`product-image-${product.RawCodeNew}`}
+                                  htmlFor={`product-image-${barcode}`}
                                   className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-emerald-600 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wide text-white shadow-sm transition hover:opacity-95"
                                 >
                                   <ImagePlus size={12} className="shrink-0" />
@@ -338,7 +340,7 @@ const InventoryTab = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      {editingBarcode === product.RawCodeNew ? (
+                      {editingBarcode === barcode ? (
                         <input 
                           type="number"
                           className="w-24 bg-white border border-primary rounded-lg px-2 py-1 text-center font-bold text-sm outline-none"
@@ -346,11 +348,11 @@ const InventoryTab = () => {
                           onChange={(e) => setEditPrice(e.target.value)}
                         />
                       ) : (
-                        <span className="font-black text-sm text-primary">₹{product.Rate || 0}</span>
+                        <span className="font-black text-sm text-primary">₹{getProductSaleRate(product) || 0}</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      {editingBarcode === product.RawCodeNew ? (
+                      {editingBarcode === barcode ? (
                         <input 
                           type="number"
                           className="w-20 bg-white border border-primary rounded-lg px-2 py-1 text-center font-bold text-sm outline-none"
@@ -360,15 +362,15 @@ const InventoryTab = () => {
                       ) : (
                         <div className="flex flex-col items-center gap-1">
                           <span className={`text-xs font-black px-3 py-1 rounded-full uppercase italic ${
-                            (product.OpStock || 0) > 10 
+                            stock > 10 
                             ? "bg-green-50 text-green-600" 
-                            : (product.OpStock || 0) <= 5
+                            : stock <= 5
                             ? "bg-red-500 text-white animate-pulse"
                             : "bg-red-50 text-red-600"
                           }`}>
-                            {product.OpStock || 0} In Stock
+                            {stock} In Stock
                           </span>
-                          {(product.OpStock || 0) <= 5 && (
+                          {stock <= 5 && (
                             <span className="text-[8px] font-black text-red-600 uppercase tracking-tighter">Low Stock Alert!</span>
                           )}
                         </div>
@@ -377,16 +379,16 @@ const InventoryTab = () => {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button 
-                          onClick={() => toggleVisibility(product.RawCodeNew, product.is_visible)}
-                          className={`p-2 rounded-xl transition-all ${product.is_visible ? 'bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white' : 'bg-primary text-white hover:bg-black'}`}
-                          title={product.is_visible ? "Hide Product" : "Show Product"}
+                          onClick={() => toggleVisibility(barcode, isActive)}
+                          className={`p-2 rounded-xl transition-all ${isActive ? 'bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white' : 'bg-primary text-white hover:bg-black'}`}
+                          title={isActive ? "Hide Product" : "Show Product"}
                         >
-                          {product.is_visible ? <Eye size={16} /> : <EyeOff size={16} />}
+                          {isActive ? <Eye size={16} /> : <EyeOff size={16} />}
                         </button>
-                        {editingBarcode === product.RawCodeNew ? (
+                        {editingBarcode === barcode ? (
                           <>
                             <button 
-                              onClick={() => saveEdit(product.RawCodeNew)}
+                              onClick={() => saveEdit(barcode)}
                               disabled={saving || !sessionActive}
                               className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all"
                             >
@@ -410,7 +412,8 @@ const InventoryTab = () => {
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

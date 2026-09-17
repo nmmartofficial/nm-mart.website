@@ -38,11 +38,11 @@ async function syncEverything() {
         console.log('Fetching current website data for comparison...');
         const { data: allWebProducts, error: fetchError } = await supabase
             .from('products')
-            .select('RawCodeNew, updated_at, Rate, MRP, OpStock, RawName, image_url, ItemGroupName, discountPerc');
+            .select('barcode, updated_at, sale_rate, mrp, stock, name, image_url, category_name, discount_percent');
         
         const webMap = new Map();
         if (allWebProducts) {
-            allWebProducts.forEach(p => webMap.set(String(p.RawCodeNew).trim(), p));
+            allWebProducts.forEach(p => webMap.set(String(p.barcode).trim(), p));
         }
 
         // --- 1. PULL FROM WEBSITE (Website -> POS) ---
@@ -62,13 +62,13 @@ async function syncEverything() {
                 try {
                     // Update POS with website values
                     await pool.request()
-                        .input('RawCodeNew', sql.VarChar, item.RawCodeNew)
-                        .input('RawName', sql.VarChar, item.RawName)
-                        .input('Rate', sql.Decimal(18, 2), item.Rate)
-                        .input('MRP', sql.Decimal(18, 2), item.MRP)
-                        .input('discountPerc', sql.Decimal(18, 2), item.discountPerc || 0)
-                        .input('ItemGroupName', sql.VarChar, item.ItemGroupName || 'General')
-                        .input('OpStock', sql.Decimal(18, 3), item.OpStock)
+                        .input('RawCodeNew', sql.VarChar, item.barcode)
+                        .input('RawName', sql.VarChar, item.name)
+                        .input('Rate', sql.Decimal(18, 2), item.sale_rate)
+                        .input('MRP', sql.Decimal(18, 2), item.mrp)
+                        .input('discountPerc', sql.Decimal(18, 2), item.discount_percent || 0)
+                        .input('ItemGroupName', sql.VarChar, item.category_name || 'General')
+                        .input('OpStock', sql.Decimal(18, 3), item.stock)
                         .query(`
                             IF EXISTS (SELECT 1 FROM RawMas WHERE RawCodeNew = @RawCodeNew)
                             BEGIN
@@ -83,7 +83,7 @@ async function syncEverything() {
                             END
                         `);
                 } catch (err) {
-                    console.error(`POS Update Failed for ${item.RawCodeNew}:`, err.message);
+                    console.error(`POS Update Failed for ${item.barcode}:`, err.message);
                 }
             }
         }
@@ -113,10 +113,10 @@ async function syncEverything() {
             
             // Only push if something actually changed in POS (Price or Stock)
             const hasChanged = !webItem || 
-                             webItem.Rate !== posItem.Rate || 
-                             webItem.MRP !== posItem.MRP || 
-                             webItem.OpStock !== posItem.OpStock ||
-                             webItem.RawName !== posItem.RawName;
+                             webItem.sale_rate !== posItem.Rate || 
+                             webItem.mrp !== posItem.MRP || 
+                             webItem.stock !== posItem.OpStock ||
+                             webItem.name !== posItem.RawName;
 
             if (hasChanged) {
                 const existingImage =
@@ -125,16 +125,14 @@ async function syncEverything() {
                         : null;
 
                 const pushData = {
-                    RawCodeNew: barcode,
-                    RawName: String(posItem.RawName).trim(),
-                    Rate: Number(posItem.Rate || 0),
-                    MRP: Number(posItem.MRP || 0),
-                    // If web has a category or discount, keep it. Otherwise use POS value.
-                    discountPerc: webItem ? (webItem.discountPerc || 0) : Number(posItem.discountPerc || 0),
-                    ItemGroupName: webItem ? (webItem.ItemGroupName || 'General') : String(posItem.ItemGroupName || 'General').trim(),
-                    OpStock: Number(posItem.OpStock || 0),
+                    barcode,
+                    name: String(posItem.RawName).trim(),
+                    sale_rate: Number(posItem.Rate || 0),
+                    mrp: Number(posItem.MRP || 0),
+                    discount_percent: webItem ? (webItem.discount_percent || 0) : Number(posItem.discountPerc || 0),
+                    category_name: webItem ? (webItem.category_name || 'General') : String(posItem.ItemGroupName || 'General').trim(),
+                    stock: Number(posItem.OpStock || 0),
                     updated_at: new Date().toISOString(),
-                    // CRITICAL: always set explicitly so upsert never wipes admin-uploaded images with NULL.
                     image_url: existingImage
                 };
 
@@ -147,7 +145,7 @@ async function syncEverything() {
             const BATCH_SIZE = 100;
             for (let i = 0; i < toPush.length; i += BATCH_SIZE) {
                 const batch = toPush.slice(i, i + BATCH_SIZE);
-                const { error } = await supabase.from('products').upsert(batch, { onConflict: 'RawCodeNew' });
+                const { error } = await supabase.from('products').upsert(batch, { onConflict: 'barcode' });
                 if (error) console.error(`Batch Error:`, error.message);
                 else process.stdout.write(`Progress: ${i + batch.length}/${toPush.length} pushed...\r`);
             }

@@ -13,7 +13,6 @@ export default async function handler(req: any, res: any) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Validate Supabase credentials early
   if (!supabaseUrl || !supabaseKey) {
     console.error("CRITICAL: Supabase credentials missing from Environment Variables.");
     return res.status(500).json({ error: "Server Configuration Error: Database credentials missing." });
@@ -28,7 +27,6 @@ export default async function handler(req: any, res: any) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // GET: Fetch all products for website
   if (req.method === 'GET') {
     try {
       console.log("Fetching all products from Supabase...");
@@ -47,7 +45,6 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // POST: Sync data from SQL Server
   if (req.method === 'POST') {
     try {
       const items = Array.isArray(req.body) ? req.body : [req.body];
@@ -58,27 +55,25 @@ export default async function handler(req: any, res: any) {
         return res.status(200).json({ success: true, message: "No products to sync." });
       }
 
-      // Map incoming fields from SQL Server (Barcode, ItemName, MRP, SalesRate, Stock)
       const sanitizedData = items.map((item: any) => ({
-        RawCodeNew: String(item.RawCodeNew ?? item.Barcode ?? "").trim(),
-        RawName: String(item.RawName ?? item.ItemName ?? "Unknown Product").trim(),
-        MRP: Number(item.MRP || 0),
-        Rate: Number(item.Rate ?? item.SalesRate ?? 0),
-        OpStock: Number(item.OpStock ?? item.Stock ?? 0),
-        discountPerc: Number(item.discountPerc ?? item.Discount ?? 0),
-        ItemGroupName: String(item.ItemGroupName ?? item.Category ?? "General").trim(),
+        barcode: String(item.RawCodeNew ?? item.Barcode ?? item.barcode ?? "").trim(),
+        name: String(item.RawName ?? item.ItemName ?? item.name ?? "Unknown Product").trim(),
+        mrp: Number(item.MRP ?? item.mrp ?? 0),
+        sale_rate: Number(item.Rate ?? item.SalesRate ?? item.sale_rate ?? 0),
+        stock: Number(item.OpStock ?? item.Stock ?? item.stock ?? 0),
+        discount_percent: Number(item.discountPerc ?? item.Discount ?? item.discount_percent ?? 0),
+        category_name: String(item.ItemGroupName ?? item.Category ?? item.category_name ?? "General").trim(),
         image_url: item.image_url ? String(item.image_url).trim() : null,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }));
 
-      if (sanitizedData.some((item) => !item.RawCodeNew || !Number.isFinite(item.Rate) || !Number.isFinite(item.OpStock))) {
+      if (sanitizedData.some((item) => !item.barcode || !Number.isFinite(item.sale_rate) || !Number.isFinite(item.stock))) {
         return res.status(400).json({ error: 'Invalid sync payload.' });
       }
 
-      // Use upsert to handle inserts/updates based on 'barcode' conflict
       const { error } = await supabase
         .from('products')
-        .upsert(sanitizedData, { onConflict: 'RawCodeNew' });
+        .upsert(sanitizedData, { onConflict: 'barcode' });
 
       if (error) {
         console.error("Supabase UPSERT Error:", error.message);

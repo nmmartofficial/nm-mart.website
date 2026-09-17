@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
+import { TABLES } from "../lib/supabase/schema";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
@@ -36,7 +37,7 @@ const Checkout = () => {
       if (session?.user) {
         // Fetch profile to pre-fill phone and name
         const { data: profile, error: profileError } = await supabase
-          .from('profiles')
+          .from(TABLES.profiles)
           .select('full_name, mobile')
           .eq('id', session.user.id)
           .single();
@@ -96,7 +97,7 @@ const Checkout = () => {
       const fullAddress = `${formData.houseNo}, ${formData.street}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.pincode}`;
 
       const { data: createdOrder, error } = await supabase
-        .from('orders')
+        .from(TABLES.orders)
         .insert({
           customer_id: session.user.id,
           customer_name: formData.fullName,

@@ -1,17 +1,36 @@
 import { supabase } from "@/lib/supabase/client";
+import { TABLES } from "@/lib/supabase/schema";
 import type { Session } from "@supabase/supabase-js";
 
 export type WebsiteBanner = {
   id: string;
-  image_url: string;
-  title?: string;
-  subtitle?: string;
-  whatsapp_link?: string;
-  /** Optional: internal path, hash (e.g. #products), or full URL (DB column may be `banner_link` or legacy `link`) */
+  name?: string | null;
+  title?: string | null;
+  subtitle?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  whatsapp_link?: string | null;
   banner_link?: string | null;
   link?: string | null;
+  link_url?: string | null;
+  link_type?: string | null;
+  link_id?: string | null;
+  linked_product_id?: string | null;
+  action_type?: string | null;
+  action_value?: string | null;
+  banner_type?: string | null;
+  is_active: boolean;
+  is_deleted?: boolean | null;
+  sort_order?: number | null;
   active: boolean;
   display_order: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  itname?: string | null;
+  company_code?: string | null;
+  tenant_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 type SupabaseErrorLike = {
@@ -63,43 +82,31 @@ export async function getActiveSession(): Promise<Session | null> {
 }
 
 export async function fetchActiveBanners(): Promise<WebsiteBanner[]> {
-  const tableCandidates = ["banners", "website_banners", "hero_banners", "banner"];
-
   try {
-    let lastError: any = null;
+    const { data, error } = await supabase
+      .from(TABLES.banners)
+      .select("*")
+      .eq("is_active", true)
+      .eq("is_deleted", false)
+      .order("sort_order", { ascending: true });
 
-    for (const tableName of tableCandidates) {
-      try {
-        const { data, error } = await supabase
-          .from(tableName)
-          .select("*");
+    if (error) throw error;
 
-        if (!error && data) {
-          const banners = (data || [])
-            .filter((banner: any) => (banner?.image_url || banner?.image || banner?.banner_image) && (banner?.is_active !== false && banner?.active !== false))
-            .map((banner: any, index: number) => ({
-              id: banner.id,
-              image_url: banner.image_url || banner.image || banner.banner_image || "",
-              title: banner.title ?? banner.name ?? "NM Mart",
-              subtitle: banner.description ?? banner.subtitle ?? "",
-              whatsapp_link: banner.link_url ?? banner.whatsapp_link ?? banner.url ?? banner.link ?? null,
-              banner_link: banner.link_url ?? banner.whatsapp_link ?? banner.url ?? banner.link ?? null,
-              link: banner.link_url ?? banner.whatsapp_link ?? banner.url ?? banner.link ?? null,
-              active: banner.is_active !== false && banner.active !== false,
-              display_order: typeof banner.sort_order === "number" ? banner.sort_order : typeof banner.display_order === "number" ? banner.display_order : index,
-            }));
+    const banners = (data || [])
+      .filter((banner: any) => banner?.image_url && banner?.is_active !== false && banner?.is_deleted !== true)
+      .map((banner: any, index: number) => ({
+        ...banner,
+        title: banner.title ?? banner.name ?? "NM Mart",
+        subtitle: banner.description ?? "",
+        whatsapp_link: banner.link_url ?? null,
+        banner_link: banner.link_url ?? null,
+        link: banner.link_url ?? null,
+        active: banner.is_active !== false,
+        display_order: typeof banner.sort_order === "number" ? banner.sort_order : index,
+      }));
 
-          logSupabaseDebug("fetchActiveBanners", { tableName, count: banners.length });
-          return banners;
-        }
-
-        lastError = error;
-      } catch (err) {
-        lastError = err;
-      }
-    }
-
-    throw lastError ?? new Error("No banner table available");
+    logSupabaseDebug("fetchActiveBanners", { count: banners.length });
+    return banners;
   } catch (error: any) {
     logSupabaseDebug("fetchActiveBanners:error", undefined, error);
     return [];
@@ -119,8 +126,8 @@ export async function persistBannerOrder(banners: WebsiteBanner[]): Promise<void
   try {
     for (const banner of ordered) {
       const { error } = await supabase
-        .from("website_banners")
-        .update({ display_order: banner.display_order })
+        .from(TABLES.banners)
+        .update({ sort_order: banner.display_order })
         .eq("id", banner.id);
       if (error) throw error;
     }

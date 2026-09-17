@@ -2,8 +2,26 @@ import { useState, useEffect, useMemo } from "react";
 import { calculateSalePrice, Product, normalizeCategory } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
 import { logSupabaseDebug } from "@/lib/supabase";
+import {
+  TABLES,
+  getProductBarcode,
+  getProductCategory,
+  getProductDiscount,
+  getProductImageUrl,
+  getProductMrp,
+  getProductName,
+  getProductSaleRate,
+  getProductStock,
+  getProductBrand,
+  getProductSubcategory,
+  getProductUnit,
+  getProductDescription,
+  isProductActive,
+  isProductFeatured,
+  type DbProductRow,
+} from "@/lib/supabase/schema";
 
-/** Customer storefront catalog: all queries require OpStock > 0. Admin uses InventoryTab (no stock filter). */
+/** Customer storefront catalog: all queries require stock > 0. Admin uses InventoryTab (no stock filter). */
 export function useProducts() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,44 +39,25 @@ export function useProducts() {
   const [hasMoreFeatured, setHasMoreFeatured] = useState(false);
   const [allCategories, setAllCategories] = useState<string[]>([]);
 
-  const PRODUCT_TABLE_CANDIDATES = ["products", "product_master", "items", "catalog_products", "inventory"];
-
-  const isExpectedTableMissingError = (error: any) => {
-    const msg = String(error?.message || "").toLowerCase();
-    return msg.includes("does not exist") || msg.includes("relation") || msg.includes("not found") || msg.includes("pgrst205") || msg.includes("pgrst301");
-  };
-
   const getProductRows = async (range?: { from: number; to: number }) => {
-    let lastError: any = null;
-
-    for (const table of PRODUCT_TABLE_CANDIDATES) {
-      try {
-        let query = supabase.from(table).select('*', range ? { count: 'exact' } : undefined);
-        if (range) query = query.range(range.from, range.to);
-        const { data, error, count } = await query;
-        if (!error && data) return { data, error: null, count: count ?? null };
-        lastError = error;
-      } catch (err) {
-        lastError = err;
-      }
-    }
-
-    return { data: [], error: lastError, count: null };
+    let query = supabase.from(TABLES.products).select("*", range ? { count: "exact" } : undefined);
+    if (range) query = query.range(range.from, range.to);
+    const { data, error, count } = await query;
+    return { data: (data || []) as DbProductRow[], error, count: count ?? null };
   };
 
-  const mapProduct = (item: any): Product => {
-    const barcode = String(item?.barcode || item?.RawCodeNew || item?.id || "").trim();
-    const name = String(item?.name || item?.RawName || item?.itname || "Unknown Product").trim();
-    const mrp = Number(item?.mrp ?? item?.MRP ?? 0);
-    const storedRate = Number(item?.sale_rate ?? item?.onlinerate ?? item?.retail_rate ?? item?.restrate ?? item?.Rate ?? 0);
-    const imageUrl = String(item?.image_url || item?.picture || item?.imagename || "").trim();
-    const category = normalizeCategory(String(item?.category_name || item?.ItemGroupName || item?.category || "GENERAL"));
-    const discount = Number(item?.discount_percent ?? item?.discperc ?? item?.discountPerc ?? item?.discount ?? 0);
+  const mapProduct = (item: DbProductRow): Product => {
+    const barcode = getProductBarcode(item);
+    const name = getProductName(item);
+    const mrp = getProductMrp(item);
+    const storedRate = getProductSaleRate(item);
+    const imageUrl = getProductImageUrl(item);
+    const category = normalizeCategory(getProductCategory(item));
+    const discount = getProductDiscount(item);
     const rate = calculateSalePrice(mrp, storedRate, discount);
-    const stock = Number(item?.stock ?? item?.opstock ?? item?.OpStock ?? 0);
-    const unit = String(item?.unit_name || item?.unitcode || item?.unit || "pcs").trim();
-    const description = String(item?.description || item?.details || item?.short_description || item?.product_description || "").trim();
-    const isFeatured = Boolean(item?.is_favourite ?? item?.isfav ?? item?.is_featured ?? false);
+    const stock = getProductStock(item);
+    const unit = getProductUnit(item);
+    const description = getProductDescription(item);
 
     return {
       id: barcode,
@@ -68,37 +67,37 @@ export function useProducts() {
       category,
       mrp,
       barcode,
-      brand: String(item?.brand_name || item?.brand || "Local").trim(),
-      subCategory: String(item?.subcategory_name || item?.sub_category || "").trim(),
+      brand: getProductBrand(item),
+      subCategory: getProductSubcategory(item),
       imageUrl,
       discount,
       stock,
       unit,
       description: description || undefined,
-      isFeatured,
+      isFeatured: isProductFeatured(item),
       save: Math.max(0, Math.round(mrp - rate)),
-      badge: String(item?.badge || "").trim()
+      badge: "",
     };
   };
 
   const fetchAllCategories = async () => {
     try {
-      const { data, error, count } = await getProductRows({ from: offset, to: offset + 49 });
+      const { data, error } = await getProductRows({ from: 0, to: 999 });
 
       if (error) throw error;
 
-      if (data) {
-        const uniqueCats = [...new Set(data
-          .map((item: any) => normalizeCategory(String(item?.category_name || item?.ItemGroupName || item?.category || "")))
-          .filter((c: string) => c && c.length > 1))];
+      const uniqueCats = [
+        ...new Set(
+          data
+            .map((item) => normalizeCategory(getProductCategory(item)))
+            .filter((c) => c && c.length > 1)
+        ),
+      ];
 
-        logSupabaseDebug("products:derivedCategories", uniqueCats);
-        setAllCategories(uniqueCats);
-      }
+      logSupabaseDebug("products:derivedCategories", uniqueCats);
+      setAllCategories(uniqueCats);
     } catch (err) {
-      if (!isExpectedTableMissingError(err)) {
-        console.error("Error deriving categories:", err);
-      }
+      console.error("Error deriving categories:", err);
     }
   };
 
@@ -108,25 +107,21 @@ export function useProducts() {
 
       if (error) throw error;
 
-      if (data) {
-        const filtered = data.filter((item: any) => {
-          const stock = Number(item?.stock ?? item?.opstock ?? item?.OpStock ?? 0);
-          return stock > 0 && (item?.is_favourite || item?.isfav || item?.is_featured === true) && item?.is_active !== false;
-        });
+      const filtered = data.filter((item) => {
+        const stock = getProductStock(item);
+        return stock > 0 && isProductFeatured(item) && isProductActive(item);
+      });
 
-        const mapped = filtered.slice(offset, offset + 12).map(mapProduct);
-        if (offset === 0) {
-          setFeaturedProducts(mapped);
-          setTotalFeatured(filtered.length || 0);
-        } else {
-          setFeaturedProducts(prev => [...prev, ...mapped]);
-        }
-        setHasMoreFeatured(filtered.length > offset + 12);
+      const mapped = filtered.slice(offset, offset + 12).map(mapProduct);
+      if (offset === 0) {
+        setFeaturedProducts(mapped);
+        setTotalFeatured(filtered.length || 0);
+      } else {
+        setFeaturedProducts((prev) => [...prev, ...mapped]);
       }
+      setHasMoreFeatured(filtered.length > offset + 12);
     } catch (err) {
-      if (!isExpectedTableMissingError(err)) {
-        console.error("Featured Fetch Error:", err);
-      }
+      console.error("Featured Fetch Error:", err);
     }
   };
 
@@ -136,38 +131,36 @@ export function useProducts() {
 
       if (error) throw error;
 
-      if (data) {
-        const filtered = data.filter((item: any) => {
-          const stock = Number(item?.stock ?? item?.opstock ?? item?.OpStock ?? 0);
-          const discount = Number(item?.discount_percent ?? item?.discperc ?? item?.discountPerc ?? 0);
-          return stock > 0 && item?.is_active !== false && (
-            type === 50 ? discount >= 50 : discount >= 33 && discount < 50
-          );
-        });
+      const filtered = data.filter((item) => {
+        const stock = getProductStock(item);
+        const discount = getProductDiscount(item);
+        return (
+          stock > 0 &&
+          isProductActive(item) &&
+          (type === 50 ? discount >= 50 : discount >= 33 && discount < 50)
+        );
+      });
 
-        const mapped = filtered.slice(offset, offset + 12).map(mapProduct);
-        if (type === 50) {
-          if (offset === 0) {
-            setFlat50(mapped);
-            setTotal50(filtered.length || 0);
-          } else {
-            setFlat50(prev => [...prev, ...mapped]);
-          }
-          setHasMore50(filtered.length > offset + 12);
+      const mapped = filtered.slice(offset, offset + 12).map(mapProduct);
+      if (type === 50) {
+        if (offset === 0) {
+          setFlat50(mapped);
+          setTotal50(filtered.length || 0);
         } else {
-          if (offset === 0) {
-            setFlat33(mapped);
-            setTotal33(filtered.length || 0);
-          } else {
-            setFlat33(prev => [...prev, ...mapped]);
-          }
-          setHasMore33(filtered.length > offset + 12);
+          setFlat50((prev) => [...prev, ...mapped]);
         }
+        setHasMore50(filtered.length > offset + 12);
+      } else {
+        if (offset === 0) {
+          setFlat33(mapped);
+          setTotal33(filtered.length || 0);
+        } else {
+          setFlat33((prev) => [...prev, ...mapped]);
+        }
+        setHasMore33(filtered.length > offset + 12);
       }
     } catch (err) {
-      if (!isExpectedTableMissingError(err)) {
-        console.error(`Discount Fetch Error (${type}%):`, err);
-      }
+      console.error(`Discount Fetch Error (${type}%):`, err);
     }
   };
 
@@ -182,16 +175,16 @@ export function useProducts() {
         fetchAllCategories();
       }
 
-      const { data, error } = await getProductRows();
+      const { data, error, count } = await getProductRows();
 
       if (error) {
         console.error("Supabase Database Error:", error);
         throw error;
       }
 
-      const filtered = (data || []).filter((item: any) => {
-        const stock = Number(item?.stock ?? item?.opstock ?? item?.OpStock ?? 0);
-        return stock > 0 && item?.is_active !== false;
+      const filtered = data.filter((item) => {
+        const stock = getProductStock(item);
+        return stock > 0 && isProductActive(item);
       });
 
       if (count !== null) setTotalCount(count);
@@ -202,15 +195,13 @@ export function useProducts() {
       if (offset === 0) {
         setAllProducts(mappedProducts);
       } else {
-        setAllProducts(prev => [...prev, ...mappedProducts]);
+        setAllProducts((prev) => [...prev, ...mappedProducts]);
       }
 
       setHasMore((count ?? 0) > offset + mappedProducts.length);
     } catch (err) {
       setError("Unable to load products right now.");
-      if (!isExpectedTableMissingError(err)) {
-        console.error("Supabase Fetch Error:", err);
-      }
+      console.error("Supabase Fetch Error:", err);
     } finally {
       setLoading(false);
     }
@@ -244,23 +235,42 @@ export function useProducts() {
     }
   };
 
-  const categories = useMemo(() => 
-    (allCategories || []).length > 0 ? allCategories : [...new Set((allProducts || []).map(p => p?.category).filter(Boolean))],
+  const categories = useMemo(
+    () =>
+      (allCategories || []).length > 0
+        ? allCategories
+        : [...new Set((allProducts || []).map((p) => p?.category).filter(Boolean))],
     [allProducts, allCategories]
   );
 
-  const brands = useMemo(() => 
-    [...new Set((allProducts || []).map(p => (p as any)?.brand).filter(Boolean))],
+  const brands = useMemo(
+    () => [...new Set((allProducts || []).map((p) => (p as any)?.brand).filter(Boolean))],
     [allProducts]
   );
 
   const refetchProducts = () => fetchProducts(0);
 
-  return { 
-    allProducts, loading, error, categories, brands, 
-    flat33, flat50, featuredProducts, hasMore, loadMore, totalCount,
-    total50, total33, totalFeatured, hasMore50, hasMore33, hasMoreFeatured,
-    loadMore50, loadMore33, loadMoreFeatured,
+  return {
+    allProducts,
+    loading,
+    error,
+    categories,
+    brands,
+    flat33,
+    flat50,
+    featuredProducts,
+    hasMore,
+    loadMore,
+    totalCount,
+    total50,
+    total33,
+    totalFeatured,
+    hasMore50,
+    hasMore33,
+    hasMoreFeatured,
+    loadMore50,
+    loadMore33,
+    loadMoreFeatured,
     refetchProducts,
   };
 }

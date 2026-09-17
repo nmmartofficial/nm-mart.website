@@ -20,8 +20,9 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { TABLES } from "../lib/supabase/schema";
 import { useTheme } from "@/lib/ThemeProvider";
-import { WA_NUMBER } from "@/lib/store-utils";
+import { WA_NUMBER, getLoyaltyPoints } from "@/lib/store-utils";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
@@ -95,27 +96,24 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
-      .from("profiles")
-      .select("full_name, welfare_status, welfare_card_number, points_balance")
+      .from(TABLES.profiles)
+      .select("full_name")
       .eq("id", userId)
       .single();
 
     if (!data) return;
     setProfileName(data.full_name || "");
 
-    let cardNumber = data.welfare_card_number;
+    let cardNumber = localStorage.getItem("nm_welfare_card");
     if (!cardNumber) {
       cardNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
-      const { error } = await supabase.from("profiles").update({ welfare_card_number: cardNumber }).eq("id", userId);
-      if (error) {
-        logSupabaseDebug("navbarCardNumberUpdate:error", { userId }, error);
-      }
+      localStorage.setItem("nm_welfare_card", cardNumber);
     }
 
     setWelfareCard({
       number: cardNumber,
-      active: data.welfare_status === "active",
-      points: data.points_balance || 0,
+      active: localStorage.getItem("nm_welfare_status") === "active",
+      points: getLoyaltyPoints(),
     });
   };
 

@@ -10,6 +10,7 @@ import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
+import { TABLES } from "@/lib/supabase/schema";
 
 const SLOGAN = "Shop More, Save More";
 
@@ -53,58 +54,34 @@ const ProductDetail = () => {
 
       if (!productsLoading) {
         try {
-          const candidateColumns = [
-            'barcode', 'RawCodeNew', 'code', 'id', 'product_code', 'item_code'
-          ];
-          let data: any = null;
-          let error: any = null;
+          const { data, error } = await supabase
+            .from(TABLES.products)
+            .select('*')
+            .eq('barcode', barcode)
+            .maybeSingle();
 
-          for (const col of candidateColumns) {
-            const response = await supabase
-              .from('products')
-              .select('*')
-              .eq(col, barcode)
-              .maybeSingle();
-
-            if (response.error) {
-              error = response.error;
-              continue;
-            }
-
-            if (response.data) {
-              data = response.data;
-              break;
-            }
-          }
-
-          if (!data && barcode) {
-            const response = await supabase
-              .from('products')
-              .select('*')
-              .or(`barcode.eq.${barcode},RawCodeNew.eq.${barcode},code.eq.${barcode},id.eq.${barcode}`)
-              .maybeSingle();
-            data = response.data;
-            error = response.error;
+          if (error) {
+            console.error("Error fetching product:", error);
           }
 
           if (data) {
-            const mrp = Number(data.mrp ?? data.MRP ?? 0);
-            const unitRate = Number(data.sale_rate ?? data.Rate ?? data.onlinerate ?? data.restrate ?? data.salerate ?? data.saleRate ?? 0);
-            const disc = Number(data.discount_percent ?? data.discountPerc ?? data.discperc ?? data.discount ?? 0);
+            const mrp = Number(data.mrp ?? 0);
+            const unitRate = Number(data.sale_rate ?? data.onlinerate ?? data.retail_rate ?? data.restrate ?? 0);
+            const disc = Number(data.discount_percent ?? data.discperc ?? data.discount ?? 0);
             const rate = calculateSalePrice(mrp, unitRate, disc);
-            const stock = Number(data.stock ?? data.opstock ?? data.OpStock ?? 0);
+            const stock = Number(data.stock ?? data.opstock ?? 0);
 
             const mapped: Product = {
-              id: String(data.barcode || data.RawCodeNew || data.id || barcode),
-              name: String(data.name || data.RawName || data.itname || "Unknown Product").trim(),
+              id: String(data.barcode || barcode),
+              name: String(data.name || "Unknown Product").trim(),
               price: rate,
               saleRate: rate,
-              category: normalizeCategory(String(data.category_name || data.ItemGroupName || data.category || "GENERAL")),
+              category: normalizeCategory(String(data.category_name || data.item_group_name || "GENERAL")),
               mrp,
-              barcode: String(data.barcode || data.RawCodeNew || data.id || barcode),
-              brand: String(data.brand_name || data.brand || "Local").trim(),
-              subCategory: String(data.subcategory_name || data.sub_category || "").trim(),
-              imageUrl: String(data.image_url || data.picture || data.imagename || "").trim(),
+              barcode: String(data.barcode || barcode),
+              brand: String(data.brand_name || "Local").trim(),
+              subCategory: String(data.subcategory_name || "").trim(),
+              imageUrl: String(data.image_url || data.picture || "").trim(),
               discount: disc,
               stock,
               save: Math.max(0, Math.round(mrp - rate))

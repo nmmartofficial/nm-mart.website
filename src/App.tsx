@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "r
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/lib/ThemeProvider";
 import { lazy, Suspense, type ReactNode, useEffect, useState } from "react";
-import { initializeDefaultConfig } from "@/lib/storeConfig";
 import { supabase } from "@/lib/supabase/client";
 import { isAdminEmail } from "@/lib/adminAccess";
 
@@ -69,10 +68,6 @@ function AdminGuard({ children }: { children: ReactNode }) {
 }
 
 function App() {
-  useEffect(() => {
-    initializeDefaultConfig();
-  }, []);
-
   return (
     <ThemeProvider>
       <CartProvider>

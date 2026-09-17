@@ -1,16 +1,15 @@
 import { supabase } from "./client";
+import type { DbProductRow } from "./schema";
+import { TABLES } from "./schema";
 
-export interface InventoryItem {
+/** Inventory item is structurally compatible with the authoritative products row.
+ *  You can assign any DbProductRow into InventoryItem, and upsert will accept additional fields from DbProductRow too.
+ */
+export interface InventoryItem extends Partial<DbProductRow> {
   barcode: string;
   name: string;
   mrp: number;
-  salerate: number;
-  category: string;
-  sub_category?: string;
-  brand?: string;
-  image_url?: string;
-  stock_quantity?: number;
-  updated_at?: string;
+  sale_rate: number;
 }
 
 /**
@@ -22,7 +21,7 @@ export async function upsertInventory(data: InventoryItem | InventoryItem[]) {
   const items = isBulk ? data : [data];
   
   const { data: result, error } = await supabase
-    .from('products')
+    .from(TABLES.products)
     .upsert(items, { onConflict: 'barcode' });
 
   if (error) {
@@ -38,7 +37,7 @@ export async function upsertInventory(data: InventoryItem | InventoryItem[]) {
  */
 export async function getProductByBarcode(barcode: string) {
   const { data, error } = await supabase
-    .from('products')
+    .from(TABLES.products)
     .select('*')
     .eq('barcode', barcode)
     .maybeSingle();
@@ -57,7 +56,7 @@ export async function getProductByBarcode(barcode: string) {
 export async function getAllProducts() {
   try {
     const { data, error } = await supabase
-      .from('products')
+      .from(TABLES.products)
       .select('*')
       .order('updated_at', { ascending: false });
 

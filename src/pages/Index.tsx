@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/lib/ThemeProvider";
 import { fetchActiveBanners, getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { getProductImagesBucket, getProductImageStoragePath } from "@/lib/supabase/productImagesStorage";
-import { 
+import {
   productSlug, WA_NUMBER, UPI_ID, MIN_ORDER, saveOrder, 
   addLoyaltyPoints, getLoyaltyPoints, OrderRecord, normalizeCategory, getOrderHistory,
   STORE_DETAILS, calculateTaxes, calculateDeliveryFee
@@ -40,6 +40,7 @@ import CheckoutModal from "@/components/shop/modals/CheckoutModal";
 import OrdersModal from "@/components/shop/modals/OrdersModal";
 import Highlights from "@/components/shop/Highlights";
 import ProductCard from "@/components/shop/ProductCard";
+import { TABLES } from "@/lib/supabase/schema";
 
 const ITEMS_PER_PAGE = 40;
 
@@ -403,29 +404,29 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
   const handleBarcodeSearch = async (code: string) => {
     try {
       const { data, error } = await supabase
-        .from('products')
+        .from(TABLES.products)
         .select('*')
-        .eq('RawCodeNew', code)
-        .gt('OpStock', 0)
+        .eq('barcode', code)
+        .gt('stock', 0)
         .maybeSingle();
       
       if (data) {
-        // If found, navigate to product detail immediately for "instant catch"
+        const saleRate = Number(data.sale_rate ?? data.onlinerate ?? 0);
         const p = {
-          id: data.RawCodeNew,
-          name: data.RawName,
-          mrp: Number(data.MRP || 0),
-          price: Number(data.Rate || 0),
-          saleRate: Number(data.Rate || 0),
-          category: normalizeCategory(data.ItemGroupName || "GENERAL"),
-          brand: "Local",
-          subCategory: "",
-          barcode: data.RawCodeNew,
+          id: data.barcode,
+          name: data.name,
+          mrp: Number(data.mrp || 0),
+          price: saleRate,
+          saleRate,
+          category: normalizeCategory(data.category_name || data.item_group_name || "GENERAL"),
+          brand: String(data.brand_name || "Local"),
+          subCategory: String(data.subcategory_name || ""),
+          barcode: data.barcode,
           imageUrl: data.image_url || "",
-          discount: Number(data.discountPerc || 0),
-          save: Math.max(0, Number(data.MRP || 0) - Number(data.Rate || 0)),
-          stock: Number(data.OpStock || 0),
-          badge: data.badge || ""
+          discount: Number(data.discount_percent ?? data.discperc ?? 0),
+          save: Math.max(0, Number(data.mrp || 0) - saleRate),
+          stock: Number(data.stock ?? data.opstock ?? 0),
+          badge: ""
         };
         navigate(`/product/${productSlug(p)}`);
       } else {
@@ -458,7 +459,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
   const fetchWelfareStatus = async (userId: string) => {
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from(TABLES.profiles)
           .select('welfare_status, welfare_card_number, points_balance')
           .eq('id', userId)
           .single();
@@ -470,7 +471,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
           if (!cardNumber) {
             cardNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
             await supabase
-              .from('profiles')
+              .from(TABLES.profiles)
               .update({ welfare_card_number: cardNumber })
               .eq('id', userId);
           }
@@ -998,7 +999,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
 
       if (session?.user) {
         const { data: profile } = await supabase
-          .from("profiles")
+          .from(TABLES.profiles)
           .select("*")
           .eq("id", session.user.id)
           .single();
@@ -1064,7 +1065,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
       
       // Save to Supabase
       const { error: supabaseError } = await supabase
-        .from("orders")
+        .from(TABLES.orders)
         .insert([orderData]);
 
       if (supabaseError) {
@@ -1076,10 +1077,10 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
       
       // Update points in database
       if (user) {
-        const { data: profile } = await supabase.from('profiles').select('loyalty_points').eq('id', user.id).single();
+        const { data: profile } = await supabase.from(TABLES.profiles).select('loyalty_points').eq('id', user.id).single();
         const currentPoints = profile?.loyalty_points || 0;
         const { error: pointsError } = await supabase
-          .from('profiles')
+          .from(TABLES.profiles)
           .update({ 
             loyalty_points: currentPoints + pointsEarned,
             points_balance: currentPoints + pointsEarned // Sync both for compatibility
@@ -1215,7 +1216,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
       const opStock = Math.max(0, Math.floor(Number(editingProduct.stock ?? 0)));
 
       const { error: localError } = await supabase
-        .from('products')
+        .from(TABLES.products)
         .update({
           RawName: String(editingProduct.name || "").trim(),
           MRP: mrp,

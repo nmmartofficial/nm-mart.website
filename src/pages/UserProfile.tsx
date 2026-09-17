@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/shop/Footer";
 import { User, Package, MapPin, LogOut, Star, Loader2, Save, Smartphone, ChevronRight, Map, Camera } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { TABLES } from "../lib/supabase/schema";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 import { WA_NUMBER } from "@/lib/store-utils";
@@ -59,6 +60,10 @@ const UserProfile = () => {
     phone: "",
     address: "",
     landmark: "",
+    city: "",
+    state: "",
+    pincode: "",
+    role: "",
     avatar_url: "",
     points: 0,
     welfare_status: "inactive",
@@ -85,7 +90,7 @@ const UserProfile = () => {
       setUser(session.user);
 
       const { data, error } = await supabase
-        .from("profiles")
+        .from(TABLES.profiles)
         .select("*")
         .eq("id", session.user.id)
         .single();
@@ -98,6 +103,10 @@ const UserProfile = () => {
           phone: data.phone_number || data.mobile || session.user.phone || "",
           address: data.address || "",
           landmark: data.landmark || "",
+          city: data.city || "",
+          state: data.state || "",
+          pincode: data.pincode || "",
+          role: data.role || "",
           avatar_url: data.avatar_url || "",
           points: data.loyalty_points || 0,
           welfare_status: data.welfare_status || "inactive",
@@ -149,7 +158,7 @@ const UserProfile = () => {
       if (!publicUrl) throw new Error("Failed to get public URL");
 
       const { error: updateError } = await supabase
-        .from("profiles")
+        .from(TABLES.profiles)
         .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
         .eq("id", user.id);
 
@@ -196,15 +205,19 @@ const UserProfile = () => {
         full_name: profile.name.trim(),
         phone_number: normalizedPhone,
         mobile: normalizedPhone,
+        phone: normalizedPhone,
         address: profile.address.trim(),
         landmark: profile.landmark.trim(),
+        city: profile.city.trim(),
+        state: profile.state.trim(),
+        pincode: profile.pincode.trim(),
         avatar_url: profile.avatar_url,
         updated_at: new Date().toISOString()
       };
       logSupabaseDebug("profileSave:payload", payload);
 
       let { data, error } = await supabase
-        .from("profiles")
+        .from(TABLES.profiles)
         .upsert(payload, { onConflict: "id" })
         .select("id")
         .single();
@@ -223,7 +236,7 @@ const UserProfile = () => {
         };
         logSupabaseDebug("profileSave:fallbackPayload", fallbackPayload);
         const fallback = await supabase
-          .from("profiles")
+          .from(TABLES.profiles)
           .upsert(fallbackPayload as any, { onConflict: "user_id" })
           .select("user_id")
           .single();

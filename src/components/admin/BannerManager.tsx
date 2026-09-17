@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug, persistBannerOrder, WebsiteBanner } from "@/lib/supabase";
+import { TABLES } from "@/lib/supabase/schema";
 import { toast } from "sonner";
 import { WA_NUMBER } from "@/lib/store-utils";
 
@@ -29,14 +30,16 @@ const BannerManager = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('website_banners')
+        .from(TABLES.banners)
         .select('*')
-        .order('display_order', { ascending: true });
+        .order('sort_order', { ascending: true });
 
       if (error) throw error;
       const normalized = (data || []).map((banner: any, index: number) => ({
         ...banner,
-        display_order: typeof banner.display_order === "number" ? banner.display_order : index,
+        active: banner.is_active !== false,
+        whatsapp_link: banner.link_url ?? "",
+        display_order: typeof banner.sort_order === "number" ? banner.sort_order : index,
       }));
       setBanners(normalized);
     } catch (err: any) {
@@ -77,13 +80,13 @@ const BannerManager = () => {
         .getPublicUrl(filePath);
 
       const { error: dbError } = await supabase
-        .from('website_banners')
+        .from(TABLES.banners)
         .insert([{
           image_url: publicUrl,
-          title: file.name.split('.')[0], // Use filename as title
-          whatsapp_link: `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`I'm interested in this offer: ${publicUrl}`)}`,
-          active: true,
-          display_order: banners.length
+          title: file.name.split('.')[0],
+          link_url: `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`I'm interested in this offer: ${publicUrl}`)}`,
+          is_active: true,
+          sort_order: banners.length
         }]);
 
       if (dbError) throw dbError;
@@ -117,7 +120,7 @@ const BannerManager = () => {
       }
 
       // 2. Delete from DB
-      const { error } = await supabase.from('website_banners').delete().eq('id', id);
+      const { error } = await supabase.from(TABLES.banners).delete().eq('id', id);
       if (error) throw error;
 
       await normalizeDisplayOrder();
@@ -172,8 +175,8 @@ const BannerManager = () => {
         return;
       }
       const { error } = await supabase
-        .from('website_banners')
-        .update({ active: !currentStatus })
+        .from(TABLES.banners)
+        .update({ is_active: !currentStatus })
         .eq('id', id);
 
       if (error) throw error;

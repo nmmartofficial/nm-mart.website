@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
+import { TABLES } from "@/lib/supabase/schema";
 
 const OrdersTab = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -23,7 +24,7 @@ const OrdersTab = () => {
     setOrdersLoading(true);
     try {
       const { data, error } = await supabase
-        .from('orders')
+        .from(TABLES.orders)
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -45,7 +46,7 @@ const OrdersTab = () => {
         return;
       }
       const { error } = await supabase
-        .from('orders')
+        .from(TABLES.orders)
         .update({ status: newStatus })
         .eq('id', orderId);
 

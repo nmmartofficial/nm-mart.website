@@ -4,6 +4,7 @@ import { Package, Truck, Search, Phone, Hash, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
+import { TABLES } from "../lib/supabase/schema";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { WA_NUMBER } from "@/lib/store-utils";
 
@@ -25,7 +26,7 @@ const TrackOrder = () => {
     try {
       // Search for order by phone and partial ID
       const { data, error } = await supabase
-        .from('orders')
+        .from(TABLES.orders)
         .select('*')
         .eq('customer_phone', mobileNumber)
         .ilike('id', `%${orderId}`)

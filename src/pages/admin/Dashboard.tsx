@@ -11,6 +11,7 @@ import {
   PieChart as RePieChart, Pie, Cell
 } from 'recharts';
 import { supabase } from "@/lib/supabase/client";
+import { TABLES } from "../../lib/supabase/schema";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -23,8 +24,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
-      const { data: salesData } = await supabase.from('orders').select('total_amount');
+      const { count: orderCount } = await supabase.from(TABLES.orders).select('*', { count: 'exact', head: true });
+      const { data: salesData } = await supabase.from(TABLES.orders).select('total_amount');
       
       const sales = (salesData || []).reduce((acc, curr) => acc + (curr.total_amount || 0), 0);
       

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Search, Package, Truck, CheckCircle2, Clock, MapPin, Loader2, AlertCircle, CalendarDays, CreditCard, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { TABLES } from "../lib/supabase/schema";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
@@ -77,7 +78,7 @@ const OrderTracker = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       let orderQuery = supabase
-        .from("orders")
+        .from(TABLES.orders)
         .select("*")
         .eq("id", id);
 

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
+import { TABLES } from "@/lib/supabase/schema";
 
 const WelfareTab = () => {
   const [customerSearch, setCustomerSearch] = useState("");
@@ -28,7 +29,7 @@ const WelfareTab = () => {
         return;
       }
       const { data, error } = await supabase
-        .from('profiles')
+        .from(TABLES.profiles)
         .select('*')
         .or(`mobile.eq.${customerSearch},full_name.ilike.%${customerSearch}%`)
         .maybeSingle();
@@ -55,8 +56,8 @@ const WelfareTab = () => {
       }
       const newPoints = (customerData.loyalty_points || 0) + Number(pointsToAdd);
       const { error } = await supabase
-        .from('profiles')
-        .update({ loyalty_points: newPoints })
+        .from(TABLES.profiles)
+        .update({ loyalty_points: newPoints } as any)
         .eq('id', customerData.id);
 
       if (error) throw error;
@@ -83,8 +84,8 @@ const WelfareTab = () => {
         return;
       }
       const { error } = await supabase
-        .from('profiles')
-        .update({ welfare_status: newStatus })
+        .from(TABLES.profiles)
+        .update({ welfare_status: newStatus } as any)
         .eq('id', customerData.id);
 
       if (error) throw error;
