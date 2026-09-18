@@ -44,10 +44,10 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
   if (loading) {
     return (
       <div
-        className={`flex w-full aspect-[16/7] animate-pulse items-center justify-center overflow-hidden bg-gray-100 md:aspect-[3/1] md:max-h-[320px] ${radiusClass}`}
+        className={`mx-auto flex h-40 w-full max-w-7xl animate-pulse items-center justify-center overflow-hidden bg-slate-100/50 md:h-[400px] ${radiusClass}`}
         style={radiusStyle}
       >
-        <p className="text-[10px] font-black uppercase italic tracking-widest text-gray-400">Loading Banners...</p>
+        <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-300">Loading Offers...</p>
       </div>
     );
   }
@@ -55,11 +55,11 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
   if (banners.length === 0) {
     return (
       <div
-        className={`flex w-full aspect-[16/7] items-center justify-center overflow-hidden border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-yellow-50 md:aspect-[3/1] md:max-h-[320px] ${bannerRadiusPx > 0 ? "" : `rounded-[32px] ${radiusClass}`}`}
+        className={`mx-auto flex h-32 w-full max-w-7xl items-center justify-center overflow-hidden border border-slate-100 bg-slate-50 md:h-[200px] ${radiusClass}`}
         style={radiusStyle}
       >
-        <p className="text-[10px] font-black uppercase italic tracking-widest text-orange-400">
-          No offers right now
+        <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">
+          NM Mart • Coming Soon
         </p>
       </div>
     );
@@ -67,93 +67,83 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
 
   const banner = banners[current];
   const bannerImage = banner?.image_url || "";
-  const textPositionClass =
-    theme.bannerTextPosition === "center"
-      ? "items-center text-center"
-      : theme.bannerTextPosition === "right"
-        ? "items-end text-right"
-        : "items-start text-left";
-  const imageLinkClass =
-    "absolute inset-0 z-0 block cursor-pointer overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80";
 
+  // Intelligent desktop scaling while preserving integrity
   const imageClass =
-    "h-full w-full object-cover object-center transition-transform duration-300 ease-out group-hover/banner:scale-[1.01]";
-
-  const mediaShellClass =
-    "relative aspect-[16/7] w-full overflow-hidden bg-gray-100 md:aspect-[3/1] md:max-h-[320px]";
+    "block h-auto w-full max-h-[75vh] md:max-h-[560px] md:min-w-[500px] object-contain transition-transform duration-500 ease-out group-hover/banner:scale-[1.01] antialiased mx-auto";
 
   return (
-    <div className="w-full px-0 md:px-0">
+    <div className="flex w-full justify-center px-0 md:px-0">
       <div
-        className={`group/banner relative w-full overflow-hidden border border-[#f1e7dd] bg-[#f7f2ea] shadow-[0_24px_70px_-35px_rgba(15,23,42,0.4)] ${radiusClass}`}
+        className={`group/banner relative w-full md:w-auto md:min-w-[600px] max-w-7xl overflow-hidden border border-slate-100 bg-white shadow-[0_24px_60px_-20px_rgba(0,0,0,0.18)] transition-all duration-500 ${radiusClass}`}
         style={radiusStyle}
       >
-        <div className={mediaShellClass}>
-          <Link
-            to={{ pathname: "/", hash: "products" }}
-            className={imageLinkClass}
-            aria-label={banner.title ? `View products: ${banner.title}` : "View products"}
-          >
-            <img src={bannerImage} alt="" decoding="async" className={imageClass} />
-          </Link>
-
-          <div className="absolute inset-0 z-[1] bg-gradient-to-r from-[#151515]/75 via-[#151515]/30 to-transparent" />
-
-          <div
-            className={`absolute inset-0 z-[2] flex p-6 md:p-10 ${textPositionClass}`}
-          >
-            <div className="max-w-xl text-white">
-              <span className="inline-flex rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.28em] text-white/90 backdrop-blur-sm">
-                NM Mart
-              </span>
-              {banner.title && (
-                <h3 className="mt-4 text-2xl font-black uppercase leading-[0.95] tracking-[-0.05em] drop-shadow-md md:text-5xl">
-                  {banner.title}
-                </h3>
-              )}
-              {banner.subtitle && (
-                <p className="mt-3 max-w-md text-xs font-semibold uppercase tracking-[0.18em] text-white/80 md:text-sm">
-                  {banner.subtitle}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            prev();
-          }}
-          className="hidden md:inline-flex absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group-hover/banner:opacity-100"
-          aria-label="Previous banner"
+        <Link
+          to={{ pathname: "/", hash: "products" }}
+          className="relative block cursor-pointer overflow-hidden focus:outline-none"
+          aria-label={banner.title ? `View products: ${banner.title}` : "View products"}
         >
-          <ChevronLeft size={22} className="text-white" />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            next();
-          }}
-          className="hidden md:inline-flex absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group-hover/banner:opacity-100"
-          aria-label="Next banner"
-        >
-          <ChevronRight size={22} className="text-white" />
-        </button>
+          <img
+            src={bannerImage}
+            alt={banner.title || "Promotion Banner"}
+            decoding="sync"
+            fetchPriority="high"
+            className={imageClass}
+            style={{
+              imageRendering: 'auto',
+              display: 'block'
+            }}
+          />
+        </Link>
 
-        <div className="absolute bottom-3 md:bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1.5 md:gap-2">
-          {banners.map((_, i) => (
+        {/* Navigation Arrows */}
+        {banners.length > 1 && (
+          <>
             <button
-              key={i}
               type="button"
-              onClick={() => setCurrent(i)}
-              className={`flex min-h-8 min-w-8 md:min-h-11 md:min-w-11 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${i === current ? "bg-white/10" : "bg-transparent"}`}
-              aria-label={`Go to banner ${i + 1}`}
-            ><span aria-hidden="true" className={`block h-1.5 rounded-full ${i === current ? "w-6 md:w-8 bg-white shadow-sm" : "w-1.5 md:w-2 bg-white/40"}`} /></button>
-          ))}
-        </div>
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                prev();
+              }}
+              className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white opacity-0 shadow-lg backdrop-blur-md transition-all hover:bg-white/40 group-hover/banner:opacity-100 focus-visible:opacity-100 md:left-5 md:p-3"
+              aria-label="Previous banner"
+            >
+              <ChevronLeft size={28} strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                next();
+              }}
+              className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white opacity-0 shadow-lg backdrop-blur-md transition-all hover:bg-white/40 group-hover/banner:opacity-100 focus-visible:opacity-100 md:right-5 md:p-3"
+              aria-label="Next banner"
+            >
+              <ChevronRight size={28} strokeWidth={2.5} />
+            </button>
+
+            {/* Pagination Dots */}
+            <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2.5 md:bottom-6">
+              {banners.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setCurrent(i);
+                  }}
+                  className={`flex h-4 w-4 items-center justify-center transition-all ${i === current ? "scale-110" : "scale-100 opacity-60"}`}
+                  aria-label={`Go to banner ${i + 1}`}
+                >
+                  <span className={`block rounded-full transition-all ${i === current ? "h-2 w-8 bg-white shadow-sm" : "h-2 w-2 bg-white/50"}`} />
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
