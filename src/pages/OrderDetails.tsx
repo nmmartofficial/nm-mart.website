@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
+import { getOrderAddress, getOrderPaymentMethod, getOrderStatus, getOrderTotal } from "@/lib/orderDisplay";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/shop/Footer";
 
@@ -31,11 +32,15 @@ type CustomerOrder = {
   id?: unknown;
   created_at?: unknown;
   status?: unknown;
+  order_status?: unknown;
   total?: unknown;
+  total_amount?: unknown;
   payment_method?: unknown;
+  payment_mode?: unknown;
   customer_name?: unknown;
   customer_phone?: unknown;
   shipping_address?: unknown;
+  delivery_address?: unknown;
   landmark?: unknown;
   pincode?: unknown;
   items?: unknown;
@@ -190,13 +195,13 @@ const OrderDetails = () => {
 
         {!loading && !error && !notFound && order && (() => {
           const id = textValue(order.id);
-          const status = textValue(order.status);
+          const status = getOrderStatus(order);
           const date = formatDate(order.created_at);
-          const total = numericValue(order.total);
-          const paymentMethod = textValue(order.payment_method);
+          const total = getOrderTotal(order);
+          const paymentMethod = getOrderPaymentMethod(order);
           const customerName = textValue(order.customer_name);
           const customerPhone = textValue(order.customer_phone);
-          const address = textValue(order.shipping_address);
+          const address = getOrderAddress(order);
           const landmark = textValue(order.landmark);
           const pincode = textValue(order.pincode);
           const items = getItems(order.items);

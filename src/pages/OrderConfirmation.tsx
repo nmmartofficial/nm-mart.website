@@ -14,6 +14,7 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
+import { getOrderPaymentMethod, getOrderStatus, getOrderTotal } from "@/lib/orderDisplay";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 
@@ -21,8 +22,11 @@ type ConfirmedOrder = {
   id?: unknown;
   created_at?: unknown;
   status?: unknown;
+  order_status?: unknown;
   total?: unknown;
+  total_amount?: unknown;
   payment_method?: unknown;
+  payment_mode?: unknown;
   items?: unknown;
 };
 
@@ -121,9 +125,9 @@ const OrderConfirmation = () => {
   );
 
   const id = textValue(order?.id);
-  const total = numericValue(order?.total);
-  const status = textValue(order?.status);
-  const paymentMethod = textValue(order?.payment_method);
+  const total = getOrderTotal(order || {});
+  const status = getOrderStatus(order || {});
+  const paymentMethod = getOrderPaymentMethod(order || {});
   const date = formatDate(order?.created_at);
   const items = Array.isArray(order?.items) ? order.items : [];
 

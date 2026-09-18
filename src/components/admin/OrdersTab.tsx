@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 import { TABLES } from "@/lib/supabase/schema";
+import { getOrderAddress, getOrderStatus, getOrderTotal } from "@/lib/orderDisplay";
 
 const OrdersTab = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -100,10 +101,10 @@ const OrdersTab = () => {
                   <div className="flex items-center gap-3">
                     <span className="bg-primary/5 text-primary text-[10px] font-black px-3 py-1 rounded-full uppercase italic">#{order.id}</span>
                     <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase italic ${
-                      order.status === 'Delivered' ? 'bg-green-50 text-green-500' : 
-                      order.status === 'Cancelled' ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'
+                      getOrderStatus(order) === 'Delivered' ? 'bg-green-50 text-green-500' : 
+                      getOrderStatus(order) === 'Cancelled' ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'
                     }`}>
-                      {order.status}
+                      {getOrderStatus(order) || 'Pending'}
                     </span>
                     <span className="text-gray-300 text-[10px] font-bold uppercase italic">
                       {new Date(order.created_at).toLocaleString()}
@@ -116,7 +117,7 @@ const OrdersTab = () => {
                       <Phone size={10} /> {order.customer_phone}
                     </p>
                     <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-1 italic flex items-center gap-1">
-                      <MapPin size={10} /> {order.shipping_address}
+                      <MapPin size={10} /> {getOrderAddress(order) || 'Address unavailable'}
                     </p>
                   </div>
 
@@ -135,7 +136,7 @@ const OrdersTab = () => {
                 <div className="flex flex-col justify-between items-end gap-6">
                   <div className="text-right">
                     <p className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] mb-1">Order Total</p>
-                    <p className="text-3xl font-black text-primary italic leading-none">₹{order.total}</p>
+                    <p className="text-3xl font-black text-primary italic leading-none">₹{getOrderTotal(order) ?? 0}</p>
                   </div>
 
                   <div className="flex gap-2">

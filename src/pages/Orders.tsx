@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
+import { getOrderPaymentMethod, getOrderStatus, getOrderTotal } from "@/lib/orderDisplay";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/shop/Footer";
 
@@ -30,8 +31,11 @@ type CustomerOrder = {
   id?: unknown;
   created_at?: unknown;
   status?: unknown;
+  order_status?: unknown;
   total?: unknown;
+  total_amount?: unknown;
   payment_method?: unknown;
+  payment_mode?: unknown;
   shipping_address?: unknown;
   landmark?: unknown;
   pincode?: unknown;
@@ -190,10 +194,10 @@ const Orders = () => {
           <div className="space-y-5">
             {orders.map((order, index) => {
               const orderId = displayText(order.id);
-              const status = displayText(order.status);
+              const status = getOrderStatus(order);
               const date = formatDate(order.created_at);
-              const total = typeof order.total === "number" || typeof order.total === "string" ? Number(order.total) : null;
-              const paymentMethod = displayText(order.payment_method);
+              const total = getOrderTotal(order);
+              const paymentMethod = getOrderPaymentMethod(order);
               const address = displayText(order.shipping_address);
               const landmark = displayText(order.landmark);
               const pincode = displayText(order.pincode);

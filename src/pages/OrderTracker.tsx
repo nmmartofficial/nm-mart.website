@@ -6,6 +6,7 @@ import { TABLES } from "../lib/supabase/schema";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
+import { getOrderAddress, getOrderPaymentMethod, getOrderStatus, getOrderTotal } from "@/lib/orderDisplay";
 
 const SLOGAN = "Shop More, Save More";
 
@@ -107,10 +108,12 @@ const OrderTracker = () => {
     }
   };
 
-  const statusText = order?.status ? String(order.status).trim() : "";
+  const statusText = getOrderStatus(order || {}) || "";
   const status = statusText ? statusPresentation(statusText) : null;
   const orderDate = formatDate(order?.created_at);
-  const paymentMethod = formatPaymentMethod(order?.payment_method);
+  const paymentMethod = formatPaymentMethod(getOrderPaymentMethod(order || {}));
+  const orderAddress = getOrderAddress(order || {});
+  const orderTotal = getOrderTotal(order || {});
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-black flex flex-col font-sans">
@@ -182,17 +185,17 @@ const OrderTracker = () => {
               </header>
 
               <div className="grid gap-6 border-b border-gray-100 p-6 md:grid-cols-2 md:p-10">
-                {(order.shipping_address || order.landmark || order.pincode) && (
+                {(orderAddress || order.landmark || order.pincode) && (
                   <section>
                     <h3 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400"><MapPin size={15} aria-hidden="true" /> Delivery details</h3>
-                    {order.shipping_address && <p className="text-sm font-semibold leading-6 text-gray-700">{order.shipping_address}</p>}
+                    {orderAddress && <p className="text-sm font-semibold leading-6 text-gray-700">{orderAddress}</p>}
                     {(order.landmark || order.pincode) && <p className="mt-1 text-xs text-gray-500">{[order.landmark && `Landmark: ${order.landmark}`, order.pincode && `Pincode: ${order.pincode}`].filter(Boolean).join(" · ")}</p>}
                   </section>
                 )}
                 <section>
                   <h3 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400"><CreditCard size={15} aria-hidden="true" /> Order payment</h3>
                   {paymentMethod && <p className="text-sm font-semibold uppercase text-gray-700">{paymentMethod}</p>}
-                  {order.total !== undefined && order.total !== null && <p className="mt-2 text-2xl font-black text-primary">₹{order.total}</p>}
+                  {orderTotal !== null && <p className="mt-2 text-2xl font-black text-primary">₹{orderTotal}</p>}
                 </section>
               </div>
 
