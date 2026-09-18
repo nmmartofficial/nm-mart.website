@@ -4,6 +4,7 @@ import { Zap, Flame, Edit3 } from "lucide-react";
 import { Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "./ProductImageDisplay";
 import { supabase } from "@/lib/supabase/client";
+import { isActiveAdminUser } from "@/lib/adminAccess";
 
 interface Props {
   flat33: Product[];
@@ -23,7 +24,6 @@ const DiscountTabs = ({
   hasMore50, hasMore33, loadMore50, loadMore33, 
   onAddToCart, onQuickEdit
 }: Props) => {
-  const ADMIN_EMAIL = "nmmart07@gmail.com";
   const [activeTab, setActiveTab] = useState<"33" | "50">("50");
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [visibleCount, setVisibleCount] = useState(8);
@@ -34,13 +34,13 @@ const DiscountTabs = ({
     const checkAdmin = async () => {
       const { data } = await supabase.auth.getSession();
       if (!mounted) return;
-      setIsAdminMode(data.session?.user?.email?.toLowerCase() === ADMIN_EMAIL);
+      setIsAdminMode(await isActiveAdminUser(supabase, data.session?.user?.id ?? null));
     };
     checkAdmin();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
-      setIsAdminMode(session?.user?.email?.toLowerCase() === ADMIN_EMAIL);
+      setIsAdminMode(await isActiveAdminUser(supabase, session?.user?.id ?? null));
     });
 
     return () => {

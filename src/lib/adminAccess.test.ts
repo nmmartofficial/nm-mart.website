@@ -1,13 +1,50 @@
 import { describe, expect, it } from "vitest";
-import { isAdminEmail } from "./adminAccess";
+import { isActiveAdminUser } from "./adminAccess";
 
 describe("admin access", () => {
-  it("accepts the configured admin email case-insensitively", () => {
-    expect(isAdminEmail(" NMMART07@GMAIL.COM ")).toBe(true);
+  it("accepts an active admin record keyed by the authenticated user id", async () => {
+    const mockSupabase = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: { is_active: true, status: "active", role: "super_admin" },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    } as any;
+
+    await expect(isActiveAdminUser(mockSupabase, "auth-user-123")).resolves.toBe(true);
   });
 
-  it("rejects missing and non-admin emails", () => {
-    expect(isAdminEmail(undefined)).toBe(false);
-    expect(isAdminEmail("customer@example.com")).toBe(false);
+  it("rejects missing, inactive, or non-admin records", async () => {
+    const missing = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({ data: null, error: null }),
+          }),
+        }),
+      }),
+    } as any;
+
+    await expect(isActiveAdminUser(missing, "missing-user")).resolves.toBe(false);
+
+    const inactive = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: { is_active: false, status: "inactive", role: "cashier" },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    } as any;
+
+    await expect(isActiveAdminUser(inactive, "inactive-user")).resolves.toBe(false);
   });
 });

@@ -3,7 +3,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/lib/ThemeProvider";
 import { lazy, Suspense, type ReactNode, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { isAdminEmail } from "@/lib/adminAccess";
+import { isActiveAdminUser } from "@/lib/adminAccess";
 
 // Pages
 import HomePage from "@/pages/HomePage";
@@ -27,6 +27,7 @@ const Admin = lazy(() => import("@/pages/Admin"));
 const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
 const AdminCustomize = lazy(() => import("@/pages/admin/Customize"));
 import { CartProvider } from "@/hooks/useCart";
+import AnnouncementTicker from "@/components/site/AnnouncementTicker";
 
 function AdminGuard({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -35,14 +36,15 @@ function AdminGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const updateAccess = (email?: string | null) => {
+    const updateAccess = async (authUserId?: string | null) => {
       if (!mounted) return;
-      setStatus(isAdminEmail(email) ? "allowed" : "denied");
+      const allowed = await isActiveAdminUser(supabase, authUserId ?? null);
+      setStatus(allowed ? "allowed" : "denied");
     };
 
-    supabase.auth.getSession().then(({ data }) => updateAccess(data.session?.user?.email));
+    supabase.auth.getSession().then(({ data }) => updateAccess(data.session?.user?.id));
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      updateAccess(session?.user?.email);
+      updateAccess(session?.user?.id);
     });
 
     return () => {
@@ -73,6 +75,7 @@ function App() {
       <CartProvider>
         <Router>
         <Toaster position="top-center" expand={false} richColors />
+        <AnnouncementTicker />
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-xs font-bold uppercase tracking-widest text-slate-500">Loading NM Mart...</div>}>
         <Routes>
           {/* Customer Routes */}

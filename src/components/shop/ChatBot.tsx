@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, X, ShoppingCart, SendHorizontal, Trash2 } from 'lucide-react';
 import { supabase } from "@/lib/supabase/client";
+import { isActiveAdminUser } from "@/lib/adminAccess";
 import { WA_NUMBER } from "@/lib/store-utils";
 
 interface ChatMessage {
@@ -15,7 +16,6 @@ interface ChatBotProps {
 }
 
 const ChatBot = ({ isOpen, setIsOpen }: ChatBotProps) => {
-  const ADMIN_EMAIL = "nmmart07@gmail.com";
   const [isAdmin, setIsAdmin] = useState(false);
   const [input, setInput] = useState('');
 
@@ -25,14 +25,14 @@ const ChatBot = ({ isOpen, setIsOpen }: ChatBotProps) => {
     const checkAdmin = async () => {
       const { data } = await supabase.auth.getSession();
       if (!mounted) return;
-      setIsAdmin(data.session?.user?.email?.toLowerCase() === ADMIN_EMAIL);
+      setIsAdmin(await isActiveAdminUser(supabase, data.session?.user?.id ?? null));
     };
 
     checkAdmin();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
-      setIsAdmin(session?.user?.email?.toLowerCase() === ADMIN_EMAIL);
+      setIsAdmin(await isActiveAdminUser(supabase, session?.user?.id ?? null));
     });
 
     return () => {

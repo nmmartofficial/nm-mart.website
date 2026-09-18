@@ -70,8 +70,8 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
       : "sticky top-0 z-50 border-b border-[#f0e9e2] bg-[#fffdf9]/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(0,0,0,0.18)]";
 
   const containerClass = headerStyle === "centered"
-    ? "max-w-7xl mx-auto px-4 h-20 flex flex-col md:flex-row items-center justify-between"
-    : "max-w-7xl mx-auto flex h-[78px] items-center justify-between px-4 md:px-6";
+    ? "mx-auto w-full px-4 h-20 flex flex-col md:flex-row items-center justify-between"
+    : "mx-auto flex w-full h-[78px] items-center justify-between px-4 md:px-6";
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -154,7 +154,7 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
 
   return (
     <header className={headerClass}>
-      <div className="mx-auto max-w-7xl px-3 py-3 md:px-5">
+      <div className="w-full px-3 py-3 md:px-5">
         <div className="flex items-center gap-3 md:gap-4">
           <Link to="/" className="group flex min-w-0 items-center gap-3 text-left">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#f1ddc6] bg-white shadow-[0_14px_30px_-20px_rgba(15,23,42,0.35)] transition-transform duration-200 group-hover:scale-[1.02] md:h-14 md:w-14">

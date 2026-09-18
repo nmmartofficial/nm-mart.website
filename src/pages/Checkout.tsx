@@ -12,6 +12,7 @@ import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
+import { buildServerOrderPayload } from "@/lib/orderPayload";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -94,35 +95,36 @@ const Checkout = () => {
         toast.error("Please login again.");
         return;
       }
+
       const fullAddress = `${formData.houseNo}, ${formData.street}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.pincode}`;
+      const payload = buildServerOrderPayload(cart, {
+        customer_id: session.user.id,
+        customer_name: formData.fullName.trim(),
+        customer_phone: formData.phone.trim(),
+        shipping_address: fullAddress.trim(),
+        landmark: formData.landmark.trim(),
+        pincode: formData.pincode.trim(),
+        payment_method: formData.paymentMethod,
+        idempotency_key: crypto.randomUUID(),
+      });
 
-      const { data: createdOrder, error } = await supabase
-        .from(TABLES.orders)
-        .insert({
-          customer_id: session.user.id,
-          customer_name: formData.fullName,
-          customer_phone: formData.phone,
-          shipping_address: fullAddress,
-          landmark: formData.landmark,
-          pincode: formData.pincode,
-          items: cart,
-          total: cartTotal,
-          payment_method: formData.paymentMethod,
-          status: 'Pending',
-          created_at: new Date().toISOString()
-        })
-        .select("id")
-        .single();
-
+      const { data, error } = await supabase.rpc("place_website_order_atomic", payload);
       if (error) throw error;
-      if (!createdOrder?.id) throw new Error("The order was created but no order ID was returned.");
+
+      const createdOrderId = data?.id ?? data?.order_id ?? data?.orderId;
+      if (!createdOrderId) {
+        throw new Error("The secure checkout returned no order ID.");
+      }
 
       clearCart();
       toast.success("Order placed successfully!");
-      navigate(`/order-confirmation/${encodeURIComponent(String(createdOrder.id))}`, { replace: true });
+      navigate(`/order-confirmation/${encodeURIComponent(String(createdOrderId))}`, { replace: true });
     } catch (err: any) {
-      logSupabaseDebug("checkoutOrder:error", { total: cartTotal }, err);
-      toast.error(getSupabaseErrorMessage(err, "Unable to place order"));
+      logSupabaseDebug("checkoutOrder:error", {
+        itemCount: cart.length,
+        total: cartTotal,
+      }, err);
+      toast.error(getSupabaseErrorMessage(err, "Secure checkout failed. Please review your details and try again."));
     } finally {
       setLoading(false);
     }

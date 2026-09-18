@@ -14,7 +14,7 @@ const ProductImageDisplay = ({ imageUrl, name, className = "h-full w-full object
   if (imageUrl && imageUrl.trim() && !failed) {
     return (
       <div 
-        className="relative w-full h-full overflow-hidden"
+        className="relative h-full w-full overflow-hidden bg-[#fffdf9]"
       >
         <img
           src={imageUrl}
@@ -30,7 +30,7 @@ const ProductImageDisplay = ({ imageUrl, name, className = "h-full w-full object
 
   // Fallback: NM Mart logo (safe local asset, then remote fallback)
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden bg-[#fffdf9]">
       <img
         src={SAFE_LOGO_URL || LOGO_FALLBACK}
         alt={name}

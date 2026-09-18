@@ -64,4 +64,33 @@ describe("buildServerOrderPayload", () => {
     expect(JSON.stringify(payload)).not.toContain("stock");
     expect(JSON.stringify(payload)).not.toContain("total");
   });
+
+  it("adds only the minimal authenticated checkout metadata required by the server", () => {
+    const payload = buildServerOrderPayload([makeCartItem()], {
+      customer_id: "auth-user-123",
+      customer_name: "Test User",
+      customer_phone: "9999988888",
+      shipping_address: "12 Test Lane, Manjhanpur",
+      landmark: "Near School",
+      pincode: "212207",
+      payment_method: "cod",
+      idempotency_key: "checkout-abc-123",
+    });
+
+    expect(payload).toMatchObject({
+      customer_id: "auth-user-123",
+      customer_name: "Test User",
+      customer_phone: "9999988888",
+      shipping_address: "12 Test Lane, Manjhanpur",
+      landmark: "Near School",
+      pincode: "212207",
+      payment_method: "cod",
+      idempotency_key: "checkout-abc-123",
+      items: [{ product_id: 123, quantity: 2 }],
+    });
+
+    expect(JSON.stringify(payload)).not.toContain("saleRate");
+    expect(JSON.stringify(payload)).not.toContain("total");
+    expect(JSON.stringify(payload)).not.toContain("stock");
+  });
 });

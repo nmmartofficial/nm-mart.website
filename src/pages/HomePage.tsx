@@ -59,6 +59,45 @@ export default function HomePage() {
     setVisiblePopularCount(nextCount);
   };
 
+  const BrandCategoryCard = ({
+    label,
+    image,
+    alt,
+    onClick,
+  }: {
+    label: string;
+    image?: string;
+    alt: string;
+    onClick: () => void;
+  }) => (
+    <div className="flex w-[106px] shrink-0 flex-col items-center sm:w-[114px] md:w-auto md:flex-1">
+      <button
+        type="button"
+        onClick={onClick}
+        className="group flex items-center justify-center rounded-full transition-transform duration-200 hover:-translate-y-0.5"
+        aria-label={alt}
+      >
+        <div className="flex h-[102px] w-[102px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_10px_22px_-16px_rgba(15,23,42,0.45)] ring-1 ring-slate-100 sm:h-[110px] sm:w-[110px] md:h-[118px] md:w-[118px]">
+          {image ? (
+            <img
+              src={image}
+              alt={alt}
+              className="h-full w-full rounded-full object-contain p-1.75"
+              loading="lazy"
+            />
+          ) : (
+            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500">
+              {label.slice(0, 2).toUpperCase()}
+            </span>
+          )}
+        </div>
+      </button>
+      <p className="mt-2 max-w-[110px] text-center text-[11px] font-bold uppercase leading-[1.25] tracking-[0.08em] text-slate-700 sm:text-[11.5px] md:max-w-none md:text-[12px]">
+        {label}
+      </p>
+    </div>
+  );
+
   useEffect(() => {
     let mounted = true;
 
@@ -118,16 +157,16 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
 
-      <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:py-8">
-        <section className="mb-8">
+      <main className="mx-auto w-full px-0 py-2 sm:px-1 md:px-3 lg:py-8">
+        <section className="mb-2 md:mb-4">
           <HeroBanner banners={banners} loading={loadingBanners} />
         </section>
 
-        <section className="mb-8 rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:p-6">
-          <div className="mb-5 flex items-center justify-between gap-3">
+        <section className="mb-3 rounded-[18px] border border-slate-200 bg-white p-2 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+          <div className="mb-2 flex items-center justify-between gap-3 md:mb-5">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-orange-500">Shop by category</p>
-              <h2 className="mt-2 text-2xl font-black uppercase tracking-[-0.06em] text-slate-900">Browse categories</h2>
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-orange-500 md:text-[10px]">Shop by category</p>
+              <h2 className="mt-1 text-[1.05rem] font-black uppercase tracking-[-0.06em] text-slate-900 md:mt-2 md:text-2xl">Browse categories</h2>
             </div>
             <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-600 md:flex">
               <Search className="h-3.5 w-3.5" />
@@ -145,39 +184,25 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6">
               {liveCategories.map((category) => (
-                <button
+                <BrandCategoryCard
                   key={category}
-                  type="button"
+                  label={category}
+                  image={categoryImages[category.toUpperCase()] || productImageByCategory[category.toUpperCase()]}
+                  alt={`Browse category ${category}`}
                   onClick={() => handleCategoryClick(category)}
-                  className="group min-h-[118px] rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:bg-orange-50 hover:shadow-[0_18px_35px_-25px_rgba(249,115,22,0.6)]"
-                  aria-label={`Browse category ${category}`}
-                >
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white text-slate-700 shadow-sm transition group-hover:scale-105 group-hover:text-orange-600">
-                    {(categoryImages[category.toUpperCase()] || productImageByCategory[category.toUpperCase()]) ? (
-                      <img
-                        src={categoryImages[category.toUpperCase()] || productImageByCategory[category.toUpperCase()]}
-                        alt={`${category} category`}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <LayoutGrid className="h-5 w-5" />
-                    )}
-                  </div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-600 group-hover:text-slate-900">{category}</p>
-                </button>
+                />
               ))}
             </div>
           )}
         </section>
 
-        <section className="mb-8 rounded-[28px] border border-slate-200 bg-gradient-to-r from-orange-50 via-white to-amber-50 p-5 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:p-6">
-          <div className="mb-5 flex items-center justify-between gap-3">
+        <section className="mb-4 rounded-[18px] border border-slate-200 bg-gradient-to-r from-orange-50 via-white to-amber-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+          <div className="mb-2 flex items-center justify-between gap-3 md:mb-5">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-orange-500">Popular picks</p>
-              <h2 className="mt-2 text-2xl font-black uppercase tracking-[-0.06em] text-slate-900">Popular Products</h2>
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-orange-500 md:text-[10px]">Popular picks</p>
+              <h2 className="mt-1 text-[1.1rem] font-black uppercase tracking-[-0.06em] text-slate-900 md:mt-2 md:text-2xl">Popular Products</h2>
             </div>
           </div>
 
@@ -199,12 +224,13 @@ export default function HomePage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="grid grid-cols-2 gap-[8px] md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
                 {visiblePopularProducts.map((product) => (
                 <ProductCard
                   key={product.id || product.barcode}
                   product={product}
                   onAddToCart={addToCart}
+                  className="min-h-[340px]"
                 />
                 ))}
               </div>
@@ -263,11 +289,11 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="mb-8 rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:p-6">
-          <div className="mb-5 flex items-center justify-between gap-3">
+        <section className="mb-4 rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+          <div className="mb-2 flex items-center justify-between gap-3 md:mb-5">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-orange-500">Trusted names</p>
-              <h2 className="mt-2 text-2xl font-black uppercase tracking-[-0.06em] text-slate-900">Shop by Brand</h2>
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-orange-500 md:text-[10px]">Trusted names</p>
+              <h2 className="mt-1 text-[1.05rem] font-black uppercase tracking-[-0.06em] text-slate-900 md:mt-2 md:text-2xl">Shop by Brand</h2>
             </div>
           </div>
 
@@ -285,29 +311,15 @@ export default function HomePage() {
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">No brands available right now</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-6">
               {liveBrands.map((brand) => (
-                <button
+                <BrandCategoryCard
                   key={brand}
-                  type="button"
+                  label={brand}
+                  image={productImageByBrand[brand.toUpperCase()]}
+                  alt={`${brand} brand`}
                   onClick={() => handleBrandClick(brand)}
-                  className="flex min-h-[112px] flex-col items-center justify-center rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:bg-orange-50"
-                  aria-label={`Browse brand ${brand}`}
-                >
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white text-sm font-black uppercase tracking-[0.12em] text-slate-700 shadow-sm">
-                    {productImageByBrand[brand.toUpperCase()] ? (
-                      <img
-                        src={productImageByBrand[brand.toUpperCase()]}
-                        alt={`${brand} brand`}
-                        className="h-full w-full object-contain p-1"
-                        loading="lazy"
-                      />
-                    ) : (
-                      brand.slice(0, 2).toUpperCase()
-                    )}
-                  </div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">{brand}</p>
-                </button>
+                />
               ))}
             </div>
           )}

@@ -80,10 +80,10 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
     "h-full w-full object-cover object-center transition-transform duration-300 ease-out group-hover/banner:scale-[1.01]";
 
   const mediaShellClass =
-    "relative aspect-[3/1] w-full overflow-hidden bg-gray-100";
+    "relative aspect-[4/1.6] w-full overflow-hidden bg-gray-100 sm:aspect-[3/1]";
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+    <div className="w-full px-0 md:px-0">
       <div
         className={`group/banner relative w-full overflow-hidden border border-[#f1e7dd] bg-[#f7f2ea] shadow-[0_24px_70px_-35px_rgba(15,23,42,0.4)] ${radiusClass}`}
         style={radiusStyle}

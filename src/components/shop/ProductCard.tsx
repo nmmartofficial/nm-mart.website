@@ -6,10 +6,9 @@ import ProductImageDisplay from "./ProductImageDisplay";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/lib/ThemeProvider";
 import { supabase } from "@/lib/supabase/client";
+import { isActiveAdminUser } from "@/lib/adminAccess";
 
 import { ThemeConfig } from "@/lib/storeConfig";
-
-const ADMIN_STORE_EMAIL = "nmmart07@gmail.com";
 
 interface ProductCardProps {
   product: Product;
@@ -35,14 +34,15 @@ const ProductCard = ({
   const [added, setAdded] = useState(false);
 
   useEffect(() => {
-    const applyEmail = (email: string | null | undefined) => {
-      setIsAdminEditor((email?.toLowerCase() ?? "") === ADMIN_STORE_EMAIL);
+    const applyAdminState = async (authUserId: string | null | undefined) => {
+      setIsAdminEditor(await isActiveAdminUser(supabase, authUserId ?? null));
     };
-    supabase.auth.getSession().then(({ data }) => applyEmail(data.session?.user?.email));
+
+    supabase.auth.getSession().then(({ data }) => applyAdminState(data.session?.user?.id));
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      applyEmail(session?.user?.email);
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      applyAdminState(session?.user?.id);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -52,25 +52,27 @@ const ProductCard = ({
 
   const cardClass =
     productStyle === "premium"
-      ? "rounded-[26px] border border-[#f2e6da] bg-white shadow-[0_20px_45px_-26px_rgba(15,23,42,0.28)] hover:-translate-y-1 hover:shadow-[0_24px_55px_-22px_rgba(255,120,0,0.16)] transition-all"
+      ? "rounded-[16px] border border-[#f2e6da] bg-white shadow-[0_16px_35px_-26px_rgba(15,23,42,0.28)] hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-22px_rgba(255,120,0,0.16)] transition-all"
       : productStyle === "offer"
-        ? "rounded-[22px] border border-[#f8d4c8] bg-[#fff7f4] hover:bg-[#fff1eb] transition-colors"
-        : "rounded-[24px] border border-[#f1ece7] bg-white hover:border-[#f7c59f] transition-colors shadow-[0_12px_25px_-18px_rgba(15,23,42,0.22)]";
+        ? "rounded-[14px] border border-[#f8d4c8] bg-[#fff7f4] hover:bg-[#fff1eb] transition-colors"
+        : "rounded-[14px] border border-[#f1ece7] bg-white hover:border-[#f7c59f] transition-colors shadow-[0_10px_18px_-16px_rgba(15,23,42,0.22)]";
 
-  const buttonClass = `min-h-11 w-full rounded-full text-[10px] font-black uppercase tracking-[0.18em] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+  const buttonClass = `min-h-[44px] w-full rounded-full text-[11px] font-black uppercase tracking-[0.14em] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
     buttonStyle === "gradient"
-      ? "bg-gradient-to-r from-[#ff8a00] via-[#ff7200] to-[#ff5c00] py-2.5 text-white border-none shadow-[0_16px_30px_-18px_rgba(255,120,0,0.8)]"
+      ? "bg-gradient-to-r from-[#ff8a00] via-[#ff7200] to-[#ff5c00] py-2.5 text-white border-none shadow-[0_12px_24px_-16px_rgba(255,120,0,0.8)]"
       : buttonStyle === "outline"
         ? "border-2 border-primary bg-transparent py-2.5 text-primary hover:bg-primary hover:text-white"
         : buttonStyle === "shadow"
-          ? "bg-primary py-2.5 text-white shadow-[0_12px_24px_-15px_rgba(0,0,0,0.25)] hover:shadow-[0_16px_28px_-16px_rgba(0,0,0,0.35)]"
+          ? "bg-primary py-2.5 text-white shadow-[0_10px_18px_-14px_rgba(0,0,0,0.25)] hover:shadow-[0_14px_22px_-16px_rgba(0,0,0,0.35)]"
           : "bg-[#111111] py-2.5 text-white hover:bg-[#ff7a00]"
   }`;
 
-  const imageHeightClass = productStyle === "premium" ? "h-32 md:h-44" : productStyle === "offer" ? "h-28 md:h-36" : "h-28 md:h-40";
+  const imageHeightClass = productStyle === "premium" ? "h-[175px] sm:h-[195px] md:h-[210px]" : productStyle === "offer" ? "h-[165px] sm:h-[185px] md:h-[200px]" : "h-[175px] sm:h-[195px] md:h-[210px]";
 
   const productName = (product?.name || "Product").trim() || "Product";
-  const productUnit = (product?.unit || product?.subCategory || "").trim();
+  const rawProductUnit = (product?.unit || product?.subCategory || "").trim();
+  const isInternalCodeValue = (value: string) => /^[\d]+$/.test(value.trim());
+  const productUnit = isInternalCodeValue(rawProductUnit) ? "" : rawProductUnit;
   const numericPrice = Number(product?.price ?? (product as Product & { selling_price?: number }).selling_price ?? product?.saleRate ?? 0);
   const numericMrp = Number(product?.mrp ?? 0);
   const numericStock = Number(product?.stock ?? 0);
@@ -107,10 +109,10 @@ const ProductCard = ({
       aria-label={`View details for ${productName}`}
       onClick={goToProduct}
       onKeyDown={handleCardKeyDown}
-      className={`group/card bg-card ${cardClass} flex h-full min-h-[320px] cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 md:min-h-[360px] ${className}`}
+      className={`group/card bg-card ${cardClass} flex h-full min-h-[330px] w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 sm:min-h-[350px] md:min-h-[380px] ${className}`}
     >
       <div className={`relative isolate overflow-hidden ${imageHeightClass} bg-white`}>
-        <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-3" />
+        <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-2" />
 
         {discountPercent > 0 && (
           <span className="absolute left-2 top-2 z-10 rounded-full bg-[#ff5a36] px-2 py-1 text-[7px] font-black uppercase tracking-[0.12em] text-white shadow-md">
@@ -143,10 +145,10 @@ const ProductCard = ({
       </div>
 
       <div className="flex flex-1 flex-col p-2.5 md:p-4">
-        <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="mb-1.5 flex items-center justify-between gap-2">
           <span aria-hidden="true" />
           <span
-            className={`text-[7px] font-black uppercase tracking-[0.12em] ${
+            className={`text-[9px] font-black uppercase tracking-[0.12em] ${
               hasStock ? "text-[#0d8b48]" : "text-[#d83131]"
             }`}
           >
@@ -154,24 +156,24 @@ const ProductCard = ({
           </span>
         </div>
 
-        <h3 className="mb-2 min-h-[2rem] text-sm font-semibold leading-snug text-[#111111] line-clamp-2 break-words md:min-h-[2.5rem] md:text-[0.96rem]">
+        <h3 className="mb-1.5 min-h-[2.5rem] text-[13.5px] font-semibold leading-snug text-[#111111] line-clamp-2 break-words md:min-h-[2.8rem] md:text-[14px]">
           {productName}
         </h3>
 
         {productUnit && (
-          <p className="mb-2 text-[9px] font-medium uppercase tracking-[0.12em] text-slate-500">{productUnit}</p>
+          <p className="mb-1.5 text-[9px] font-medium uppercase tracking-[0.12em] text-slate-500">{productUnit}</p>
         )}
 
-        <div className="mt-auto pt-2">
+        <div className="mt-auto pt-1.5">
           <div className="flex items-end gap-2">
             {hasMrp && numericMrp > numericPrice && (
-              <span className="pb-0.5 text-[10px] font-medium text-slate-500 line-through decoration-slate-400">
+              <span className="pb-0.5 text-[11px] font-medium text-slate-500 line-through decoration-slate-400">
                 ₹{numericMrp.toLocaleString("en-IN")}
               </span>
             )}
 
             {hasPrice ? (
-              <span className="text-xl font-black leading-none tracking-[-0.05em] text-[#111111] md:text-[1.45rem]">
+              <span className="text-[1.45rem] font-black leading-none tracking-[-0.05em] text-[#111111] md:text-[1.7rem]">
                 ₹{numericPrice.toLocaleString("en-IN")}
               </span>
             ) : (

@@ -6,13 +6,12 @@ const WhatsAppButton = () => {
   
   return (
     // 'bottom-6' पर ताकि ये सबसे नीचे रहे
-    <div className="fixed bottom-6 right-6 z-[9999]">
+    <div className="fixed bottom-[calc(1.1rem+env(safe-area-inset-bottom))] right-3 z-[9999]">
       <a 
         href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent('Hi NM Mart, I need manual support with my order/account.')}`}
         target="_blank"
         rel="noopener noreferrer"
-        // w-12 h-12 और p-2.5 से ये पीले बटन के बराबर हो जाएगा
-        className="w-12 h-12 bg-[#25D366] rounded-full shadow-md border border-black/10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+        className="flex h-14 w-14 items-center justify-center rounded-full border border-black/10 bg-[#25D366] shadow-[0_14px_28px_-14px_rgba(0,0,0,0.5)] transition-all hover:scale-105 active:scale-95"
       >
         {/* असली WhatsApp आइकन का छोटा रूप */}
         <svg 

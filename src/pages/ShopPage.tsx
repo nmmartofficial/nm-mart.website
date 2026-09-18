@@ -50,26 +50,6 @@ const ShopPage = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
-    const nextQuery = searchParams.get("search") || searchParams.get("q") || "";
-    const nextCategoryParam = searchParams.get("category") || "all";
-    const nextBrandParam = searchParams.get("brand") || "all";
-    const nextCategory = nextCategoryParam;
-    const nextBrand = nextBrandParam;
-    const nextMin = searchParams.get("priceMin") || "";
-    const nextMax = searchParams.get("priceMax") || "";
-    const nextSort = searchParams.get("sort") || "featured";
-
-    if (nextQuery !== query) setQuery(nextQuery);
-    if (nextCategory !== selectedCategory) setSelectedCategory(nextCategory);
-    if (nextBrand !== selectedBrand) setSelectedBrand(nextBrand);
-    if (nextMin !== priceMin) setPriceMin(nextMin);
-    if (nextMax !== priceMax) setPriceMax(nextMax);
-    if (nextSort !== sortBy && sortOptions.some((option) => option.value === nextSort)) {
-      setSortBy(nextSort as (typeof sortOptions)[number]["value"]);
-    }
-  }, [searchParams, query, selectedCategory, selectedBrand, priceMin, priceMax, sortBy, validCategorySet, validBrandSet]);
-
-  useEffect(() => {
     const nextParams = new URLSearchParams();
 
     if (query.trim()) nextParams.set("search", query.trim());
@@ -341,12 +321,31 @@ const ShopPage = () => {
           </div>
         </div>
 
+        {mobileFiltersOpen && (
+          <div className="fixed inset-0 z-40 bg-slate-950/35 backdrop-blur-[1px] lg:hidden" onClick={() => setMobileFiltersOpen(false)}>
+            <div
+              className="absolute left-0 top-0 h-full w-[85%] max-w-sm overflow-y-auto border-r border-slate-200 bg-white p-4 shadow-2xl transition-transform duration-200 ease-out"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">Filters</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-600"
+                >
+                  Close
+                </button>
+              </div>
+              {filterPanel}
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-6 lg:grid-cols-[290px_minmax(0,1fr)]">
           <div className="hidden lg:block">{filterPanel}</div>
-
-          {mobileFiltersOpen && (
-            <div className="lg:hidden">{filterPanel}</div>
-          )}
 
           <div>
             {loading ? (
