@@ -10,33 +10,31 @@ interface Props {
 const ProductImageDisplay = ({ imageUrl, name, className = "h-full w-full object-contain p-3" }: Props) => {
   const [failed, setFailed] = useState(false);
 
-  // If we have a valid image URL and it hasn't failed, show it
+  const shellClass = "relative flex h-full w-full shrink-0 items-center justify-center overflow-hidden bg-[#fffdf9]";
+
   if (imageUrl && imageUrl.trim() && !failed) {
     return (
-      <div 
-        className="relative h-full w-full overflow-hidden bg-[#fffdf9]"
-      >
+      <div className={shellClass}>
         <img
           src={imageUrl}
           alt={name}
           loading="lazy"
           decoding="async"
-          className={className}
+          className={`shrink-0 max-w-full max-h-full ${className}`}
           onError={() => setFailed(true)}
         />
       </div>
     );
   }
 
-  // Fallback: NM Mart logo (safe local asset, then remote fallback)
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#fffdf9]">
+    <div className={shellClass}>
       <img
         src={SAFE_LOGO_URL || LOGO_FALLBACK}
         alt={name}
         loading="lazy"
         decoding="async"
-        className={className}
+        className={`shrink-0 max-w-full max-h-full ${className}`}
         onError={(event) => {
           const target = event.currentTarget as HTMLImageElement;
           if (target.src !== LOGO_FALLBACK) {

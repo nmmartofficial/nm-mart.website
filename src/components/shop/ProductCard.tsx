@@ -57,22 +57,30 @@ const ProductCard = ({
         ? "rounded-[14px] border border-[#f8d4c8] bg-[#fff7f4] hover:bg-[#fff1eb] transition-colors"
         : "rounded-[14px] border border-[#f1ece7] bg-white hover:border-[#f7c59f] transition-colors shadow-[0_10px_18px_-16px_rgba(15,23,42,0.22)]";
 
-  const buttonClass = `min-h-[44px] w-full rounded-full text-[11px] font-black uppercase tracking-[0.14em] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+  function shouldDisplayLabel(text: string): boolean {
+    if (!text) return false;
+    const t = String(text).trim();
+    if (!t) return false;
+    if (/^\d+$/.test(t)) return false;
+    if (t.length <= 2 && /\d/.test(t)) return false;
+    return true;
+  }
+
+  const buttonClass = `h-[42px] w-full rounded-full text-[11px] md:text-[11px] font-black uppercase tracking-[0.14em] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
     buttonStyle === "gradient"
-      ? "bg-gradient-to-r from-[#ff8a00] via-[#ff7200] to-[#ff5c00] py-2.5 text-white border-none shadow-[0_12px_24px_-16px_rgba(255,120,0,0.8)]"
+      ? "bg-gradient-to-r from-[#ff8a00] via-[#ff7200] to-[#ff5c00] text-white border-none shadow-[0_12px_24px_-16px_rgba(255,120,0,0.8)]"
       : buttonStyle === "outline"
-        ? "border-2 border-primary bg-transparent py-2.5 text-primary hover:bg-primary hover:text-white"
+        ? "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-white"
         : buttonStyle === "shadow"
-          ? "bg-primary py-2.5 text-white shadow-[0_10px_18px_-14px_rgba(0,0,0,0.25)] hover:shadow-[0_14px_22px_-16px_rgba(0,0,0,0.35)]"
-          : "bg-[#111111] py-2.5 text-white hover:bg-[#ff7a00]"
+          ? "bg-primary text-white shadow-[0_10px_18px_-14px_rgba(0,0,0,0.25)] hover:shadow-[0_14px_22px_-16px_rgba(0,0,0,0.35)]"
+          : "bg-[#111111] text-white hover:bg-[#ff7a00]"
   }`;
 
-  const imageHeightClass = productStyle === "premium" ? "h-[175px] sm:h-[195px] md:h-[210px]" : productStyle === "offer" ? "h-[165px] sm:h-[185px] md:h-[200px]" : "h-[175px] sm:h-[195px] md:h-[210px]";
+  const imageHeightClass = productStyle === "premium" ? "h-[138px] md:h-[210px]" : productStyle === "offer" ? "h-[134px] md:h-[200px]" : "h-[138px] md:h-[210px]";
 
   const productName = (product?.name || "Product").trim() || "Product";
   const rawProductUnit = (product?.unit || product?.subCategory || "").trim();
-  const isInternalCodeValue = (value: string) => /^[\d]+$/.test(value.trim());
-  const productUnit = isInternalCodeValue(rawProductUnit) ? "" : rawProductUnit;
+  const productUnit = shouldDisplayLabel(rawProductUnit) ? rawProductUnit : "";
   const numericPrice = Number(product?.price ?? (product as Product & { selling_price?: number }).selling_price ?? product?.saleRate ?? 0);
   const numericMrp = Number(product?.mrp ?? 0);
   const numericStock = Number(product?.stock ?? 0);
@@ -109,13 +117,13 @@ const ProductCard = ({
       aria-label={`View details for ${productName}`}
       onClick={goToProduct}
       onKeyDown={handleCardKeyDown}
-      className={`group/card bg-card ${cardClass} flex h-full min-h-[330px] w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 sm:min-h-[350px] md:min-h-[380px] ${className}`}
+      className={`group/card bg-card ${cardClass} flex w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 ${className}`}
     >
-      <div className={`relative isolate overflow-hidden ${imageHeightClass} bg-white`}>
-        <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-2" />
+      <div className={`relative isolate shrink-0 overflow-hidden ${imageHeightClass} bg-white`}>
+        <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-1.5" />
 
         {discountPercent > 0 && (
-          <span className="absolute left-2 top-2 z-10 rounded-full bg-[#ff5a36] px-2 py-1 text-[7px] font-black uppercase tracking-[0.12em] text-white shadow-md">
+          <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-[#ff5a36] px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-white shadow-md">
             {discountPercent}% OFF
           </span>
         )}
@@ -144,36 +152,25 @@ const ProductCard = ({
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-2.5 md:p-4">
-        <div className="mb-1.5 flex items-center justify-between gap-2">
-          <span aria-hidden="true" />
-          <span
-            className={`text-[9px] font-black uppercase tracking-[0.12em] ${
-              hasStock ? "text-[#0d8b48]" : "text-[#d83131]"
-            }`}
-          >
-            {hasStock ? "In Stock" : "Out of Stock"}
-          </span>
-        </div>
-
-        <h3 className="mb-1.5 min-h-[2.5rem] text-[13.5px] font-semibold leading-snug text-[#111111] line-clamp-2 break-words md:min-h-[2.8rem] md:text-[14px]">
+      <div className="flex flex-col p-2 md:p-4">
+        <h3 className="mb-1 text-[12.5px] font-semibold leading-snug text-[#111111] line-clamp-2 break-words md:text-[14px]">
           {productName}
         </h3>
 
         {productUnit && (
-          <p className="mb-1.5 text-[9px] font-medium uppercase tracking-[0.12em] text-slate-500">{productUnit}</p>
+          <p className="mb-1 text-[9px] font-medium uppercase tracking-[0.12em] text-slate-500">{productUnit}</p>
         )}
 
-        <div className="mt-auto pt-1.5">
+        <div className="mb-2">
           <div className="flex items-end gap-2">
             {hasMrp && numericMrp > numericPrice && (
-              <span className="pb-0.5 text-[11px] font-medium text-slate-500 line-through decoration-slate-400">
+              <span className="pb-0.5 text-[10.5px] font-medium text-slate-500 line-through decoration-slate-400">
                 ₹{numericMrp.toLocaleString("en-IN")}
               </span>
             )}
 
             {hasPrice ? (
-              <span className="text-[1.45rem] font-black leading-none tracking-[-0.05em] text-[#111111] md:text-[1.7rem]">
+              <span className="text-[16px] font-black leading-none tracking-[-0.05em] text-[#111111] md:text-[1.5rem]">
                 ₹{numericPrice.toLocaleString("en-IN")}
               </span>
             ) : (
@@ -188,7 +185,7 @@ const ProductCard = ({
           )}
         </div>
 
-        <div className="mt-3 flex flex-col gap-2">
+        <div className="mt-auto">
           <button
             type="button"
             onClick={(e) => {
@@ -208,7 +205,6 @@ const ProductCard = ({
               {hasStock ? (added ? "Added" : "Add to Cart") : "Out of Stock"}
             </span>
           </button>
-
         </div>
       </div>
     </motion.article>

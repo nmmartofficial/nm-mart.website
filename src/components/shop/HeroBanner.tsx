@@ -44,7 +44,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
   if (loading) {
     return (
       <div
-        className={`flex w-full aspect-[3/1] animate-pulse items-center justify-center overflow-hidden bg-gray-100 ${radiusClass}`}
+        className={`flex w-full aspect-[16/7] animate-pulse items-center justify-center overflow-hidden bg-gray-100 md:aspect-[3/1] md:max-h-[320px] ${radiusClass}`}
         style={radiusStyle}
       >
         <p className="text-[10px] font-black uppercase italic tracking-widest text-gray-400">Loading Banners...</p>
@@ -55,7 +55,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
   if (banners.length === 0) {
     return (
       <div
-        className={`flex w-full aspect-[3/1] items-center justify-center overflow-hidden border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-yellow-50 ${bannerRadiusPx > 0 ? "" : `rounded-[32px] ${radiusClass}`}`}
+        className={`flex w-full aspect-[16/7] items-center justify-center overflow-hidden border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-yellow-50 md:aspect-[3/1] md:max-h-[320px] ${bannerRadiusPx > 0 ? "" : `rounded-[32px] ${radiusClass}`}`}
         style={radiusStyle}
       >
         <p className="text-[10px] font-black uppercase italic tracking-widest text-orange-400">
@@ -80,7 +80,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
     "h-full w-full object-cover object-center transition-transform duration-300 ease-out group-hover/banner:scale-[1.01]";
 
   const mediaShellClass =
-    "relative aspect-[4/1.6] w-full overflow-hidden bg-gray-100 sm:aspect-[3/1]";
+    "relative aspect-[16/7] w-full overflow-hidden bg-gray-100 md:aspect-[3/1] md:max-h-[320px]";
 
   return (
     <div className="w-full px-0 md:px-0">
@@ -126,7 +126,7 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
             e.stopPropagation();
             prev();
           }}
-          className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group-hover/banner:opacity-100"
+          className="hidden md:inline-flex absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group-hover/banner:opacity-100"
           aria-label="Previous banner"
         >
           <ChevronLeft size={22} className="text-white" />
@@ -137,21 +137,21 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
             e.stopPropagation();
             next();
           }}
-          className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group-hover/banner:opacity-100"
+          className="hidden md:inline-flex absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-3 opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-white/40 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group-hover/banner:opacity-100"
           aria-label="Next banner"
         >
           <ChevronRight size={22} className="text-white" />
         </button>
 
-        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+        <div className="absolute bottom-3 md:bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1.5 md:gap-2">
           {banners.map((_, i) => (
             <button
               key={i}
               type="button"
               onClick={() => setCurrent(i)}
-              className={`flex min-h-11 min-w-11 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${i === current ? "bg-white/10" : "bg-transparent"}`}
+              className={`flex min-h-8 min-w-8 md:min-h-11 md:min-w-11 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${i === current ? "bg-white/10" : "bg-transparent"}`}
               aria-label={`Go to banner ${i + 1}`}
-            ><span aria-hidden="true" className={`block h-1.5 rounded-full ${i === current ? "w-8 bg-white shadow-sm" : "w-2 bg-white/40"}`} /></button>
+            ><span aria-hidden="true" className={`block h-1.5 rounded-full ${i === current ? "w-6 md:w-8 bg-white shadow-sm" : "w-1.5 md:w-2 bg-white/40"}`} /></button>
           ))}
         </div>
       </div>

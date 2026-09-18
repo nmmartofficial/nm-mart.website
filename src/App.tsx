@@ -28,6 +28,8 @@ const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
 const AdminCustomize = lazy(() => import("@/pages/admin/Customize"));
 import { CartProvider } from "@/hooks/useCart";
 import AnnouncementTicker from "@/components/site/AnnouncementTicker";
+import BottomNavigation from "@/components/shop/BottomNavigation";
+import WhatsAppButton from "@/components/shop/WhatsAppButton";
 
 function AdminGuard({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -77,32 +79,35 @@ function App() {
         <Toaster position="top-center" expand={false} richColors />
         <AnnouncementTicker />
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-xs font-bold uppercase tracking-widest text-slate-500">Loading NM Mart...</div>}>
-        <Routes>
-          {/* Customer Routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/delivery" element={<Delivery />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/orders/:orderId" element={<OrderDetails />} />
-          <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
-          <Route path="/tracker" element={<OrderTracker />} />
-          <Route path="/shop" element={<ShopPage />} />
-          <Route path="/products" element={<ShopPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/product/:slug" element={<ProductDetail />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
-          <Route path="/admin/dashboard" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
-          <Route path="/admin/customize" element={<AdminGuard><AdminCustomize /></AdminGuard>} />
-          <Route path="*" element={<NotFound />} />
-
-        </Routes>
+          <div className="pb-safe-nav md:pb-0">
+            <Routes>
+              {/* Customer Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/delivery" element={<Delivery />} />
+              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/orders/:orderId" element={<OrderDetails />} />
+              <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+              <Route path="/tracker" element={<OrderTracker />} />
+              <Route path="/shop" element={<ShopPage />} />
+              <Route path="/products" element={<ShopPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/product/:slug" element={<ProductDetail />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
+              <Route path="/admin/dashboard" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+              <Route path="/admin/customize" element={<AdminGuard><AdminCustomize /></AdminGuard>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
         </Suspense>
+        <BottomNavigation />
+        <WhatsAppButton />
         </Router>
       </CartProvider>
     </ThemeProvider>

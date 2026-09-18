@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Bell,
+  Bookmark,
+  Wallet,
   ShoppingCart,
   Menu,
   User,
@@ -18,11 +21,12 @@ import {
   Bot,
   Search,
   ChevronDown,
+  MapPin,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
 import { useTheme } from "@/lib/ThemeProvider";
-import { WA_NUMBER, getLoyaltyPoints } from "@/lib/store-utils";
+import { WA_NUMBER, getLoyaltyPoints, STORE_DETAILS } from "@/lib/store-utils";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
@@ -48,6 +52,7 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
   const [showGoldenCard, setShowGoldenCard] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState<string>("");
   const { cartCount } = useCart();
 
   useEffect(() => {
@@ -62,16 +67,14 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
   };
 
   const headerStyle = theme.headerStyle || "classic";
-  
-  const headerClass = headerStyle === "modern"
-    ? "sticky top-0 z-50 w-full border-b border-[#f1e4d3] bg-[#fffdf9]/90 backdrop-blur-xl shadow-[0_12px_35px_-25px_rgba(15,23,42,0.35)]"
-    : headerStyle === "minimal"
-      ? "sticky top-0 z-50 bg-background/60 backdrop-blur-md border-b border-border h-14"
-      : "sticky top-0 z-50 border-b border-[#f0e9e2] bg-[#fffdf9]/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(0,0,0,0.18)]";
 
-  const containerClass = headerStyle === "centered"
-    ? "mx-auto w-full px-4 h-20 flex flex-col md:flex-row items-center justify-between"
-    : "mx-auto flex w-full h-[78px] items-center justify-between px-4 md:px-6";
+  const headerClass = headerStyle === "modern"
+    ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#f1e4d3] bg-[#fffdf9]/90 backdrop-blur-xl shadow-[0_12px_35px_-25px_rgba(15,23,42,0.35)]"
+    : headerStyle === "minimal"
+      ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden bg-background/60 backdrop-blur-md border-b border-border"
+      : "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#f0e9e2] bg-[#fffdf9]/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(0,0,0,0.18)]";
+
+  const mobileHeaderClass = "bg-[#003b73] text-white";
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -97,12 +100,20 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from(TABLES.profiles)
-      .select("full_name")
+      .select("full_name, address, city, state, pincode")
       .eq("id", userId)
       .single();
 
     if (!data) return;
     setProfileName(data.full_name || "");
+
+    const addrParts: string[] = [];
+    if (data.address) addrParts.push(data.address);
+    if (data.city) addrParts.push(data.city);
+    if (data.pincode) addrParts.push(data.pincode);
+    if (addrParts.length > 0) {
+      setDeliveryAddress(addrParts.join(", "));
+    }
 
     let cardNumber = localStorage.getItem("nm_welfare_card");
     if (!cardNumber) {
@@ -152,32 +163,35 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
     { label: "Support", icon: Headset, action: () => navigate("/contact") },
   ];
 
+  const resolveDeliveryDisplay = () => {
+    if (deliveryAddress) return deliveryAddress;
+    const shortStore = "Naya Nagar, Dhata Road, Manjhanpur, Kaushambi";
+    return STORE_DETAILS?.address ? STORE_DETAILS.address.split(", ").slice(0, 4).join(", ") : shortStore;
+  };
+
   return (
-    <header className={headerClass}>
-      <div className="w-full px-3 py-3 md:px-5">
-        <div className="flex items-center gap-3 md:gap-4">
-          <Link to="/" className="group flex min-w-0 items-center gap-3 text-left">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#f1ddc6] bg-white shadow-[0_14px_30px_-20px_rgba(15,23,42,0.35)] transition-transform duration-200 group-hover:scale-[1.02] md:h-14 md:w-14">
-              {theme.storeLogo ? (
-                <img src={theme.storeLogo} alt="NM Mart logo" className="h-9 w-9 object-contain md:h-11 md:w-11" />
-              ) : (
-                <ShoppingCart className="h-6 w-6 text-[#111111] md:h-7 md:w-7" />
-              )}
-            </div>
-            <div className="hidden min-w-0 md:block">
-              <p className="flex items-center gap-2 truncate text-lg font-black uppercase tracking-[-0.05em] text-[#111111]">
-                <span>NM MART</span>
-                <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#2ecc71] shadow-[0_0_10px_rgba(46,204,113,0.65)]" aria-label="Live online" />
-              </p>
-              <p className="truncate text-[10px] font-bold uppercase tracking-[0.22em] text-[#5f5a55]">
-                Shop More, Save More
+    <header className={`${headerClass} md:bg-[#fffdf9]/90 bg-[#003b73]`}>
+      <div className="w-full max-w-[100vw] overflow-x-hidden px-3 py-2 md:px-5 md:py-3">
+        {/* Top Row: Logo and Mobile Actions */}
+        <div className="flex h-[44px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
+          <Link to="/" className="group flex min-w-0 shrink-1 items-center gap-1 text-left md:gap-3">
+            <div className="flex flex-col leading-none">
+              <span className="text-[20px] font-black tracking-tighter text-[#ffcc00] md:text-[#111111] md:text-2xl">
+                NM MART
+              </span>
+              <span className="text-[10px] font-bold tracking-tight text-white md:hidden">
+                Wholesale
+              </span>
+              <p className="hidden md:block truncate text-[10px] font-bold uppercase tracking-[0.22em] text-[#5f5a55]">
+                {theme.storeSlogan || "Shop More, Save More"}
               </p>
             </div>
           </Link>
 
-          <div className="hidden flex-1 md:block">
+          {/* Desktop Search */}
+          <div className="hidden flex-1 md:block mx-8">
             <form
-              className="flex items-center gap-3 rounded-full border border-[#eadcc6] bg-white px-4 py-3 shadow-[0_12px_25px_-22px_rgba(15,23,42,0.55)]"
+              className="flex items-center gap-3 rounded-full border border-[#eadcc6] bg-white px-4 py-2.5 shadow-sm"
               onSubmit={handleSearchSubmit}
             >
               <Search className="h-4 w-4 text-[#8a8a8a]" />
@@ -192,18 +206,44 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
             </form>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 md:gap-3">
-            <div className="relative">
+          <div className="flex shrink-0 items-center gap-2.5 md:gap-3">
+            {/* Mobile Actions: Wallet, Bell, Bookmark */}
+            <div className="flex items-center gap-3 md:gap-4">
+              <button
+                type="button"
+                onClick={() => navigate("/profile")}
+                className="text-white md:hidden transition-opacity hover:opacity-80"
+                aria-label="Wallet"
+              >
+                <Wallet size={22} />
+              </button>
+              <button
+                type="button"
+                className="text-white md:text-slate-800 transition-opacity hover:opacity-80"
+                aria-label="Notifications"
+              >
+                <Bell size={22} className="md:size-5" />
+              </button>
+              <button
+                type="button"
+                className="text-white md:text-slate-800 transition-opacity hover:opacity-80"
+                aria-label="Bookmarks"
+              >
+                <Bookmark size={22} className="md:size-5" />
+              </button>
+            </div>
+
+            <div className="relative hidden md:block">
               <button
                 type="button"
                 aria-label="Open account menu"
                 aria-expanded={accountOpen}
                 onClick={() => setAccountOpen((open) => !open)}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#f1ddc6] bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#1e1e1e] shadow-sm transition hover:-translate-y-0.5 hover:border-[#efc28a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:px-4"
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-[#f1ddc6] bg-white px-4 text-[#1e1e1e] shadow-sm transition hover:-translate-y-0.5"
               >
-                <User size={16} className="text-[#111111]" />
-                <span className="hidden sm:inline">Account</span>
-                <ChevronDown size={13} className={`hidden sm:block transition-transform ${accountOpen ? "rotate-180" : ""}`} />
+                <User size={15} className="text-[#111111]" />
+                <span className="text-[10px] font-black uppercase tracking-[0.18em]">Account</span>
+                <ChevronDown size={12} className={`transition-transform ${accountOpen ? "rotate-180" : ""}`} />
               </button>
 
               {accountOpen && (
@@ -232,43 +272,50 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
             <button
               type="button"
               onClick={() => navigate("/cart")}
-              aria-label={`Cart${cartCount ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ", empty"}`}
-              className="relative inline-flex min-h-11 items-center gap-2 rounded-full bg-[#111827] px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-[0_14px_30px_-18px_rgba(17,24,39,0.8)] transition hover:bg-[#f59e0b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:px-4"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-white transition md:h-11 md:w-auto md:px-4 md:bg-[#111827]"
             >
-              <ShoppingCart size={16} className="text-white" />
-              <span className="hidden sm:inline">Cart</span>
-              <span className="inline-flex min-w-[1.3rem] items-center justify-center rounded-full bg-[#f59e0b] px-1.5 py-0.5 text-[9px] font-black text-white">
-                {cartCount}
+              <ShoppingCart size={24} className="text-white md:size-[15px]" />
+              <span className="hidden md:inline ml-2 text-[10px] font-black uppercase tracking-[0.18em]">Cart</span>
+              <span className="absolute -top-1.5 -right-1.5 flex min-w-[1.2rem] items-center justify-center rounded-full bg-red-600 px-1 py-0.5 text-[9px] font-bold text-white md:static md:ml-1.5 md:bg-orange-500 md:text-[10px]">
+                {cartCount > 99 ? "100+" : cartCount}
               </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f1ddc6] bg-white shadow-[0_12px_25px_-20px_rgba(0,0,0,0.3)] transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:hidden"
-              aria-label="Open menu"
-            >
-              <Menu size={18} className="text-[#111111]" />
             </button>
           </div>
         </div>
 
-        <div className="mt-3 md:hidden">
+        {/* Mobile Search Bar */}
+        <div className="md:hidden mt-3">
           <form
-            className="flex items-center gap-3 rounded-full border border-[#eadcc6] bg-white px-4 py-3 shadow-[0_12px_25px_-22px_rgba(15,23,42,0.55)]"
+            className="flex h-[40px] w-full items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3"
             onSubmit={handleSearchSubmit}
           >
-            <Search className="h-4 w-4 text-[#8a8a8a]" />
+            <Search className="h-5 w-5 shrink-0 text-white" />
             <input
               type="search"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              aria-label="Search products"
-              placeholder="Search products, brands & categories"
-              className="w-full border-0 bg-transparent text-sm text-[#1f2937] placeholder:text-[#7b7b7b] focus:outline-none"
+              placeholder="Search product, brand or article..."
+              className="block w-full border-0 bg-transparent text-[15px] font-medium text-white placeholder:text-white/70 focus:outline-none"
             />
           </form>
         </div>
+      </div>
+
+      {/* Mobile Location Bar */}
+      <div className="md:hidden flex items-center justify-between bg-[#e6effc] px-4 py-2.5">
+        <div className="flex items-center gap-2 text-slate-900">
+          <MapPin size={20} className="text-blue-400" />
+          <span className="text-[16px] font-bold tracking-tight">
+            {resolveDeliveryDisplay().split(',').slice(0, 2).join(',')}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/profile")}
+          className="text-[16px] font-bold text-[#003b73]"
+        >
+          Change
+        </button>
       </div>
 
       <AnimatePresence>
