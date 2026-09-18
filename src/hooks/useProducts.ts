@@ -60,7 +60,8 @@ export function useProducts() {
     const description = getProductDescription(item);
 
     return {
-      id: barcode,
+      id: Number(item.id),
+      product_id: Number(item.id),
       name,
       price: rate,
       saleRate: rate,

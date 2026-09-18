@@ -1,6 +1,7 @@
 // ─── Types ───
 export interface Product {
-  id: string; // From barcode
+  id: number; // Authoritative Supabase products.id
+  product_id: number; // Explicit order-item identifier alias
   name: string;
   mrp: number;
   price: number; // From salerate

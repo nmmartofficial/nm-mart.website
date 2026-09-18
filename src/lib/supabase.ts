@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "@/lib/supabase/schema";
+import { resolveStorageImageUrl } from "@/lib/supabase/productImagesStorage";
 import type { Session } from "@supabase/supabase-js";
 
 export type WebsiteBanner = {
@@ -96,6 +97,7 @@ export async function fetchActiveBanners(): Promise<WebsiteBanner[]> {
       .filter((banner: any) => banner?.image_url && banner?.is_active !== false && banner?.is_deleted !== true)
       .map((banner: any, index: number) => ({
         ...banner,
+        image_url: resolveStorageImageUrl(banner.image_url, "banners"),
         title: banner.title ?? banner.name ?? "NM Mart",
         subtitle: banner.description ?? "",
         whatsapp_link: banner.link_url ?? null,

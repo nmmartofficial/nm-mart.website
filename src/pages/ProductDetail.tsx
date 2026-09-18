@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import { TABLES } from "@/lib/supabase/schema";
+import { getProductImageUrl } from "@/lib/supabase/schema";
 
 const SLOGAN = "Shop More, Save More";
 
@@ -72,7 +73,8 @@ const ProductDetail = () => {
             const stock = Number(data.stock ?? data.opstock ?? 0);
 
             const mapped: Product = {
-              id: String(data.barcode || barcode),
+              id: Number(data.id),
+              product_id: Number(data.id),
               name: String(data.name || "Unknown Product").trim(),
               price: rate,
               saleRate: rate,
@@ -81,7 +83,7 @@ const ProductDetail = () => {
               barcode: String(data.barcode || barcode),
               brand: String(data.brand_name || "Local").trim(),
               subCategory: String(data.subcategory_name || "").trim(),
-              imageUrl: String(data.image_url || data.picture || "").trim(),
+              imageUrl: getProductImageUrl(data),
               discount: disc,
               stock,
               save: Math.max(0, Math.round(mrp - rate))

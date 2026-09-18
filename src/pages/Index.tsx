@@ -413,7 +413,8 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
       if (data) {
         const saleRate = Number(data.sale_rate ?? data.onlinerate ?? 0);
         const p = {
-          id: data.barcode,
+          id: Number(data.id),
+          product_id: Number(data.id),
           name: data.name,
           mrp: Number(data.mrp || 0),
           price: saleRate,

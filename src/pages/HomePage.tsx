@@ -10,6 +10,7 @@ import Footer from "@/components/shop/Footer";
 import { fetchActiveBanners } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
+import { resolveStorageImageUrl } from "@/lib/supabase/productImagesStorage";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -101,7 +102,7 @@ export default function HomePage() {
       const images: Record<string, string> = {};
       for (const category of data || []) {
         const name = String(category?.name || "").trim().toUpperCase();
-        const image = String(category?.image_url || "").trim();
+        const image = resolveStorageImageUrl(category?.image_url, "categories");
         if (name && image) images[name] = image;
       }
       setCategoryImages(images);
