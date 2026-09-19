@@ -110,6 +110,10 @@ export function normalizeCategory(cat: string): string {
   return cat.trim().toUpperCase();
 }
 
+export function isDisplayLabel(value: string | null | undefined): boolean {
+  return /\p{L}/u.test(String(value ?? "").trim());
+}
+
 export function parseProductSlug(slug: string): { name: string; barcode: string } {
   const decoded = decodeURIComponent(slug);
   const parts = decoded.split("__");

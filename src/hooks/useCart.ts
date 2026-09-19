@@ -1,5 +1,38 @@
-import { createContext, createElement, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Product, CartItem } from "@/lib/store-utils";
+import { supabase } from "@/lib/supabase/client";
+
+const GUEST_CART_KEY = "nm_mart_cart_guest";
+
+function readCart(key: string): CartItem[] {
+  try {
+    const saved = window.localStorage.getItem(key);
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function sameProduct(first: CartItem, second: CartItem): boolean {
+  if (first.id && second.id) return first.id === second.id;
+  if (first.barcode && second.barcode) return first.barcode === second.barcode;
+  return first.name === second.name;
+}
+
+function mergeCarts(savedCart: CartItem[], guestCart: CartItem[]): CartItem[] {
+  return guestCart.reduce<CartItem[]>((merged, guestItem) => {
+    const existing = merged.find((item) => sameProduct(item, guestItem));
+    if (!existing) return [...merged, guestItem];
+
+    const stockLimit = Number(existing.stock);
+    const quantity = existing.qty + guestItem.qty;
+    const nextQty = Number.isFinite(stockLimit) && stockLimit > 0
+      ? Math.min(quantity, stockLimit)
+      : quantity;
+    return merged.map((item) => sameProduct(item, guestItem) ? { ...item, qty: nextQty } : item);
+  }, [...savedCart]);
+}
 
 type CartContextValue = {
   cart: CartItem[];
@@ -15,12 +48,51 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => readCart(GUEST_CART_KEY));
+  const [userId, setUserId] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadUserCart = async (authSession?: { user?: { id?: string } } | null) => {
+      const session = authSession === undefined
+        ? (await supabase.auth.getSession()).data.session
+        : authSession;
+      if (!mounted) return;
+      const nextUserId = session?.user?.id ?? null;
+      if (!nextUserId) {
+        setUserId(null);
+        setCart((currentCart) => {
+          window.localStorage.setItem(GUEST_CART_KEY, JSON.stringify(currentCart));
+          return currentCart;
+        });
+        return;
+      }
+
+      const savedCart = readCart(`nm_mart_cart_${nextUserId}`);
+      const guestCart = readCart(GUEST_CART_KEY);
+      const mergedCart = mergeCarts(savedCart, guestCart);
+      setUserId(nextUserId);
+      setCart(mergedCart);
+      if (guestCart.length > 0) window.localStorage.removeItem(GUEST_CART_KEY);
+    };
+
+    void loadUserCart();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      void loadUserCart(session);
+    });
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const key = userId ? `nm_mart_cart_${userId}` : GUEST_CART_KEY;
+    if (userId !== undefined) window.localStorage.setItem(key, JSON.stringify(cart));
+  }, [cart, userId]);
 
   const isSameProduct = (cartItem: CartItem, product: Product) => {
-    if (cartItem.id && product.id) return cartItem.id === product.id;
-    if (cartItem.barcode && product.barcode) return cartItem.barcode === product.barcode;
-    return cartItem.name === product.name;
+    return sameProduct(cartItem, product);
   };
 
   const addToCart = useCallback((p: Product) => {

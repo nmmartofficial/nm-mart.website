@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { calculateSalePrice, Product, normalizeCategory } from "@/lib/store-utils";
+import { calculateSalePrice, isDisplayLabel, Product, normalizeCategory } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
 import { logSupabaseDebug } from "@/lib/supabase";
 import {
@@ -22,7 +22,7 @@ import {
 } from "@/lib/supabase/schema";
 
 export function getUniqueBrandNames(products: Array<{ brand?: string | null }>): string[] {
-  return [...new Set(products.map((product) => String(product?.brand ?? "").trim()).filter(Boolean))];
+  return [...new Set(products.map((product) => String(product?.brand ?? "").trim()).filter(isDisplayLabel))];
 }
 
 /** Customer storefront catalog: all queries require stock > 0. Admin uses InventoryTab (no stock filter). */
@@ -45,7 +45,8 @@ export function useProducts() {
   const [allCategories, setAllCategories] = useState<string[]>([]);
 
   const getProductRows = async (range?: { from: number; to: number }) => {
-    let query = supabase.from(TABLES.products).select("*", range ? { count: "exact" } : undefined);
+    const productColumns = "barcode,name,mrp,sale_rate,retail_rate,restrate,onlinerate,online_rate,selling_price,stock,opstock,opening_stock,category_name,item_group_name,item_group,brand_name,subcategory_name,sub_category_name,discount_percent,discount_pct,discperc,discount,image_url,picture,is_active,is_deleted,is_favourite,isfav,unit_name,unitcode,description,item_description,itemdescription,id";
+    let query = supabase.from(TABLES.products).select(productColumns, range ? { count: "exact" } : undefined);
     if (range) query = query.range(range.from, range.to);
     const { data, error, count } = await query;
     return { data: (data || []) as DbProductRow[], error, count: count ?? null };
@@ -57,7 +58,8 @@ export function useProducts() {
     const mrp = getProductMrp(item);
     const storedRate = getProductSaleRate(item);
     const imageUrl = getProductImageUrl(item);
-    const category = normalizeCategory(getProductCategory(item));
+    const normalizedCategory = normalizeCategory(getProductCategory(item));
+    const category = isDisplayLabel(normalizedCategory) ? normalizedCategory : "GENERAL";
     const discount = getProductDiscount(item);
     const rate = calculateSalePrice(mrp, storedRate, discount);
     const stock = getProductStock(item);
@@ -73,7 +75,7 @@ export function useProducts() {
       category,
       mrp,
       barcode,
-      brand: getProductBrand(item),
+      brand: isDisplayLabel(getProductBrand(item)) ? getProductBrand(item) : "Local",
       subCategory: getProductSubcategory(item),
       imageUrl,
       discount,
@@ -95,7 +97,7 @@ export function useProducts() {
         ...new Set(
           data
             .map((item) => normalizeCategory(getProductCategory(item)))
-            .filter((c) => c && c.length > 1)
+            .filter((c) => c && c.length > 1 && isDisplayLabel(c))
         ),
       ];
 
@@ -103,6 +105,33 @@ export function useProducts() {
       setAllCategories(uniqueCats);
     } catch (err) {
       console.error("Error deriving categories:", err);
+    }
+  };
+
+  const fetchSupplementalProducts = async () => {
+    try {
+      const { data, error } = await getProductRows({ from: 0, to: 999 });
+      if (error) throw error;
+
+      const liveRows = data.filter((item) => getProductStock(item) > 0 && isProductActive(item));
+      const mappedProducts = liveRows.map(mapProduct);
+      const categories = [...new Set(liveRows.map((item) => normalizeCategory(getProductCategory(item))).filter((category) => category.length > 1 && isDisplayLabel(category)))];
+      const featured = mappedProducts.filter((product) => product.isFeatured);
+      const flat50 = mappedProducts.filter((product) => product.discount >= 50);
+      const flat33 = mappedProducts.filter((product) => product.discount >= 33 && product.discount < 50);
+
+      setAllCategories(categories);
+      setFeaturedProducts(featured);
+      setFlat50(flat50);
+      setFlat33(flat33);
+      setTotalFeatured(featured.length);
+      setTotal50(flat50.length);
+      setTotal33(flat33.length);
+      setHasMoreFeatured(false);
+      setHasMore50(false);
+      setHasMore33(false);
+    } catch (err) {
+      console.error("Supplemental Products Fetch Error:", err);
     }
   };
 
@@ -172,10 +201,7 @@ export function useProducts() {
       if (offset === 0) {
         setLoading(true);
         setError(null);
-        fetchFeaturedProducts(0);
-        fetchDiscountedProducts(50, 0);
-        fetchDiscountedProducts(33, 0);
-        fetchAllCategories();
+        void fetchSupplementalProducts();
       }
 
       const { data, error, count } = await getProductRows({ from: offset, to: offset + 49 });
