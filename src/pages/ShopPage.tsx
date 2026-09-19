@@ -46,6 +46,7 @@ const ShopPage = () => {
     const sortValue = searchParams.get("sort");
     return (sortOptions.some((option) => option.value === sortValue) ? sortValue : "featured") as (typeof sortOptions)[number]["value"];
   });
+  const offersOnly = searchParams.get("offers") === "25";
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -57,6 +58,7 @@ const ShopPage = () => {
     if (priceMin.trim()) nextParams.set("priceMin", priceMin.trim());
     if (priceMax.trim()) nextParams.set("priceMax", priceMax.trim());
     if (sortBy !== "featured") nextParams.set("sort", sortBy);
+    if (offersOnly) nextParams.set("offers", "25");
 
     const nextSearch = nextParams.toString();
     const currentSearch = searchParams.toString();
@@ -64,7 +66,7 @@ const ShopPage = () => {
     if (nextSearch !== currentSearch) {
       setSearchParams(nextSearch ? `?${nextSearch}` : "", { replace: true });
     }
-  }, [query, selectedCategory, selectedBrand, priceMin, priceMax, sortBy, searchParams, setSearchParams]);
+  }, [offersOnly, query, selectedCategory, selectedBrand, priceMin, priceMax, sortBy, searchParams, setSearchParams]);
 
   const filteredProducts = useMemo(() => {
     const searchValue = query.trim().toLowerCase();
@@ -85,10 +87,11 @@ const ShopPage = () => {
 
       const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
       const matchesBrand = selectedBrand === "all" || product.brand === selectedBrand;
+      const matchesOffers = !offersOnly || Number(product.discount || 0) > 25;
       const matchesPriceMin = !hasMinPrice || productPrice >= effectiveMin;
       const matchesPriceMax = !hasMaxPrice || productPrice <= effectiveMax;
 
-      return matchesSearch && matchesCategory && matchesBrand && matchesPriceMin && matchesPriceMax;
+      return matchesSearch && matchesCategory && matchesBrand && matchesPriceMin && matchesPriceMax && matchesOffers;
     });
 
     const sorted = [...list];
@@ -114,7 +117,7 @@ const ShopPage = () => {
     }
 
     return sorted;
-  }, [allProducts, priceMax, priceMin, query, selectedBrand, selectedCategory, sortBy]);
+  }, [allProducts, offersOnly, priceMax, priceMin, query, selectedBrand, selectedCategory, sortBy]);
 
   const clearFilters = () => {
     setQuery("");

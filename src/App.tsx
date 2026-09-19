@@ -18,6 +18,7 @@ import ProductDetail from "@/pages/ProductDetail";
 import Checkout from "@/pages/Checkout";
 import ResetPassword from "@/pages/ResetPassword";
 import ShopPage from "@/pages/ShopPage";
+import Categories from "@/pages/Categories";
 import CartPage from "@/pages/CartPage";
 import Orders from "@/pages/Orders";
 import OrderDetails from "@/pages/OrderDetails";
@@ -107,6 +108,7 @@ function App() {
               <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
               <Route path="/tracker" element={<OrderTracker />} />
               <Route path="/shop" element={<ShopPage />} />
+              <Route path="/categories" element={<Categories />} />
               <Route path="/products" element={<ShopPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
