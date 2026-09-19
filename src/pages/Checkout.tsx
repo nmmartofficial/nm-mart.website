@@ -37,10 +37,10 @@ const Checkout = () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSessionActive(Boolean(session));
       if (session?.user) {
-        // Fetch profile to pre-fill phone and name
+        // Reuse saved delivery details so customers do not re-enter them for every order.
         const { data: profile, error: profileError } = await supabase
           .from(TABLES.profiles)
-          .select('full_name, mobile')
+          .select('full_name, phone_number, mobile, phone, address, landmark, city, state, pincode')
           .eq('id', session.user.id)
           .single();
         if (profileError) {
@@ -51,7 +51,10 @@ const Checkout = () => {
           setFormData(prev => ({
             ...prev,
             fullName: profile.full_name || "",
-            phone: profile.mobile || session.user.phone?.replace("+91", "") || ""
+            phone: profile.phone_number || profile.mobile || profile.phone || session.user.phone?.replace("+91", "") || "",
+            street: profile.address || "",
+            landmark: profile.landmark || "",
+            pincode: profile.pincode || prev.pincode,
           }));
         }
       }
