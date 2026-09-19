@@ -22,7 +22,6 @@ export type ServerOrderPayload = CheckoutMetadata & {
 
 export type CheckoutFormValues = {
   fullName?: string;
-  houseNo?: string;
   street?: string;
   phone?: string;
   pincode?: string;
@@ -54,7 +53,6 @@ export function isServiceablePincode(
 
 export function validateCheckoutForm(form: CheckoutFormValues): { ok: true } | { ok: false; message: string } {
   const fullName = form.fullName?.trim() ?? "";
-  const houseNo = form.houseNo?.trim() ?? "";
   const street = form.street?.trim() ?? "";
   const phone = form.phone ?? "";
   const pincode = form.pincode ?? "";
@@ -65,8 +63,8 @@ export function validateCheckoutForm(form: CheckoutFormValues): { ok: true } | {
     return { ok: false, message: "Please enter a valid full name." };
   }
 
-  if (!houseNo || !street) {
-    return { ok: false, message: "Please enter your house number and street." };
+  if (!street) {
+    return { ok: false, message: "Please enter your street or area." };
   }
 
   if (!isValidIndianPhone(phone)) {

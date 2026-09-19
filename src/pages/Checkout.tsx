@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Phone, CreditCard, Banknote, QrCode, 
   Loader2, ShoppingBag, Truck, 
-  ChevronRight, Building2, Landmark, Map as MapIcon
+  ChevronRight, Landmark, Map as MapIcon
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
@@ -26,7 +26,6 @@ const Checkout = () => {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
-    houseNo: "",
     street: "",
     landmark: "",
     pincode: "212207", // Default for Manjhanpur
@@ -87,7 +86,6 @@ const Checkout = () => {
 
     const validation = validateCheckoutForm({
       fullName: formData.fullName,
-      houseNo: formData.houseNo,
       street: formData.street,
       phone: formData.phone,
       pincode: formData.pincode,
@@ -105,7 +103,8 @@ const Checkout = () => {
       const session = await getActiveSession();
       if (!session) {
         setSessionActive(false);
-        toast.error("Please login again.");
+        toast.error("Please login before placing your order.");
+        navigate("/login?next=%2Fcheckout");
         return;
       }
 
@@ -147,7 +146,7 @@ const Checkout = () => {
         }
       }
 
-      const fullAddress = `${formData.houseNo}, ${formData.street}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.pincode}`;
+      const fullAddress = `${formData.street}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.pincode}`;
       const payload = buildServerOrderPayload(cart, {
         customer_id: session.user.id,
         customer_name: formData.fullName.trim(),
@@ -253,22 +252,6 @@ const Checkout = () => {
                         placeholder="10-DIGIT MOBILE"
                         required
                         className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-primary transition-all font-bold text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">House No / Flat *</label>
-                    <div className="relative group">
-                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                      <input 
-                        type="text" 
-                        name="houseNo"
-                        value={formData.houseNo}
-                        onChange={handleInputChange}
-                        placeholder="HOUSE/FLAT NO"
-                        required
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-primary transition-all font-bold uppercase text-sm"
                       />
                     </div>
                   </div>
@@ -406,7 +389,7 @@ const Checkout = () => {
                   <div className="h-[1px] bg-gray-100 my-6"></div>
                 {!sessionActive && (
                   <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
-                    Please Login - order submit is disabled.
+                    Please login before placing the order. Your checkout details will remain available.
                   </div>
                 )}
 
@@ -423,7 +406,7 @@ const Checkout = () => {
 
                   <button 
                     type="submit"
-                    disabled={loading || !sessionActive}
+                    disabled={loading}
                     aria-busy={loading}
                     className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] hover:bg-black transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 italic mt-8 active:scale-[0.98]"
                   >

@@ -105,7 +105,6 @@ describe("buildServerOrderPayload", () => {
 
     expect(validateCheckoutForm({
       fullName: "Test User",
-      houseNo: "12",
       street: "Main Road",
       phone: "9876543210",
       pincode: "212207",
