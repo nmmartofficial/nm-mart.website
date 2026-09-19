@@ -20,6 +20,7 @@ import {
   MapPin,
   Bookmark,
   Bell,
+  Heart,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
@@ -161,9 +162,9 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
 
   return (
     <header className={`${headerClass} md:bg-[#fffdf9]/90 bg-[#064985]`}>
-      <div className="w-full max-w-[100vw] overflow-x-hidden px-3 py-2 md:px-5 md:py-3">
+      <div className="w-full max-w-[100vw] overflow-x-hidden px-3 pt-2 pb-0 md:px-5 md:py-3">
         {/* Top Row: Logo and Mobile Actions */}
-        <div className="flex h-[58px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
+        <div className="flex h-[52px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
           <Link to="/" className="group flex min-w-0 shrink-1 items-center gap-1 text-left md:gap-3">
             <div className="flex flex-col leading-none">
               <span className="text-[27px] font-black tracking-tighter text-[#ffcc00] md:text-[#111111] md:text-2xl">
@@ -218,7 +219,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
               <button
                 type="button"
                 onClick={() => navigate("/orders")}
-                className="text-white transition-opacity hover:opacity-80 md:hidden"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#fbbf24] text-[#123b6d] transition-opacity hover:opacity-80 md:hidden"
                 aria-label="Orders"
               >
                 <Bell size={22} />
@@ -226,10 +227,10 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
               <button
                 type="button"
                 onClick={() => navigate("/wishlist")}
-                className="text-white transition-opacity hover:opacity-80 md:hidden"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#fda4af] text-[#9f1239] transition-opacity hover:opacity-80 md:hidden"
                 aria-label="Wishlist"
               >
-                <Bookmark size={22} />
+                <Heart size={18} fill="currentColor" />
               </button>
             </div>
 
@@ -304,7 +305,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
         </div>
 
         {/* Mobile Search Bar */}
-        <div className="mt-1 md:hidden">
+        <div className="mt-0 md:hidden">
           <form
             className="flex h-[52px] w-full items-center gap-3 rounded-xl border border-white/25 bg-[#4669aa] px-4 shadow-inner"
             onSubmit={handleSearchSubmit}
