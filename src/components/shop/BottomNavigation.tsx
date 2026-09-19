@@ -6,7 +6,7 @@ export default function BottomNavigation() {
 
   const items = [
     { label: "Home", to: "/", Icon: Home },
-    { label: "Categories", to: "/shop", Icon: Grid2X2 },
+    { label: "Categories", to: "/#categories", Icon: Grid2X2 },
     { label: "Offers", to: "/shop?sort=discount-desc", Icon: Tag },
     { label: "Orders", to: "/orders", Icon: Package },
     { label: "Account", to: "/profile", Icon: User },
@@ -15,7 +15,7 @@ export default function BottomNavigation() {
   const isActive = (to: string) => {
     if (to === "/") return pathname === "/";
     if (to.includes("sort=discount-desc")) return search.includes("sort=discount-desc");
-    if (to === "/shop") return pathname === "/shop" || pathname === "/products";
+    if (to === "/#categories") return pathname === "/" && window.location.hash === "#categories";
     return pathname === to;
   };
 

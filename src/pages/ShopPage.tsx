@@ -46,7 +46,6 @@ const ShopPage = () => {
     const sortValue = searchParams.get("sort");
     return (sortOptions.some((option) => option.value === sortValue) ? sortValue : "featured") as (typeof sortOptions)[number]["value"];
   });
-  const [visibleProductsCount, setVisibleProductsCount] = useState(8);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -66,10 +65,6 @@ const ShopPage = () => {
       setSearchParams(nextSearch ? `?${nextSearch}` : "", { replace: true });
     }
   }, [query, selectedCategory, selectedBrand, priceMin, priceMax, sortBy, searchParams, setSearchParams]);
-
-  useEffect(() => {
-    setVisibleProductsCount(8);
-  }, [query, selectedCategory, selectedBrand, priceMin, priceMax, sortBy]);
 
   const filteredProducts = useMemo(() => {
     const searchValue = query.trim().toLowerCase();
@@ -131,14 +126,7 @@ const ShopPage = () => {
     setSearchParams("", { replace: true });
   };
 
-  const displayedProducts = filteredProducts.slice(0, visibleProductsCount);
-  const canLoadMoreProducts = visibleProductsCount < filteredProducts.length || hasMore;
-
-  const handleLoadMoreProducts = () => {
-    const nextCount = visibleProductsCount + 8;
-    if (nextCount > allProducts.length && hasMore) loadMore();
-    setVisibleProductsCount(nextCount);
-  };
+  const displayedProducts = filteredProducts;
 
   const filterPanel = (
     <div className="space-y-5 rounded-[26px] border border-slate-200 bg-white p-4 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.35)] md:p-5">
@@ -406,18 +394,6 @@ const ShopPage = () => {
                   />
                 ))}
               </div>
-              {canLoadMoreProducts && (
-                <div className="mt-6 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={handleLoadMoreProducts}
-                    disabled={loading}
-                    className="rounded-full border border-slate-200 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-wait disabled:opacity-60"
-                  >
-                    {loading ? "Loading Products" : "Load More Products"}
-                  </button>
-                </div>
-              )}
               </>
             )}
           </div>

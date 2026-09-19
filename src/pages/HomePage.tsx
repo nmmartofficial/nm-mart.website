@@ -41,8 +41,8 @@ export default function HomePage() {
   const [visibleFeaturedCount, setVisibleFeaturedCount] = useState(8);
   const [visibleFlat50Count, setVisibleFlat50Count] = useState(8);
   const [visibleFlat33Count, setVisibleFlat33Count] = useState(8);
-  const [visibleCategoryCount, setVisibleCategoryCount] = useState(6);
-  const [visibleBrandCount, setVisibleBrandCount] = useState(6);
+  const [visibleCategoryCount] = useState(Number.MAX_SAFE_INTEGER);
+  const [visibleBrandCount] = useState(Number.MAX_SAFE_INTEGER);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const allLiveCategories = (categories || []).filter(Boolean);
   const liveCategories = allLiveCategories.slice(0, visibleCategoryCount);
@@ -275,7 +275,7 @@ export default function HomePage() {
           <HeroBanner banners={banners} loading={loadingBanners} />
         </section>
 
-        <section className="mb-3 rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+        <section id="categories" className="mb-3 rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
           <div className="mb-2 flex items-end justify-between gap-3 md:mb-5">
             <div className="min-w-0 flex-1">
               <SectionHeader

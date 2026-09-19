@@ -51,6 +51,22 @@ export function useProducts() {
     return { data: (data || []) as DbProductRow[], error, count: count ?? null };
   };
 
+  const getAllProductRows = async () => {
+    const batchSize = 1000;
+    const rows: DbProductRow[] = [];
+    let offset = 0;
+
+    while (true) {
+      const result = await getProductRows({ from: offset, to: offset + batchSize - 1 });
+      if (result.error) throw result.error;
+      rows.push(...result.data);
+      if (result.data.length < batchSize) break;
+      offset += batchSize;
+    }
+
+    return rows;
+  };
+
   const mapProduct = (item: DbProductRow): Product => {
     const barcode = getProductBarcode(item);
     const name = getProductName(item);
@@ -88,9 +104,7 @@ export function useProducts() {
 
   const fetchAllCategories = async () => {
     try {
-      const { data, error } = await getProductRows({ from: 0, to: 999 });
-
-      if (error) throw error;
+      const data = await getAllProductRows();
 
       const uniqueCats = [
         ...new Set(
@@ -109,9 +123,7 @@ export function useProducts() {
 
   const fetchFeaturedProducts = async (offset = 0) => {
     try {
-      const { data, error } = await getProductRows();
-
-      if (error) throw error;
+      const data = await getAllProductRows();
 
       const filtered = data.filter((item) => {
         const stock = getProductStock(item);
@@ -133,9 +145,7 @@ export function useProducts() {
 
   const fetchDiscountedProducts = async (type: 50 | 33, offset = 0) => {
     try {
-      const { data, error } = await getProductRows();
-
-      if (error) throw error;
+      const data = await getAllProductRows();
 
       const filtered = data.filter((item) => {
         const stock = getProductStock(item);
@@ -181,12 +191,7 @@ export function useProducts() {
         fetchAllCategories();
       }
 
-      const { data, error, count } = await getProductRows();
-
-      if (error) {
-        console.error("Supabase Database Error:", error);
-        throw error;
-      }
+      const data = await getAllProductRows();
 
       const filtered = data.filter((item) => {
         const stock = getProductStock(item);
@@ -195,9 +200,9 @@ export function useProducts() {
 
       setAllBrands(getUniqueBrandNames(filtered.map((item) => ({ brand: getProductBrand(item) }))));
 
-      if (count !== null) setTotalCount(count);
+      setTotalCount(filtered.length);
 
-      const mappedProducts: Product[] = filtered.slice(offset, offset + 50).map(mapProduct);
+      const mappedProducts: Product[] = filtered.map(mapProduct);
       logSupabaseDebug("products:fetched", { count: mappedProducts.length, offset });
 
       if (offset === 0) {
@@ -206,7 +211,7 @@ export function useProducts() {
         setAllProducts((prev) => [...prev, ...mappedProducts]);
       }
 
-      setHasMore((count ?? filtered.length) > offset + mappedProducts.length);
+      setHasMore(false);
     } catch (err) {
       setError("Unable to load products right now.");
       console.error("Supabase Fetch Error:", err);

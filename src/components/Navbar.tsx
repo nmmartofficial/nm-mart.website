@@ -297,9 +297,9 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
             <button
               type="button"
               onClick={() => navigate("/cart")}
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-white transition md:h-11 md:w-auto md:px-4 md:bg-[#111827]"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#111827] text-white shadow-sm transition hover:bg-[#f97316] md:h-11 md:w-auto md:px-4"
             >
-              <ShoppingCart size={24} className="text-white md:size-[15px]" />
+              <ShoppingCart size={21} className="text-white md:size-[15px]" />
               <span className="hidden md:inline ml-2 text-[10px] font-black uppercase tracking-[0.18em]">Cart</span>
               <span className="absolute -top-1.5 -right-1.5 flex min-w-[1.2rem] items-center justify-center rounded-full bg-red-600 px-1 py-0.5 text-[9px] font-bold text-white md:static md:ml-1.5 md:bg-orange-500 md:text-[10px]">
                 {cartCount > 99 ? "100+" : cartCount}
