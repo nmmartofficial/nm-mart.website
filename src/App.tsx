@@ -87,7 +87,7 @@ function App() {
     <ThemeProvider>
       <CartProvider>
         <WishlistProvider>
-          <Router>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Toaster position="top-center" expand={false} richColors />
         <AnnouncementTicker />
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-xs font-bold uppercase tracking-widest text-slate-500">Loading NM Mart...</div>}>

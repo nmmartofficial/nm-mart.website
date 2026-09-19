@@ -88,7 +88,6 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
             src={bannerImage}
             alt={banner.title || "Promotion Banner"}
             decoding="sync"
-            fetchPriority="high"
             className={imageClass}
             style={{
               imageRendering: 'auto',
