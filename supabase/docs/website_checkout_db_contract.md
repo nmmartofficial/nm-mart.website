@@ -24,7 +24,7 @@ The local repo snapshot shows these shared schema shapes:
 - `public.profiles`
   - `id`, `full_name`, `mobile`, `phone`, `role`, `created_at`, `updated_at`
 
-This repository snapshot does not contain a verified live schema for `public.order_items` or `public.inventory_logs`. Those tables must be inspected in the target Supabase database before production execution. The migration package does not create or change them blindly.
+The supplied live `public.orders` definition stores website line items in `items jsonb`; this checkout package therefore does not require a separate `order_items` table. Stock is validated and deducted from the authoritative `public.products` rows inside the RPC transaction.
 
 ## RPC contract prepared
 
@@ -56,11 +56,10 @@ Security requirements:
 - ignore browser-supplied price/stock/totals
 - calculate totals server-side
 - lock relevant products in a transaction
-- create order, order_items, deduct stock, and create inventory log in one atomic transaction
-- enforce idempotency using `(customer_id, idempotency_key)` if the live schema contains the column
+- create the `public.orders` row with `items jsonb`, then deduct stock in the same transaction
+- enforce idempotency using `(customer_id, idempotency_key)`; the migration adds this nullable column if absent
 
 Important limitations:
-- The actual live DB contract for `order_items` and `inventory_logs` must be inspected before production execution.
 - No live DB or service-role access is available here, so execution remains blocked until the target database is confirmed.
 
 ## Functions included in the migration package
@@ -80,12 +79,10 @@ Before applying the migration in production, the DB operator must verify:
 1. live `public.products` columns and stock field names
 2. live `public.orders` columns and status/payment fields
 3. live `public.profiles` customer mapping
-4. presence/shape of `public.order_items`
-5. presence/shape of `public.inventory_logs`
-6. admin consumer usage of `public.place_order_atomic`
-7. grants and RLS on `public.orders` / `public.products`
-8. stock and order concurrency requirements
-9. whether the final website checkout should be `authenticated-only`
+4. admin consumer usage of `public.place_order_atomic`
+5. grants and RLS on `public.orders` / `public.products`
+6. stock and order concurrency requirements
+7. whether the final website checkout should be `authenticated-only`
 
 ## Execution status
 
