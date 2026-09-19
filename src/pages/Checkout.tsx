@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-  ArrowLeft, MapPin, Phone, CreditCard, Banknote, QrCode, 
-  Loader2, ShoppingBag, Truck, 
+  ArrowLeft, MapPin, Phone, CreditCard, Banknote,
+  Loader2, ShoppingBag,
   ChevronRight, Landmark, Map as MapIcon
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { TABLES } from "../lib/supabase/schema";
 import { useCart } from "@/hooks/useCart";
-import { UPI_ID, type CartItem } from "@/lib/store-utils";
+import { type CartItem } from "@/lib/store-utils";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
@@ -21,7 +21,6 @@ const Checkout = () => {
   const { cart, cartTotal, clearCart } = useCart();
   const { addresses } = useSavedAddresses();
   const subtotal = cart.reduce((sum, item) => sum + (Number(item.saleRate ?? item.price ?? 0) * item.qty), 0);
-  const upiIntentUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent("NM MART")}&am=${encodeURIComponent(String(cartTotal))}&cu=INR`;
   const [loading, setLoading] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState("");
@@ -184,14 +183,15 @@ const Checkout = () => {
         shipping_address: fullAddress.trim(),
         landmark: formData.landmark.trim(),
         pincode: formData.pincode.trim(),
-        payment_method: formData.paymentMethod,
+        payment_method: "cod",
         idempotency_key: `${session.user.id}:${Date.now()}:${crypto.randomUUID()}`,
       });
 
       const { data, error } = await supabase.rpc("place_website_order_atomic", payload);
       if (error) throw error;
 
-      const createdOrderId = data?.id ?? data?.order_id ?? data?.orderId;
+      const returnedOrder = Array.isArray(data) ? data[0] : data;
+      const createdOrderId = returnedOrder?.id ?? returnedOrder?.order_id ?? returnedOrder?.orderId;
       if (!createdOrderId) {
         throw new Error("The secure checkout returned no order ID.");
       }
@@ -351,11 +351,9 @@ const Checkout = () => {
                   <span>Payment Method</span>
                 </legend>
 
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid gap-6 md:max-w-sm">
                   {[
                     { id: 'cod', label: 'Cash On Delivery', icon: Banknote, sub: 'Pay when your order arrives' },
-                    { id: 'upi', label: 'Pay via UPI', icon: QrCode, sub: 'UPI method recorded with your order' },
-                    { id: 'card_at_home', label: 'Card at Home', icon: Truck, sub: 'Card payment at delivery' },
                   ].map((method) => (
                     <label
                       key={method.id}
@@ -387,21 +385,8 @@ const Checkout = () => {
                     </label>
                   ))}
                 </div>
-                {formData.paymentMethod === "upi" && (
-                  <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">Pay online with UPI</p>
-                    <p className="mt-2 text-sm font-bold text-slate-800">UPI ID: {UPI_ID}</p>
-                    <p className="mt-1 text-[10px] leading-5 text-slate-600">Open your UPI app, complete the payment, then tap Place Order. Payment will remain pending until it is verified.</p>
-                    <a
-                      href={upiIntentUrl}
-                      className="mt-4 inline-flex items-center justify-center rounded-full bg-orange-600 px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white transition hover:bg-black"
-                    >
-                      Open UPI App
-                    </a>
-                  </div>
-                )}
                 <p className="text-[10px] font-semibold leading-5 text-gray-400">
-                  Select how you intend to pay. This checkout does not process or verify online payments.
+                  Cash on delivery is currently the only supported payment method.
                 </p>
               </fieldset>
             </div>

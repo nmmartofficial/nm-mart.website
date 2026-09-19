@@ -66,7 +66,7 @@ SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_auth_user uuid;
-  v_order_id bigint;
+  v_order_id text;
   v_item jsonb;
   v_quantity integer;
   v_product_id bigint;
@@ -188,6 +188,7 @@ BEGIN
 
   v_total := v_subtotal;
   INSERT INTO public.orders (
+    id,
     customer_id,
     customer_name,
     customer_phone,
@@ -210,6 +211,7 @@ BEGIN
     items
   )
   VALUES (
+    gen_random_uuid()::text,
     v_customer_uuid,
     p_customer_name,
     p_customer_phone,
