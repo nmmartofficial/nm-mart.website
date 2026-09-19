@@ -236,6 +236,23 @@ export async function getThemeConfig(draft = false): Promise<ThemeConfig> {
   };
 }
 
+export async function getMainStoreLogo(): Promise<string> {
+  try {
+    const { data, error } = await supabase
+      .from("store_assets")
+      .select("image_url")
+      .eq("asset_key", "main_logo")
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (!error && data?.image_url) return String(data.image_url).trim();
+  } catch {
+    // Keep the bundled logo as a safe fallback until the asset table is available.
+  }
+
+  return DEFAULT_CONFIG.theme.storeLogo;
+}
+
 export async function setThemeConfig(config: Partial<ThemeConfig>, draft = false): Promise<boolean> {
   const current = await getThemeConfig(draft);
   return setStoreConfig(draft ? 'theme_draft' : 'theme', { ...current, ...config });

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getThemeConfig, ThemeConfig } from './storeConfig';
+import { getMainStoreLogo, getThemeConfig, ThemeConfig } from './storeConfig';
 
 interface ThemeContextType {
   theme: ThemeConfig;
@@ -201,7 +201,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
     }
 
-    setTheme(resolved);
+    const storeLogo = await getMainStoreLogo();
+    setTheme({ ...resolved, storeLogo });
     applyTheme(resolved);
   };
 

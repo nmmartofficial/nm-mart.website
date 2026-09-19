@@ -167,9 +167,13 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
         <div className="flex h-[52px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
           <Link to="/" className="group flex min-w-0 shrink-1 items-center gap-1 text-left md:gap-3">
             <div className="flex flex-col leading-none">
-              <span className="text-[27px] font-black tracking-tighter text-[#ffcc00] md:text-[#111111] md:text-2xl">
-                NM MART
-              </span>
+              <div className="flex h-9 w-32 items-center md:h-11 md:w-44">
+                <img
+                  src={theme.storeLogo || "/nm-mart-logo.png"}
+                  alt={theme.storeName || "NM Mart logo"}
+                  className="max-h-full max-w-full object-contain object-left"
+                />
+              </div>
               <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-white md:hidden">
                 Wholesale
               </span>
