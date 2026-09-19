@@ -397,6 +397,18 @@ const ShopPage = () => {
                   />
                 ))}
               </div>
+              {hasMore && (
+                <div className="mt-7 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={loadMore}
+                    disabled={loading}
+                    className="rounded-full border border-slate-200 bg-white px-6 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {loading ? "Loading Products" : "Load More Products"}
+                  </button>
+                </div>
+              )}
               </>
             )}
           </div>
