@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { TABLES } from "../lib/supabase/schema";
 import { useCart } from "@/hooks/useCart";
+import { UPI_ID } from "@/lib/store-utils";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
@@ -18,6 +19,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { cart, cartTotal, clearCart } = useCart();
   const subtotal = cart.reduce((sum, item) => sum + (Number(item.saleRate ?? item.price ?? 0) * item.qty), 0);
+  const upiIntentUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent("NM MART")}&am=${encodeURIComponent(String(cartTotal))}&cu=INR`;
   const [loading, setLoading] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
 
@@ -362,6 +364,19 @@ const Checkout = () => {
                     </label>
                   ))}
                 </div>
+                {formData.paymentMethod === "upi" && (
+                  <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-700">Pay online with UPI</p>
+                    <p className="mt-2 text-sm font-bold text-slate-800">UPI ID: {UPI_ID}</p>
+                    <p className="mt-1 text-[10px] leading-5 text-slate-600">Open your UPI app, complete the payment, then tap Place Order. Payment will remain pending until it is verified.</p>
+                    <a
+                      href={upiIntentUrl}
+                      className="mt-4 inline-flex items-center justify-center rounded-full bg-orange-600 px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white transition hover:bg-black"
+                    >
+                      Open UPI App
+                    </a>
+                  </div>
+                )}
                 <p className="text-[10px] font-semibold leading-5 text-gray-400">
                   Select how you intend to pay. This checkout does not process or verify online payments.
                 </p>
