@@ -28,6 +28,7 @@ import { WA_NUMBER, STORE_DETAILS } from "@/lib/store-utils";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
 import WelfareModal from "@/components/shop/modals/WelfareModal";
 
 import { ThemeConfig } from "@/lib/storeConfig";
@@ -52,6 +53,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState<string>("");
   const { cartCount } = useCart();
+  const { wishlist } = useWishlist();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -223,11 +225,31 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
               </button>
               <button
                 type="button"
-                onClick={() => navigate("/shop?sort=discount-desc")}
+                onClick={() => navigate("/wishlist")}
                 className="text-white transition-opacity hover:opacity-80 md:hidden"
-                aria-label="Offers"
+                aria-label="Wishlist"
               >
                 <Bookmark size={22} />
+              </button>
+            </div>
+
+            <div className="hidden items-center gap-2 md:flex">
+              <button
+                type="button"
+                onClick={() => navigate("/wishlist")}
+                className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#f1ddc6] bg-white text-slate-700 shadow-sm transition hover:text-rose-500"
+                aria-label="Open wishlist"
+              >
+                <Bookmark size={17} />
+                {wishlist.length > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-rose-500 px-1 text-[9px] font-black text-white">{wishlist.length}</span>}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/orders")}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#f1ddc6] bg-white text-slate-700 shadow-sm transition hover:text-primary"
+                aria-label="Open order notifications"
+              >
+                <Bell size={17} />
               </button>
             </div>
 
@@ -282,7 +304,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
         </div>
 
         {/* Mobile Search Bar */}
-        <div className="mt-3 md:hidden">
+        <div className="mt-1 md:hidden">
           <form
             className="flex h-[52px] w-full items-center gap-3 rounded-xl border border-white/25 bg-[#4669aa] px-4 shadow-inner"
             onSubmit={handleSearchSubmit}
@@ -300,7 +322,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
       </div>
 
       {/* Mobile Location Bar */}
-      <div className="flex items-center justify-between bg-[#dbeafe] px-4 py-3 md:hidden">
+      <div className="flex items-center justify-between bg-[#dbeafe] px-4 py-2.5 md:hidden">
         <div className="flex items-center gap-2 text-slate-900">
           <MapPin size={24} className="text-[#69a9ed]" />
           <span className="text-[16px] font-bold tracking-tight text-slate-950">

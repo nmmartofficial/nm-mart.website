@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, Pen } from "lucide-react";
+import { ShoppingCart, Pen, Heart } from "lucide-react";
 import { Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "./ProductImageDisplay";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/lib/ThemeProvider";
 import { supabase } from "@/lib/supabase/client";
 import { isActiveAdminUser } from "@/lib/adminAccess";
+import { useWishlist } from "@/hooks/useWishlist";
 
 import { ThemeConfig } from "@/lib/storeConfig";
 
@@ -32,6 +33,7 @@ const ProductCard = ({
   const theme = propsTheme || storeTheme;
   const [isAdminEditor, setIsAdminEditor] = useState(false);
   const [added, setAdded] = useState(false);
+  const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     const applyAdminState = async (authUserId: string | null | undefined) => {
@@ -127,6 +129,18 @@ const ProductCard = ({
             {discountPercent}% OFF
           </span>
         )}
+
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleWishlist(product);
+          }}
+          className="absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-sm transition hover:text-rose-500"
+          aria-label={isWishlisted(product) ? `Remove ${productName} from wishlist` : `Add ${productName} to wishlist`}
+        >
+          <Heart size={15} className={isWishlisted(product) ? "fill-rose-500 text-rose-500" : ""} />
+        </button>
 
         {!hasStock && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/25 backdrop-blur-[1px]">

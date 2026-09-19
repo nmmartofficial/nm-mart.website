@@ -12,6 +12,7 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Privacy from "@/pages/Privacy";
 import UserProfile from "@/pages/UserProfile";
+import Wishlist from "@/pages/Wishlist";
 import OrderTracker from "@/pages/OrderTracker";
 import ProductDetail from "@/pages/ProductDetail";
 import Checkout from "@/pages/Checkout";
@@ -27,6 +28,7 @@ const Admin = lazy(() => import("@/pages/Admin"));
 const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
 const AdminCustomize = lazy(() => import("@/pages/admin/Customize"));
 import { CartProvider } from "@/hooks/useCart";
+import { WishlistProvider } from "@/hooks/useWishlist";
 import AnnouncementTicker from "@/components/site/AnnouncementTicker";
 import BottomNavigation from "@/components/shop/BottomNavigation";
 import WhatsAppButton from "@/components/shop/WhatsAppButton";
@@ -84,7 +86,8 @@ function App() {
   return (
     <ThemeProvider>
       <CartProvider>
-        <Router>
+        <WishlistProvider>
+          <Router>
         <Toaster position="top-center" expand={false} richColors />
         <AnnouncementTicker />
         <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-xs font-bold uppercase tracking-widest text-slate-500">Loading NM Mart...</div>}>
@@ -98,6 +101,7 @@ function App() {
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/delivery" element={<Delivery />} />
               <Route path="/profile" element={<UserProfile />} />
+              <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/orders/:orderId" element={<OrderDetails />} />
               <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
@@ -116,7 +120,8 @@ function App() {
           </div>
         </Suspense>
         <CustomerNavigation />
-        </Router>
+          </Router>
+        </WishlistProvider>
       </CartProvider>
     </ThemeProvider>
   );
