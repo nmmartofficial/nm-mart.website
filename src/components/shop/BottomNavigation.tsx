@@ -1,20 +1,21 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Tag, Package, User, Menu } from "lucide-react";
+import { Home, Tag, Package, User, Grid2X2 } from "lucide-react";
 
 export default function BottomNavigation() {
   const { pathname, search } = useLocation();
 
   const items = [
     { label: "Home", to: "/", Icon: Home },
-    { label: "My Profile", to: "/profile", Icon: User },
-    { label: "My Offers", to: "/shop?sort=discount-desc", Icon: Tag, badge: "NEW" },
-    { label: "My Orders", to: "/orders", Icon: Package },
-    { label: "More", to: "/profile", Icon: Menu },
+    { label: "Categories", to: "/shop", Icon: Grid2X2 },
+    { label: "Offers", to: "/shop?sort=discount-desc", Icon: Tag },
+    { label: "Orders", to: "/orders", Icon: Package },
+    { label: "Account", to: "/profile", Icon: User },
   ];
 
   const isActive = (to: string) => {
     if (to === "/") return pathname === "/";
     if (to.includes("sort=discount-desc")) return search.includes("sort=discount-desc");
+    if (to === "/shop") return pathname === "/shop" || pathname === "/products";
     return pathname === to;
   };
 
@@ -27,7 +28,7 @@ export default function BottomNavigation() {
             <Link
               key={label}
               to={to}
-              className={`flex flex-col items-center justify-center min-h-[60px] gap-0.5 transition-colors ${
+              className={`flex min-h-[56px] flex-col items-center justify-center gap-0.5 transition-colors ${
                 active ? "text-blue-700" : "text-slate-500"
               }`}
               aria-current={active ? "page" : undefined}

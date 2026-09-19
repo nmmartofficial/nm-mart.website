@@ -26,13 +26,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = useCallback((p: Product) => {
     setCart(prev => {
       const ex = prev.find(c => isSameProduct(c, p));
-      if (ex) return prev.map(c => isSameProduct(c, p) ? { ...c, qty: c.qty + 1 } : c);
+      if (ex) {
+        const stockLimit = Number(ex.stock);
+        const nextQty = Number.isFinite(stockLimit) && stockLimit > 0
+          ? Math.min(ex.qty + 1, stockLimit)
+          : ex.qty + 1;
+        return prev.map(c => isSameProduct(c, p) ? { ...c, qty: nextQty } : c);
+      }
       return [...prev, { ...p, qty: 1 }];
     });
   }, []);
 
   const updateQty = useCallback((idx: number, delta: number) => {
-    setCart(prev => prev.map((c, i) => i === idx ? { ...c, qty: Math.max(0, c.qty + delta) } : c).filter(c => c.qty > 0));
+    setCart(prev => prev.map((c, i) => {
+      if (i !== idx) return c;
+      const stockLimit = Number(c.stock);
+      const nextQty = Math.max(0, c.qty + delta);
+      return {
+        ...c,
+        qty: Number.isFinite(stockLimit) && stockLimit > 0 ? Math.min(nextQty, stockLimit) : nextQty,
+      };
+    }).filter(c => c.qty > 0));
   }, []);
 
   const removeItem = useCallback((idx: number) => {

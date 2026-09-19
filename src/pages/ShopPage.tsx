@@ -344,7 +344,7 @@ const ShopPage = () => {
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-[290px_minmax(0,1fr)]">
+        <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:gap-10">
           <div className="hidden lg:block">{filterPanel}</div>
 
           <div>
@@ -397,7 +397,7 @@ const ShopPage = () => {
               </div>
             ) : (
               <>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 2xl:grid-cols-4">
                 {displayedProducts.map((product) => (
                   <ProductCard
                     key={product.id || product.barcode}

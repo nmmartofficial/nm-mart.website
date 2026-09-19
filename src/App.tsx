@@ -71,6 +71,15 @@ function AdminGuard({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function CustomerNavigation() {
+  const { pathname } = useLocation();
+  const isPrivateChromeHidden = pathname === "/login" || pathname === "/reset-password" || pathname.startsWith("/admin");
+
+  if (isPrivateChromeHidden) return null;
+
+  return <><BottomNavigation /><WhatsAppButton /></>;
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -106,8 +115,7 @@ function App() {
             </Routes>
           </div>
         </Suspense>
-        <BottomNavigation />
-        <WhatsAppButton />
+        <CustomerNavigation />
         </Router>
       </CartProvider>
     </ThemeProvider>

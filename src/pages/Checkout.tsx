@@ -12,7 +12,7 @@ import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
-import { buildServerOrderPayload } from "@/lib/orderPayload";
+import { buildServerOrderPayload, validateCheckoutForm } from "@/lib/orderPayload";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -82,8 +82,19 @@ const Checkout = () => {
       navigate("/cart");
       return;
     }
-    if (!formData.fullName || !formData.phone || !formData.houseNo || !formData.street) {
-      toast.error("Please fill in all required fields");
+
+    const validation = validateCheckoutForm({
+      fullName: formData.fullName,
+      houseNo: formData.houseNo,
+      street: formData.street,
+      phone: formData.phone,
+      pincode: formData.pincode,
+      paymentMethod: formData.paymentMethod,
+      serviceablePincodes: ["212207", "212201", "212216"],
+    });
+
+    if (!validation.ok) {
+      toast.error(validation.message);
       return;
     }
 
@@ -96,6 +107,44 @@ const Checkout = () => {
         return;
       }
 
+      const productIds = [...new Set(cart.map((item) => Number(item.product_id)).filter((id) => Number.isFinite(id) && id > 0))];
+      if (productIds.length === 0) {
+        throw new Error("No valid cart items were found for checkout.");
+      }
+
+      const { data: stockRows, error: stockError } = await supabase
+        .from(TABLES.products)
+        .select("id, name, stock, is_active, is_deleted")
+        .in("id", productIds);
+
+      if (stockError) throw stockError;
+
+      const stockMap = new Map<number, { name: string; stock: number; isActive: boolean; isDeleted: boolean }>();
+      for (const row of stockRows ?? []) {
+        const productId = Number(row.id);
+        if (!Number.isFinite(productId)) continue;
+        stockMap.set(productId, {
+          name: String(row.name ?? "Product"),
+          stock: Number(row.stock ?? 0),
+          isActive: row.is_active !== false,
+          isDeleted: row.is_deleted === true,
+        });
+      }
+
+      for (const item of cart) {
+        const productId = Number(item.product_id);
+        const stockInfo = stockMap.get(productId);
+        if (!stockInfo) {
+          throw new Error(`"${item.name}" is no longer available in stock.`);
+        }
+        if (stockInfo.isDeleted || !stockInfo.isActive) {
+          throw new Error(`"${item.name}" is unavailable and cannot be ordered.`);
+        }
+        if (Number(stockInfo.stock ?? 0) < Number(item.qty ?? 0)) {
+          throw new Error(`Only ${stockInfo.stock} of "${item.name}" remain in stock.`);
+        }
+      }
+
       const fullAddress = `${formData.houseNo}, ${formData.street}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.pincode}`;
       const payload = buildServerOrderPayload(cart, {
         customer_id: session.user.id,
@@ -105,7 +154,7 @@ const Checkout = () => {
         landmark: formData.landmark.trim(),
         pincode: formData.pincode.trim(),
         payment_method: formData.paymentMethod,
-        idempotency_key: crypto.randomUUID(),
+        idempotency_key: `${session.user.id}:${Date.now()}:${crypto.randomUUID()}`,
       });
 
       const { data, error } = await supabase.rpc("place_website_order_atomic", payload);

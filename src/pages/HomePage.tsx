@@ -11,6 +11,8 @@ import { fetchActiveBanners } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
 import { resolveStorageImageUrl } from "@/lib/supabase/productImagesStorage";
+import type { Product } from "@/lib/store-utils";
+import type { WebsiteBanner } from "@/lib/supabase";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -24,17 +26,34 @@ export default function HomePage() {
     featuredProducts,
     flat50,
     flat33,
+    hasMore50,
+    hasMore33,
+    hasMoreFeatured,
+    loadMore50,
+    loadMore33,
+    loadMoreFeatured,
   } = useProducts();
   const { addToCart } = useCart();
-  const [banners, setBanners] = useState<any[]>([]);
+  const [banners, setBanners] = useState<WebsiteBanner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
   const [visiblePopularCount, setVisiblePopularCount] = useState(8);
+  const [visibleOfferCount, setVisibleOfferCount] = useState(8);
+  const [visibleFeaturedCount, setVisibleFeaturedCount] = useState(8);
+  const [visibleFlat50Count, setVisibleFlat50Count] = useState(8);
+  const [visibleFlat33Count, setVisibleFlat33Count] = useState(8);
+  const [visibleCategoryCount, setVisibleCategoryCount] = useState(6);
+  const [visibleBrandCount, setVisibleBrandCount] = useState(6);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
-  const liveCategories = (categories || []).filter(Boolean).slice(0, 8);
-  const liveBrands = (brands || []).filter(Boolean).slice(0, 12);
-  const liveFeatured = (featuredProducts || []).filter((p: any) => Number(p?.stock) > 0).slice(0, 8);
-  const liveFlat50 = (flat50 || []).filter((p: any) => Number(p?.stock) > 0).slice(0, 8);
-  const liveFlat33 = (flat33 || []).filter((p: any) => Number(p?.stock) > 0).slice(0, 8);
+  const allLiveCategories = (categories || []).filter(Boolean);
+  const liveCategories = allLiveCategories.slice(0, visibleCategoryCount);
+  const allLiveBrands = (brands || []).filter(Boolean);
+  const liveBrands = allLiveBrands.slice(0, visibleBrandCount);
+  const allLiveFeatured = (featuredProducts || []).filter((p: Product) => Number(p.stock) > 0);
+  const allLiveFlat50 = (flat50 || []).filter((p: Product) => Number(p.stock) > 0);
+  const allLiveFlat33 = (flat33 || []).filter((p: Product) => Number(p.stock) > 0);
+  const liveFeatured = allLiveFeatured.slice(0, visibleFeaturedCount);
+  const liveFlat50 = allLiveFlat50.slice(0, visibleFlat50Count);
+  const liveFlat33 = allLiveFlat33.slice(0, visibleFlat33Count);
   const productImageByCategory = useMemo(() => {
     const images: Record<string, string> = {};
     for (const product of allProducts || []) {
@@ -53,10 +72,10 @@ export default function HomePage() {
   }, [allProducts]);
   const popularProducts = (allProducts || []).filter((product) => Number(product.stock) > 0);
   const visiblePopularProducts = popularProducts.slice(0, visiblePopularCount);
-  const offerProducts = (allProducts || [])
+  const allOfferProducts = (allProducts || [])
     .filter((product) => Number(product.stock) > 0 && Number(product.discount) > 0)
-    .sort((a, b) => Number(b.discount) - Number(a.discount))
-    .slice(0, 8);
+    .sort((a, b) => Number(b.discount) - Number(a.discount));
+  const offerProducts = allOfferProducts.slice(0, visibleOfferCount);
 
   const handleCategoryClick = (category: string) => {
     navigate(`/shop?category=${encodeURIComponent(category)}`);
@@ -70,6 +89,30 @@ export default function HomePage() {
     const nextCount = visiblePopularCount + 8;
     if (nextCount > allProducts.length && hasMore) loadMore();
     setVisiblePopularCount(nextCount);
+  };
+
+  const handleLoadMoreOffers = () => {
+    const nextCount = visibleOfferCount + 8;
+    if (nextCount > allOfferProducts.length && hasMore) loadMore();
+    setVisibleOfferCount(nextCount);
+  };
+
+  const handleLoadMoreFeatured = () => {
+    const nextCount = visibleFeaturedCount + 8;
+    if (nextCount > featuredProducts.length && hasMoreFeatured) loadMoreFeatured();
+    setVisibleFeaturedCount(nextCount);
+  };
+
+  const handleLoadMoreFlat50 = () => {
+    const nextCount = visibleFlat50Count + 8;
+    if (nextCount > flat50.length && hasMore50) loadMore50();
+    setVisibleFlat50Count(nextCount);
+  };
+
+  const handleLoadMoreFlat33 = () => {
+    const nextCount = visibleFlat33Count + 8;
+    if (nextCount > flat33.length && hasMore33) loadMore33();
+    setVisibleFlat33Count(nextCount);
   };
 
   function shouldDisplayBrandLabel(text: string): boolean {
@@ -94,14 +137,14 @@ export default function HomePage() {
   }) => {
     const safeLabel = shouldDisplayBrandLabel(label) ? label : "";
     return (
-      <div className="flex w-[92px] shrink-0 flex-col items-center sm:w-[100px] md:w-auto md:flex-1">
+      <div className="flex w-[72px] shrink-0 flex-col items-center sm:w-[84px] md:w-auto md:flex-1">
         <button
           type="button"
           onClick={onClick}
           className="group flex items-center justify-center rounded-full transition-transform duration-200 hover:-translate-y-0.5"
           aria-label={alt}
         >
-          <div className="flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_10px_22px_-16px_rgba(15,23,42,0.45)] ring-1 ring-slate-100 sm:h-[90px] sm:w-[90px] md:h-[110px] md:w-[110px]">
+          <div className="flex h-[68px] w-[68px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_10px_22px_-16px_rgba(15,23,42,0.45)] ring-1 ring-slate-100 sm:h-[76px] sm:w-[76px] md:h-[110px] md:w-[110px]">
             {image ? (
               <img
                 src={image}
@@ -110,7 +153,7 @@ export default function HomePage() {
                 loading="lazy"
               />
             ) : (
-              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500">
+                <span className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-500 md:text-[10px] md:tracking-[0.15em]">
                 {safeLabel ? safeLabel.slice(0, 2).toUpperCase() : "NM"}
               </span>
             )}
@@ -181,7 +224,7 @@ export default function HomePage() {
   }, []);
 
   const ProductSkeletonGrid = ({ count = 8 }: { count?: number }) => (
-    <div className="grid grid-cols-2 gap-[11px] md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+    <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
       {Array.from({ length: count }).map((_, index) => (
         <div key={index} className="animate-pulse rounded-[14px] border border-slate-200 bg-white p-2 shadow-sm">
           <div className="mb-2 h-[138px] rounded-[12px] bg-slate-200" />
@@ -233,11 +276,24 @@ export default function HomePage() {
         </section>
 
         <section className="mb-3 rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
-          <SectionHeader
-            eyebrow="SHOP BY CATEGORY"
-            title="BROWSE CATEGORIES"
-            meta={`${liveCategories.length} live`}
-          />
+          <div className="mb-2 flex items-end justify-between gap-3 md:mb-5">
+            <div className="min-w-0 flex-1">
+              <SectionHeader
+                eyebrow="SHOP BY CATEGORY"
+                title="BROWSE CATEGORIES"
+                meta={`${allLiveCategories.length} live`}
+              />
+            </div>
+            {allLiveCategories.length > visibleCategoryCount && (
+              <button
+                type="button"
+                onClick={() => setVisibleCategoryCount(allLiveCategories.length)}
+                className="mb-1 shrink-0 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 md:px-4 md:text-[10px]"
+              >
+                Load more categories
+              </button>
+            )}
+          </div>
 
           {liveCategories.length === 0 ? (
             <div className="flex min-h-[160px] items-center justify-center rounded-[22px] border border-dashed border-slate-200 bg-slate-50">
@@ -265,7 +321,20 @@ export default function HomePage() {
 
         {liveBrands.length > 0 && (
           <section className="mb-3 rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
-            <SectionHeader eyebrow="TOP BRANDS" title="BRANDS YOU LOVE" />
+            <div className="mb-2 flex items-end justify-between gap-3 md:mb-5">
+              <div className="min-w-0 flex-1">
+                <SectionHeader eyebrow="TOP BRANDS" title="BRANDS " />
+              </div>
+              {allLiveBrands.length > visibleBrandCount && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleBrandCount(allLiveBrands.length)}
+                  className="mb-1 shrink-0 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 md:px-4 md:text-[10px]"
+                >
+                  Load more brands
+                </button>
+              )}
+            </div>
 
             {productsLoading ? (
               <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-6">
@@ -295,8 +364,8 @@ export default function HomePage() {
         {liveFeatured.length > 0 && !productsLoading && (
           <section className="mb-4 rounded-[18px] border border-slate-200 bg-gradient-to-r from-amber-50 via-white to-orange-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
             <SectionHeader eyebrow="Editor's pick" title="FEATURED PRODUCTS" />
-            <div className="grid grid-cols-2 gap-[11px] md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-              {liveFeatured.map((product: any) => (
+            <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+              {liveFeatured.map((product: Product) => (
                 <ProductCard
                   key={product.id || product.barcode}
                   product={product}
@@ -304,10 +373,23 @@ export default function HomePage() {
                 />
               ))}
             </div>
+            {(liveFeatured.length < allLiveFeatured.length || hasMoreFeatured) && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleLoadMoreFeatured}
+                  disabled={productsLoading}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-wait disabled:opacity-60"
+                >
+                  Load More Featured
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </section>
         )}
 
-        <section className="mb-4 rounded-[18px] border border-slate-200 bg-gradient-to-r from-orange-50 via-white to-amber-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+        <section id="products" className="mb-4 rounded-[18px] border border-slate-200 bg-gradient-to-r from-orange-50 via-white to-amber-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
           <SectionHeader eyebrow="Popular picks" title="POPULAR PRODUCTS" />
 
           {productsLoading ? (
@@ -316,7 +398,7 @@ export default function HomePage() {
             <EmptySectionState text="No products available right now" />
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-[11px] md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
                 {visiblePopularProducts.map((product) => (
                   <ProductCard
                     key={product.id || product.barcode}
@@ -351,23 +433,38 @@ export default function HomePage() {
           ) : offerProducts.length === 0 ? (
             <EmptySectionState text="No active offers right now" />
           ) : (
-            <div className="grid grid-cols-2 gap-[11px] md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-              {offerProducts.map((product) => (
-                <ProductCard
-                  key={product.id || product.barcode}
-                  product={product}
-                  onAddToCart={addToCart}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+                {offerProducts.map((product) => (
+                  <ProductCard
+                    key={product.id || product.barcode}
+                    product={product}
+                    onAddToCart={addToCart}
+                  />
+                ))}
+              </div>
+              {(visibleOfferCount < allOfferProducts.length || hasMore) && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleLoadMoreOffers}
+                    disabled={productsLoading}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    Load More Offers
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </section>
 
         {liveFlat50.length > 0 && !productsLoading && (
           <section className="mb-4 rounded-[18px] border border-red-200 bg-gradient-to-r from-red-50 via-white to-rose-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
             <SectionHeader eyebrow="Big Savings" title="FLAT 50% OFF" />
-            <div className="grid grid-cols-2 gap-[11px] md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-              {liveFlat50.map((product: any) => (
+            <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+              {liveFlat50.map((product: Product) => (
                 <ProductCard
                   key={product.id || product.barcode}
                   product={product}
@@ -375,14 +472,27 @@ export default function HomePage() {
                 />
               ))}
             </div>
+            {(liveFlat50.length < allLiveFlat50.length || hasMore50) && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleLoadMoreFlat50}
+                  disabled={productsLoading}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-wait disabled:opacity-60"
+                >
+                  Load More 50% Deals
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </section>
         )}
 
         {liveFlat33.length > 0 && !productsLoading && (
           <section className="mb-4 rounded-[18px] border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-yellow-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
             <SectionHeader eyebrow="Great Value" title="UP TO 33% OFF" />
-            <div className="grid grid-cols-2 gap-[11px] md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-              {liveFlat33.map((product: any) => (
+            <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+              {liveFlat33.map((product: Product) => (
                 <ProductCard
                   key={product.id || product.barcode}
                   product={product}
@@ -390,6 +500,19 @@ export default function HomePage() {
                 />
               ))}
             </div>
+            {(liveFlat33.length < allLiveFlat33.length || hasMore33) && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleLoadMoreFlat33}
+                  disabled={productsLoading}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-wait disabled:opacity-60"
+                >
+                  Load More 33% Deals
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </section>
         )}
       </main>

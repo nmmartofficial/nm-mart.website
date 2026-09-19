@@ -2,10 +2,11 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/lib/ThemeProvider";
+import type { WebsiteBanner } from "@/lib/supabase";
 
 interface HeroBannerProps {
   onBannerClick?: (link: { type: string; value: string }) => void;
-  banners?: any[];
+  banners?: WebsiteBanner[];
   loading?: boolean;
 }
 
@@ -70,12 +71,12 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
 
   // Intelligent desktop scaling while preserving integrity
   const imageClass =
-    "block h-auto w-full max-h-[75vh] md:max-h-[560px] md:min-w-[500px] object-contain transition-transform duration-500 ease-out group-hover/banner:scale-[1.01] antialiased mx-auto";
+    "block h-[clamp(145px,43vw,220px)] w-full object-cover transition-transform duration-500 ease-out group-hover/banner:scale-[1.01] antialiased mx-auto md:h-[clamp(320px,38vw,520px)]";
 
   return (
-    <div className="flex w-full justify-center px-0 md:px-0">
+    <div className="flex w-full justify-center px-0">
       <div
-        className={`group/banner relative w-full md:w-auto md:min-w-[600px] max-w-7xl overflow-hidden border border-slate-100 bg-white shadow-[0_24px_60px_-20px_rgba(0,0,0,0.18)] transition-all duration-500 ${radiusClass}`}
+        className={`group/banner relative w-full max-w-[1400px] overflow-hidden border border-slate-100 bg-white shadow-[0_24px_60px_-20px_rgba(0,0,0,0.18)] transition-all duration-500 ${radiusClass}`}
         style={radiusStyle}
       >
         <Link

@@ -29,7 +29,6 @@ import { getSectionLayout, SectionLayout } from "@/lib/storeConfig";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import HeroBanner from "@/components/shop/HeroBanner";
 import Navbar from "@/components/Navbar";
-import ChatBot from "@/components/shop/ChatBot";
 import Footer from "@/components/shop/Footer";
 import FlashSaleBanner from "@/components/shop/FlashSaleBanner";
 import DiscountTabs from "@/components/shop/DiscountTabs";
@@ -347,7 +346,6 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [scannedProduct, setScannedProduct] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const quickEditImageRef = useRef<HTMLInputElement>(null);
@@ -989,129 +987,15 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
   };
 
   const placeOrder = async () => {
-     try {
-       const session = await getActiveSession();
-       if (!session && user) {
-         toast.error("Please login again.");
-         return;
-       }
-       let customerDetails = "";
-       let orderCustomerData: any = {};
-
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from(TABLES.profiles)
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profile) {
-          customerDetails = `\n\n👤 *Customer Details:* \nName: ${profile.full_name}\nPhone: ${profile.mobile}\nAddress: ${profile.address || "N/A"}\nLandmark: ${profile.landmark || "N/A"}`;
-          if (profile.welfare_status === 'active') {
-            customerDetails += `\n🌟 *Welfare Member:* ${profile.welfare_card_number}`;
-          }
-          // Store customer data in order for Admin view
-          orderCustomerData = {
-            customer: profile.full_name,
-            phone: profile.mobile,
-            address: profile.address,
-            landmark: profile.landmark
-          };
-        }
-      }
-
-      if (cartTotal < MIN_ORDER) return alert(`Min order ₹${MIN_ORDER}!`);
-      const orderId = `NMM-${Date.now()}`;
-      const deliveryFee = calculateDeliveryFee(cartTotal);
-      const totalWithDelivery = finalTotal + deliveryFee;
-      
-      // Generate PDF Bill
-      generatePDFBill(
-        orderId, 
-        cart, 
-        cartTotal, 
-        welfareDiscount, 
-        deliveryFee, 
-        totalWithDelivery, 
-        { name: orderCustomerData.customer || "Guest", phone: orderCustomerData.phone || "" }
-      );
-
-      const itemsText = cart.map(c => `- ${c.name} (x${c.qty}): ₹${c.saleRate * c.qty}`).join("\n");
-      let text = `*New Order from ${theme.storeName || 'NM MART'}* 🛒\n\n🆔 *Order ID:* ${orderId}\n📦 *Items:*\n${itemsText}\n\n💰 *Subtotal:* ₹${cartTotal}`;
-      
-      if (welfareDiscount > 0) {
-        text += `\n🌟 *Welfare Discount (5%):* -₹${welfareDiscount}`;
-      }
-      
-      text += `\n🚚 *Delivery Fee:* ${deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}`;
-      text += `\n✅ *Grand Total:* ₹${totalWithDelivery}`;
-      
-      text += `\n\n💳 *Payment:* ${payMethod.toUpperCase()}${payMethod === 'upi' && transactionId ? `\n🆔 *UTR/Txn ID:* ${transactionId}` : ''}${customerDetails}\n\n_Note: I have downloaded my POS Bill. Please confirm my order!_`;
-      
-      const orderData = {
-        id: orderId,
-        customer_id: user?.id || null,
-        items: cart,
-        total: totalWithDelivery,
-        status: "Pending",
-        customer_name: orderCustomerData.customer || "Guest",
-        customer_phone: orderCustomerData.phone || "",
-        shipping_address: orderCustomerData.address || "Store Pickup",
-        landmark: orderCustomerData.landmark || "",
-        payment_method: payMethod,
-        transaction_id: payMethod === 'upi' ? transactionId : null,
-        pincode: pincode,
-        created_at: new Date().toISOString()
-      };
-      
-      // Save to Supabase
-      const { error: supabaseError } = await supabase
-        .from(TABLES.orders)
-        .insert([orderData]);
-
-      if (supabaseError) {
-        logSupabaseDebug("indexPlaceOrder:orderInsert:error", orderData, supabaseError);
-        toast.error(getSupabaseErrorMessage(supabaseError, "Unable to save order"));
-      }
-
-      const pointsEarned = Math.floor(finalTotal / 100);
-      
-      // Update points in database
-      if (user) {
-        const { data: profile } = await supabase.from(TABLES.profiles).select('loyalty_points').eq('id', user.id).single();
-        const currentPoints = profile?.loyalty_points || 0;
-        const { error: pointsError } = await supabase
-          .from(TABLES.profiles)
-          .update({ 
-            loyalty_points: currentPoints + pointsEarned,
-            points_balance: currentPoints + pointsEarned // Sync both for compatibility
-          })
-          .eq('id', user.id);
-        if (pointsError) {
-          logSupabaseDebug("indexPlaceOrder:pointsUpdate:error", { userId: user.id, pointsEarned }, pointsError);
-          toast.error(getSupabaseErrorMessage(pointsError, "Unable to update loyalty points"));
-        }
-      }
-
-      saveOrder({
-        id: orderId,
-        items: cart,
-        total: cartTotal,
-        date: new Date().toLocaleString(),
-        status: "Pending"
-      });
-      
-      addLoyaltyPoints(pointsEarned);
-      
-      window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
-      clearCart();
-      setCheckoutOpen(false);
-      setCartOpen(false);
-      toast.success("Order placed successfully!");
-    } catch (err: any) {
-      logSupabaseDebug("indexPlaceOrder:error", { cartCount: cart.length, cartTotal }, err);
-      toast.error(getSupabaseErrorMessage(err, "Order process failed"));
+    if (cart.length === 0) {
+      toast.error("Your cart is empty.");
+      return;
     }
+
+    setCheckoutOpen(false);
+    setCartOpen(false);
+    navigate("/checkout");
+    toast.info("Please use the secure checkout page to place the order.");
   };
 
   const reorder = (order: OrderRecord) => {
@@ -1265,7 +1149,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
           </div>
         </div>
       )}
-      <Navbar theme={theme} setIsAiChatOpen={setIsAiChatOpen} />
+      <Navbar theme={theme} />
 
       {/* Search Section - Professional & Prominent */}
       <div className="sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 top-[72px]">
@@ -1568,8 +1452,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
         <MessageCircle size={24} />
       </a>
 
-      {/* Modals & Chatbot */}
-      <ChatBot isOpen={isAiChatOpen} setIsOpen={setIsAiChatOpen} />
+      {/* Modals */}
       <WelfareModal isOpen={showWelfareModal} onClose={() => setShowWelfareModal(false)} />
 
       {/* Back to Top */}

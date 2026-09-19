@@ -1,9 +1,10 @@
 const tickerItems = [
-  "🚧 NM MART WEBSITE UPDATE IN PROGRESS",
-  "हम आपको बेहतर Shopping Experience देने के लिए वेबसाइट को अपडेट कर रहे हैं",
-  "📍 Naya Nagar, Dhata Road, Manjhanpur, Kaushambi",
-  "🌐 NMmart.in",
-  "📞 +91 8282827240",
+  "SHOP MORE, SAVE MORE",
+  "FREE HOME DELIVERY",
+  "Fresh groceries at great prices",
+  "Naya Nagar, Dhata Road, Manjhanpur, Kaushambi",
+  "NMmart.in",
+  "+91 8282827240",
 ];
 
 const tickerContent = [...tickerItems, ...tickerItems];

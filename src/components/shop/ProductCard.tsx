@@ -66,7 +66,7 @@ const ProductCard = ({
     return true;
   }
 
-  const buttonClass = `h-[42px] w-full rounded-full text-[11px] md:text-[11px] font-black uppercase tracking-[0.14em] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+  const buttonClass = `h-[38px] w-full rounded-full text-[9px] md:h-[44px] md:text-[12px] font-black uppercase tracking-[0.1em] md:tracking-[0.14em] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
     buttonStyle === "gradient"
       ? "bg-gradient-to-r from-[#ff8a00] via-[#ff7200] to-[#ff5c00] text-white border-none shadow-[0_12px_24px_-16px_rgba(255,120,0,0.8)]"
       : buttonStyle === "outline"
@@ -76,7 +76,7 @@ const ProductCard = ({
           : "bg-[#111111] text-white hover:bg-[#ff7a00]"
   }`;
 
-  const imageHeightClass = productStyle === "premium" ? "h-[138px] md:h-[210px]" : productStyle === "offer" ? "h-[134px] md:h-[200px]" : "h-[138px] md:h-[210px]";
+  const imageHeightClass = productStyle === "premium" ? "h-[106px] md:h-[235px]" : productStyle === "offer" ? "h-[102px] md:h-[225px]" : "h-[106px] md:h-[235px]";
 
   const productName = (product?.name || "Product").trim() || "Product";
   const rawProductUnit = (product?.unit || product?.subCategory || "").trim();
@@ -120,7 +120,7 @@ const ProductCard = ({
       className={`group/card bg-card ${cardClass} flex w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 ${className}`}
     >
       <div className={`relative isolate shrink-0 overflow-hidden ${imageHeightClass} bg-white`}>
-        <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-1.5" />
+        <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-1 md:p-1.5" />
 
         {discountPercent > 0 && (
           <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-[#ff5a36] px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-white shadow-md">
@@ -152,13 +152,17 @@ const ProductCard = ({
         ) : null}
       </div>
 
-      <div className="flex flex-col p-2 md:p-4">
-        <h3 className="mb-1 text-[12.5px] font-semibold leading-snug text-[#111111] line-clamp-2 break-words md:text-[14px]">
+      <div className="flex flex-col p-1.5 md:p-5">
+        <h3 className="mb-1 text-[10px] font-semibold leading-tight text-[#111111] line-clamp-2 break-words md:mb-1.5 md:text-[16px] md:leading-snug">
           {productName}
         </h3>
 
+        {product.brand && (
+          <p className="mb-1 text-[7px] font-bold uppercase tracking-[0.08em] text-slate-500 md:text-[10px] md:tracking-[0.12em]">{product.brand}</p>
+        )}
+
         {productUnit && (
-          <p className="mb-1 text-[9px] font-medium uppercase tracking-[0.12em] text-slate-500">{productUnit}</p>
+          <p className="mb-1 text-[7px] font-medium uppercase tracking-[0.08em] text-slate-500 md:mb-1.5 md:text-[10px] md:tracking-[0.12em]">{productUnit}</p>
         )}
 
         <div className="mb-2">
@@ -170,7 +174,7 @@ const ProductCard = ({
             )}
 
             {hasPrice ? (
-              <span className="text-[16px] font-black leading-none tracking-[-0.05em] text-[#111111] md:text-[1.5rem]">
+                <span className="text-[15px] font-black leading-none tracking-[-0.05em] text-[#111111] md:text-[1.75rem]">
                 ₹{numericPrice.toLocaleString("en-IN")}
               </span>
             ) : (
@@ -185,7 +189,7 @@ const ProductCard = ({
           )}
         </div>
 
-        <div className="mt-auto">
+        <div className="mt-1 md:mt-auto">
           <button
             type="button"
             onClick={(e) => {

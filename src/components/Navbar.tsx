@@ -2,14 +2,10 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Bell,
-  Bookmark,
-  Wallet,
   ShoppingCart,
   Menu,
   User,
   Package,
-  ShieldCheck,
   Truck,
   CreditCard,
   Headset,
@@ -22,29 +18,31 @@ import {
   Search,
   ChevronDown,
   MapPin,
+  Bookmark,
+  Bell,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
 import { useTheme } from "@/lib/ThemeProvider";
-import { WA_NUMBER, getLoyaltyPoints, STORE_DETAILS } from "@/lib/store-utils";
+import { WA_NUMBER, STORE_DETAILS } from "@/lib/store-utils";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
 import WelfareModal from "@/components/shop/modals/WelfareModal";
 
 import { ThemeConfig } from "@/lib/storeConfig";
+import type { User } from "@supabase/supabase-js";
 
 interface NavbarProps {
   theme?: ThemeConfig;
-  setIsAiChatOpen?: (isOpen: boolean) => void;
 }
 
-const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
+const Navbar = ({ theme: propsTheme }: NavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme: storeTheme } = useTheme();
   const theme = propsTheme || storeTheme;
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [profileName, setProfileName] = useState("");
   const [welfareCard, setWelfareCard] = useState<{ number: string; active: boolean; points: number } | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -91,6 +89,7 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
       } else {
         setProfileName("");
         setWelfareCard(null);
+        setDeliveryAddress("");
       }
     });
 
@@ -115,17 +114,7 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
       setDeliveryAddress(addrParts.join(", "));
     }
 
-    let cardNumber = localStorage.getItem("nm_welfare_card");
-    if (!cardNumber) {
-      cardNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
-      localStorage.setItem("nm_welfare_card", cardNumber);
-    }
-
-    setWelfareCard({
-      number: cardNumber,
-      active: localStorage.getItem("nm_welfare_status") === "active",
-      points: getLoyaltyPoints(),
-    });
+    setWelfareCard(null);
   };
 
   const handleLogout = async () => {
@@ -134,9 +123,9 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
       if (error) throw error;
       setDrawerOpen(false);
       navigate("/");
-    } catch (err: any) {
+    } catch (err: unknown) {
       logSupabaseDebug("navbarLogout:error", undefined, err);
-      toast.error(getSupabaseErrorMessage(err, "Unable to logout"));
+      toast.error(getSupabaseErrorMessage(err as { message?: string; code?: string }, "Unable to logout"));
     }
   };
 
@@ -149,7 +138,6 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
   const menuItems = [
     { label: "My Profile", icon: User, action: () => navigate("/profile") },
     { label: "My Orders", icon: Package, action: () => navigate("/orders") },
-    { label: "Welfare Card", icon: ShieldCheck, action: handleWelfare },
     { label: "Fast Delivery Info", icon: Truck, action: () => navigate("/delivery") },
     { label: "Secure Payments", icon: CreditCard, action: () => navigate("/contact") },
     { label: "Support", icon: Headset, action: () => navigate("/contact") },
@@ -170,16 +158,16 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
   };
 
   return (
-    <header className={`${headerClass} md:bg-[#fffdf9]/90 bg-[#003b73]`}>
+    <header className={`${headerClass} md:bg-[#fffdf9]/90 bg-[#064985]`}>
       <div className="w-full max-w-[100vw] overflow-x-hidden px-3 py-2 md:px-5 md:py-3">
         {/* Top Row: Logo and Mobile Actions */}
-        <div className="flex h-[44px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
+        <div className="flex h-[58px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
           <Link to="/" className="group flex min-w-0 shrink-1 items-center gap-1 text-left md:gap-3">
             <div className="flex flex-col leading-none">
-              <span className="text-[20px] font-black tracking-tighter text-[#ffcc00] md:text-[#111111] md:text-2xl">
+              <span className="text-[27px] font-black tracking-tighter text-[#ffcc00] md:text-[#111111] md:text-2xl">
                 NM MART
               </span>
-              <span className="text-[10px] font-bold tracking-tight text-white md:hidden">
+              <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-white md:hidden">
                 Wholesale
               </span>
               <p className="hidden md:block truncate text-[10px] font-bold uppercase tracking-[0.22em] text-[#5f5a55]">
@@ -207,29 +195,39 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
           </div>
 
           <div className="flex shrink-0 items-center gap-2.5 md:gap-3">
-            {/* Mobile Actions: Wallet, Bell, Bookmark */}
+            {/* Mobile Actions */}
             <div className="flex items-center gap-3 md:gap-4">
               <button
                 type="button"
-                onClick={() => navigate("/profile")}
-                className="text-white md:hidden transition-opacity hover:opacity-80"
-                aria-label="Wallet"
+                onClick={() => setDrawerOpen(true)}
+                className="text-white transition-opacity hover:opacity-80 md:hidden"
+                aria-label="Open menu"
               >
-                <Wallet size={22} />
+                <Menu size={22} />
               </button>
               <button
                 type="button"
-                className="text-white md:text-slate-800 transition-opacity hover:opacity-80"
-                aria-label="Notifications"
+                onClick={() => navigate(user ? "/profile" : "/login")}
+                className="text-white transition-opacity hover:opacity-80 md:hidden"
+                aria-label="Account"
               >
-                <Bell size={22} className="md:size-5" />
+                <User size={22} />
               </button>
               <button
                 type="button"
-                className="text-white md:text-slate-800 transition-opacity hover:opacity-80"
-                aria-label="Bookmarks"
+                onClick={() => navigate("/orders")}
+                className="text-white transition-opacity hover:opacity-80 md:hidden"
+                aria-label="Orders"
               >
-                <Bookmark size={22} className="md:size-5" />
+                <Bell size={22} />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/shop?sort=discount-desc")}
+                className="text-white transition-opacity hover:opacity-80 md:hidden"
+                aria-label="Offers"
+              >
+                <Bookmark size={22} />
               </button>
             </div>
 
@@ -283,36 +281,44 @@ const Navbar = ({ theme: propsTheme, setIsAiChatOpen }: NavbarProps) => {
           </div>
         </div>
 
+        <nav className="hidden items-center gap-7 border-t border-[#f1e4d3] pt-2.5 md:flex" aria-label="Main navigation">
+          <Link to="/" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:text-primary">Home</Link>
+          <Link to="/shop" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:text-primary">Categories</Link>
+          <Link to="/shop?sort=discount-desc" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:text-primary">Offers</Link>
+          <Link to="/orders" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:text-primary">Orders</Link>
+          <Link to="/profile" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:text-primary">Account</Link>
+        </nav>
+
         {/* Mobile Search Bar */}
-        <div className="md:hidden mt-3">
+        <div className="mt-3 md:hidden">
           <form
-            className="flex h-[40px] w-full items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3"
+            className="flex h-[52px] w-full items-center gap-3 rounded-xl border border-white/25 bg-[#4669aa] px-4 shadow-inner"
             onSubmit={handleSearchSubmit}
           >
-            <Search className="h-5 w-5 shrink-0 text-white" />
+            <Search className="h-7 w-7 shrink-0 text-white" />
             <input
               type="search"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search product, brand or article..."
-              className="block w-full border-0 bg-transparent text-[15px] font-medium text-white placeholder:text-white/70 focus:outline-none"
+              className="block w-full border-0 bg-transparent text-[17px] font-medium text-white placeholder:text-white/80 focus:outline-none"
             />
           </form>
         </div>
       </div>
 
       {/* Mobile Location Bar */}
-      <div className="md:hidden flex items-center justify-between bg-[#e6effc] px-4 py-2.5">
+      <div className="flex items-center justify-between bg-[#dbeafe] px-4 py-3 md:hidden">
         <div className="flex items-center gap-2 text-slate-900">
-          <MapPin size={20} className="text-blue-400" />
-          <span className="text-[16px] font-bold tracking-tight">
+          <MapPin size={24} className="text-[#69a9ed]" />
+          <span className="text-[16px] font-bold tracking-tight text-slate-950">
             {resolveDeliveryDisplay().split(',').slice(0, 2).join(',')}
           </span>
         </div>
         <button
           type="button"
           onClick={() => navigate("/profile")}
-          className="text-[16px] font-bold text-[#003b73]"
+          className="text-[16px] font-bold text-[#064985]"
         >
           Change
         </button>

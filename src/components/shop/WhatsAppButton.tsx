@@ -5,12 +5,12 @@ const WhatsAppButton = () => {
   const phoneNumber = WA_NUMBER;
   
   return (
-    <div className="fixed bottom-[calc(64px+2.75rem+env(safe-area-inset-bottom))] right-3 md:bottom-6 md:right-6 z-[9999]">
+    <div className="fixed bottom-[calc(56px+2.25rem+env(safe-area-inset-bottom))] right-3 z-[9999] md:bottom-6 md:right-6">
       <a 
         href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent('Hi NM Mart, I need manual support with my order/account.')}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex h-14 w-14 items-center justify-center rounded-full border border-black/10 bg-[#25D366] shadow-[0_14px_28px_-14px_rgba(0,0,0,0.5)] transition-all hover:scale-105 active:scale-95"
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-[#25D366] shadow-[0_14px_28px_-14px_rgba(0,0,0,0.5)] transition-all hover:scale-105 active:scale-95"
       >
         {/* असली WhatsApp आइकन का छोटा रूप */}
         <svg 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CartItem } from "./store-utils";
-import { buildServerOrderPayload } from "./orderPayload";
+import { buildServerOrderPayload, isServiceablePincode, isValidIndianPhone, isValidPincode, validateCheckoutForm } from "./orderPayload";
+import { getOrderAddress, getOrderPaymentMethod, getOrderStatus, getOrderTotal } from "./orderDisplay";
 
 const makeCartItem = (overrides: Partial<CartItem> = {}): CartItem => ({
   id: 123,
@@ -92,5 +93,60 @@ describe("buildServerOrderPayload", () => {
     expect(JSON.stringify(payload)).not.toContain("saleRate");
     expect(JSON.stringify(payload)).not.toContain("total");
     expect(JSON.stringify(payload)).not.toContain("stock");
+  });
+
+  it("accepts valid checkout inputs and rejects invalid customer details", () => {
+    expect(isValidIndianPhone("9876543210")).toBe(true);
+    expect(isValidIndianPhone("12345")).toBe(false);
+    expect(isValidPincode("212207")).toBe(true);
+    expect(isValidPincode("21220")).toBe(false);
+    expect(isServiceablePincode("212207", ["212207", "212201"])).toBe(true);
+    expect(isServiceablePincode("999999", ["212207", "212201"])).toBe(false);
+
+    expect(validateCheckoutForm({
+      fullName: "Test User",
+      phone: "9876543210",
+      pincode: "212207",
+      paymentMethod: "cod",
+      serviceablePincodes: ["212207", "212201"],
+    })).toEqual({ ok: true });
+
+    expect(validateCheckoutForm({
+      fullName: "",
+      phone: "9876543210",
+      pincode: "212207",
+      paymentMethod: "cod",
+      serviceablePincodes: ["212207", "212201"],
+    }).ok).toBe(false);
+
+    expect(validateCheckoutForm({
+      fullName: "Test User",
+      phone: "9876543210",
+      pincode: "999999",
+      paymentMethod: "cod",
+      serviceablePincodes: ["212207", "212201"],
+    }).ok).toBe(false);
+
+    expect(validateCheckoutForm({
+      fullName: "Test User",
+      phone: "9876543210",
+      pincode: "212207",
+      paymentMethod: "wallet",
+      serviceablePincodes: ["212207", "212201"],
+    }).ok).toBe(false);
+  });
+
+  it("reads alternate live order field names used across Supabase projects", () => {
+    const order = {
+      delivery_status: "Out for Delivery",
+      grand_total: "2450",
+      payment_type: "upi",
+      customer_address: "12 Market Road, Manjhanpur",
+    };
+
+    expect(getOrderStatus(order)).toBe("Out for Delivery");
+    expect(getOrderTotal(order)).toBe(2450);
+    expect(getOrderPaymentMethod(order)).toBe("upi");
+    expect(getOrderAddress(order)).toBe("12 Market Road, Manjhanpur");
   });
 });

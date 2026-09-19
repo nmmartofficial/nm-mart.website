@@ -21,9 +21,14 @@ import {
   type DbProductRow,
 } from "@/lib/supabase/schema";
 
+export function getUniqueBrandNames(products: Array<{ brand?: string | null }>): string[] {
+  return [...new Set(products.map((product) => String(product?.brand ?? "").trim()).filter(Boolean))];
+}
+
 /** Customer storefront catalog: all queries require stock > 0. Admin uses InventoryTab (no stock filter). */
 export function useProducts() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [allBrands, setAllBrands] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
@@ -188,6 +193,8 @@ export function useProducts() {
         return stock > 0 && isProductActive(item);
       });
 
+      setAllBrands(getUniqueBrandNames(filtered.map((item) => ({ brand: getProductBrand(item) }))));
+
       if (count !== null) setTotalCount(count);
 
       const mappedProducts: Product[] = filtered.slice(offset, offset + 50).map(mapProduct);
@@ -199,7 +206,7 @@ export function useProducts() {
         setAllProducts((prev) => [...prev, ...mappedProducts]);
       }
 
-      setHasMore((count ?? 0) > offset + mappedProducts.length);
+      setHasMore((count ?? filtered.length) > offset + mappedProducts.length);
     } catch (err) {
       setError("Unable to load products right now.");
       console.error("Supabase Fetch Error:", err);
@@ -245,8 +252,8 @@ export function useProducts() {
   );
 
   const brands = useMemo(
-    () => [...new Set((allProducts || []).map((p) => (p as any)?.brand).filter(Boolean))],
-    [allProducts]
+    () => allBrands,
+    [allBrands]
   );
 
   const refetchProducts = () => fetchProducts(0);
