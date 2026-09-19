@@ -281,14 +281,6 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
           </div>
         </div>
 
-        <nav className="hidden items-center gap-7 border-t border-[#f1e4d3] pt-2.5 md:flex" aria-label="Main navigation">
-          <Link to="/" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:text-primary">Home</Link>
-          <Link to="/shop" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:text-primary">Categories</Link>
-          <Link to="/shop?sort=discount-desc" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:text-primary">Offers</Link>
-          <Link to="/orders" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:text-primary">Orders</Link>
-          <Link to="/profile" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:text-primary">Account</Link>
-        </nav>
-
         {/* Mobile Search Bar */}
         <div className="mt-3 md:hidden">
           <form
