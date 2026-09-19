@@ -19,6 +19,7 @@ import Checkout from "@/pages/Checkout";
 import ResetPassword from "@/pages/ResetPassword";
 import ShopPage from "@/pages/ShopPage";
 import Categories from "@/pages/Categories";
+import Addresses from "@/pages/Addresses";
 import CartPage from "@/pages/CartPage";
 import Orders from "@/pages/Orders";
 import OrderDetails from "@/pages/OrderDetails";
@@ -109,6 +110,7 @@ function App() {
               <Route path="/tracker" element={<OrderTracker />} />
               <Route path="/shop" element={<ShopPage />} />
               <Route path="/categories" element={<Categories />} />
+              <Route path="/addresses" element={<Addresses />} />
               <Route path="/products" element={<ShopPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/product/:slug" element={<ProductDetail />} />

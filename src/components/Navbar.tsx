@@ -148,6 +148,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
 
   const accountMenuItems = [
     { label: user ? "My Profile" : "Login", icon: User, action: () => navigate(user ? "/profile" : "/login") },
+    { label: "Saved Addresses", icon: MapPin, action: () => navigate("/addresses") },
     { label: "My Orders", icon: Package, action: () => navigate("/orders") },
     { label: "Checkout", icon: ShoppingCart, action: () => navigate("/checkout") },
     { label: "Track Order", icon: Truck, action: () => navigate("/tracker") },

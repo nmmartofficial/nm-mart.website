@@ -13,6 +13,7 @@ export const TABLES = {
   banners: "banners",
   wishlistItems: "wishlist_items",
   storeAssets: "store_assets",
+  customerAddresses: "customer_addresses",
 } as const;
 
 /** Alias of Tables<"products"> from types.ts — always in sync with Supabase schema generation. */

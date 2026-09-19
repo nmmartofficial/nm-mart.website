@@ -9,19 +9,22 @@ import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { TABLES } from "../lib/supabase/schema";
 import { useCart } from "@/hooks/useCart";
-import { UPI_ID } from "@/lib/store-utils";
+import { UPI_ID, type CartItem } from "@/lib/store-utils";
 import { toast } from "sonner";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 import { buildServerOrderPayload, validateCheckoutForm } from "@/lib/orderPayload";
+import { useSavedAddresses } from "@/hooks/useSavedAddresses";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { cart, cartTotal, clearCart } = useCart();
+  const { addresses } = useSavedAddresses();
   const subtotal = cart.reduce((sum, item) => sum + (Number(item.saleRate ?? item.price ?? 0) * item.qty), 0);
   const upiIntentUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent("NM MART")}&am=${encodeURIComponent(String(cartTotal))}&cu=INR`;
   const [loading, setLoading] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -65,6 +68,30 @@ const Checkout = () => {
       navigate("/");
     }
   }, [cart.length, navigate]);
+
+  useEffect(() => {
+    const defaultAddress = addresses.find((address) => address.is_default) || addresses[0];
+    if (!defaultAddress || selectedAddressId) return;
+    setSelectedAddressId(String(defaultAddress.id));
+    setFormData((current) => ({
+      ...current,
+      street: defaultAddress.address,
+      landmark: defaultAddress.landmark || "",
+      pincode: defaultAddress.pincode || current.pincode,
+    }));
+  }, [addresses, selectedAddressId]);
+
+  const handleSavedAddressChange = (value: string) => {
+    setSelectedAddressId(value);
+    const address = addresses.find((item) => String(item.id) === value);
+    if (!address) return;
+    setFormData((current) => ({
+      ...current,
+      street: address.address,
+      landmark: address.landmark || "",
+      pincode: address.pincode || current.pincode,
+    }));
+  };
 
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -172,7 +199,7 @@ const Checkout = () => {
       clearCart();
       toast.success("Order placed successfully!");
       navigate(`/order-confirmation/${encodeURIComponent(String(createdOrderId))}`, { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       logSupabaseDebug("checkoutOrder:error", {
         itemCount: cart.length,
         total: cartTotal,
@@ -228,6 +255,16 @@ const Checkout = () => {
                   </div>
                   <h3 className="text-2xl font-black italic uppercase text-black">Delivery Details</h3>
                 </div>
+
+                {addresses.length > 0 && (
+                  <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                    <label htmlFor="saved-address" className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Choose a saved address</label>
+                    <select id="saved-address" value={selectedAddressId} onChange={(event) => handleSavedAddressChange(event.target.value)} className="mt-2 w-full rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none">
+                      {addresses.map((address) => <option key={address.id} value={address.id}>{address.label} - {address.address}, {address.pincode}</option>)}
+                    </select>
+                    <button type="button" onClick={() => navigate("/addresses")} className="mt-2 text-[10px] font-black uppercase tracking-[0.14em] text-primary hover:underline">Manage saved addresses</button>
+                  </div>
+                )}
 
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-2">
@@ -378,7 +415,7 @@ const Checkout = () => {
                 
                 <div className="p-8 space-y-6">
                   <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
-                    {cart.map((item: any, i: number) => (
+                    {cart.map((item: CartItem, i: number) => (
                       <div key={i} className="flex justify-between items-center gap-4">
                         <div className="flex-1">
                           <p className="text-[11px] font-black uppercase text-black italic line-clamp-1">{item.name}</p>
