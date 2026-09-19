@@ -5,11 +5,14 @@ import Footer from "@/components/shop/Footer";
 import ProductCard from "@/components/shop/ProductCard";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useProducts } from "@/hooks/useProducts";
 
 export default function Wishlist() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { wishlist } = useWishlist();
+  const { wishlistBarcodes } = useWishlist();
+  const { allProducts, loading } = useProducts();
+  const wishlist = allProducts.filter((product) => wishlistBarcodes.includes(product.barcode));
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-slate-900">
@@ -32,7 +35,9 @@ export default function Wishlist() {
           </span>
         </div>
 
-        {wishlist.length === 0 ? (
+        {loading ? (
+          <div className="rounded-[28px] border border-slate-200 bg-white p-12 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Loading saved products...</div>
+        ) : wishlist.length === 0 ? (
           <div className="rounded-[28px] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm md:p-16">
             <Heart className="mx-auto h-12 w-12 text-slate-300" />
             <h2 className="mt-5 text-2xl font-black uppercase tracking-[-0.05em]">Your wishlist is empty</h2>

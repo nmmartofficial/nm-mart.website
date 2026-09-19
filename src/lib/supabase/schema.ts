@@ -11,6 +11,7 @@ export const TABLES = {
   profiles: "profiles",
   categories: "categories",
   banners: "banners",
+  wishlistItems: "wishlist_items",
 } as const;
 
 /** Alias of Tables<"products"> from types.ts — always in sync with Supabase schema generation. */

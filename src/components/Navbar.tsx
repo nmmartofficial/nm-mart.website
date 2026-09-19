@@ -53,7 +53,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState<string>("");
   const { cartCount } = useCart();
-  const { wishlist } = useWishlist();
+  const { wishlistBarcodes } = useWishlist();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -241,7 +241,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
                 aria-label="Open wishlist"
               >
                 <Bookmark size={17} />
-                {wishlist.length > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-rose-500 px-1 text-[9px] font-black text-white">{wishlist.length}</span>}
+                {wishlistBarcodes.length > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-rose-500 px-1 text-[9px] font-black text-white">{wishlistBarcodes.length}</span>}
               </button>
               <button
                 type="button"

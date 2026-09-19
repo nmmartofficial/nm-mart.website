@@ -1,47 +1,73 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Product } from "@/lib/store-utils";
+import { supabase } from "@/lib/supabase/client";
+import { TABLES } from "@/lib/supabase/schema";
 
 interface WishlistContextValue {
-  wishlist: Product[];
+  wishlistBarcodes: string[];
   isWishlisted: (product: Product) => boolean;
-  toggleWishlist: (product: Product) => void;
-  removeFromWishlist: (product: Product) => void;
+  toggleWishlist: (product: Product) => Promise<void>;
 }
 
 const WishlistContext = createContext<WishlistContextValue | null>(null);
-const STORAGE_KEY = "nm_mart_wishlist";
-
-function sameProduct(first: Product, second: Product): boolean {
-  if (first.id && second.id) return first.id === second.id;
-  return first.barcode === second.barcode;
-}
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
-  const [wishlist, setWishlist] = useState<Product[]>(() => {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      return stored ? (JSON.parse(stored) as Product[]) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [wishlistBarcodes, setWishlistBarcodes] = useState<string[]>([]);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(wishlist));
-  }, [wishlist]);
+    let mounted = true;
+    const loadWishlist = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        if (mounted) setWishlistBarcodes([]);
+        return;
+      }
+
+      const { data } = await supabase
+        .from(TABLES.wishlistItems)
+        .select("product_barcode")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (mounted) setWishlistBarcodes((data || []).map((item) => String(item.product_barcode)));
+    };
+
+    loadWishlist();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => loadWishlist());
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const toggleWishlist = useCallback(async (product: Product) => {
+    const barcode = String(product.barcode || "").trim();
+    if (!barcode) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    if (wishlistBarcodes.includes(barcode)) {
+      await supabase
+        .from(TABLES.wishlistItems)
+        .delete()
+        .eq("user_id", user.id)
+        .eq("product_barcode", barcode);
+      setWishlistBarcodes((current) => current.filter((item) => item !== barcode));
+      return;
+    }
+
+    const { error } = await supabase.from(TABLES.wishlistItems).insert({
+      user_id: user.id,
+      product_barcode: barcode,
+    });
+    if (!error) setWishlistBarcodes((current) => [barcode, ...current]);
+  }, [wishlistBarcodes]);
 
   const value = useMemo<WishlistContextValue>(() => ({
-    wishlist,
-    isWishlisted: (product) => wishlist.some((item) => sameProduct(item, product)),
-    toggleWishlist: (product) => {
-      setWishlist((current) => current.some((item) => sameProduct(item, product))
-        ? current.filter((item) => !sameProduct(item, product))
-        : [...current, product]);
-    },
-    removeFromWishlist: (product) => {
-      setWishlist((current) => current.filter((item) => !sameProduct(item, product)));
-    },
-  }), [wishlist]);
+    wishlistBarcodes,
+    isWishlisted: (product) => wishlistBarcodes.includes(String(product.barcode || "").trim()),
+    toggleWishlist,
+  }), [wishlistBarcodes, toggleWishlist]);
 
   return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
 }
