@@ -286,7 +286,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
             <button
               type="button"
               onClick={() => setMoreOpen(true)}
-              className="hidden items-center justify-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sm transition hover:bg-white/20 md:inline-flex"
+              className="hidden items-center justify-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sm transition hover:bg-white/20 md:order-4 md:inline-flex"
               aria-label="Open More menu"
             >
               More
