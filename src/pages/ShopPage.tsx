@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Filter, Search, SlidersHorizontal } from "lucide-react";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 import ProductCard from "@/components/shop/ProductCard";
 import { useCart } from "@/hooks/useCart";
-import { useProducts } from "@/hooks/useProducts";
+import { useProductCatalog } from "@/hooks/useProductCatalog";
 
 const sortOptions = [
   { value: "featured", label: "Featured" },
@@ -22,14 +22,9 @@ const getNumericPrice = (value: unknown): number => {
 };
 
 const ShopPage = () => {
-  const { allProducts, loading, error, categories, brands, hasMore, loadMore, refetchProducts } = useProducts();
   const { addToCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const validCategories = useMemo(() => (categories || []).filter((category): category is string => Boolean(category && typeof category === "string" && category.trim())), [categories]);
-  const validBrands = useMemo(() => (brands || []).filter((brand): brand is string => Boolean(brand && typeof brand === "string" && brand.trim())), [brands]);
-  const validCategorySet = useMemo(() => new Set(validCategories), [validCategories]);
-  const validBrandSet = useMemo(() => new Set(validBrands), [validBrands]);
+  const collection = searchParams.get("collection") || "";
 
   const [query, setQuery] = useState(() => searchParams.get("search") || searchParams.get("q") || "");
   const [selectedCategory, setSelectedCategory] = useState(() => {
@@ -48,6 +43,45 @@ const ShopPage = () => {
   });
   const offersOnly = searchParams.get("offers") === "25";
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const collectionOptions = collection === "featured"
+    ? { featuredOnly: true as const }
+    : collection === "flat50"
+      ? { minDiscount: 50 }
+      : collection === "flat33"
+        ? { minDiscount: 33, maxDiscount: 50 }
+        : {};
+  const catalog = useProductCatalog({
+    pageSize: 20,
+    search: query,
+    category: selectedCategory === "all" ? undefined : selectedCategory,
+    brand: selectedBrand === "all" ? undefined : selectedBrand,
+    offersOnly,
+    sort: sortBy,
+    minPrice: priceMin.trim() ? Number(priceMin) : undefined,
+    maxPrice: priceMax.trim() ? Number(priceMax) : undefined,
+    ...collectionOptions,
+  });
+  const { products: allProducts, loading, loadingMore, error, loadMoreError, categories, brands, hasMore, loadMore, retry: refetchProducts, retryLoadMore } = catalog;
+  const validCategories = useMemo(() => (categories || []).filter((category): category is string => Boolean(category && typeof category === "string" && category.trim())), [categories]);
+  const validBrands = useMemo(() => (brands || []).filter((brand): brand is string => Boolean(brand && typeof brand === "string" && brand.trim())), [brands]);
+  const validCategorySet = useMemo(() => new Set(validCategories), [validCategories]);
+  const validBrandSet = useMemo(() => new Set(validBrands), [validBrands]);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const nextQuery = searchParams.get("search") || searchParams.get("q") || "";
+    const nextCategory = searchParams.get("category") || "all";
+    const nextBrand = searchParams.get("brand") || "all";
+    const nextPriceMin = searchParams.get("priceMin") || "";
+    const nextPriceMax = searchParams.get("priceMax") || "";
+    const nextSort = searchParams.get("sort");
+    setQuery(nextQuery);
+    setSelectedCategory(nextCategory);
+    setSelectedBrand(nextBrand);
+    setPriceMin(nextPriceMin);
+    setPriceMax(nextPriceMax);
+    setSortBy((sortOptions.some((option) => option.value === nextSort) ? nextSort : "featured") as (typeof sortOptions)[number]["value"]);
+  }, [searchParams]);
 
   useEffect(() => {
     const nextParams = new URLSearchParams();
@@ -59,6 +93,7 @@ const ShopPage = () => {
     if (priceMax.trim()) nextParams.set("priceMax", priceMax.trim());
     if (sortBy !== "featured") nextParams.set("sort", sortBy);
     if (offersOnly) nextParams.set("offers", "25");
+    if (collection) nextParams.set("collection", collection);
 
     const nextSearch = nextParams.toString();
     const currentSearch = searchParams.toString();
@@ -66,58 +101,16 @@ const ShopPage = () => {
     if (nextSearch !== currentSearch) {
       setSearchParams(nextSearch ? `?${nextSearch}` : "", { replace: true });
     }
-  }, [offersOnly, query, selectedCategory, selectedBrand, priceMin, priceMax, sortBy, searchParams, setSearchParams]);
+  }, [collection, offersOnly, query, selectedCategory, selectedBrand, priceMin, priceMax, sortBy, searchParams, setSearchParams]);
 
   const filteredProducts = useMemo(() => {
-    const searchValue = query.trim().toLowerCase();
     const minValue = Number(priceMin);
     const maxValue = Number(priceMax);
-    const hasMinPrice = priceMin.trim() !== "" && Number.isFinite(minValue);
-    const hasMaxPrice = priceMax.trim() !== "" && Number.isFinite(maxValue);
-    const effectiveMin = hasMinPrice && hasMaxPrice && minValue > maxValue ? maxValue : minValue;
-    const effectiveMax = hasMinPrice && hasMaxPrice && minValue > maxValue ? minValue : maxValue;
-
-    const list = allProducts.filter((product) => {
-      const productPrice = getNumericPrice(product.price);
-      const matchesSearch =
-        !searchValue ||
-        [product.name, product.brand, product.category, product.subCategory, product.barcode]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(searchValue));
-
-      const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
-      const matchesBrand = selectedBrand === "all" || product.brand === selectedBrand;
-      const matchesOffers = !offersOnly || Number(product.discount || 0) > 25;
-      const matchesPriceMin = !hasMinPrice || productPrice >= effectiveMin;
-      const matchesPriceMax = !hasMaxPrice || productPrice <= effectiveMax;
-
-      return matchesSearch && matchesCategory && matchesBrand && matchesPriceMin && matchesPriceMax && matchesOffers;
-    });
-
-    const sorted = [...list];
-    switch (sortBy) {
-      case "price-asc":
-        sorted.sort((a, b) => getNumericPrice(a.price) - getNumericPrice(b.price));
-        break;
-      case "price-desc":
-        sorted.sort((a, b) => getNumericPrice(b.price) - getNumericPrice(a.price));
-        break;
-      case "name-asc":
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "name-desc":
-        sorted.sort((a, b) => b.name.localeCompare(a.name));
-        break;
-      case "discount-desc":
-        sorted.sort((a, b) => Number(b.discount || 0) - Number(a.discount || 0));
-        break;
-      default:
-        sorted.sort((a, b) => Number(b.discount || 0) - Number(a.discount || 0) || Number(b.stock || 0) - Number(a.stock || 0));
-        break;
-    }
-
-    return sorted;
-  }, [allProducts, offersOnly, priceMax, priceMin, query, selectedBrand, selectedCategory, sortBy]);
+    return allProducts.filter((product) =>
+      (!priceMin.trim() || getNumericPrice(product.price) >= minValue) &&
+      (!priceMax.trim() || getNumericPrice(product.price) <= maxValue)
+    );
+  }, [allProducts, priceMax, priceMin]);
 
   const clearFilters = () => {
     setQuery("");
@@ -130,6 +123,16 @@ const ShopPage = () => {
   };
 
   const displayedProducts = filteredProducts;
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasMore || loading || loadingMore) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) loadMore();
+    }, { rootMargin: "500px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore, loading, loadingMore]);
 
   const filterPanel = (
     <div className="space-y-5 rounded-[26px] border border-slate-200 bg-white p-4 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.35)] md:p-5">
@@ -397,18 +400,9 @@ const ShopPage = () => {
                   />
                 ))}
               </div>
-              {hasMore && (
-                <div className="mt-7 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={loadMore}
-                    disabled={loading}
-                    className="rounded-full border border-slate-200 bg-white px-6 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-wait disabled:opacity-60"
-                  >
-                    {loading ? "Loading Products" : "Load More Products"}
-                  </button>
-                </div>
-              )}
+              <div ref={loadMoreRef} className="mt-7 flex min-h-12 items-center justify-center">
+                {loadingMore ? <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Loading more products...</span> : loadMoreError ? <button type="button" onClick={retryLoadMore} className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600 underline">Couldn't load more products. Try again.</button> : hasMore ? <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Loading more as you scroll</span> : <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">No more products</span>}
+              </div>
               </>
             )}
           </div>

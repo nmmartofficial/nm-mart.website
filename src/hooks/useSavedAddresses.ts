@@ -59,5 +59,30 @@ export function useSavedAddresses() {
     setAddresses((current) => current.filter((address) => address.id !== id));
   };
 
-  return { addresses, loading, saveAddress, deleteAddress, reloadAddresses: loadAddresses };
+  const updateAddress = async (id: number, address: Omit<SavedAddress, "id" | "is_default">) => {
+    const { error } = await supabase.from(TABLES.customerAddresses).update(address).eq("id", id);
+    if (error) throw error;
+    await loadAddresses();
+  };
+
+  const setDefaultAddress = async (id: number) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Please login before selecting an address.");
+
+    const clearDefault = await supabase
+      .from(TABLES.customerAddresses)
+      .update({ is_default: false })
+      .eq("user_id", user.id);
+    if (clearDefault.error) throw clearDefault.error;
+
+    const { error } = await supabase
+      .from(TABLES.customerAddresses)
+      .update({ is_default: true })
+      .eq("id", id)
+      .eq("user_id", user.id);
+    if (error) throw error;
+    await loadAddresses();
+  };
+
+  return { addresses, loading, saveAddress, updateAddress, deleteAddress, setDefaultAddress, reloadAddresses: loadAddresses };
 }

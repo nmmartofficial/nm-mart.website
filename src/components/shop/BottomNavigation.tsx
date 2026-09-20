@@ -1,15 +1,18 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Tag, Package, User, Grid2X2 } from "lucide-react";
+import { Home, Tag, Package, MoreHorizontal, Grid2X2 } from "lucide-react";
+import { useState } from "react";
+import MoreDrawer from "@/components/shop/MoreDrawer";
 
 export default function BottomNavigation() {
   const { pathname, search } = useLocation();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const items = [
     { label: "Home", to: "/", Icon: Home },
     { label: "Categories", to: "/categories", Icon: Grid2X2 },
     { label: "Offers", to: "/shop?offers=25", Icon: Tag },
     { label: "Orders", to: "/orders", Icon: Package },
-    { label: "Account", to: "/profile", Icon: User },
+    { label: "More", to: "", Icon: MoreHorizontal },
   ];
 
   const isActive = (to: string) => {
@@ -20,10 +23,29 @@ export default function BottomNavigation() {
   };
 
   return (
-    <nav className="fixed left-0 right-0 bottom-0 z-50 w-full max-w-[100vw] overflow-x-hidden md:hidden border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]">
-      <div className="grid w-full max-w-[100vw] grid-cols-5">
+    <>
+      <nav className="fixed left-0 right-0 bottom-0 z-50 w-full max-w-[100vw] overflow-x-hidden md:hidden border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]">
+        <div className="grid w-full max-w-[100vw] grid-cols-5">
         {items.map(({ label, to, Icon, badge }) => {
-          const active = isActive(to);
+          const active = label === "More" ? moreOpen || pathname === "/profile" : isActive(to);
+          if (label === "More") {
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setMoreOpen(true)}
+                className={`flex min-h-[56px] flex-col items-center justify-center gap-0.5 transition-colors ${
+                  active ? "text-blue-700" : "text-slate-500"
+                }`}
+                aria-expanded={moreOpen}
+                aria-controls="more-drawer"
+              >
+                <Icon size={22} strokeWidth={active ? 2.5 : 2} />
+                <span className={`text-[9px] font-bold tracking-tight ${active ? "font-black" : ""}`}>{label}</span>
+              </button>
+            );
+          }
+
           return (
             <Link
               key={label}
@@ -45,7 +67,9 @@ export default function BottomNavigation() {
             </Link>
           );
         })}
-      </div>
-    </nav>
+        </div>
+      </nav>
+      <MoreDrawer open={moreOpen} onClose={() => setMoreOpen(false)} />
+    </>
   );
 }

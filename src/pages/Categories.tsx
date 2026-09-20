@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, LayoutGrid } from "lucide-react";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
-import { useProducts } from "@/hooks/useProducts";
+import { useProductCatalog } from "@/hooks/useProductCatalog";
 
 export default function Categories() {
   const navigate = useNavigate();
-  const { allProducts, categories, loading, error } = useProducts();
+  const { products: allProducts, categories, loading, error } = useProductCatalog({ pageSize: 20 });
   const imageByCategory = useMemo(() => {
     const images: Record<string, string> = {};
     for (const product of allProducts) {

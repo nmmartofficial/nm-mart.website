@@ -184,7 +184,7 @@
   - **Point 9 Non-Negotiable**: "Only render a section if the underlying real Supabase data exists. Do not invent products."
   - **Overall section order (after brands)**:
     1. Featured Products (if `featuredProducts.length > 0`)
-    2. Popular Products (if `popularProducts.length > 0` — in-stock items)
+    2. Popular N Products (if `popularProducts.length > 0` — in-stock items)
     3. Special Offers (discount > 0)
     4. Flat 50%+ (if `flat50.length > 0`)
     5. Flat 33–49% (if `flat33.length > 0`)

@@ -1,13 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/shop/Footer";
-import { User, Package, MapPin, LogOut, Star, Loader2, Save, Smartphone, ChevronRight, Map, Camera } from "lucide-react";
+import { User, Package, MapPin, LogOut, Star, Loader2, Save, Smartphone, ChevronRight, Map, Camera, Heart, Settings, Headset, ArrowLeft, Pencil } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { toast } from "sonner";
-import { WA_NUMBER } from "@/lib/store-utils";
 
 export interface ProfileAddressInput {
   name: string;
@@ -54,6 +51,7 @@ const UserProfile = () => {
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [editing, setEditing] = useState(false);
 
   const [profile, setProfile] = useState({
     name: "",
@@ -246,9 +244,10 @@ const UserProfile = () => {
 
       if (error) throw error;
       logSupabaseDebug("profileSave:success", data);
-      const successMessage = "Delivery details saved successfully.";
+      const successMessage = "Profile details saved successfully.";
       setSaveMessage({ type: "success", text: successMessage });
       toast.success(successMessage);
+      setEditing(false);
     } catch (err: any) {
       const message = getSupabaseErrorMessage(err, "Save failed");
       setSaveMessage({ type: "error", text: message });
@@ -265,6 +264,11 @@ const UserProfile = () => {
     toast.info("Logged out successfully");
   };
 
+  const initials = (profile.name || user?.email || "NM").trim().split(/\s+/).slice(0, 2).map((part: string) => part[0]).join("").toUpperCase();
+  const contact = profile.phone || user?.email || "Contact details unavailable";
+
+  const showUnavailable = (label: string) => toast.info(`${label} is coming soon.`);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center gap-4">
@@ -275,68 +279,36 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFAF5] text-black flex flex-col font-sans">
-      <Navbar />
-      
-      <main className="flex-1 py-12 px-4 md:px-6">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {!sessionActive && (
-            <div className="text-[10px] font-black uppercase tracking-wider text-red-500">
-              Please Login - save actions are disabled.
-            </div>
-          )}
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <main className="mx-auto max-w-2xl px-4 pb-28 pt-4 md:px-6 md:pb-12">
+        <header className="flex h-12 items-center justify-between border-b border-slate-200">
+          <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-600 hover:text-primary" aria-label="Go back">
+            <ArrowLeft size={18} /> My Profile
+          </button>
+          <button type="button" onClick={() => showUnavailable("Settings")} className="rounded-full p-2 text-slate-500 hover:bg-white hover:text-primary" aria-label="Profile settings">
+            <Settings size={18} />
+          </button>
+        </header>
 
-          {saveMessage && (
-            <div className={`rounded-2xl border px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] ${
-              saveMessage.type === "success"
-                ? "border-green-200 bg-green-50 text-green-700"
-                : "border-red-200 bg-red-50 text-red-700"
-            }`}>
-              {saveMessage.text}
-            </div>
-          )}
-          
-          {/* Dashboard Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-black">
-                My <span className="text-primary">Account</span>
-              </h1>
-              <p className="text-gray-400 font-bold uppercase tracking-widest text-xs italic">
-                Manage your profile and track orders
-              </p>
-            </div>
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 bg-white border border-gray-100 text-gray-500 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all shadow-sm"
-            >
-              <LogOut size={16} /> Logout
-            </button>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left Column - Profile Details */}
-            <div className="lg:col-span-1 space-y-8">
-              <div className="bg-white p-10 rounded-3xl shadow-2xl space-y-10">
-                {/* Premium Profile Header */}
-                <div className="text-center">
+        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => avatarInputRef.current?.click()}
-                    className="relative mx-auto w-28 h-28 rounded-full bg-gray-100 shadow-lg overflow-hidden flex items-center justify-center text-orange-500 focus:outline-none"
+                    className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-orange-50 text-primary shadow-sm focus:outline-none"
                     title="Change profile photo"
                     disabled={avatarUploading}
                   >
                     {(avatarPreviewUrl || profile.avatar_url) ? (
                       <img src={avatarPreviewUrl || profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <User size={40} />
+                      <span className="text-lg font-black">{initials}</span>
                     )}
-                    <span className="absolute bottom-2 right-2 w-9 h-9 rounded-full bg-white shadow-lg flex items-center justify-center border border-orange-100">
+                    <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full border border-orange-100 bg-white">
                       {avatarUploading ? (
-                        <Loader2 className="animate-spin text-orange-500" size={18} />
+                        <Loader2 className="animate-spin text-orange-500" size={11} />
                       ) : (
-                        <Camera className="text-orange-500" size={18} />
+                        <Camera className="text-orange-500" size={11} />
                       )}
                     </span>
                     <input
@@ -349,22 +321,26 @@ const UserProfile = () => {
                     />
                   </button>
 
-                  {profile.name ? (
-                    <h3 className="mt-5 text-2xl font-black italic uppercase tracking-tight text-black leading-none">
-                      {profile.name}
-                    </h3>
-                  ) : null}
-
-                  <div className="mt-4 flex justify-center">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 via-orange-500 to-yellow-400 shadow-[0_18px_40px_rgba(255,140,0,0.35)] flex flex-col items-center justify-center animate-pulse">
-                      <Star size={18} className="text-yellow-100 fill-current drop-shadow" />
-                      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.22em] text-white/95">Points</div>
-                      <div className="text-2xl font-black text-white leading-none drop-shadow">{profile.points}</div>
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <h1 className="truncate text-lg font-black uppercase tracking-[-0.03em] text-slate-900">{profile.name || "NM Mart customer"}</h1>
+                    <p className="mt-1 truncate text-sm font-medium text-slate-500">{contact}</p>
                   </div>
-                </div>
+                  <button type="button" onClick={() => setEditing((value) => !value)} className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-primary hover:bg-primary/5">
+                    <Pencil size={13} /> Edit
+                  </button>
+          </div>
+        </section>
 
-                <div className="space-y-8">
+        <button type="button" onClick={() => showUnavailable("Rewards / Points")} className="mt-4 flex w-full items-center justify-between rounded-2xl border border-orange-100 bg-orange-50/70 px-4 py-3 text-left shadow-sm hover:bg-orange-50">
+          <span className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-primary"><Star size={17} fill="currentColor" /></span><span><span className="block text-[10px] font-black uppercase tracking-[0.16em] text-primary">Rewards Points</span><span className="mt-0.5 block text-sm font-black text-slate-800">{profile.points > 0 ? `${profile.points} Points` : "No points yet"}</span></span></span>
+          <ChevronRight size={17} className="text-primary" />
+        </button>
+
+        {saveMessage && <div className={`mt-4 rounded-xl border px-3 py-2 text-xs font-bold ${saveMessage.type === "success" ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700"}`}>{saveMessage.text}</div>}
+
+        {editing && <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-black uppercase tracking-[0.12em]">Personal Information</h2><button type="button" onClick={() => setEditing(false)} className="text-xs font-bold text-slate-500">Cancel</button></div>
+          <div className="space-y-3">
                   <div className="relative">
                     <div className="flex items-center gap-2">
                       <User size={18} className="text-orange-500" />
@@ -378,11 +354,11 @@ const UserProfile = () => {
                             setProfile({ ...profile, name: e.target.value });
                           }}
                           placeholder=" "
-                          className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold uppercase text-sm focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
+                          className="peer w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold outline-none focus:border-primary"
                         />
                         <label
                           htmlFor="profile_full_name"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 text-sm font-bold text-[#333] transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-orange-600 peer-not-placeholder-shown:top-1.5 peer-not-placeholder-shown:text-[11px]"
+                          className="sr-only"
                         >
                           Full Name
                         </label>
@@ -403,11 +379,11 @@ const UserProfile = () => {
                             setProfile({ ...profile, phone: e.target.value });
                           }}
                           placeholder=" "
-                          className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold text-sm focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
+                          className="peer w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold outline-none focus:border-primary"
                         />
                         <label
                           htmlFor="profile_phone"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 text-sm font-bold text-[#333] transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-orange-600 peer-not-placeholder-shown:top-1.5 peer-not-placeholder-shown:text-[11px]"
+                          className="sr-only"
                         >
                           Phone Number
                         </label>
@@ -428,11 +404,11 @@ const UserProfile = () => {
                           }}
                           placeholder=" "
                           rows={3}
-                          className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold uppercase text-sm resize-none focus:border-[#FF8800] focus:shadow-[0_18px_30px_-24px_rgba(255,136,0,0.95)] transition-all"
+                          className="peer w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold outline-none focus:border-primary"
                         />
                         <label
                           htmlFor="profile_address"
-                          className="absolute left-0 top-6 -translate-y-1/2 text-sm font-bold text-[#333] transition-all peer-placeholder-shown:top-6 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-[11px] peer-focus:text-orange-600 peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:text-[11px]"
+                          className="sr-only"
                         >
                           Delivery Address
                         </label>
@@ -453,11 +429,11 @@ const UserProfile = () => {
                             setProfile({ ...profile, landmark: e.target.value });
                           }}
                           placeholder=" "
-                          className="peer w-full bg-transparent border-0 border-b-2 border-[#EEEEEE] py-4 pr-2 outline-none font-bold uppercase text-sm focus:border-[#FF8800] focus:shadow-[0_16px_26px_-22px_rgba(255,136,0,0.95)] transition-all"
+                          className="peer w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold outline-none focus:border-primary"
                         />
                         <label
                           htmlFor="profile_landmark"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 text-sm font-bold text-[#333] transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-orange-600 peer-not-placeholder-shown:top-1.5 peer-not-placeholder-shown:text-[11px]"
+                          className="sr-only"
                         >
                           Landmark (Optional)
                         </label>
@@ -468,79 +444,32 @@ const UserProfile = () => {
                   <button 
                     onClick={handleSave}
                     disabled={saving || !sessionActive}
-                    className="w-full py-5 rounded-full font-black uppercase tracking-[3px] shadow-lg flex items-center justify-center italic transition-all bg-gradient-to-r from-[#FF7F00] to-[#FFD700] hover:shadow-xl active:animate-bounce active:shadow-2xl"
+                    className="w-full rounded-xl bg-primary py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-orange-700 disabled:opacity-60"
                   >
                     {saving ? <Loader2 className="animate-spin" size={18} /> : (
                       <>
-                        UPDATE PROFILE <Save size={18} className="ml-2" />
+                        UPDATE PROFILE <Save size={15} className="ml-2 inline" />
                       </>
                     )}
                   </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - Order History and Account Actions */}
-            <div className="lg:col-span-2 space-y-8">
-              <div className="flex flex-col gap-6 rounded-[40px] border border-orange-100 bg-white p-8 shadow-sm md:flex-row md:items-center md:justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-xl bg-orange-50 p-3 text-primary">
-                    <Package size={22} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black italic uppercase text-black">Order History</h3>
-                    <p className="mt-2 max-w-md text-sm leading-6 text-gray-500">View your complete order history, payment details, delivery information, and current status.</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate("/orders")}
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                >
-                  View My Orders <ChevronRight size={15} />
-                </button>
-              </div>
-
-              <div className="bg-white border border-gray-100 rounded-[40px] shadow-sm p-8">
-                <div className="mb-6 flex items-center gap-3">
-                  <div className="p-2 bg-gray-50 rounded-xl text-primary">
-                    <User size={18} />
-                  </div>
-                  <h3 className="text-xl font-black italic uppercase text-black">Account Actions</h3>
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-3">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/tracker")}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
-                  >
-                    Track Order
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/cart")}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
-                  >
-                    Cart
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/")}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
-                  >
-                    Shop Now
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
+        </section>}
+
+        <div className="mt-5 space-y-5">
+          <ProfileMenuSection title="Account" items={[{ label: "Personal Information", icon: User, action: () => setEditing(true) }, { label: "Delivery Addresses", icon: MapPin, action: () => navigate("/addresses") }]} />
+          <ProfileMenuSection title="Orders & Shopping" items={[{ label: "My Orders", icon: Package, action: () => navigate("/orders") }, { label: "Wishlist", icon: Heart, action: () => navigate("/wishlist") }]} />
+          <ProfileMenuSection title="Rewards" items={[{ label: "Rewards / Points", icon: Star, action: () => showUnavailable("Rewards / Points") }]} />
+          <ProfileMenuSection title="Settings" items={[{ label: "Settings", icon: Settings, action: () => showUnavailable("Settings") }]} />
+          <ProfileMenuSection title="Support" items={[{ label: "Help & Support", icon: Headset, action: () => navigate("/contact") }]} />
+          <section className="border-t border-slate-200 pt-4"><button type="button" onClick={handleLogout} className="flex min-h-12 w-full items-center justify-between rounded-xl border border-red-100 bg-white px-4 text-left text-red-600 shadow-sm hover:bg-red-50"><span className="flex items-center gap-3 text-sm font-bold"><LogOut size={17} /> Logout</span><ChevronRight size={16} className="text-red-300" /></button></section>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
+
+function ProfileMenuSection({ title, items }: { title: string; items: Array<{ label: string; icon: typeof User; action: () => void }> }) {
+  return <section><h2 className="mb-1.5 px-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{title}</h2><div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">{items.map(({ label, icon: Icon, action }) => <button key={label} type="button" onClick={action} className="flex min-h-12 w-full items-center justify-between gap-3 border-b border-slate-100 px-4 text-left last:border-0 hover:bg-slate-50"><span className="flex items-center gap-3 text-sm font-bold text-slate-800"><Icon size={17} className="text-primary" />{label}</span><ChevronRight size={16} className="text-slate-400" /></button>)}</div></section>;
+}
 
 export default UserProfile;

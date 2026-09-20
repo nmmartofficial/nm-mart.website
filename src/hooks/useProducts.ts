@@ -90,7 +90,7 @@ export function useProducts() {
 
   const fetchAllCategories = async () => {
     try {
-      const { data, error } = await getProductRows({ from: 0, to: 999 });
+      const { data, error } = await getProductRows({ from: 0, to: 49 });
       if (error) throw error;
 
       const uniqueCats = [
@@ -110,7 +110,7 @@ export function useProducts() {
 
   const fetchSupplementalProducts = async () => {
     try {
-      const { data, error } = await getProductRows({ from: 0, to: 999 });
+      const { data, error } = await getProductRows({ from: 0, to: 49 });
       if (error) throw error;
 
       const liveRows = data.filter((item) => getProductStock(item) > 0 && isProductActive(item));
@@ -137,7 +137,7 @@ export function useProducts() {
 
   const fetchFeaturedProducts = async (offset = 0) => {
     try {
-      const { data, error } = await getProductRows({ from: 0, to: 999 });
+      const { data, error } = await getProductRows({ from: offset, to: offset + 11 });
       if (error) throw error;
 
       const filtered = data.filter((item) => {
@@ -160,7 +160,7 @@ export function useProducts() {
 
   const fetchDiscountedProducts = async (type: 50 | 33, offset = 0) => {
     try {
-      const { data, error } = await getProductRows({ from: 0, to: 999 });
+      const { data, error } = await getProductRows({ from: offset, to: offset + 11 });
       if (error) throw error;
 
       const filtered = data.filter((item) => {

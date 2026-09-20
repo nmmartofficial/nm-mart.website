@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, ShoppingCart, Star, Share2, Loader2, Package, CheckCircle2, Plus, Minus, ChevronRight } from "lucide-react";
-import { useProducts } from "@/hooks/useProducts";
+import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useCart } from "@/hooks/useCart";
 import { calculateSalePrice, parseProductSlug, normalizeCategory, Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
@@ -18,7 +18,7 @@ const SLOGAN = "Shop More, Save More";
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { allProducts, loading: productsLoading } = useProducts();
+  const { products: allProducts, loading: productsLoading } = useProductCatalog({ pageSize: 20 });
   const { addToCart, cart, updateQty } = useCart();
   const [adding, setAdding] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);

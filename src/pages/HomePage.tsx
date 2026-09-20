@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, LayoutGrid, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useProducts } from "@/hooks/useProducts";
+import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useCart } from "@/hooks/useCart";
 import Header from "@/components/shop/Header";
 import HeroBanner from "@/components/shop/HeroBanner";
@@ -16,23 +16,22 @@ import type { WebsiteBanner } from "@/lib/supabase";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const {
-    allProducts,
-    loading: productsLoading,
-    categories,
-    brands,
-    hasMore,
-    loadMore,
-    featuredProducts,
-    flat50,
-    flat33,
-    hasMore50,
-    hasMore33,
-    hasMoreFeatured,
-    loadMore50,
-    loadMore33,
-    loadMoreFeatured,
-  } = useProducts();
+  const popularCatalog = useProductCatalog({ pageSize: 8 });
+  const offersCatalog = useProductCatalog({ pageSize: 8, offersOnly: true });
+  const featuredCatalog = useProductCatalog({ pageSize: 8, featuredOnly: true });
+  const flat50Catalog = useProductCatalog({ pageSize: 8, minDiscount: 50 });
+  const flat33Catalog = useProductCatalog({ pageSize: 8, minDiscount: 33, maxDiscount: 50 });
+  const allProducts = popularCatalog.products;
+  const productsLoading = popularCatalog.loading || offersCatalog.loading || featuredCatalog.loading || flat50Catalog.loading || flat33Catalog.loading;
+  const categories = popularCatalog.categories;
+  const brands = popularCatalog.brands;
+  const hasMore = popularCatalog.hasMore;
+  const featuredProducts = featuredCatalog.products;
+  const flat50 = flat50Catalog.products;
+  const flat33 = flat33Catalog.products;
+  const hasMore50 = flat50Catalog.hasMore;
+  const hasMore33 = flat33Catalog.hasMore;
+  const hasMoreFeatured = featuredCatalog.hasMore;
   const { addToCart } = useCart();
   const [banners, setBanners] = useState<WebsiteBanner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
@@ -41,8 +40,8 @@ export default function HomePage() {
   const [visibleFeaturedCount, setVisibleFeaturedCount] = useState(8);
   const [visibleFlat50Count, setVisibleFlat50Count] = useState(8);
   const [visibleFlat33Count, setVisibleFlat33Count] = useState(8);
-  const [visibleCategoryCount] = useState(Number.MAX_SAFE_INTEGER);
-  const [visibleBrandCount] = useState(Number.MAX_SAFE_INTEGER);
+  const [visibleCategoryCount] = useState(12);
+  const [visibleBrandCount] = useState(8);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const allLiveCategories = (categories || []).filter(Boolean);
   const liveCategories = allLiveCategories.slice(0, visibleCategoryCount);
@@ -72,9 +71,7 @@ export default function HomePage() {
   }, [allProducts]);
   const popularProducts = (allProducts || []).filter((product) => Number(product.stock) > 0);
   const visiblePopularProducts = popularProducts.slice(0, visiblePopularCount);
-  const allOfferProducts = (allProducts || [])
-    .filter((product) => Number(product.stock) > 0 && Number(product.discount) > 0)
-    .sort((a, b) => Number(b.discount) - Number(a.discount));
+  const allOfferProducts = offersCatalog.products;
   const offerProducts = allOfferProducts.slice(0, visibleOfferCount);
 
   const handleCategoryClick = (category: string) => {
@@ -86,33 +83,23 @@ export default function HomePage() {
   };
 
   const handleLoadMorePopular = () => {
-    const nextCount = visiblePopularCount + 8;
-    if (nextCount > allProducts.length && hasMore) loadMore();
-    setVisiblePopularCount(nextCount);
+    navigate("/shop?collection=popular");
   };
 
   const handleLoadMoreOffers = () => {
-    const nextCount = visibleOfferCount + 8;
-    if (nextCount > allOfferProducts.length && hasMore) loadMore();
-    setVisibleOfferCount(nextCount);
+    navigate("/shop?offers=25");
   };
 
   const handleLoadMoreFeatured = () => {
-    const nextCount = visibleFeaturedCount + 8;
-    if (nextCount > featuredProducts.length && hasMoreFeatured) loadMoreFeatured();
-    setVisibleFeaturedCount(nextCount);
+    navigate("/shop?collection=featured");
   };
 
   const handleLoadMoreFlat50 = () => {
-    const nextCount = visibleFlat50Count + 8;
-    if (nextCount > flat50.length && hasMore50) loadMore50();
-    setVisibleFlat50Count(nextCount);
+    navigate("/shop?collection=flat50");
   };
 
   const handleLoadMoreFlat33 = () => {
-    const nextCount = visibleFlat33Count + 8;
-    if (nextCount > flat33.length && hasMore33) loadMore33();
-    setVisibleFlat33Count(nextCount);
+    navigate("/shop?collection=flat33");
   };
 
   function shouldDisplayBrandLabel(text: string): boolean {
@@ -290,7 +277,7 @@ export default function HomePage() {
                 onClick={() => setVisibleCategoryCount(allLiveCategories.length)}
                 className="mb-1 shrink-0 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 md:px-4 md:text-[10px]"
               >
-                Load more categories
+                Load more N categories
               </button>
             )}
           </div>
@@ -363,7 +350,7 @@ export default function HomePage() {
 
         {liveFeatured.length > 0 && !productsLoading && (
           <section className="mb-4 rounded-[18px] border border-slate-200 bg-gradient-to-r from-amber-50 via-white to-orange-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
-            <SectionHeader eyebrow="Editor's pick" title="FEATURED PRODUCTS" />
+            <SectionHeader eyebrow="Editor's pick" title="TOP PICKS FOR YOU" />
             <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
               {liveFeatured.map((product: Product) => (
                 <ProductCard
@@ -381,7 +368,7 @@ export default function HomePage() {
                   disabled={productsLoading}
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-wait disabled:opacity-60"
                 >
-                  Load More Featured
+                  Load More Top Picks For You
                   <ChevronDown className="h-4 w-4" />
                 </button>
               </div>
@@ -390,7 +377,7 @@ export default function HomePage() {
         )}
 
         <section id="products" className="mb-4 rounded-[18px] border border-slate-200 bg-gradient-to-r from-orange-50 via-white to-amber-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
-          <SectionHeader eyebrow="Popular picks" title="POPULAR PRODUCTS" />
+          <SectionHeader eyebrow="Popular picks" title="CUSTOMER FAVORITES" />
 
           {productsLoading ? (
             <ProductSkeletonGrid count={8} />
@@ -426,7 +413,7 @@ export default function HomePage() {
         </section>
 
         <section className="mb-4 rounded-[28px] border border-slate-200 bg-gradient-to-br from-rose-50 via-white to-orange-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
-          <SectionHeader eyebrow="Special deals" title="SPECIAL OFFERS" />
+          <SectionHeader eyebrow="Special deals" title="HOT DEALS" />
 
           {productsLoading ? (
             <ProductSkeletonGrid count={4} />

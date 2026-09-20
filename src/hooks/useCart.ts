@@ -61,10 +61,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const nextUserId = session?.user?.id ?? null;
       if (!nextUserId) {
         setUserId(null);
-        setCart((currentCart) => {
-          window.localStorage.setItem(GUEST_CART_KEY, JSON.stringify(currentCart));
-          return currentCart;
-        });
+        setCart(readCart(GUEST_CART_KEY));
         return;
       }
 

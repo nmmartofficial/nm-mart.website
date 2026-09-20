@@ -5,13 +5,13 @@ import Footer from "@/components/shop/Footer";
 import ProductCard from "@/components/shop/ProductCard";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
-import { useProducts } from "@/hooks/useProducts";
+import { useProductCatalog } from "@/hooks/useProductCatalog";
 
 export default function Wishlist() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { wishlistBarcodes } = useWishlist();
-  const { allProducts, loading } = useProducts();
+  const { products: allProducts, loading } = useProductCatalog({ pageSize: 20 });
   const wishlist = allProducts.filter((product) => wishlistBarcodes.includes(product.barcode));
 
   return (

@@ -17,10 +17,15 @@ import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 import { getOrderPaymentMethod, getOrderStatus, getOrderTotal } from "@/lib/orderDisplay";
+import { fetchCatalogProductsByIds } from "@/hooks/useProductCatalog";
+import { useCart } from "@/hooks/useCart";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/shop/Footer";
+import { toast } from "sonner";
 
 type OrderItem = {
+  product_id?: unknown;
+  productId?: unknown;
   name?: unknown;
   qty?: unknown;
   saleRate?: unknown;
@@ -91,6 +96,49 @@ const Orders = () => {
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [repeatingOrderId, setRepeatingOrderId] = useState<string | null>(null);
+  const { addToCart } = useCart();
+
+  const handleRepeatOrder = async (order: CustomerOrder) => {
+    const orderId = displayText(order.id);
+    const items = getItems(order.items);
+    const requestedItems = items
+      .map((item) => ({
+        id: Number(item.product_id ?? item.productId),
+        quantity: Math.max(1, Number(item.qty ?? 1)),
+        name: displayText(item.name) || "Previous item",
+      }))
+      .filter((item) => Number.isInteger(item.id) && item.id > 0);
+
+    if (!orderId || requestedItems.length === 0) {
+      toast.error("This order does not contain reusable product references.");
+      return;
+    }
+
+    setRepeatingOrderId(orderId);
+    try {
+      const products = await fetchCatalogProductsByIds(requestedItems.map((item) => item.id));
+      const availableById = new Map(products.map((product) => [product.id, product]));
+      const unavailable = requestedItems.filter((item) => !availableById.has(item.id));
+
+      for (const item of requestedItems) {
+        const product = availableById.get(item.id);
+        if (!product) continue;
+        for (let quantity = 0; quantity < item.quantity; quantity += 1) addToCart(product);
+      }
+
+      if (unavailable.length > 0) {
+        toast.warning(`${unavailable.length} item${unavailable.length === 1 ? "" : "s"} unavailable. Available items were added to your cart.`);
+      } else {
+        toast.success("Previous order items added to your cart at current prices.");
+      }
+      navigate("/cart");
+    } catch (err: unknown) {
+      toast.error(getSupabaseErrorMessage(err as { message?: string; code?: string }, "Unable to repeat this order."));
+    } finally {
+      setRepeatingOrderId(null);
+    }
+  };
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -292,6 +340,15 @@ const Orders = () => {
                         >
                           Track order <Truck size={14} />
                         </Link>
+                        <button
+                          type="button"
+                          onClick={() => void handleRepeatOrder(order)}
+                          disabled={repeatingOrderId === orderId}
+                          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 transition hover:text-primary disabled:opacity-50"
+                        >
+                          <RefreshCw size={14} className={repeatingOrderId === orderId ? "animate-spin" : ""} />
+                          {repeatingOrderId === orderId ? "Adding..." : "Buy Again"}
+                        </button>
                       </div>
                     </div>
                   )}

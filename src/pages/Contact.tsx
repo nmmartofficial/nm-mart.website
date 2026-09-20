@@ -88,7 +88,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Business Hours</p>
-                      <p className="font-bold text-lg text-black italic">Daily 09:00 AM – 09:00 PM</p>
+                      <p className="font-bold text-lg text-black italic">Daily 08:00 AM – 10:00 PM</p>
                     </div>
                   </div>
                 </div>
@@ -101,7 +101,7 @@ const Contact = () => {
                   <p className="font-bold text-white/80 text-sm uppercase tracking-widest">Chat with us on WhatsApp now</p>
                 </div>
                 <a 
-                  href={`https://wa.me/${WA_NUMBER}`}
+                  href={`https://wa.me/${8282827240}`}
                   target="_blank" 
                   className="bg-white text-primary px-8 py-4 rounded-2xl font-black uppercase italic text-sm hover:bg-black hover:text-white transition-all shadow-sm flex items-center gap-2"
                 >

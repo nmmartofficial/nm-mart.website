@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -48,9 +49,9 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
   const [profileName, setProfileName] = useState("");
   const [welfareCard, setWelfareCard] = useState<{ number: string; active: boolean; points: number } | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
   const [showWelfareModal, setShowWelfareModal] = useState(false);
   const [showGoldenCard, setShowGoldenCard] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState<string>("");
   const { cartCount } = useCart();
@@ -125,6 +126,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setDrawerOpen(false);
+      setDesktopMenuOpen(false);
       navigate("/");
     } catch (err: unknown) {
       logSupabaseDebug("navbarLogout:error", undefined, err);
@@ -134,8 +136,14 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
 
   const handleWelfare = () => {
     setDrawerOpen(false);
+    setDesktopMenuOpen(false);
     if (welfareCard?.active) setShowGoldenCard(true);
     else setShowWelfareModal(true);
+  };
+
+  const showUnavailable = (label: string) => {
+    setDesktopMenuOpen(false);
+    toast.info(`${label} is coming soon.`);
   };
 
   const menuItems = [
@@ -146,14 +154,29 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
     { label: "Support", icon: Headset, action: () => navigate("/contact") },
   ];
 
-  const accountMenuItems = [
-    { label: user ? "My Profile" : "Login", icon: User, action: () => navigate(user ? "/profile" : "/login") },
-    { label: "Saved Addresses", icon: MapPin, action: () => navigate("/addresses") },
+  const desktopMenuItems = [
+    ...(user ? [{ label: "My Profile", icon: User, action: () => navigate("/profile") }] : []),
     { label: "My Orders", icon: Package, action: () => navigate("/orders") },
-    { label: "Checkout", icon: ShoppingCart, action: () => navigate("/checkout") },
-    { label: "Track Order", icon: Truck, action: () => navigate("/tracker") },
-    { label: "Support", icon: Headset, action: () => navigate("/contact") },
+    { label: "My Addresses", icon: MapPin, action: () => navigate("/addresses") },
+    { label: "My Wishlist", icon: Bookmark, action: () => navigate("/wishlist") },
+    { label: "My Coupons", icon: Gift, action: handleWelfare },
+    { label: "My Rewards", icon: Star, action: handleWelfare },
+    { label: "Notifications", icon: Bell, action: () => navigate("/orders") },
+    { label: "Help & Support", icon: Headset, action: () => navigate("/contact") },
+    { label: "FAQ", icon: Bot, action: () => navigate("/faq") },
+    { label: "Settings", icon: Star, action: () => showUnavailable("Settings") },
+    { label: "Terms & Conditions", icon: CreditCard, action: () => navigate("/terms") },
+    { label: "Privacy Policy", icon: Bookmark, action: () => navigate("/privacy") },
   ];
+
+  useEffect(() => {
+    if (!desktopMenuOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDesktopMenuOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [desktopMenuOpen]);
 
   const resolveDeliveryDisplay = () => {
     if (deliveryAddress) return deliveryAddress;
@@ -259,46 +282,23 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
               </button>
             </div>
 
-            <div className="relative hidden md:block">
+            <div className="relative hidden md:order-4 md:block">
               <button
                 type="button"
-                aria-label="Open account menu"
-                aria-expanded={accountOpen}
-                onClick={() => setAccountOpen((open) => !open)}
+                aria-label="Open menu"
+                aria-expanded={desktopMenuOpen}
+                onClick={() => setDesktopMenuOpen(true)}
                 className="inline-flex h-11 items-center gap-2 rounded-full border border-[#f1ddc6] bg-white px-4 text-[#1e1e1e] shadow-sm transition hover:-translate-y-0.5"
               >
-                <User size={15} className="text-[#111111]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.18em]">Account</span>
-                <ChevronDown size={12} className={`transition-transform ${accountOpen ? "rotate-180" : ""}`} />
+                <Menu size={16} className="text-[#111111]" />
+                <span className="text-[10px] font-black uppercase tracking-[0.18em]">Menu</span>
               </button>
-
-              {accountOpen && (
-                <div className="absolute right-0 top-full z-[80] mt-2 w-52 rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_20px_45px_-20px_rgba(15,23,42,0.4)]">
-                  <p className="px-3 pb-2 pt-1 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
-                    Account Menu
-                  </p>
-                  {accountMenuItems.map((item) => (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={() => {
-                        setAccountOpen(false);
-                        item.action();
-                      }}
-                      className="flex min-h-10 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-700 transition hover:bg-orange-50 hover:text-slate-900"
-                    >
-                      <item.icon size={15} className="text-orange-500" />
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             <button
               type="button"
               onClick={() => navigate("/cart")}
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#111827] text-white shadow-sm transition hover:bg-[#f97316] md:h-11 md:w-auto md:px-4"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#111827] text-white shadow-sm transition hover:bg-[#f97316] md:order-3 md:h-11 md:w-auto md:px-4"
             >
               <ShoppingCart size={21} className="text-white md:size-[15px]" />
               <span className="hidden md:inline ml-2 text-[10px] font-black uppercase tracking-[0.18em]">Cart</span>
@@ -343,6 +343,65 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
           Change
         </button>
       </div>
+
+      <div className="hidden border-t border-[#f0e9e2] bg-white md:block">
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 py-2.5">
+          <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700">
+            <MapPin size={16} className="shrink-0 text-primary" />
+            <span className="truncate">{resolveDeliveryDisplay()}</span>
+            <button type="button" onClick={() => navigate("/addresses")} className="shrink-0 text-xs font-black uppercase tracking-[0.12em] text-primary hover:underline">
+              Change
+            </button>
+          </div>
+          <nav aria-label="Desktop navigation" className="flex shrink-0 items-center gap-6 text-[10px] font-black uppercase tracking-[0.16em] text-slate-600">
+            <Link to="/" className="transition hover:text-primary">Home</Link>
+            <Link to="/categories" className="transition hover:text-primary">Categories</Link>
+            <Link to="/shop?offers=25" className="transition hover:text-primary">Offers</Link>
+            <Link to="/contact" className="transition hover:text-primary">Help</Link>
+          </nav>
+        </div>
+      </div>
+
+      {desktopMenuOpen && createPortal(
+          <>
+            <motion.button
+              type="button"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDesktopMenuOpen(false)}
+              className="fixed inset-0 z-[90] hidden bg-slate-950/35 backdrop-blur-[1px] md:block"
+              aria-label="Close desktop menu overlay"
+            />
+            <motion.aside
+              initial={{ x: 420 }}
+              animate={{ x: 0 }}
+              exit={{ x: 420 }}
+              transition={{ type: "spring", stiffness: 260, damping: 28 }}
+              className="fixed right-0 top-0 z-[91] hidden h-full w-[380px] max-w-[92vw] flex-col border-l border-slate-200/80 bg-slate-50 shadow-[-28px_0_48px_-12px_rgba(15,23,42,0.4)] md:flex"
+              aria-label="Desktop menu drawer"
+            >
+              <div className="flex shrink-0 items-center justify-between border-b border-slate-200/90 bg-slate-50 p-6">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-gray-400">NM MART</p>
+                  <p className="mt-1 font-black text-lg uppercase tracking-tight text-black">{user ? (profileName || "My Account") : "Hello, Guest"}</p>
+                </div>
+                <button type="button" onClick={() => setDesktopMenuOpen(false)} className="rounded-xl p-2 transition-colors hover:bg-gray-100" aria-label="Close menu">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-slate-50 p-4">
+                {!user && <button type="button" onClick={() => { setDesktopMenuOpen(false); navigate("/login"); }} className="mb-2 flex w-full items-center justify-between rounded-2xl bg-orange-50 px-4 py-3 text-left text-sm font-bold text-primary hover:bg-orange-100"><span>Login / Create Account</span><ChevronRight size={17} /></button>}
+                {desktopMenuItems.map((item) => (
+                  <button key={item.label} type="button" onClick={() => { setDesktopMenuOpen(false); item.action(); }} className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition-colors hover:bg-orange-50">
+                    <span className="flex items-center gap-3 text-sm font-bold text-black"><item.icon size={18} className="text-orange-500" />{item.label}</span>
+                    <ChevronRight size={18} className="text-gray-300" />
+                  </button>
+                ))}
+                {user && <button type="button" onClick={handleLogout} className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition-colors hover:bg-red-50"><span className="flex items-center gap-3 text-sm font-bold text-red-600"><LogOut size={18} />Logout</span><ChevronRight size={18} className="text-red-300" /></button>}
+              </div>
+            </motion.aside>
+        </>, document.body)}
 
       <AnimatePresence>
         {drawerOpen && (

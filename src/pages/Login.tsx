@@ -96,7 +96,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedNextPath = searchParams.get("next") || "";
-  const nextPath = requestedNextPath.startsWith("/admin") ? requestedNextPath : "/";
+  const nextPath = requestedNextPath.startsWith("/") && !requestedNextPath.startsWith("//") ? requestedNextPath : "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -135,7 +135,7 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}/login?next=${encodeURIComponent(nextPath)}`,
         },
       });
       if (error) throw error;

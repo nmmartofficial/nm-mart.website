@@ -52,6 +52,9 @@ export const MIN_ORDER = 1499;
 export const FREE_DELIVERY_THRESHOLD = 2999;
 export const FLAT_DELIVERY_FEE = 70;
 export const LOGO_FALLBACK = "/nm-mart-logo.png";
+export const ANDROID_APP_URL = "";
+export const IOS_APP_URL = "";
+export const SUPPORT_HOURS = "Daily 09:00 AM – 09:00 PM";
 
 export const STORE_DETAILS = {
   name: "NM MART",
