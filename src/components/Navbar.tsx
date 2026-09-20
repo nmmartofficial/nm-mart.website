@@ -20,6 +20,7 @@ import {
   Bookmark,
   Bell,
   Heart,
+  LayoutGrid,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
@@ -290,10 +291,18 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
             <button
               type="button"
               onClick={() => setMoreOpen(true)}
-              className="hidden items-center justify-center rounded-full border border-slate-900 bg-slate-900 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sm transition hover:bg-slate-800 md:inline-flex"
               aria-label="Open More menu"
+              aria-expanded={moreOpen}
+              aria-controls="more-drawer"
+              className={`hidden h-11 items-center gap-2 rounded-full border px-4 text-[10px] font-black uppercase tracking-[0.18em] shadow-sm transition md:order-4 md:inline-flex ${
+                moreOpen
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-900 hover:text-slate-900"
+              }`}
             >
+              <LayoutGrid size={15} />
               More
+              <ChevronDown size={14} className={`transition-transform ${moreOpen ? "rotate-180" : ""}`} />
             </button>
           </div>
         </div>
