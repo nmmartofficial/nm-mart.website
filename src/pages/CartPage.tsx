@@ -33,14 +33,14 @@ const CartPage = () => {
             >
               <ArrowLeft size={14} /> Back
             </button>
-            <h1 className="text-3xl font-black uppercase tracking-[-0.06em] text-slate-900 md:text-5xl">
+            <h1 className="text-3xl font-black uppercase tracking-[-0.08em] text-slate-900 md:text-5xl">
               Your <span className="text-primary">Cart</span>
             </h1>
           </div>
 
-          <div className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
+          <div className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm shadow-slate-200/60">
             <ShoppingBag size={18} className="text-primary" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
               {cartCount} Item{cartCount === 1 ? "" : "s"}
             </span>
           </div>

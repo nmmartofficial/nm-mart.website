@@ -18,6 +18,8 @@
     --nm-danger: #DC2626;
     --nm-warning: #F59E0B;
     --nm-orange: #F97316;
+    --nm-font-body: 'Inter', 'Segoe UI', sans-serif;
+    --nm-font-heading: 'Space Grotesk', 'Inter', sans-serif;
 
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
@@ -70,10 +72,29 @@
     background:
       radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 22%),
       linear-gradient(180deg, #f8fbff 0%, #f4f7fb 100%);
-    color: hsl(var(--foreground));
-    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--nm-text);
+    font-family: var(--nm-font-body);
+    font-weight: 500;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--nm-font-heading);
+    color: var(--nm-text);
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin: 0;
+  }
+
+  p, li, span, div, label {
+    color: inherit;
+  }
+
+  p {
+    color: var(--nm-text-secondary);
   }
 
   #root {

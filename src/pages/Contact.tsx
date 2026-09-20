@@ -99,7 +99,7 @@ const Contact = () => {
             </div>
 
             <div className="mt-6">
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Quick Help</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-primary">Quick Help</p>
 
               <div className="mt-4 space-y-3">
                 {helpItems.map(({ icon: Icon, title, description }) => (
@@ -124,7 +124,7 @@ const Contact = () => {
             </div>
 
             <div className="mt-7">
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Contact Support</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-primary">Contact Support</p>
 
               <div className="mt-4 space-y-3">
                 {contactItems.map(({ icon: Icon, label, href }) => (

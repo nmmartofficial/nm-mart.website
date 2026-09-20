@@ -67,7 +67,7 @@ export default function SettingsPage() {
 
           <div className="space-y-6 px-4 py-5">
             <section>
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">App Preferences</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-primary">App Preferences</p>
               <div className="mt-3 space-y-3">
                 {preferences.map(({ icon: Icon, title, subtitle }) => (
                   <button

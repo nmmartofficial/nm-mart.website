@@ -11,7 +11,7 @@ import {
   LogOut,
   ChevronRight,
   X,
-  Gift,
+  Wallet,
   Star,
   Bot,
   Search,
@@ -89,15 +89,9 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
 
   const headerStyle = theme.headerStyle || "classic";
 
-  const headerClass = isHomeRoute
-    ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#0f4e9a] bg-[#0b3b78] text-white shadow-[0_10px_30px_-20px_rgba(11,59,120,0.45)]"
-    : headerStyle === "modern"
-      ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_12px_35px_-25px_rgba(15,23,42,0.35)]"
-      : headerStyle === "minimal"
-        ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden bg-background/60 backdrop-blur-md border-b border-border"
-        : "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(0,0,0,0.18)]";
+  const headerClass = "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#1f5fba] bg-[#0b3b78] text-white shadow-[0_10px_30px_-20px_rgba(11,59,120,0.45)]";
 
-  const mobileHeaderClass = isHomeRoute ? "bg-[#0b3b78] text-white" : "bg-white text-slate-900";
+  const mobileHeaderClass = "bg-[#0b3b78] text-white";
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -132,11 +126,13 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
     setProfileName(data.full_name || "");
 
     const addrParts: string[] = [];
-    if (data.address) addrParts.push(data.address);
     if (data.city) addrParts.push(data.city);
-    if (data.pincode) addrParts.push(data.pincode);
+    else if (data.address) addrParts.push(data.address);
+    if (data.state) addrParts.push(data.state);
     if (addrParts.length > 0) {
-      setDeliveryAddress(addrParts.join(", "));
+      setDeliveryAddress(addrParts[0]);
+    } else if (data.pincode) {
+      setDeliveryAddress(String(data.pincode));
     }
 
     setWelfareCard(null);
@@ -185,21 +181,21 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
     const shortStore = "Naya Nagar, Dhata Road, Manjhanpur, Kaushambi";
     const baseAddress = STORE_DETAILS?.address ? STORE_DETAILS.address : shortStore;
     const parts = baseAddress.split(",").map((part) => part.trim()).filter(Boolean);
-    if (parts.length >= 2) return `${parts[parts.length - 2]}, ${parts[parts.length - 1]}`;
+    if (parts.length >= 2) return parts[parts.length - 2];
     return baseAddress;
   };
 
   return (
-    <header className={`${headerClass} md:bg-white/90 bg-white`}>
+    <header className={headerClass}>
       <div className="w-full max-w-[100vw] overflow-x-hidden px-3 pt-2 pb-0 md:px-5 md:py-3">
         {/* Top Row: Logo and Mobile Actions */}
         <div className="flex h-[52px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
-          <Link to="/" className="group flex min-w-0 shrink items-center text-left md:flex-1">
-            <div className="flex w-[170px] max-w-[45vw] flex-col leading-none text-white md:w-[220px] md:text-[#0b3b78]">
-              <span className="text-left text-[20px] font-black uppercase tracking-[-0.06em] text-white md:text-[28px] md:text-[#0b3b78]">
+          <Link to="/" className="group flex min-w-0 shrink items-center justify-center text-left md:flex-1">
+            <div className="flex w-[170px] max-w-[45vw] flex-col items-center justify-center leading-none text-white md:w-[220px]">
+              <span className="text-center text-[26px] font-black uppercase tracking-[-0.06em] text-[#f8d86a] md:text-[34px]">
                 NM Mart
               </span>
-              <span className="mt-1 w-full text-center text-[9px] font-black uppercase tracking-[0.18em] text-white/80 md:text-[10px] md:text-[#0b3b78]/80">
+              <span className="mt-1 w-full text-center text-[7px] font-black uppercase tracking-[0.18em] text-white/80 md:text-[9px]">
                 {theme.storeSlogan || "Shop More, Save More"}
               </span>
             </div>
@@ -230,18 +226,18 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
               <button
                 type="button"
                 onClick={() => navigate("/orders")}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary transition-opacity hover:bg-primary/15 md:hidden"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-colors hover:bg-white/20 md:hidden"
                 aria-label="Orders"
               >
-                <Bell size={22} />
+                <Bell size={22} className="text-white" />
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/wishlist")}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-500 transition-opacity hover:bg-rose-100 md:hidden"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-colors hover:bg-white/20 md:hidden"
                 aria-label="Wishlist"
               >
-                <Heart size={18} fill="currentColor" />
+                <Heart size={18} className="text-white" fill="currentColor" />
               </button>
             </div>
 
@@ -249,40 +245,40 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
               <button
                 type="button"
                 onClick={() => navigate("/wishlist")}
-                className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:text-primary"
+                className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white shadow-sm transition hover:bg-white/20"
                 aria-label="Open wishlist"
               >
-                <Bookmark size={17} />
+                <Bookmark size={17} className="text-white" />
                 {wishlistBarcodes.length > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-rose-500 px-1 text-[9px] font-black text-white">{wishlistBarcodes.length}</span>}
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/orders")}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:text-primary"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white shadow-sm transition hover:bg-white/20"
                 aria-label="Open order notifications"
               >
-                <Bell size={17} />
+                <Bell size={17} className="text-white" />
               </button>
             </div>
 
             <button
               type="button"
-              onClick={handleWelfare}
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#d83b3b] text-white shadow-sm transition hover:bg-[#bf2e2e] md:order-2"
-              aria-label="Coupons and rewards"
+              onClick={() => navigate("/wallet")}
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white shadow-sm transition hover:bg-white/20 md:order-2"
+              aria-label="Wallet"
             >
-              <Gift size={18} />
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-[#d83b3b] shadow-sm">
+              <Wallet size={18} className="text-white" />
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#d83b3b] text-[9px] font-black text-white shadow-sm">
                 1
               </span>
             </button>
             <button
               type="button"
               onClick={() => navigate("/cart")}
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#0b3b78] shadow-sm transition hover:bg-slate-100 md:order-3 md:h-11 md:w-auto md:px-4"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white shadow-sm transition hover:bg-white/20 md:order-3 md:h-11 md:w-auto md:px-4"
             >
-              <ShoppingCart size={21} className="text-[#0b3b78] md:size-[15px]" />
-              <span className="hidden md:inline ml-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78]">Cart</span>
+              <ShoppingCart size={21} className="text-white md:size-[15px]" />
+              <span className="hidden md:inline ml-2 text-[10px] font-black uppercase tracking-[0.18em] text-white">Cart</span>
               <span className="absolute -top-1.5 -right-1.5 flex min-w-[1.2rem] items-center justify-center rounded-full bg-red-500 px-1 py-0.5 text-[9px] font-bold text-white md:static md:ml-1.5 md:bg-red-500 md:text-[10px]">
                 {cartCount > 99 ? "100+" : cartCount}
               </span>
@@ -290,7 +286,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
             <button
               type="button"
               onClick={() => setMoreOpen(true)}
-              className="hidden items-center justify-center rounded-full border border-slate-900 bg-slate-900 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sm transition hover:bg-slate-800 md:inline-flex"
+              className="hidden items-center justify-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sm transition hover:bg-white/20 md:inline-flex"
               aria-label="Open More menu"
             >
               More
