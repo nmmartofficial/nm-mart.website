@@ -86,19 +86,8 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
     const currentPath = location.pathname;
     return currentPath === path || currentPath.startsWith(`${path}/`);
   });
-  const isHomeRoute = location.pathname === "/";
-
-  const headerStyle = theme.headerStyle || "classic";
-
-  const headerClass = isHomeRoute
-    ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#0f4e9a] bg-[#0b3b78] text-white shadow-[0_10px_30px_-20px_rgba(11,59,120,0.45)]"
-    : headerStyle === "modern"
-      ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_12px_35px_-25px_rgba(15,23,42,0.35)]"
-      : headerStyle === "minimal"
-        ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden bg-background/60 backdrop-blur-md border-b border-border"
-        : "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(0,0,0,0.18)]";
-
-  const mobileHeaderClass = isHomeRoute ? "bg-[#0b3b78] text-white" : "bg-white text-slate-900";
+  const headerClass = "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#0f4e9a] bg-[#0b3b78] text-white shadow-[0_10px_30px_-20px_rgba(11,59,120,0.45)]";
+  const mobileHeaderClass = "bg-[#0b3b78] text-white";
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -227,17 +216,17 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
           {!isMoreSection && (
             <div className="hidden flex-1 md:block mx-6 lg:mx-8">
               <form
-                className={`flex items-center gap-3 rounded-full border px-4 py-2.5 shadow-sm ${isHomeRoute ? "border-[#1d5fbf] bg-[#1d5fbf]/90" : "border-[#eadcc6] bg-white"}`}
+                className="flex items-center gap-3 rounded-full border border-[#1d5fbf] bg-[#1d5fbf]/90 px-4 py-2.5 shadow-sm"
                 onSubmit={handleSearchSubmit}
               >
-                <Search className={`h-4 w-4 ${isHomeRoute ? "text-white/90" : "text-[#8a8a8a]"}`} />
+                <Search className="h-4 w-4 text-white/90" />
                 <input
                   type="search"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   aria-label="Search products"
                   placeholder="Search products, brands & categories"
-                  className={`w-full border-0 bg-transparent text-sm focus:outline-none ${isHomeRoute ? "text-white placeholder:text-white/70" : "text-[#1f2937] placeholder:text-[#7b7b7b]"}`}
+                  className="w-full border-0 bg-transparent text-sm text-white placeholder:text-white/70 focus:outline-none"
                 />
               </form>
             </div>
@@ -320,16 +309,16 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
         {!isMoreSection && (
           <div className="mt-0 md:hidden">
             <form
-              className={`flex h-[52px] w-full items-center gap-3 rounded-xl border px-4 shadow-inner ${isHomeRoute ? "border-[#1d5fbf] bg-[#1d5fbf]" : "border-slate-200 bg-slate-50"}`}
+              className="flex h-[52px] w-full items-center gap-3 rounded-xl border border-[#1d5fbf] bg-[#1d5fbf] px-4 shadow-inner"
               onSubmit={handleSearchSubmit}
             >
-              <Search className={`h-7 w-7 shrink-0 ${isHomeRoute ? "text-white/90" : "text-slate-500"}`} />
+              <Search className="h-7 w-7 shrink-0 text-white/90" />
               <input
                 type="search"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search product, brand or article..."
-                className={`block w-full border-0 bg-transparent text-[17px] font-medium focus:outline-none ${isHomeRoute ? "text-white placeholder:text-white/70" : "text-slate-900 placeholder:text-slate-400"}`}
+                className="block w-full border-0 bg-transparent text-[17px] font-medium text-white placeholder:text-white/70 focus:outline-none"
               />
             </form>
           </div>
@@ -338,9 +327,9 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
 
       {!isMoreSection && (
         <>
-          <div className={`flex items-center justify-between px-4 md:hidden ${isHomeRoute ? "bg-[#dfeefd] py-0" : "bg-slate-50 py-2.5"}`}>
-            <div className={`flex items-center gap-2 ${isHomeRoute ? "text-[#0b3b78]" : "text-slate-900"}`}>
-              <MapPin size={24} className={isHomeRoute ? "text-[#1d5fbf]" : "text-primary"} />
+          <div className="flex items-center justify-between bg-[#dfeefd] px-4 py-0 md:hidden">
+            <div className="flex items-center gap-2 text-[#0b3b78]">
+              <MapPin size={24} className="text-[#1d5fbf]" />
               <span className="text-[16px] font-bold tracking-tight text-slate-950">
                 {resolveDeliveryDisplay()}
               </span>
@@ -348,14 +337,14 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
             <button
               type="button"
               onClick={() => navigate("/addresses")}
-              className={`text-[16px] font-bold ${isHomeRoute ? "text-[#0b3b78]" : "text-slate-900"}`}
+              className="text-[16px] font-bold text-[#0b3b78]"
             >
               Change
             </button>
           </div>
 
-          <div className={`hidden border-t border-[#f0e9e2] md:block ${isHomeRoute ? "bg-[#dfeefd]" : "bg-white"}`}>
-            <div className={`mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 ${isHomeRoute ? "py-1" : "py-2.5"}`}>
+          <div className="hidden border-t border-[#b9d8f7] bg-[#dfeefd] md:block">
+            <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 py-1">
               <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700">
                 <MapPin size={16} className="shrink-0 text-primary" />
                 <span className="truncate">{resolveDeliveryDisplay()}</span>
