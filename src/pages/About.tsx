@@ -30,13 +30,13 @@ const About = () => {
       <Header />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-6 md:px-6 md:py-10 lg:py-12">
-        <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.35)] md:p-8 lg:p-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-500">About Us</p>
-          <div className="mt-3 flex flex-col gap-4 md:gap-6">
-            <h1 className="text-3xl font-black uppercase tracking-[-0.06em] text-slate-900 md:text-5xl">
-              NM Mart
+        <section className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.4)] md:p-8 lg:p-10">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-primary">About Us</p>
+          <div className="mt-3 flex flex-col gap-4 md:gap-5">
+            <h1 className="text-3xl font-black uppercase tracking-[-0.08em] text-slate-900 md:text-5xl">
+              <span className="text-[var(--nm-primary-dark)]">NM</span> <span className="text-[#f6c453]">Mart</span>
             </h1>
-            <p className="max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+            <p className="max-w-3xl text-sm leading-7 text-slate-600 md:text-[15px]">
               Bringing wholesale prices directly to the doorsteps of Manjhanpur, NM Mart is built around smart shopping, honest pricing, and a service-first approach for everyday families.
             </p>
           </div>

@@ -31,10 +31,10 @@ export default function WalletPage() {
 
         {hasBalance ? (
           <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.45)] sm:p-6">
-            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-6 text-center sm:px-6">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Wallet Balance</p>
-              <div className="mt-4 text-4xl font-black tracking-[-0.06em] text-slate-900">₹ {walletBalance.toFixed(2)}</div>
-              <p className="mt-3 text-sm font-medium text-slate-500">Available Balance</p>
+            <div className="rounded-[24px] border border-primary/15 bg-gradient-to-br from-primary/8 to-primary/3 px-4 py-6 text-center sm:px-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-primary">Wallet Balance</p>
+              <div className="mt-4 text-4xl font-black tracking-[-0.08em] text-slate-900">₹ {walletBalance.toFixed(2)}</div>
+              <p className="mt-3 text-sm font-medium text-slate-600">Available Balance</p>
 
               <button
                 type="button"
@@ -47,7 +47,7 @@ export default function WalletPage() {
 
             <div className="mt-7">
               <div className="mb-4 flex items-center gap-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">Quick Actions</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-primary">Quick Actions</p>
                 <span className="h-px flex-1 bg-slate-200" />
               </div>
 
@@ -80,7 +80,7 @@ export default function WalletPage() {
 
             <div className="mt-8">
               <div className="mb-4 flex items-center gap-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">Wallet Activity</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-primary">Wallet Activity</p>
                 <span className="h-px flex-1 bg-slate-200" />
               </div>
 
