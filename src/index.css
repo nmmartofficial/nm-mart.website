@@ -6,29 +6,42 @@
 
 @layer base {
   :root {
+    --nm-primary: #1677E8;
+    --nm-primary-dark: #0B3B78;
+    --nm-primary-light: #EAF3FF;
+    --nm-primary-border: #BBD8FF;
+    --nm-background: #F7F9FC;
+    --nm-text: #111827;
+    --nm-text-secondary: #64748B;
+    --nm-border: #E2E8F0;
+    --nm-success: #16A34A;
+    --nm-danger: #DC2626;
+    --nm-warning: #F59E0B;
+    --nm-orange: #F97316;
+
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 214 92% 52%;
-    --primary-hover: 214 88% 47%;
-    --primary-active: 217 82% 41%;
-    --primary-soft: 214 96% 96%;
+    --primary: 214 84% 47%;
+    --primary-hover: 216 80% 31%;
+    --primary-active: 216 80% 27%;
+    --primary-soft: 214 100% 95%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
+    --secondary: 210 35% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 38%;
-    --accent: 214 92% 52%;
+    --accent: 214 84% 47%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 74% 46%;
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 90%;
     --border-strong: 214 26% 78%;
     --input: 214 32% 90%;
-    --ring: 214 92% 52%;
+    --ring: 214 84% 47%;
     --radius: 1.1rem;
     --surface: 0 0% 100%;
     --surface-muted: 210 40% 98%;
@@ -117,24 +130,24 @@
   }
 
   .nm-btn-primary {
-    @apply inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-white transition-all duration-200 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary/25;
-    background: hsl(var(--primary));
+    @apply inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-white transition-all duration-200 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-[var(--nm-primary-border)];
+    background: var(--nm-primary);
   }
 
   .nm-btn-primary:hover {
-    background: hsl(var(--primary-hover));
+    background: var(--nm-primary-dark);
   }
 
   .nm-btn-primary:active {
-    background: hsl(var(--primary-active));
+    background: var(--nm-primary-dark);
   }
 
   .nm-btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-slate-800 transition-all duration-200 hover:bg-slate-100 active:bg-slate-200 focus-visible:ring-2 focus-visible:ring-primary/20;
+    @apply inline-flex items-center justify-center rounded-full border border-[var(--nm-primary-border)] bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-[var(--nm-primary)] transition-all duration-200 hover:bg-[var(--nm-primary-light)] hover:text-[var(--nm-primary-dark)] active:bg-[#DCEEFF] focus-visible:ring-2 focus-visible:ring-[var(--nm-primary-border)];
   }
 
   .nm-btn-ghost {
-    @apply inline-flex items-center justify-center rounded-full px-3 py-2 text-sm font-bold text-slate-700 transition-all duration-200 hover:bg-slate-100 active:bg-slate-200 focus-visible:ring-2 focus-visible:ring-primary/20;
+    @apply inline-flex items-center justify-center rounded-full px-3 py-2 text-sm font-bold text-[var(--nm-primary)] transition-all duration-200 hover:bg-[var(--nm-primary-light)] hover:text-[var(--nm-primary-dark)] active:bg-[#DCEEFF] focus-visible:ring-2 focus-visible:ring-[var(--nm-primary-border)];
   }
 
   .nm-input {

@@ -241,7 +241,7 @@ export default function HomePage() {
   }) => (
     <div className="mb-2 flex items-center justify-between gap-3 md:mb-5">
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-orange-500 md:text-[10px]">{eyebrow}</p>
+        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#1d5fbf] md:text-[10px]">{eyebrow}</p>
         <h2 className="mt-1 text-[1.05rem] font-black uppercase tracking-[-0.06em] text-slate-900 md:mt-2 md:text-2xl">{title}</h2>
       </div>
       {meta && (
@@ -254,7 +254,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen max-w-[100vw] overflow-x-clip bg-slate-50 text-slate-900">
+    <div className="min-h-screen max-w-[100vw] overflow-x-clip bg-[#dfeefd] text-slate-900">
       <Header />
 
       <main className="mx-auto w-full max-w-[100vw] overflow-x-clip px-3 py-2 md:px-3 lg:py-8">
@@ -262,7 +262,7 @@ export default function HomePage() {
           <HeroBanner banners={banners} loading={loadingBanners} />
         </section>
 
-        <section id="categories" className="mb-3 rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+        <section id="categories" className="mb-3 rounded-[18px] border border-[#d7ebff] bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
           <div className="mb-2 flex items-end justify-between gap-3 md:mb-5">
             <div className="min-w-0 flex-1">
               <SectionHeader
@@ -275,7 +275,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setVisibleCategoryCount(allLiveCategories.length)}
-                className="mb-1 shrink-0 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 md:px-4 md:text-[10px]"
+                className="mb-1 shrink-0 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] md:px-4 md:text-[10px]"
               >
                 Load more N categories
               </button>
@@ -316,7 +316,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={() => setVisibleBrandCount(allLiveBrands.length)}
-                  className="mb-1 shrink-0 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 md:px-4 md:text-[10px]"
+                  className="mb-1 shrink-0 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] md:px-4 md:text-[10px]"
                 >
                   Load more brands
                 </button>
@@ -349,7 +349,7 @@ export default function HomePage() {
         )}
 
         {liveFeatured.length > 0 && !productsLoading && (
-          <section className="mb-4 rounded-[18px] border border-slate-200 bg-gradient-to-r from-amber-50 via-white to-orange-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+          <section className="mb-4 rounded-[18px] border border-[#d7ebff] bg-gradient-to-r from-[#dfeefd] via-white to-[#edf6ff] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
             <SectionHeader eyebrow="Editor's pick" title="TOP PICKS FOR YOU" />
             <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
               {liveFeatured.map((product: Product) => (
@@ -366,7 +366,7 @@ export default function HomePage() {
                   type="button"
                   onClick={handleLoadMoreFeatured}
                   disabled={productsLoading}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-wait disabled:opacity-60"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
                 >
                   Load More Top Picks For You
                   <ChevronDown className="h-4 w-4" />
@@ -376,7 +376,7 @@ export default function HomePage() {
           </section>
         )}
 
-        <section id="products" className="mb-4 rounded-[18px] border border-slate-200 bg-gradient-to-r from-orange-50 via-white to-amber-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+        <section id="products" className="mb-4 rounded-[18px] border border-[#d7ebff] bg-gradient-to-r from-[#edf6ff] via-white to-[#dfeefd] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
           <SectionHeader eyebrow="Popular picks" title="CUSTOMER FAVORITES" />
 
           {productsLoading ? (
@@ -401,7 +401,7 @@ export default function HomePage() {
                     type="button"
                     onClick={handleLoadMorePopular}
                     disabled={productsLoading}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-wait disabled:opacity-60"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#eaf3ff] hover:text-[#0b3b78] disabled:cursor-wait disabled:opacity-60"
                   >
                     {productsLoading ? "Loading Products" : "Load More Products"}
                     <ChevronDown className="h-4 w-4" />
@@ -412,7 +412,7 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="mb-4 rounded-[28px] border border-slate-200 bg-gradient-to-br from-rose-50 via-white to-orange-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+        <section className="mb-4 rounded-[28px] border border-[#d7ebff] bg-gradient-to-br from-[#edf6ff] via-white to-[#dfeefd] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
           <SectionHeader eyebrow="Special deals" title="HOT DEALS" />
 
           {productsLoading ? (
@@ -436,7 +436,7 @@ export default function HomePage() {
                     type="button"
                     onClick={handleLoadMoreOffers}
                     disabled={productsLoading}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-wait disabled:opacity-60"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
                   >
                     Load More Offers
                     <ChevronDown className="h-4 w-4" />
@@ -465,7 +465,7 @@ export default function HomePage() {
                   type="button"
                   onClick={handleLoadMoreFlat50}
                   disabled={productsLoading}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-wait disabled:opacity-60"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
                 >
                   Load More 50% Deals
                   <ChevronDown className="h-4 w-4" />
@@ -493,7 +493,7 @@ export default function HomePage() {
                   type="button"
                   onClick={handleLoadMoreFlat33}
                   disabled={productsLoading}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-100 disabled:cursor-wait disabled:opacity-60"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
                 >
                   Load More 33% Deals
                   <ChevronDown className="h-4 w-4" />

@@ -9,8 +9,8 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const PRESET_COLORS: Record<string, { primary: string; secondary: string }> = {
-  "NM Classic": { primary: "#CC0000", secondary: "#D4AF37" },
-  "Sky Fresh": { primary: "#0EA5E9", secondary: "#E0F2FE" },
+  "NM Classic": { primary: "#1677E8", secondary: "#EAF3FF" },
+  "Sky Fresh": { primary: "#1677E8", secondary: "#E0F2FE" },
   "Forest": { primary: "#10B981", secondary: "#D1FAE5" },
   "Royal": { primary: "#8B5CF6", secondary: "#EDE9FE" },
   "Festive": { primary: "#F97316", secondary: "#FFEDD5" },
@@ -19,8 +19,11 @@ const PRESET_COLORS: Record<string, { primary: string; secondary: string }> = {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<ThemeConfig>({
-    primaryColor: "#CC0000",
-    secondaryColor: "#D4AF37",
+    primaryColor: "#1D4ED8",
+    secondaryColor: "#E0F2FE",
+    backgroundColor: "#F7F9FC",
+    textColor: "#0F172A",
+    highlightColor: "#DBEAFE",
     presetName: "NM Classic",
     storeName: "NM Mart",
     storeLogo: "/nm-mart-logo.png",
@@ -109,6 +112,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     styleTag.innerHTML = `
       :root {
+        --nm-primary: ${primaryColor};
+        --nm-primary-dark: ${primaryColor};
+        --nm-primary-light: ${highlightColor || '#EAF3FF'};
+        --nm-primary-border: ${highlightColor || '#BBD8FF'};
         --primary: ${primaryHsl};
         --background: ${bgHsl};
         --foreground: ${textHsl};

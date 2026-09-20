@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import WelfareModal from "@/components/shop/modals/WelfareModal";
+import MoreDrawer from "@/components/shop/MoreDrawer";
 
 import { ThemeConfig } from "@/lib/storeConfig";
 import type { User } from "@supabase/supabase-js";
@@ -50,7 +51,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
   const [showGoldenCard, setShowGoldenCard] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState<string>("");
-  const [logoFailed, setLogoFailed] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const { cartCount } = useCart();
   const { wishlistBarcodes } = useWishlist();
 
@@ -65,15 +66,38 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
     navigate(nextSearch ? `/shop?search=${encodeURIComponent(nextSearch)}` : "/shop");
   };
 
+  const moreSectionPaths = [
+    "/more",
+    "/profile",
+    "/addresses",
+    "/wallet",
+    "/coupons",
+    "/orders",
+    "/contact",
+    "/faq",
+    "/settings",
+    "/privacy",
+    "/terms",
+    "/about",
+  ];
+
+  const isMoreSection = moreOpen || moreSectionPaths.some((path) => {
+    const currentPath = location.pathname;
+    return currentPath === path || currentPath.startsWith(`${path}/`);
+  });
+  const isHomeRoute = location.pathname === "/";
+
   const headerStyle = theme.headerStyle || "classic";
 
-  const headerClass = headerStyle === "modern"
-    ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_12px_35px_-25px_rgba(15,23,42,0.35)]"
-    : headerStyle === "minimal"
-      ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden bg-background/60 backdrop-blur-md border-b border-border"
-      : "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(0,0,0,0.18)]";
+  const headerClass = isHomeRoute
+    ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#0f4e9a] bg-[#0b3b78] text-white shadow-[0_10px_30px_-20px_rgba(11,59,120,0.45)]"
+    : headerStyle === "modern"
+      ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_12px_35px_-25px_rgba(15,23,42,0.35)]"
+      : headerStyle === "minimal"
+        ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden bg-background/60 backdrop-blur-md border-b border-border"
+        : "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(0,0,0,0.18)]";
 
-  const mobileHeaderClass = "bg-white text-slate-900";
+  const mobileHeaderClass = isHomeRoute ? "bg-[#0b3b78] text-white" : "bg-white text-slate-900";
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -147,12 +171,11 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
     { label: "My Orders", icon: Package, action: () => navigate("/orders") },
     { label: "My Addresses", icon: MapPin, action: () => navigate("/addresses") },
     { label: "My Wishlist", icon: Bookmark, action: () => navigate("/wishlist") },
-    { label: "My Coupons", icon: Gift, action: handleWelfare },
     { label: "My Rewards", icon: Star, action: handleWelfare },
     { label: "Notifications", icon: Bell, action: () => navigate("/orders") },
     { label: "Help & Support", icon: Headset, action: () => navigate("/contact") },
     { label: "FAQ", icon: Bot, action: () => navigate("/faq") },
-    { label: "Settings", icon: Star, action: () => showUnavailable("Settings") },
+    { label: "Settings", icon: Star, action: () => navigate("/settings") },
     { label: "Terms & Conditions", icon: CreditCard, action: () => navigate("/terms") },
     { label: "Privacy Policy", icon: Bookmark, action: () => navigate("/privacy") },
   ];
@@ -160,7 +183,10 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
   const resolveDeliveryDisplay = () => {
     if (deliveryAddress) return deliveryAddress;
     const shortStore = "Naya Nagar, Dhata Road, Manjhanpur, Kaushambi";
-    return STORE_DETAILS?.address ? STORE_DETAILS.address.split(", ").slice(0, 4).join(", ") : shortStore;
+    const baseAddress = STORE_DETAILS?.address ? STORE_DETAILS.address : shortStore;
+    const parts = baseAddress.split(",").map((part) => part.trim()).filter(Boolean);
+    if (parts.length >= 2) return `${parts[parts.length - 2]}, ${parts[parts.length - 1]}`;
+    return baseAddress;
   };
 
   return (
@@ -168,48 +194,35 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
       <div className="w-full max-w-[100vw] overflow-x-hidden px-3 pt-2 pb-0 md:px-5 md:py-3">
         {/* Top Row: Logo and Mobile Actions */}
         <div className="flex h-[52px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
-          <Link to="/" className="group flex min-w-0 shrink-1 items-center gap-1 text-left md:gap-3 md:flex-1">
-            <div className="flex flex-col leading-none">
-              <div className="flex h-12 w-36 items-center justify-start md:h-16 md:w-[18rem] lg:h-[4.75rem] lg:w-[22rem] xl:h-[5.25rem] xl:w-[25rem]">
-                {logoFailed || !(theme.storeLogo || "/nm-mart-logo.png") ? (
-                  <div className="flex h-full w-full items-center justify-center rounded-lg border border-primary/15 bg-primary/5 px-3 text-[10px] font-black uppercase tracking-[0.18em] text-primary shadow-sm md:text-xs lg:text-sm">
-                    NM Mart
-                  </div>
-                ) : (
-                  <img
-                    src={theme.storeLogo || "/nm-mart-logo.png"}
-                    alt={theme.storeName || "NM Mart logo"}
-                    onError={() => setLogoFailed(true)}
-                    className="h-full w-full object-contain object-left drop-shadow-sm"
-                  />
-                )}
-              </div>
-              <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-white md:hidden">
-                Wholesale
+          <Link to="/" className="group flex min-w-0 shrink items-center text-left md:flex-1">
+            <div className="flex w-[170px] max-w-[45vw] flex-col leading-none text-white md:w-[220px] md:text-[#0b3b78]">
+              <span className="text-left text-[20px] font-black uppercase tracking-[-0.06em] text-white md:text-[28px] md:text-[#0b3b78]">
+                NM Mart
               </span>
-              <p className="hidden md:block truncate text-[10px] font-bold uppercase tracking-[0.22em] text-[#5f5a55]">
+              <span className="mt-1 w-full text-center text-[9px] font-black uppercase tracking-[0.18em] text-white/80 md:text-[10px] md:text-[#0b3b78]/80">
                 {theme.storeSlogan || "Shop More, Save More"}
-              </p>
+              </span>
             </div>
           </Link>
 
-          {/* Desktop Search */}
-          <div className="hidden flex-1 md:block mx-6 lg:mx-8">
-            <form
-              className="flex items-center gap-3 rounded-full border border-[#eadcc6] bg-white px-4 py-2.5 shadow-sm"
-              onSubmit={handleSearchSubmit}
-            >
-              <Search className="h-4 w-4 text-[#8a8a8a]" />
-              <input
-                type="search"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                aria-label="Search products"
-                placeholder="Search products, brands & categories"
-                className="w-full border-0 bg-transparent text-sm text-[#1f2937] placeholder:text-[#7b7b7b] focus:outline-none"
-              />
-            </form>
-          </div>
+          {!isMoreSection && (
+            <div className="hidden flex-1 md:block mx-6 lg:mx-8">
+              <form
+                className={`flex items-center gap-3 rounded-full border px-4 py-2.5 shadow-sm ${isHomeRoute ? "border-[#1d5fbf] bg-[#1d5fbf]/90" : "border-[#eadcc6] bg-white"}`}
+                onSubmit={handleSearchSubmit}
+              >
+                <Search className={`h-4 w-4 ${isHomeRoute ? "text-white/90" : "text-[#8a8a8a]"}`} />
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  aria-label="Search products"
+                  placeholder="Search products, brands & categories"
+                  className={`w-full border-0 bg-transparent text-sm focus:outline-none ${isHomeRoute ? "text-white placeholder:text-white/70" : "text-[#1f2937] placeholder:text-[#7b7b7b]"}`}
+                />
+              </form>
+            </div>
+          )}
 
           <div className="flex shrink-0 items-center gap-2.5 md:gap-3 md:pl-1">
             {/* Mobile Actions */}
@@ -254,70 +267,95 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
 
             <button
               type="button"
-              onClick={() => navigate("/cart")}
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white shadow-sm transition hover:bg-primary-hover md:order-3 md:h-11 md:w-auto md:px-4"
+              onClick={handleWelfare}
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#d83b3b] text-white shadow-sm transition hover:bg-[#bf2e2e] md:order-2"
+              aria-label="Coupons and rewards"
             >
-              <ShoppingCart size={21} className="text-white md:size-[15px]" />
-              <span className="hidden md:inline ml-2 text-[10px] font-black uppercase tracking-[0.18em]">Cart</span>
+              <Gift size={18} />
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-[#d83b3b] shadow-sm">
+                1
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/cart")}
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#0b3b78] shadow-sm transition hover:bg-slate-100 md:order-3 md:h-11 md:w-auto md:px-4"
+            >
+              <ShoppingCart size={21} className="text-[#0b3b78] md:size-[15px]" />
+              <span className="hidden md:inline ml-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78]">Cart</span>
               <span className="absolute -top-1.5 -right-1.5 flex min-w-[1.2rem] items-center justify-center rounded-full bg-red-500 px-1 py-0.5 text-[9px] font-bold text-white md:static md:ml-1.5 md:bg-red-500 md:text-[10px]">
                 {cartCount > 99 ? "100+" : cartCount}
               </span>
             </button>
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              className="hidden items-center justify-center rounded-full border border-slate-900 bg-slate-900 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sm transition hover:bg-slate-800 md:inline-flex"
+              aria-label="Open More menu"
+            >
+              More
+            </button>
           </div>
         </div>
 
-        {/* Mobile Search Bar */}
-        <div className="mt-0 md:hidden">
-          <form
-            className="flex h-[52px] w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 shadow-inner"
-            onSubmit={handleSearchSubmit}
-          >
-            <Search className="h-7 w-7 shrink-0 text-slate-500" />
-            <input
-              type="search"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search product, brand or article..."
-              className="block w-full border-0 bg-transparent text-[17px] font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none"
-            />
-          </form>
-        </div>
+        {!isMoreSection && (
+          <div className="mt-0 md:hidden">
+            <form
+              className={`flex h-[52px] w-full items-center gap-3 rounded-xl border px-4 shadow-inner ${isHomeRoute ? "border-[#1d5fbf] bg-[#1d5fbf]" : "border-slate-200 bg-slate-50"}`}
+              onSubmit={handleSearchSubmit}
+            >
+              <Search className={`h-7 w-7 shrink-0 ${isHomeRoute ? "text-white/90" : "text-slate-500"}`} />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search product, brand or article..."
+                className={`block w-full border-0 bg-transparent text-[17px] font-medium focus:outline-none ${isHomeRoute ? "text-white placeholder:text-white/70" : "text-slate-900 placeholder:text-slate-400"}`}
+              />
+            </form>
+          </div>
+        )}
       </div>
 
-      {/* Mobile Location Bar */}
-      <div className="flex items-center justify-between bg-slate-50 px-4 py-2.5 md:hidden">
-        <div className="flex items-center gap-2 text-slate-900">
-          <MapPin size={24} className="text-primary" />
-          <span className="text-[16px] font-bold tracking-tight text-slate-950">
-            {resolveDeliveryDisplay().split(',').slice(0, 2).join(',')}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate("/profile")}
-          className="text-[16px] font-bold text-slate-900"
-        >
-          Change
-        </button>
-      </div>
-
-      <div className="hidden border-t border-[#f0e9e2] bg-white md:block">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 py-2.5">
-          <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700">
-            <MapPin size={16} className="shrink-0 text-primary" />
-            <span className="truncate">{resolveDeliveryDisplay()}</span>
-            <button type="button" onClick={() => navigate("/addresses")} className="shrink-0 text-xs font-black uppercase tracking-[0.12em] text-primary hover:underline">
+      {!isMoreSection && (
+        <>
+          <div className={`flex items-center justify-between px-4 py-2.5 md:hidden ${isHomeRoute ? "bg-[#dfeefd]" : "bg-slate-50"}`}>
+            <div className={`flex items-center gap-2 ${isHomeRoute ? "text-[#0b3b78]" : "text-slate-900"}`}>
+              <MapPin size={24} className={isHomeRoute ? "text-[#1d5fbf]" : "text-primary"} />
+              <span className="text-[16px] font-bold tracking-tight text-slate-950">
+                {resolveDeliveryDisplay()}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/addresses")}
+              className={`text-[16px] font-bold ${isHomeRoute ? "text-[#0b3b78]" : "text-slate-900"}`}
+            >
               Change
             </button>
           </div>
-          <nav aria-label="Desktop navigation" className="flex shrink-0 items-center gap-6 text-[10px] font-black uppercase tracking-[0.16em] text-slate-600">
-            <Link to="/" className="transition hover:text-primary">Home</Link>
-            <Link to="/categories" className="transition hover:text-primary">Categories</Link>
-            <Link to="/shop?offers=25" className="transition hover:text-primary">Offers</Link>
-            <Link to="/contact" className="transition hover:text-primary">Help</Link>
-          </nav>
-        </div>
-      </div>
+
+          <div className="hidden border-t border-[#f0e9e2] bg-white md:block">
+            <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 py-2.5">
+              <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700">
+                <MapPin size={16} className="shrink-0 text-primary" />
+                <span className="truncate">{resolveDeliveryDisplay()}</span>
+                <button type="button" onClick={() => navigate("/addresses")} className="shrink-0 text-xs font-black uppercase tracking-[0.12em] text-primary hover:underline">
+                  Change
+                </button>
+              </div>
+              <nav aria-label="Desktop navigation" className="flex shrink-0 items-center gap-6 text-[10px] font-black uppercase tracking-[0.16em] text-slate-600">
+                <Link to="/" className="transition hover:text-primary">Home</Link>
+                <Link to="/categories" className="transition hover:text-primary">Categories</Link>
+                <Link to="/shop?offers=25" className="transition hover:text-primary">Offers</Link>
+                <Link to="/contact" className="transition hover:text-primary">Help</Link>
+              </nav>
+            </div>
+          </div>
+        </>
+      )}
+
+      <MoreDrawer open={moreOpen} onClose={() => setMoreOpen(false)} />
 
       <AnimatePresence>
         {showGoldenCard && welfareCard && (

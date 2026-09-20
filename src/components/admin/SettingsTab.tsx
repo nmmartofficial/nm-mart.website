@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase/client";
 import { getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
 
 const THEME_PRESETS = [
-  { name: "NM Classic", primary: "#CC0000", secondary: "#D4AF37" },
+  { name: "NM Classic", primary: "#0EA5E9", secondary: "#D4AF37" },
   { name: "Sky Fresh", primary: "#0EA5E9", secondary: "#E0F2FE" },
   { name: "Forest", primary: "#10B981", secondary: "#D1FAE5" },
   { name: "Royal", primary: "#8B5CF6", secondary: "#EDE9FE" },
@@ -24,7 +24,7 @@ const SettingsTab = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [theme, setTheme] = useState<ThemeConfig>({
-    primaryColor: "#CC0000",
+    primaryColor: "#0EA5E9",
     secondaryColor: "#D4AF37",
     presetName: "NM Classic",
     storeName: "NM Mart",

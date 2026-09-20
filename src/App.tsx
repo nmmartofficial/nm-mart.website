@@ -10,6 +10,7 @@ import HomePage from "@/pages/HomePage";
 import Login from "@/pages/Login";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
+import Settings from "@/pages/Settings";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
 import UserProfile from "@/pages/UserProfile";
@@ -21,6 +22,8 @@ import ResetPassword from "@/pages/ResetPassword";
 import ShopPage from "@/pages/ShopPage";
 import Categories from "@/pages/Categories";
 import Addresses from "@/pages/Addresses";
+import Wallet from "@/pages/Wallet";
+import Coupons from "@/pages/Coupons";
 import CartPage from "@/pages/CartPage";
 import Orders from "@/pages/Orders";
 import OrderDetails from "@/pages/OrderDetails";
@@ -165,6 +168,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/delivery" element={<Delivery />} />
@@ -178,6 +182,8 @@ function App() {
               <Route path="/shop" element={<ShopPage />} />
               <Route path="/categories" element={<Categories />} />
               <Route path="/addresses" element={<CustomerAuthGuard><Addresses /></CustomerAuthGuard>} />
+              <Route path="/wallet" element={<CustomerAuthGuard><Wallet /></CustomerAuthGuard>} />
+              <Route path="/coupons" element={<CustomerAuthGuard><Coupons /></CustomerAuthGuard>} />
               <Route path="/products" element={<ShopPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
