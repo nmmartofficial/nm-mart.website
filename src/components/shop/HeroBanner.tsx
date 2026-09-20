@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/lib/ThemeProvider";
 import type { WebsiteBanner } from "@/lib/supabase";
 
@@ -69,19 +68,18 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
   const banner = banners[current];
   const bannerImage = banner?.image_url || "";
 
-  // Intelligent desktop scaling while preserving integrity
   const imageClass =
-    "block h-[clamp(145px,43vw,220px)] w-full object-cover transition-transform duration-500 ease-out group-hover/banner:scale-[1.01] antialiased mx-auto md:h-[clamp(320px,38vw,520px)]";
+    "block aspect-square w-full object-cover object-center transition-transform duration-500 ease-out group-hover/banner:scale-[1.01] antialiased md:aspect-[16/7] md:h-auto";
 
   return (
     <div className="flex w-full justify-center px-0">
       <div
-        className={`group/banner relative w-full max-w-[1400px] overflow-hidden border border-slate-100 bg-white shadow-[0_24px_60px_-20px_rgba(0,0,0,0.18)] transition-all duration-500 ${radiusClass}`}
+        className={`group/banner relative w-full max-w-[1400px] overflow-hidden border-0 bg-white shadow-none transition-all duration-500 ${radiusClass}`}
         style={radiusStyle}
       >
         <Link
           to={{ pathname: "/", hash: "products" }}
-          className="relative block cursor-pointer overflow-hidden focus:outline-none"
+          className="relative block w-full cursor-pointer overflow-hidden focus:outline-none"
           aria-label={banner.title ? `View products: ${banner.title}` : "View products"}
         >
           <img
@@ -96,53 +94,25 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
           />
         </Link>
 
-        {/* Navigation Arrows */}
+        {/* Pagination Dots */}
         {banners.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                prev();
-              }}
-              className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white opacity-0 shadow-lg backdrop-blur-md transition-all hover:bg-white/40 group-hover/banner:opacity-100 focus-visible:opacity-100 md:left-5 md:p-3"
-              aria-label="Previous banner"
-            >
-              <ChevronLeft size={28} strokeWidth={2.5} />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                next();
-              }}
-              className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white opacity-0 shadow-lg backdrop-blur-md transition-all hover:bg-white/40 group-hover/banner:opacity-100 focus-visible:opacity-100 md:right-5 md:p-3"
-              aria-label="Next banner"
-            >
-              <ChevronRight size={28} strokeWidth={2.5} />
-            </button>
-
-            {/* Pagination Dots */}
-            <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2.5 md:bottom-6">
-              {banners.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setCurrent(i);
-                  }}
-                  className={`flex h-4 w-4 items-center justify-center transition-all ${i === current ? "scale-110" : "scale-100 opacity-60"}`}
-                  aria-label={`Go to banner ${i + 1}`}
-                >
-                  <span className={`block rounded-full transition-all ${i === current ? "h-2 w-8 bg-white shadow-sm" : "h-2 w-2 bg-white/50"}`} />
-                </button>
-              ))}
-            </div>
-          </>
+          <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-2 md:bottom-4">
+            {banners.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setCurrent(i);
+                }}
+                className={`flex h-3 w-3 items-center justify-center transition-all ${i === current ? "scale-110" : "scale-100 opacity-60"}`}
+                aria-label={`Go to banner ${i + 1}`}
+              >
+                <span className={`block rounded-full transition-all ${i === current ? "h-2 w-6 bg-white shadow-sm" : "h-2 w-2 bg-white/60"}`} />
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </div>
