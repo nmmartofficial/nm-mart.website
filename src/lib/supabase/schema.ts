@@ -85,30 +85,40 @@ export function getProductDescription(row: Partial<DbProductRow> | null | undefi
 }
 
 export function posToSupabaseProduct(pos: {
+  barcode?: string;
   RawCodeNew?: string;
   Barcode?: string;
+  name?: string;
   RawName?: string;
   ItemName?: string;
+  mrp?: number;
   MRP?: number;
+  sale_rate?: number;
   Rate?: number;
   SalesRate?: number;
+  stock?: number;
   OpStock?: number;
   Stock?: number;
+  discount_percent?: number;
   discountPerc?: number;
   Discount?: number;
+  category_name?: string;
   ItemGroupName?: string;
   Category?: string;
   image_url?: string | null;
 }) {
-  const barcode = String(pos.RawCodeNew ?? pos.Barcode ?? "").trim();
+  const barcode = String(pos.barcode ?? pos.RawCodeNew ?? pos.Barcode ?? "").trim();
+  const discount_percent = Number(pos.discount_percent ?? pos.discountPerc ?? pos.Discount ?? 0);
   return {
     barcode,
-    name: String(pos.RawName ?? pos.ItemName ?? "Unknown Product").trim(),
-    mrp: Number(pos.MRP ?? 0),
-    sale_rate: Number(pos.Rate ?? pos.SalesRate ?? 0),
-    stock: Number(pos.OpStock ?? pos.Stock ?? 0),
-    discount_percent: Number(pos.discountPerc ?? pos.Discount ?? 0),
-    category_name: String(pos.ItemGroupName ?? pos.Category ?? "General").trim(),
+    name: String(pos.name ?? pos.RawName ?? pos.ItemName ?? "Unknown Product").trim(),
+    mrp: Number(pos.mrp ?? pos.MRP ?? 0),
+    sale_rate: Number(pos.sale_rate ?? pos.Rate ?? pos.SalesRate ?? 0),
+    stock: Number(pos.stock ?? pos.OpStock ?? pos.Stock ?? 0),
+    opstock: Number(pos.stock ?? pos.OpStock ?? pos.Stock ?? 0),
+    discount_percent,
+    discperc: discount_percent,
+    category_name: String(pos.category_name ?? pos.ItemGroupName ?? pos.Category ?? "General").trim(),
     image_url: pos.image_url ? String(pos.image_url).trim() : null,
     updated_at: new Date().toISOString(),
   };

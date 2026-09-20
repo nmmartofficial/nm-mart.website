@@ -63,18 +63,19 @@ const HeroBanner = ({ onBannerClick: _onBannerClick, banners: incomingBanners = 
       <div className="group/banner relative w-full bg-transparent">
         <Link
           to={{ pathname: "/", hash: "products" }}
-          className="relative block w-full cursor-pointer focus:outline-none"
+          className="relative block aspect-[2.4/1] w-full cursor-pointer overflow-hidden focus:outline-none lg:aspect-[4.5/1]"
           aria-label={banner.title ? `View products: ${banner.title}` : "View products"}
         >
           <img
             src={bannerImage}
             alt={banner.title || "Promotion Banner"}
             decoding="sync"
-            className="block w-full h-auto antialiased"
+            className="block h-full w-full object-cover object-center antialiased"
             style={{
               imageRendering: 'auto',
               display: 'block',
-              width: '100%'
+              width: '100%',
+              height: '100%'
             }}
           />
         </Link>

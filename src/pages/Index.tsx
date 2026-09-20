@@ -573,7 +573,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
     
     if (query) {
       const q = query.toLowerCase();
-      // Searching through RawName, RawCodeNew, and tags
+      // Searching through name, barcode, and tags
       list = list.filter(p => 
         p.name.toLowerCase().includes(q) || 
         p.barcode.toLowerCase().includes(q) ||
@@ -1071,42 +1071,31 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
         toast.error("Please login again.");
         return;
       }
-      // ─── REVERSE SYNC: Save to sync_back table for POS update ───
-      const { error: syncError } = await supabase
-        .from('sync_back')
-        .insert([{
-          RawCodeNew: String(editingProduct.barcode || ""),
-          NewRate: rate,
-          NewName: String(editingProduct.name || "").trim(),
-          status: 'pending',
-          created_at: new Date().toISOString()
-        }]);
 
-      if (syncError) throw syncError;
-
-      let discountPerc = 0;
+      let discount_percent = 0;
       if (mrp > 0 && rate >= 0 && rate < mrp) {
-        discountPerc = Math.min(99, Math.round(100 * (1 - rate / mrp)));
+        discount_percent = Math.min(99, Math.round(100 * (1 - rate / mrp)));
       }
 
-      const imageUrl = String(editingProduct.imageUrl || "").trim() || null;
-      const opStock = Math.max(0, Math.floor(Number(editingProduct.stock ?? 0)));
+      const image_url = String(editingProduct.imageUrl || "").trim() || null;
+      const opstock = Math.max(0, Math.floor(Number(editingProduct.stock ?? 0)));
 
       const { error: localError } = await supabase
         .from(TABLES.products)
         .update({
-          RawName: String(editingProduct.name || "").trim(),
-          MRP: mrp,
-          Rate: rate,
-          OpStock: opStock,
-          ItemGroupName: normalizeCategory(editingProduct.category || "GENERAL"),
-          unit: String(editingProduct.unit || "pcs").trim(),
-          is_featured: Boolean(editingProduct.isFeatured),
-          image_url: imageUrl,
-          discountPerc,
+          name: String(editingProduct.name || "").trim(),
+          mrp: mrp,
+          sale_rate: rate,
+          opstock: opstock,
+          category_name: normalizeCategory(editingProduct.category || "GENERAL"),
+          unit_name: String(editingProduct.unit || "pcs").trim(),
+          is_favourite: Boolean(editingProduct.isFeatured),
+          image_url: image_url,
+          discount_percent,
+          discperc: discount_percent,
           updated_at: new Date().toISOString(),
         })
-        .eq('RawCodeNew', editingProduct.barcode);
+        .eq('barcode', editingProduct.barcode);
 
       if (localError) throw localError;
 
