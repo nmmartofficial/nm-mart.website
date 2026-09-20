@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "@/lib/supabase/schema";
+import { getSupabaseErrorMessage } from "@/lib/supabase";
 
 export type SavedAddress = {
   id: number;
@@ -49,19 +50,19 @@ export function useSavedAddresses() {
       ...address,
       is_default: address.is_default ?? addresses.length === 0,
     });
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Unable to save address."));
     await loadAddresses();
   };
 
   const deleteAddress = async (id: number) => {
     const { error } = await supabase.from(TABLES.customerAddresses).delete().eq("id", id);
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Unable to delete address."));
     setAddresses((current) => current.filter((address) => address.id !== id));
   };
 
   const updateAddress = async (id: number, address: Omit<SavedAddress, "id" | "is_default">) => {
     const { error } = await supabase.from(TABLES.customerAddresses).update(address).eq("id", id);
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Unable to update address."));
     await loadAddresses();
   };
 
@@ -73,14 +74,14 @@ export function useSavedAddresses() {
       .from(TABLES.customerAddresses)
       .update({ is_default: false })
       .eq("user_id", user.id);
-    if (clearDefault.error) throw clearDefault.error;
+    if (clearDefault.error) throw new Error(getSupabaseErrorMessage(clearDefault.error, "Unable to update default address."));
 
     const { error } = await supabase
       .from(TABLES.customerAddresses)
       .update({ is_default: true })
       .eq("id", id)
       .eq("user_id", user.id);
-    if (error) throw error;
+    if (error) throw new Error(getSupabaseErrorMessage(error, "Unable to set default address."));
     await loadAddresses();
   };
 

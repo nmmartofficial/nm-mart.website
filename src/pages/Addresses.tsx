@@ -6,6 +6,7 @@ import Footer from "@/components/shop/Footer";
 import { useSavedAddresses } from "@/hooks/useSavedAddresses";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "@/lib/supabase/schema";
+import { getSupabaseErrorMessage } from "@/lib/supabase";
 import { toast } from "sonner";
 
 export default function Addresses() {
@@ -91,7 +92,11 @@ export default function Addresses() {
       setShowForm(false);
       toast.success(editingId ? "Address updated successfully." : "Address saved successfully.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to save address.");
+      const message = getSupabaseErrorMessage(
+        error && typeof error === "object" && "message" in error ? (error as { message?: string; code?: string; details?: string; hint?: string }) : undefined,
+        "Unable to save address."
+      );
+      toast.error(message);
     } finally {
       setSaving(false);
     }

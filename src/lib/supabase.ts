@@ -53,9 +53,12 @@ export function getSupabaseErrorMessage(
   error: SupabaseErrorLike | null | undefined,
   fallback = "Operation failed"
 ): string {
-  const msg = error?.message || "";
+  const msg = (error?.message || "").replace(/\s+/g, " ").trim();
   const code = error?.code || "";
-  const lower = msg.toLowerCase();
+  const details = (error?.details || "").replace(/\s+/g, " ").trim();
+  const hint = (error?.hint || "").replace(/\s+/g, " ").trim();
+  const combined = [msg, details, hint].filter(Boolean).join(" | ");
+  const lower = combined.toLowerCase();
 
   if (lower.includes("jwt") || lower.includes("auth") || code === "PGRST301") {
     return "Please login again.";
@@ -63,13 +66,30 @@ export function getSupabaseErrorMessage(
   if (lower.includes("network") || lower.includes("fetch") || lower.includes("timeout")) {
     return "Checking connection. Please try again.";
   }
+  if (lower.includes("permission denied") || lower.includes("row-level security") || lower.includes("rls")) {
+    return "Permission issue: this action is not allowed in the current session. Please check login status or backend policy.";
+  }
   if (lower.includes("relation") && lower.includes("does not exist")) {
-    return `Table not found: ${msg}`;
+    return `Database issue: a required table is missing. Please update the Supabase schema. Details: ${combined}`;
   }
-  if (code === "23505") {
-    return `Duplicate data conflict: ${msg}`;
+  if (lower.includes("column") && lower.includes("does not exist")) {
+    return `Database issue: a required column is missing. Please update the Supabase schema. Details: ${combined}`;
   }
-  if (msg) return msg;
+  if (code === "23505" || lower.includes("duplicate key") || lower.includes("already exists")) {
+    return `Duplicate entry detected. This record already exists and cannot be saved again. Details: ${combined}`;
+  }
+  if (code === "23503" || lower.includes("foreign key") || lower.includes("violates foreign key")) {
+    return `Related data is missing. Please check the linked record before saving. Details: ${combined}`;
+  }
+  if (lower.includes("not-null") || lower.includes("null value") || lower.includes("cannot be null")) {
+    return `Missing required field. Please complete all required values before trying again.`;
+  }
+  if (lower.includes("invalid input syntax") || lower.includes("invalid text representation") || lower.includes("bad request")) {
+    return `Invalid value format. Please check the entered data and try again. Details: ${combined}`;
+  }
+  if (combined) {
+    return `${combined}`;
+  }
   return fallback;
 }
 
