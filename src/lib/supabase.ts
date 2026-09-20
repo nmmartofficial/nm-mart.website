@@ -42,6 +42,7 @@ type SupabaseErrorLike = {
 };
 
 export function logSupabaseDebug(action: string, payload?: unknown, error?: unknown): void {
+  if (import.meta.env.PROD) return;
   if (error) {
     console.error(`[Supabase:${action}]`, { payload, error });
     return;

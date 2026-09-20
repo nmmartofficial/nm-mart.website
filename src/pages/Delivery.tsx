@@ -9,6 +9,7 @@ import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/l
 import { TABLES } from "../lib/supabase/schema";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { isActiveAdminUser } from "@/lib/adminAccess";
 
 const SLOGAN = "Shop More, Save More";
 
@@ -18,9 +19,8 @@ const DeliveryDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [query, setQuery] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const ADMIN_PASS = "NMMART2026";
 
   useEffect(() => {
     if (isAuthenticated) fetchOrders();
@@ -44,16 +44,27 @@ const DeliveryDashboard = () => {
     }
   };
 
-  const handleLogin = () => {
-    if (password === ADMIN_PASS) {
-      setIsAuthenticated(true);
-      toast.success("Welcome back, Admin!");
-    } else {
-      toast.error("Invalid Admin PIN");
+  const handleLogin = async () => {
+    if (!email.trim() || !password) {
+      toast.error("Enter your admin email and password.");
+      return;
     }
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error || !data.user) {
+      toast.error("Invalid admin credentials.");
+      return;
+    }
+    if (!(await isActiveAdminUser(supabase, data.user.id))) {
+      await supabase.auth.signOut();
+      toast.error("This account is not authorized for delivery administration.");
+      return;
+    }
+    setIsAuthenticated(true);
+    toast.success("Welcome back, Admin!");
   };
 
   const handleLogout = () => {
+    void supabase.auth.signOut();
     setIsAuthenticated(false);
     toast.info("Logged out from Admin Dashboard");
   };
@@ -104,12 +115,16 @@ const DeliveryDashboard = () => {
 
             <div className="space-y-6 text-left">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Admin Security PIN</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Admin Email</label>
+                <input type="email" placeholder="admin@example.com" className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-4 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold" value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Admin Password</label>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-primary transition-colors" size={18} />
                   <input 
                     type="password" 
-                    placeholder="••••••••"
+                    placeholder="Enter password"
                     className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold tracking-[0.5em]"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

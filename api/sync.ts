@@ -41,7 +41,7 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json(data || []);
     } catch (error: any) {
       console.error("GET 500 Error:", error.message);
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: 'Unable to fetch products.' });
     }
   }
 
@@ -79,7 +79,7 @@ export default async function handler(req: any, res: any) {
         console.error("Supabase UPSERT Error:", error.message);
         return res.status(500).json({ 
           success: false, 
-          error: `Database Error: ${error.message}`
+          error: 'Product sync failed.'
         });
       }
 
@@ -92,7 +92,7 @@ export default async function handler(req: any, res: any) {
 
     } catch (error: any) {
       console.error("CRITICAL Sync Error:", error.message);
-      return res.status(500).json({ error: `Server Error: ${error.message}` });
+      return res.status(500).json({ error: 'Product sync failed.' });
     }
   }
 
