@@ -2,11 +2,11 @@
 
 ## Status
 
-This document is a prepared database implementation package for safe execution in a verified staging or production Supabase environment. It is not a claim that the live database has already been modified.
+This document describes the website checkout database contract deployed to the shared Supabase project.
 
 ## Environment note
 
-The local workspace currently has no isolated staging database and no SQL/service-role access. The project config points to the live production project `mggkadgemqcyybsplkqc`, but there is no safe execution path here. The prepared SQL package is therefore intentionally conservative and still requires live schema verification before execution.
+The project config points to the live Supabase project `mggkadgemqcyybsplkqc`. Live SQL verification and migration deployment were completed on 2026-09-20.
 
 ## Shared architecture
 
@@ -60,7 +60,7 @@ Security requirements:
 - enforce idempotency using `(customer_id, idempotency_key)`; the migration adds this nullable column if absent
 
 Important limitations:
-- No live DB or service-role access is available here, so execution remains blocked until the target database is confirmed.
+- A real authenticated checkout should still be used to verify the full customer-to-admin workflow after deployment.
 
 ## Functions included in the migration package
 
@@ -86,11 +86,10 @@ Before applying the migration in production, the DB operator must verify:
 
 ## Execution status
 
-The package is READY FOR CONTROLLED DATABASE EXECUTION only in a verified Supabase environment.
+The checkout migrations are applied to the shared Supabase project:
 
-The current workspace status remains:
-
-- live DB execution: BLOCKED
-- production data changed: NO
-- production checkout switched: NO
-- migration applied: NO
+- live DB execution: APPLIED
+- production checkout function: patched
+- tenant/company INSERT columns: verified
+- unauthenticated checkout: rejected as expected
+- migration applied: YES
