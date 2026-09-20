@@ -15,7 +15,7 @@ export default function Wishlist() {
   const wishlist = allProducts.filter((product) => wishlistBarcodes.includes(product.barcode));
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
       <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-10">
         <button

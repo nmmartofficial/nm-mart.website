@@ -271,7 +271,7 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-primary" size={40} />
         <p className="text-gray-400 font-black uppercase tracking-[4px] text-xs italic">Loading Dashboard...</p>
       </div>
@@ -304,7 +304,7 @@ const UserProfile = () => {
                     ) : (
                       <span className="text-lg font-black">{initials}</span>
                     )}
-                    <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full border border-orange-100 bg-white">
+                    <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white">
                       {avatarUploading ? (
                         <Loader2 className="animate-spin text-orange-500" size={11} />
                       ) : (
@@ -331,7 +331,7 @@ const UserProfile = () => {
           </div>
         </section>
 
-        <button type="button" onClick={() => showUnavailable("Rewards / Points")} className="mt-4 flex w-full items-center justify-between rounded-2xl border border-orange-100 bg-orange-50/70 px-4 py-3 text-left shadow-sm hover:bg-orange-50">
+        <button type="button" onClick={() => showUnavailable("Rewards / Points")} className="mt-4 flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-primary/5 px-4 py-3 text-left shadow-sm hover:bg-primary/10">
           <span className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-primary"><Star size={17} fill="currentColor" /></span><span><span className="block text-[10px] font-black uppercase tracking-[0.16em] text-primary">Rewards Points</span><span className="mt-0.5 block text-sm font-black text-slate-800">{profile.points > 0 ? `${profile.points} Points` : "No points yet"}</span></span></span>
           <ChevronRight size={17} className="text-primary" />
         </button>

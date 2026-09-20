@@ -148,7 +148,7 @@ const OrderDetails = () => {
   }, [fetchOrder, navigate]);
 
   const renderState = (title: string, message: string, action?: React.ReactNode) => (
-    <section className="flex min-h-[360px] flex-col items-center justify-center rounded-[28px] border border-orange-100 bg-white px-6 py-12 text-center shadow-sm" role="alert">
+    <section className="flex min-h-[360px] flex-col items-center justify-center rounded-[28px] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm" role="alert">
       <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
         <AlertCircle size={28} aria-hidden="true" />
       </div>
@@ -159,12 +159,12 @@ const OrderDetails = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#fffaf5] text-black">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar />
 
       <main className="mx-auto w-full max-w-5xl px-4 py-8 md:px-6 md:py-12">
         {loading && (
-          <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 rounded-[28px] border border-orange-100 bg-white shadow-sm" role="status" aria-live="polite">
+          <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 rounded-[28px] border border-slate-200 bg-white shadow-sm" role="status" aria-live="polite">
             <Loader2 className="animate-spin text-primary" size={34} aria-hidden="true" />
             <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Loading order details</p>
           </div>
@@ -176,7 +176,7 @@ const OrderDetails = () => {
           <button
             type="button"
             onClick={() => void fetchOrder()}
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             Try Again <ArrowRight size={14} />
           </button>,
@@ -187,7 +187,7 @@ const OrderDetails = () => {
           "This order is unavailable or does not belong to the signed-in account.",
           <Link
             to="/orders"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <ArrowLeft size={14} /> Back to My Orders
           </Link>,
@@ -228,7 +228,7 @@ const OrderDetails = () => {
                   {id && (
                     <Link
                       to={`/tracker?id=${encodeURIComponent(id)}`}
-                      className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-slate-700 transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-slate-700 transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                       <Truck size={14} /> Track Order
                     </Link>
@@ -236,17 +236,17 @@ const OrderDetails = () => {
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     <Printer size={14} /> Print
                   </button>
                 </div>
               </div>
 
-              <article className="overflow-hidden rounded-[30px] border border-orange-100 bg-white shadow-sm print:rounded-none print:border-0 print:shadow-none">
-                <header className="flex flex-col gap-6 border-b border-orange-100 bg-orange-50/50 p-6 md:flex-row md:items-start md:justify-between md:p-10">
+              <article className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-sm print:rounded-none print:border-0 print:shadow-none">
+                <header className="flex flex-col gap-6 border-b border-slate-200 bg-primary/5 p-6 md:flex-row md:items-start md:justify-between md:p-10">
                   <div className="flex items-start gap-4">
-                    <img src="/nm-mart-logo.png" alt="NM Mart" className="h-14 w-14 rounded-2xl border border-orange-100 bg-white object-contain p-2" />
+                    <img src="/nm-mart-logo.png" alt="NM Mart" className="h-14 w-14 rounded-2xl border border-slate-200 bg-white object-contain p-2" />
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.28em] text-primary">NM Mart</p>
                       <h1 className="mt-1 text-3xl font-black uppercase italic tracking-tighter text-slate-900 md:text-4xl">Order Details</h1>

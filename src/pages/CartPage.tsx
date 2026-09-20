@@ -20,7 +20,7 @@ const CartPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-black">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
 
       <main className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-10">
@@ -33,7 +33,7 @@ const CartPage = () => {
             >
               <ArrowLeft size={14} /> Back
             </button>
-            <h1 className="text-3xl font-black uppercase tracking-[-0.06em] text-black md:text-5xl">
+            <h1 className="text-3xl font-black uppercase tracking-[-0.06em] text-slate-900 md:text-5xl">
               Your <span className="text-primary">Cart</span>
             </h1>
           </div>
@@ -60,7 +60,7 @@ const CartPage = () => {
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 to="/shop"
-                className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-black"
+                className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-primary-hover"
               >
                 Continue Shopping
               </Link>
@@ -179,7 +179,7 @@ const CartPage = () => {
                 type="button"
                 onClick={handleCheckout}
                 disabled={cart.length === 0}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 Proceed to Checkout
               </button>

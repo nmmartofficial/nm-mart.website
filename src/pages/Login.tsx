@@ -235,14 +235,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-[#111] flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <Header />
 
       <main className="flex-1 flex flex-col items-center py-12 px-4 relative">
         <div className="absolute top-6 left-6 hidden md:block">
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-3 bg-white border border-gray-100 px-5 py-2.5 rounded-2xl text-gray-400 hover:text-black hover:border-black transition-all shadow-sm group"
+            className="flex items-center gap-3 bg-white border border-gray-100 px-5 py-2.5 rounded-2xl text-gray-400 hover:text-primary hover:border-primary transition-all shadow-sm group"
           >
             <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
             <span className="text-xs font-black uppercase tracking-widest italic">Back to Shop</span>
@@ -252,7 +252,7 @@ const Login = () => {
         <div className="w-full max-w-[350px] mb-6 md:hidden">
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-gray-400 hover:text-black transition-colors text-[11px] font-black uppercase tracking-widest italic group"
+            className="flex items-center gap-2 text-gray-400 hover:text-primary transition-colors text-[11px] font-black uppercase tracking-widest italic group"
           >
             <div className="bg-white p-2 rounded-full shadow-sm border border-gray-100">
               <ArrowLeft size={14} />
@@ -287,7 +287,7 @@ const Login = () => {
                     </div>
                     <button
                       onClick={() => setForgotPasswordMode(false)}
-                      className="w-full bg-black text-white py-2.5 rounded shadow-sm hover:bg-gray-900 transition-all text-sm font-bold"
+                      className="w-full bg-primary text-white py-2.5 rounded shadow-sm hover:bg-primary-hover transition-all text-sm font-bold"
                     >
                       Return to Sign In
                     </button>
@@ -313,7 +313,7 @@ const Login = () => {
                     <button
                       onClick={handleForgotPassword}
                       disabled={loading}
-                      className="w-full bg-black text-white py-2.5 rounded shadow-sm hover:bg-gray-900 transition-all text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="w-full bg-primary text-white py-2.5 rounded shadow-sm hover:bg-primary-hover transition-all text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {loading ? <Loader2 className="animate-spin" size={16} /> : "Continue"}
                     </button>
@@ -394,7 +394,7 @@ const Login = () => {
                   <button
                     onClick={handleAuth}
                     disabled={loading}
-                    className="w-full bg-black text-white py-2.5 rounded shadow-sm hover:bg-gray-900 transition-all text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full bg-primary text-white py-2.5 rounded shadow-sm hover:bg-primary-hover transition-all text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {loading ? <Loader2 className="animate-spin" size={16} /> : isSignUp ? "Create Account" : "Sign In"}
                   </button>
@@ -406,7 +406,7 @@ const Login = () => {
 
                   <button
                     onClick={handleGoogleLogin}
-                    className="w-full bg-black text-white py-2.5 rounded shadow-sm hover:bg-gray-900 transition-all text-sm font-bold flex items-center justify-center gap-3 border border-black"
+                    className="w-full bg-slate-900 text-white py-2.5 rounded shadow-sm hover:bg-primary transition-all text-sm font-bold flex items-center justify-center gap-3 border border-slate-900"
                   >
                     <div className="bg-white p-1 rounded-sm">
                       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-4 h-4" />
@@ -415,7 +415,7 @@ const Login = () => {
                   </button>
 
                   <p className="text-[10px] leading-relaxed text-gray-500 italic text-center">
-                    By continuing, you agree to NM Mart's <span className="text-black hover:underline cursor-pointer font-bold">Conditions of Use</span> and <span className="text-black hover:underline cursor-pointer font-bold">Privacy Notice</span>.
+                    By continuing, you agree to NM Mart's <span className="text-slate-900 hover:underline cursor-pointer font-bold">Conditions of Use</span> and <span className="text-slate-900 hover:underline cursor-pointer font-bold">Privacy Notice</span>.
                   </p>
                 </div>
               </>
@@ -424,7 +424,7 @@ const Login = () => {
 
           <div className="relative py-4 text-center">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
-            <span className="relative bg-[#f8f9fa] px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest italic">New to NM Mart?</span>
+            <span className="relative bg-slate-50 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest italic">New to NM Mart?</span>
           </div>
 
           <button
@@ -433,7 +433,7 @@ const Login = () => {
               setConfirmPassword("");
               setPassword("");
             }}
-            className="w-full bg-white border border-black text-black py-2.5 rounded shadow-sm hover:bg-gray-50 transition-all text-sm font-bold"
+            className="w-full bg-white border border-slate-200 text-slate-900 py-2.5 rounded shadow-sm hover:bg-slate-50 transition-all text-sm font-bold"
           >
             {isSignUp ? "Already have an account? Sign in" : "Create your NM Mart account"}
           </button>

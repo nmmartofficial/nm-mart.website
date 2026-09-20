@@ -147,7 +147,7 @@ const CartDrawer = ({
                   <button 
                     disabled={cartTotal < MIN_ORDER}
                     onClick={() => { setCheckoutOpen(true); setCartOpen(false); }}
-                    className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[3px] shadow-xl shadow-primary/20 hover:bg-black transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale italic"
+                    className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[3px] shadow-xl shadow-primary/20 hover:bg-primary-hover transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale italic"
                   >
                     Place Order Now
                   </button>

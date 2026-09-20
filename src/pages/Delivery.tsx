@@ -86,7 +86,7 @@ const DeliveryDashboard = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-6 font-sans">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
         <div className="w-full max-w-md bg-white border border-gray-100 p-10 rounded-[40px] shadow-2xl text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
           
@@ -120,7 +120,7 @@ const DeliveryDashboard = () => {
 
               <button 
                 onClick={handleLogin}
-                className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-[2px] hover:bg-black transition-all shadow-sm active:scale-95"
+                className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-[2px] hover:bg-primary-hover transition-all shadow-sm active:scale-95"
               >
                 Access Terminal
               </button>
@@ -132,7 +132,7 @@ const DeliveryDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-black font-sans pb-12">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-12">
       {/* Top Navigation */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-6 py-4 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-4">
@@ -247,7 +247,7 @@ const DeliveryDashboard = () => {
                   {order.status !== 'Delivered' && (
                     <button 
                       onClick={() => markAsDelivered(order.id)}
-                      className="bg-primary text-white px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-[1px] hover:bg-black transition-all flex items-center gap-2 italic shadow-sm active:scale-95"
+                      className="bg-primary text-white px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-[1px] hover:bg-primary-hover transition-all flex items-center gap-2 italic shadow-sm active:scale-95"
                     >
                       <CheckCircle2 size={14} /> Delivered
                     </button>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ShoppingCart, Pen, Heart } from "lucide-react";
 import { Product, productSlug } from "@/lib/store-utils";
@@ -20,14 +20,14 @@ interface ProductCardProps {
   className?: string;
 }
 
-const ProductCard = ({
+const ProductCard = memo(function ProductCard({
   product,
   onAddToCart,
   showAdminQuickEdit,
   onAdminQuickEdit,
   theme: propsTheme,
   className = "",
-}: ProductCardProps) => {
+}: ProductCardProps) {
   const navigate = useNavigate();
   const { theme: storeTheme } = useTheme();
   const theme = propsTheme || storeTheme;
@@ -36,28 +36,47 @@ const ProductCard = ({
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   useEffect(() => {
+    const shouldWatchAdminState = Boolean(showAdminQuickEdit || onAdminQuickEdit);
+    if (!shouldWatchAdminState) {
+      setIsAdminEditor(false);
+      return;
+    }
+
+    let active = true;
     const applyAdminState = async (authUserId: string | null | undefined) => {
+      if (!active) return;
       setIsAdminEditor(await isActiveAdminUser(supabase, authUserId ?? null));
     };
 
-    supabase.auth.getSession().then(({ data }) => applyAdminState(data.session?.user?.id));
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) {
+        void applyAdminState(data?.session?.user?.id);
+      }
+    });
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      applyAdminState(session?.user?.id);
+      if (active) {
+        void applyAdminState(session?.user?.id);
+      }
     });
-    return () => subscription.unsubscribe();
-  }, []);
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [onAdminQuickEdit, showAdminQuickEdit]);
 
   const productStyle = theme.productCardStyle || "compact";
   const buttonStyle = theme.buttonStyle || "flat";
 
   const cardClass =
     productStyle === "premium"
-      ? "rounded-[16px] border border-[#f2e6da] bg-white shadow-[0_16px_35px_-26px_rgba(15,23,42,0.28)] hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-22px_rgba(255,120,0,0.16)] transition-all"
+      ? "rounded-[16px] border border-slate-200 bg-white shadow-[0_16px_35px_-26px_rgba(15,23,42,0.28)] hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-22px_rgba(37,99,235,0.12)] transition-all"
       : productStyle === "offer"
-        ? "rounded-[14px] border border-[#f8d4c8] bg-[#fff7f4] hover:bg-[#fff1eb] transition-colors"
-        : "rounded-[14px] border border-[#f1ece7] bg-white hover:border-[#f7c59f] transition-colors shadow-[0_10px_18px_-16px_rgba(15,23,42,0.22)]";
+        ? "rounded-[14px] border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors"
+        : "rounded-[14px] border border-slate-200 bg-white hover:border-primary/40 transition-colors shadow-[0_10px_18px_-16px_rgba(15,23,42,0.22)]";
 
   function shouldDisplayLabel(text: string): boolean {
     if (!text) return false;
@@ -70,12 +89,12 @@ const ProductCard = ({
 
   const buttonClass = `h-[38px] w-full rounded-full text-[9px] md:h-[44px] md:text-[12px] font-black uppercase tracking-[0.1em] md:tracking-[0.14em] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
     buttonStyle === "gradient"
-      ? "bg-gradient-to-r from-[#ff8a00] via-[#ff7200] to-[#ff5c00] text-white border-none shadow-[0_12px_24px_-16px_rgba(255,120,0,0.8)]"
+      ? "bg-primary text-white border-none shadow-[0_12px_24px_-16px_rgba(37,99,235,0.55)] hover:bg-primary-hover"
       : buttonStyle === "outline"
         ? "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-white"
         : buttonStyle === "shadow"
-          ? "bg-primary text-white shadow-[0_10px_18px_-14px_rgba(0,0,0,0.25)] hover:shadow-[0_14px_22px_-16px_rgba(0,0,0,0.35)]"
-          : "bg-[#111111] text-white hover:bg-[#ff7a00]"
+          ? "bg-primary text-white shadow-[0_10px_18px_-14px_rgba(37,99,235,0.35)] hover:bg-primary-hover"
+          : "bg-slate-900 text-white hover:bg-primary"
   }`;
 
   const imageHeightClass = productStyle === "premium" ? "h-[106px] md:h-[235px]" : productStyle === "offer" ? "h-[102px] md:h-[225px]" : "h-[106px] md:h-[235px]";
@@ -101,6 +120,7 @@ const ProductCard = ({
     : 0;
 
   const goToProduct = () => navigate(`/product/${productSlug(product)}`);
+  const isProductWishlisted = isWishlisted(product?.barcode ?? "");
   const showPen = isAdminEditor && typeof onAdminQuickEdit === "function";
 
   const handleCardKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -119,6 +139,7 @@ const ProductCard = ({
       aria-label={`View details for ${productName}`}
       onClick={goToProduct}
       onKeyDown={handleCardKeyDown}
+      style={{ contentVisibility: "auto", containIntrinsicSize: "280px 420px" }}
       className={`group/card bg-card ${cardClass} flex w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 ${className}`}
     >
       <div className={`relative isolate shrink-0 overflow-hidden ${imageHeightClass} bg-white`}>
@@ -137,9 +158,9 @@ const ProductCard = ({
             toggleWishlist(product);
           }}
           className="absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-sm transition hover:text-rose-500"
-          aria-label={isWishlisted(product) ? `Remove ${productName} from wishlist` : `Add ${productName} to wishlist`}
+          aria-label={isProductWishlisted ? `Remove ${productName} from wishlist` : `Add ${productName} to wishlist`}
         >
-          <Heart size={15} className={isWishlisted(product) ? "fill-rose-500 text-rose-500" : ""} />
+          <Heart size={15} className={isProductWishlisted ? "fill-rose-500 text-rose-500" : ""} />
         </button>
 
         {!hasStock && (
@@ -167,7 +188,7 @@ const ProductCard = ({
       </div>
 
       <div className="flex flex-col p-1.5 md:p-5">
-        <h3 className="mb-1 text-[10px] font-semibold leading-tight text-[#111111] line-clamp-2 break-words md:mb-1.5 md:text-[16px] md:leading-snug">
+        <h3 className="mb-1 text-[10px] font-semibold leading-tight text-slate-900 line-clamp-2 break-words md:mb-1.5 md:text-[16px] md:leading-snug">
           {productName}
         </h3>
 
@@ -188,7 +209,7 @@ const ProductCard = ({
             )}
 
             {hasPrice ? (
-                <span className="text-[15px] font-black leading-none tracking-[-0.05em] text-[#111111] md:text-[1.75rem]">
+                <span className="text-[15px] font-black leading-none tracking-[-0.05em] text-slate-900 md:text-[1.75rem]">
                 ₹{numericPrice.toLocaleString("en-IN")}
               </span>
             ) : (
@@ -197,7 +218,7 @@ const ProductCard = ({
           </div>
 
           {savingsAmount > 0 && (
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#0a7d42]">
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[hsl(var(--success))]">
               Save ₹{savingsAmount.toLocaleString("en-IN")}
             </p>
           )}
@@ -227,6 +248,6 @@ const ProductCard = ({
       </div>
     </motion.article>
   );
-};
+});
 
 export default ProductCard;

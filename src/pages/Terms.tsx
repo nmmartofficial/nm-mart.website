@@ -100,34 +100,37 @@ export default function Terms() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#FFFAF5] font-sans text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <Header />
-      <main className="flex-1 px-4 py-8 sm:px-6 md:py-12">
-        <div className="mx-auto max-w-4xl">
-          <header className="mb-8 text-center md:mb-10">
-            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-primary">
-              <FileText size={14} /> NM Mart Legal Information
-            </div>
-            <h1 className="mt-5 text-4xl font-black uppercase tracking-[-0.06em] text-slate-900 sm:text-5xl md:text-6xl">Terms &amp; Conditions</h1>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-500">Please read these general terms before using the NM Mart website or placing an order.</p>
-          </header>
+      <main className="nm-page-shell flex-1 py-6 md:py-10">
+        <header className="mb-6 text-center md:mb-8">
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+            <FileText size={14} /> NM Mart Legal Information
+          </div>
+          <h1 className="mt-4 text-3xl font-black uppercase tracking-[-0.06em] text-slate-900 md:text-5xl">Terms &amp; Conditions</h1>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-500">Please read these general terms before using the NM Mart website or placing an order.</p>
+        </header>
 
-          <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 md:p-12">
-            <div className="space-y-8 md:space-y-10">
-              {sections.map((section, index) => (
-                <section key={section.title} className="border-b border-slate-100 pb-8 last:border-0 last:pb-0 md:pb-10">
-                  <h2 className="text-lg font-black uppercase tracking-[-0.02em] text-slate-900 sm:text-xl"><span className="mr-2 text-primary">{index + 1}.</span>{section.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{section.body}</p>
-                </section>
-              ))}
-            </div>
+        <article className="nm-card p-5 sm:p-8 md:p-10">
+          <div className="space-y-8 md:space-y-10">
+            {sections.map((section, index) => (
+              <section key={section.title} className="border-b border-slate-100 pb-8 last:border-0 last:pb-0 md:pb-10">
+                <h2 className="text-lg font-black uppercase tracking-[-0.02em] text-slate-900 sm:text-xl">
+                  <span className="mr-2 text-primary">{index + 1}.</span>
+                  {section.title}
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{section.body}</p>
+              </section>
+            ))}
+          </div>
 
-            <div className="mt-10 flex flex-col items-start gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:flex-row sm:items-center">
-              <Mail className="shrink-0 text-primary" size={18} />
-              <p className="text-sm leading-6 text-slate-600">Questions about these terms? <a href="mailto:support@nmmart.in" className="font-bold text-primary hover:underline">Contact NM Mart support</a>.</p>
-            </div>
-          </article>
-        </div>
+          <div className="mt-10 flex flex-col items-start gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:flex-row sm:items-center">
+            <Mail className="shrink-0 text-primary" size={18} />
+            <p className="text-sm leading-6 text-slate-600">
+              Questions about these terms? <a href="mailto:support@nmmart.in" className="font-bold text-primary hover:underline">Contact NM Mart support</a>.
+            </p>
+          </div>
+        </article>
       </main>
       <Footer />
     </div>

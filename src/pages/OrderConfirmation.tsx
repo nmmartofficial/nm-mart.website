@@ -114,7 +114,7 @@ const OrderConfirmation = () => {
   }, [fetchOrder, navigate]);
 
   const statePanel = (title: string, message: string, action: React.ReactNode) => (
-    <section className="flex min-h-[360px] flex-col items-center justify-center rounded-[30px] border border-orange-100 bg-white px-6 py-12 text-center shadow-sm" role="alert">
+    <section className="flex min-h-[360px] flex-col items-center justify-center rounded-[30px] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm" role="alert">
       <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
         <AlertCircle size={28} aria-hidden="true" />
       </div>
@@ -132,11 +132,11 @@ const OrderConfirmation = () => {
   const items = Array.isArray(order?.items) ? order.items : [];
 
   return (
-    <div className="min-h-screen bg-[#fffaf5] text-black">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
       <main className="mx-auto flex w-full max-w-4xl flex-1 px-4 py-8 md:px-6 md:py-12">
         {loading && (
-          <div className="flex min-h-[360px] w-full flex-col items-center justify-center gap-4 rounded-[30px] border border-orange-100 bg-white shadow-sm" role="status" aria-live="polite">
+          <div className="flex min-h-[360px] w-full flex-col items-center justify-center gap-4 rounded-[30px] border border-slate-200 bg-white shadow-sm" role="status" aria-live="polite">
             <Loader2 className="animate-spin text-primary" size={34} aria-hidden="true" />
             <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Verifying your order</p>
           </div>
@@ -145,7 +145,7 @@ const OrderConfirmation = () => {
         {!loading && error && statePanel(
           "Confirmation unavailable",
           error,
-          <button type="button" onClick={() => void fetchOrder()} className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+          <button type="button" onClick={() => void fetchOrder()} className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
             Try Again <ArrowRight size={14} />
           </button>,
         )}
@@ -153,14 +153,14 @@ const OrderConfirmation = () => {
         {!loading && !error && notFound && statePanel(
           "Order not found",
           "This confirmation is unavailable or the order does not belong to the signed-in account.",
-          <Link to="/orders" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+          <Link to="/orders" className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
             View My Orders <ArrowRight size={14} />
           </Link>,
         )}
 
         {!loading && !error && !notFound && order && (
-          <article className="w-full overflow-hidden rounded-[32px] border border-orange-100 bg-white shadow-xl">
-            <header className="border-b border-orange-100 bg-orange-50/50 px-6 py-10 text-center md:px-10">
+          <article className="w-full overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xl">
+            <header className="border-b border-slate-200 bg-primary/5 px-6 py-10 text-center md:px-10">
               <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg">
                 <CheckCircle2 size={34} aria-hidden="true" />
               </div>
@@ -169,7 +169,7 @@ const OrderConfirmation = () => {
               <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500">Your order has been recorded. This page shows the details returned from the order record.</p>
             </header>
 
-            <div className="grid gap-6 border-b border-slate-100 p-6 md:grid-cols-3 md:p-10">
+            <div className="grid gap-6 border-b border-slate-200 p-6 md:grid-cols-3 md:p-10">
               {id && <div><p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Order ID</p><p className="mt-2 break-all text-sm font-bold tracking-[0.08em] text-slate-800">{id}</p></div>}
               {date && <div><p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Created</p><p className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-700"><CalendarDays size={14} aria-hidden="true" /> {date}</p></div>}
               {status && <div><p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Current status</p><p className="mt-2 text-sm font-black uppercase text-primary">{status}</p></div>}
@@ -185,9 +185,9 @@ const OrderConfirmation = () => {
             </div>
 
             <footer className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/70 p-6 sm:flex-row sm:flex-wrap sm:justify-center md:p-8">
-              {id && <Link to={`/orders/${encodeURIComponent(id)}`} className="inline-flex items-center justify-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-700 transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"><Package size={14} /> View Order Details</Link>}
-              {id && <Link to={`/tracker?id=${encodeURIComponent(id)}`} className="inline-flex items-center justify-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-700 transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"><Truck size={14} /> Track Order</Link>}
-              <Link to="/orders" className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">My Orders <ArrowRight size={14} /></Link>
+              {id && <Link to={`/orders/${encodeURIComponent(id)}`} className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-700 transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"><Package size={14} /> View Order Details</Link>}
+              {id && <Link to={`/tracker?id=${encodeURIComponent(id)}`} className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-slate-700 transition hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"><Truck size={14} /> Track Order</Link>}
+              <Link to="/orders" className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">My Orders <ArrowRight size={14} /></Link>
               <Link to="/shop" className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-white transition hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Continue Shopping <ArrowRight size={14} /></Link>
             </footer>
           </article>

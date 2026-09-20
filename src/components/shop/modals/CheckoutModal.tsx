@@ -83,7 +83,7 @@ const CheckoutModal = ({
                 <div>
                   <h2 className="text-2xl font-black text-black uppercase italic tracking-tighter">Final <span className="text-primary">Checkout</span></h2>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 italic">Secure Payment Gateway</p>
-                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-100">
+                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10">
                     <Truck size={12} className="text-orange-600" />
                     <span className="text-[9px] font-black uppercase tracking-widest text-orange-700 italic">
                       {deliveryEtaLabel}
@@ -134,7 +134,7 @@ const CheckoutModal = ({
                     onClick={verifyPincode}
                     disabled={verifyingPincode || pincodeVerified}
                     className={`px-6 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${
-                      pincodeVerified ? 'bg-green-500 text-white' : 'bg-black text-white hover:bg-primary'
+                      pincodeVerified ? 'bg-emerald-500 text-white' : 'bg-primary text-white hover:bg-primary-hover'
                     }`}
                   >
                     {verifyingPincode ? <Loader2 className="animate-spin" size={14} /> : (pincodeVerified ? 'Verified' : 'Check')}
@@ -229,7 +229,7 @@ const CheckoutModal = ({
                       alt="UPI QR" 
                       className="w-full h-full rounded-2xl" 
                     />
-                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black px-4 py-1.5 rounded-full uppercase tracking-[2px] shadow-xl">Scan to Pay</div>
+                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] font-black px-4 py-1.5 rounded-full uppercase tracking-[2px] shadow-xl">Scan to Pay</div>
                   </div>
                   
                   <div className="space-y-3">
@@ -237,7 +237,7 @@ const CheckoutModal = ({
                     
                     <a 
                       href={`upi://pay?pa=${UPI_ID}&pn=NM%20MART&am=${totalWithDelivery}&cu=INR`}
-                      className="md:hidden flex items-center justify-center gap-3 bg-black text-white py-4 rounded-2xl font-black text-xs uppercase shadow-xl active:scale-95 transition-all italic"
+                      className="md:hidden flex items-center justify-center gap-3 bg-primary text-white py-4 rounded-2xl font-black text-xs uppercase shadow-xl active:scale-95 transition-all italic hover:bg-primary-hover"
                     >
                       <QrCode size={18} /> Pay with Any App
                     </a>
@@ -273,7 +273,7 @@ const CheckoutModal = ({
                 className={`w-full py-5 rounded-[24px] font-black uppercase text-sm shadow-2xl flex items-center justify-center gap-3 transition-all italic tracking-[2px] ${
                   payMethod === 'upi' && !transactionId 
                   ? "bg-gray-100 text-gray-300 cursor-not-allowed" 
-                  : "bg-primary text-white hover:bg-black hover:scale-[1.02] active:scale-[0.98]"
+                  : "bg-primary text-white hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98]"
                 }`}
               >
                 <Send size={20} /> {payMethod === 'upi' ? "Verify & Place Order" : "Place Order & Generate Bill"}

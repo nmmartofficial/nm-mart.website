@@ -178,11 +178,11 @@ const Orders = () => {
   }, [fetchOrders, navigate]);
 
   return (
-    <div className="min-h-screen bg-[#fffaf5] text-black">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 md:px-6 md:py-12">
-        <header className="mb-8 flex flex-col gap-5 border-b border-orange-100 pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <header className="mb-8 flex flex-col gap-5 border-b border-slate-200 pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-2 text-[10px] font-black uppercase tracking-[0.28em] text-primary">Account</p>
             <h1 className="text-4xl font-black uppercase italic tracking-tighter md:text-5xl">My Orders</h1>
@@ -199,7 +199,7 @@ const Orders = () => {
         </header>
 
         {loading && (
-          <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-[28px] border border-orange-100 bg-white shadow-sm">
+          <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-[28px] border border-slate-200 bg-white shadow-sm">
             <Loader2 className="animate-spin text-primary" size={34} aria-hidden="true" />
             <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Loading your orders</p>
           </div>
@@ -215,7 +215,7 @@ const Orders = () => {
             <button
               type="button"
               onClick={() => void fetchOrders()}
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <RefreshCw size={14} /> Try Again
             </button>
@@ -223,7 +223,7 @@ const Orders = () => {
         )}
 
         {!loading && !error && orders.length === 0 && (
-          <section className="flex min-h-[360px] flex-col items-center justify-center rounded-[28px] border border-orange-100 bg-white px-6 py-12 text-center shadow-sm">
+          <section className="flex min-h-[360px] flex-col items-center justify-center rounded-[28px] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
             <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-primary">
               <ShoppingBag size={28} aria-hidden="true" />
             </div>
@@ -231,7 +231,7 @@ const Orders = () => {
             <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">Your completed purchases will appear here after you place an order.</p>
             <Link
               to="/shop"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               Browse the Shop <ArrowRight size={14} />
             </Link>
@@ -254,7 +254,7 @@ const Orders = () => {
               const extraItems = Math.max(0, items.length - visibleItems.length);
 
               return (
-                <article key={orderId || `order-${index}`} className="overflow-hidden rounded-[28px] border border-orange-100 bg-white shadow-sm">
+                <article key={orderId || `order-${index}`} className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
                   <div className="flex flex-col gap-5 border-b border-slate-100 p-5 md:flex-row md:items-start md:justify-between md:p-7">
                     <div className="min-w-0">
                       {orderId && (
@@ -330,7 +330,7 @@ const Orders = () => {
                       <div className="flex flex-wrap items-center gap-5">
                         <Link
                           to={`/orders/${encodeURIComponent(orderId)}`}
-                          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-primary transition hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-primary transition hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                         >
                           View details <ArrowRight size={14} />
                         </Link>

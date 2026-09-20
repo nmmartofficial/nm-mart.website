@@ -16,6 +16,8 @@ const sortOptions = [
   { value: "discount-desc", label: "Biggest Discounts" },
 ] as const;
 
+const MAX_RENDERED_PRODUCTS = 500;
+
 const getNumericPrice = (value: unknown): number => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -122,7 +124,7 @@ const ShopPage = () => {
     setSearchParams("", { replace: true });
   };
 
-  const displayedProducts = filteredProducts;
+  const displayedProducts = filteredProducts.slice(0, MAX_RENDERED_PRODUCTS);
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -300,6 +302,12 @@ const ShopPage = () => {
             {statusMessage}
           </div>
         </div>
+
+        {filteredProducts.length > MAX_RENDERED_PRODUCTS && (
+          <div className="mb-5 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-primary">
+            Showing the first {MAX_RENDERED_PRODUCTS} matching products for faster browsing. Use filters to narrow down results.
+          </div>
+        )}
 
         <div className="mb-6 flex items-center justify-between gap-3 md:hidden">
           <button

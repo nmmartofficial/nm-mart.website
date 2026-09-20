@@ -116,16 +116,16 @@ const OrderTracker = () => {
   const orderTotal = getOrderTotal(order || {});
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-black flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <Header />
 
       <main className="flex-1 py-12 px-4">
         <div className="mx-auto max-w-4xl space-y-8">
           <div className="space-y-4 text-center">
-            <h1 className="text-4xl font-black uppercase italic tracking-tighter text-black md:text-5xl">
+            <h1 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 md:text-5xl">
               Track Your <span className="text-primary">Order</span>
             </h1>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-gray-400 italic">
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400 italic">
               {SLOGAN}
             </p>
           </div>
@@ -147,7 +147,7 @@ const OrderTracker = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-primary p-3 text-white shadow-sm transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+                className="rounded-xl bg-primary p-3 text-white shadow-sm transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
                 aria-label="Track order"
               >
                 {loading ? <Loader2 className="animate-spin" size={20} /> : <Search size={20} />}
@@ -165,15 +165,15 @@ const OrderTracker = () => {
           )}
 
           {order && status && (
-            <article className="animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden rounded-[32px] border border-gray-100 bg-white shadow-xl">
-              <header className="flex flex-col gap-5 border-b border-gray-100 bg-orange-50/40 p-6 md:flex-row md:items-start md:justify-between md:p-10">
+            <article className="animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xl">
+              <header className="flex flex-col gap-5 border-b border-slate-200 bg-primary/5 p-6 md:flex-row md:items-start md:justify-between md:p-10">
                 <div>
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Order status</p>
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Order status</p>
                   <div className="flex items-center gap-3">
                     <div className={`rounded-2xl border p-3 ${status.className}`}><status.icon size={24} aria-hidden="true" /></div>
                     <div>
-                      <h2 className="text-2xl font-black uppercase italic tracking-tighter text-black">{status.label}</h2>
-                      <p className="mt-1 text-sm text-gray-500">{status.description}</p>
+                      <h2 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900">{status.label}</h2>
+                      <p className="mt-1 text-sm text-slate-500">{status.description}</p>
                     </div>
                   </div>
                 </div>

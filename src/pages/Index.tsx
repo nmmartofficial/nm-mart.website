@@ -1641,7 +1641,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
                   type="button"
                   onClick={submitQuickEdit}
                   disabled={editLoading}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-xs font-black uppercase italic tracking-widest text-white shadow-lg transition-all hover:bg-black active:scale-95 disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-xs font-black uppercase italic tracking-widest text-white shadow-lg transition-all hover:bg-primary-hover active:scale-95 disabled:opacity-60"
                 >
                   {editLoading ? <LoaderIcon className="animate-spin" size={18} /> : <Save size={18} />}
                   Update Instantly

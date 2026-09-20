@@ -1,112 +1,98 @@
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
-import { ShieldCheck, Lock, Eye, FileText, Globe, Scale, Mail } from "lucide-react";
+import { Eye, FileText, Lock, Mail, Scale, ShieldCheck } from "lucide-react";
 
 const Privacy = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-[#FFFAF5] text-black font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
-      
-      <main className="flex-1 py-20 px-6">
-        <div className="max-w-4xl mx-auto space-y-16">
-          {/* Header */}
-          <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/5 border border-primary/20 rounded-full mb-4 shadow-sm">
-              <ShieldCheck size={14} className="text-primary" />
-              <span className="text-[10px] text-primary font-black uppercase tracking-widest italic">Secure & Transparent</span>
-            </div>
-            <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-black">
-              Privacy <span className="text-primary">Policy</span>
-            </h1>
-            <p className="text-gray-400 font-bold uppercase tracking-[4px] text-[10px]">
-              Last Updated: April 2026
-            </p>
-          </div>
 
-          {/* Content Card */}
-          <div className="bg-white border border-gray-100 p-10 md:p-16 rounded-[50px] shadow-sm space-y-16">
-            
-            <section className="space-y-6">
-              <div className="flex items-center gap-4 text-primary">
-                <div className="p-3 bg-gray-50 rounded-2xl shadow-sm">
-                  <FileText size={24} />
-                </div>
-                <h3 className="text-2xl font-black italic uppercase tracking-tight text-black">Introduction</h3>
+      <main className="nm-page-shell py-6 md:py-10">
+        <header className="mb-6 text-center md:mb-8">
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+            <ShieldCheck size={14} /> Secure &amp; Transparent
+          </div>
+          <h1 className="mt-4 text-3xl font-black uppercase tracking-[-0.06em] text-slate-900 md:text-5xl">
+            Privacy Policy
+          </h1>
+          <p className="mt-3 text-sm font-medium uppercase tracking-[0.15em] text-slate-500">Last updated: April 2026</p>
+        </header>
+
+        <article className="nm-card p-5 md:p-8 lg:p-10">
+          <div className="space-y-8">
+            <section className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-primary"><FileText size={18} /></div>
+                <h2 className="nm-heading text-xl md:text-2xl">Introduction</h2>
               </div>
-              <p className="text-gray-500 leading-relaxed text-lg font-medium uppercase tracking-widest text-[12px]">
+              <p className="text-sm leading-7 text-slate-600 md:text-[15px]">
                 Welcome to NM Mart. We value your trust and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and share your data when you visit our store or use our digital services in Manjhanpur.
               </p>
             </section>
 
-            <section className="space-y-8">
-              <div className="flex items-center gap-4 text-primary">
-                <div className="p-3 bg-gray-50 rounded-2xl shadow-sm">
-                  <Eye size={24} />
-                </div>
-                <h3 className="text-2xl font-black italic uppercase tracking-tight text-black">Information Collection</h3>
+            <section className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-primary"><Eye size={18} /></div>
+                <h2 className="nm-heading text-xl md:text-2xl">Information Collection</h2>
               </div>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 p-8 rounded-[30px] border border-gray-100 space-y-4 shadow-sm">
-                  <h4 className="font-black uppercase text-xs tracking-widest text-primary">Personal Data</h4>
-                  <p className="text-gray-500 text-sm leading-relaxed font-bold">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Personal Data</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
                     We collect your name, mobile number, and delivery address to process your wholesale orders and ensure timely delivery.
                   </p>
                 </div>
-                <div className="bg-gray-50 p-8 rounded-[30px] border border-gray-100 space-y-4 shadow-sm">
-                  <h4 className="font-black uppercase text-xs tracking-widest text-primary">Transaction Info</h4>
-                  <p className="text-gray-500 text-sm leading-relaxed font-bold">
-                    Details of your purchases, payment methods (COD/UPI), and loyalty point balances are securely stored in our system.
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Transaction Info</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Details of your purchases, payment methods, and loyalty point balances are securely stored in our system.
                   </p>
                 </div>
               </div>
             </section>
 
-            <section className="space-y-6">
-              <div className="flex items-center gap-4 text-primary">
-                <div className="p-3 bg-gray-50 rounded-2xl shadow-sm">
-                  <Lock size={24} />
-                </div>
-                <h3 className="text-2xl font-black italic uppercase tracking-tight text-black">Data Security</h3>
+            <section className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-primary"><Lock size={18} /></div>
+                <h2 className="nm-heading text-xl md:text-2xl">Data Security</h2>
               </div>
-              <p className="text-gray-500 leading-relaxed text-lg font-medium uppercase tracking-widest text-[12px]">
-                Your data is stored using industry-standard encryption provided by Supabase. We do not sell your personal information to third parties. Access to customer records is strictly limited to authorized personnel via our secure Admin Terminal.
+              <p className="text-sm leading-7 text-slate-600 md:text-[15px]">
+                Your data is stored using industry-standard security controls. We do not sell personal information to third parties and access is limited to authorized personnel via secure internal systems.
               </p>
             </section>
 
-            <section className="space-y-6">
-              <div className="flex items-center gap-4 text-primary">
-                <div className="p-3 bg-gray-50 rounded-2xl shadow-sm">
-                  <Scale size={24} />
-                </div>
-                <h3 className="text-2xl font-black italic uppercase tracking-tight text-black">Your Rights</h3>
+            <section className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-primary"><Scale size={18} /></div>
+                <h2 className="nm-heading text-xl md:text-2xl">Your Rights</h2>
               </div>
-              <ul className="space-y-4">
-                <li className="flex items-center gap-4 text-gray-500 font-bold uppercase text-[10px] tracking-widest">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+              <ul className="space-y-3 text-sm text-slate-600">
+                <li className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                  <span className="h-2 w-2 rounded-full bg-primary" />
                   Right to access your order history
                 </li>
-                <li className="flex items-center gap-4 text-gray-500 font-bold uppercase text-[10px] tracking-widest">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                <li className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                  <span className="h-2 w-2 rounded-full bg-primary" />
                   Right to correct your delivery details
                 </li>
-                <li className="flex items-center gap-4 text-gray-500 font-bold uppercase text-[10px] tracking-widest">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                  Right to request account deletion
+                <li className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                  <span className="h-2 w-2 rounded-full bg-primary" />
+                  Right to request account support and account-related updates
                 </li>
               </ul>
             </section>
 
-            <div className="pt-16 border-t border-gray-100 text-center space-y-6">
-              <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[3px]">Questions about your privacy?</p>
-              <a 
-                href="mailto:support@nmmart.in" 
-                className="bg-primary text-white px-10 py-4 rounded-2xl font-black uppercase italic text-xs hover:bg-black transition-all shadow-sm flex items-center gap-3 w-fit mx-auto"
+            <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-center md:p-5">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Questions about your privacy?</p>
+              <a
+                href="mailto:support@nmmart.in"
+                className="nm-btn-primary mx-auto mt-4"
               >
-                <Mail size={16} /> Contact Support
+                <Mail size={16} className="mr-2" /> Contact Support
               </a>
             </div>
           </div>
-        </div>
+        </article>
       </main>
 
       <Footer />

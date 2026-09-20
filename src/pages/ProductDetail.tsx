@@ -125,23 +125,23 @@ const ProductDetail = () => {
 
   if (fetching || (productsLoading && !product)) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-primary" size={40} />
-        <p className="text-gray-400 font-black uppercase tracking-[4px] text-xs italic">Syncing NM Database...</p>
+        <p className="text-slate-400 font-black uppercase tracking-[4px] text-xs italic">Syncing NM Database...</p>
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center gap-6 px-4 text-center">
-        <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center text-gray-200">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6 px-4 text-center">
+        <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center text-slate-300">
           <Package size={40} />
         </div>
-        <p className="text-xl font-black text-black uppercase tracking-tighter italic">Product not found</p>
+        <p className="text-xl font-black text-slate-900 uppercase tracking-tighter italic">Product not found</p>
         <button 
           onClick={() => navigate("/")} 
-          className="bg-primary text-white px-10 py-4 rounded-2xl font-black uppercase italic text-sm hover:bg-black transition-all shadow-sm"
+          className="bg-primary text-white px-10 py-4 rounded-2xl font-black uppercase italic text-sm hover:bg-primary-hover transition-all shadow-sm"
         >
           ← Back to Store
         </button>
@@ -150,7 +150,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-black font-sans flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       <Header />
 
       <main className="flex-1 py-6 md:py-12 px-4 md:px-6">
@@ -282,7 +282,7 @@ const ProductDetail = () => {
                       disabled={adding || !product.stock || product.stock <= 0}
                       className={`w-full flex items-center justify-center gap-3 py-5 rounded-2xl font-black uppercase tracking-[2px] shadow-sm transition-all active:scale-[0.98] italic text-sm ${
                         product.stock && product.stock > 0 
-                        ? "bg-primary text-white hover:bg-black" 
+                        ? "bg-primary text-white hover:bg-primary-hover"
                         : "bg-muted text-muted-foreground cursor-not-allowed"
                       }`}
                     >

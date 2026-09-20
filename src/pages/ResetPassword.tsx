@@ -82,7 +82,7 @@ const ResetPassword = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
+      <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
         <Header />
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <div className="w-full max-w-[400px] bg-white p-8 rounded-2xl border border-gray-200 shadow-sm text-center space-y-6">
@@ -90,13 +90,13 @@ const ResetPassword = () => {
               <CheckCircle2 size={40} />
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-black tracking-tight text-black">Password updated</h2>
+              <h2 className="text-2xl font-black tracking-tight text-slate-900">Password updated</h2>
               <p className="text-sm text-gray-600">Your new password is active. You can now sign in with it.</p>
             </div>
             <button
               type="button"
               onClick={() => navigate("/login")}
-              className="w-full bg-black text-white py-3 rounded-md font-bold hover:bg-gray-900 transition-all"
+              className="w-full bg-primary text-white py-3 rounded-md font-bold hover:bg-primary-hover transition-all"
             >
               Go to Login
             </button>
@@ -109,11 +109,11 @@ const ResetPassword = () => {
 
   if (isCheckingSession) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
+      <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
         <Header />
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="w-full max-w-[380px] bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
-            <Loader2 className="mx-auto animate-spin text-black" size={32} />
+            <Loader2 className="mx-auto animate-spin text-primary" size={32} />
             <p className="mt-4 text-sm text-gray-600">Checking your secure reset link...</p>
           </div>
         </div>
@@ -124,7 +124,7 @@ const ResetPassword = () => {
 
   if (!sessionReady) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
+      <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
         <Header />
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <div className="w-full max-w-[380px] bg-white p-8 rounded-2xl border border-gray-200 shadow-sm space-y-5">
@@ -132,13 +132,13 @@ const ResetPassword = () => {
               <ShieldAlert size={40} />
             </div>
             <div className="space-y-2 text-center">
-              <h2 className="text-2xl font-black tracking-tight text-black">Reset link expired</h2>
+              <h2 className="text-2xl font-black tracking-tight text-slate-900">Reset link expired</h2>
               <p className="text-sm text-gray-600">This recovery link is invalid or has already expired. Please request a new password reset email.</p>
             </div>
             <button
               type="button"
               onClick={() => navigate("/login")}
-              className="w-full bg-black text-white py-3 rounded-md font-bold hover:bg-gray-900 transition-all"
+              className="w-full bg-primary text-white py-3 rounded-md font-bold hover:bg-primary-hover transition-all"
             >
               Back to Login
             </button>
@@ -150,7 +150,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-[#111] flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <Header />
 
       <div className="flex-1 flex flex-col items-center py-16 px-4">
@@ -207,7 +207,7 @@ const ResetPassword = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-black text-white py-3 rounded-md font-bold hover:bg-gray-900 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-primary text-white py-3 rounded-md font-bold hover:bg-primary-hover transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {loading ? <Loader2 className="animate-spin" size={18} /> : "Update Password"}
               </button>

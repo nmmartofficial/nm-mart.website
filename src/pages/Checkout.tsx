@@ -211,7 +211,7 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-black flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <Header />
       
       <main className="flex-1 py-12 px-4 md:px-6">
@@ -225,7 +225,7 @@ const Checkout = () => {
               >
                 <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Cart
               </button>
-              <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-black leading-none">
+              <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">
                 Secure <span className="text-primary">Checkout</span>
               </h1>
               <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] italic">
@@ -433,7 +433,7 @@ const Checkout = () => {
                     type="submit"
                     disabled={loading}
                     aria-busy={loading}
-                    className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] hover:bg-black transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 italic mt-8 active:scale-[0.98]"
+                    className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 italic mt-8 active:scale-[0.98]"
                   >
                     {loading ? <><Loader2 className="animate-spin" size={20} /> Processing order...</> : (
                       <>

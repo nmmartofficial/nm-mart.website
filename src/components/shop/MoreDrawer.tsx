@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronRight,
   CircleHelp,
@@ -45,7 +45,7 @@ const sections = [
     title: "Settings & Legal",
     items: [
       { label: "Settings", icon: Settings },
-      { label: "Terms & Conditions", icon: ShieldCheck },
+      { label: "Terms & Conditions", icon: ShieldCheck, to: "/terms" },
       { label: "Privacy Policy", icon: ShieldCheck, to: "/privacy" },
     ],
   },
@@ -58,6 +58,7 @@ interface MoreDrawerProps {
 
 export default function MoreDrawer({ open, onClose }: MoreDrawerProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<SupabaseUser | null>(null);
 
   useEffect(() => {
@@ -130,22 +131,36 @@ export default function MoreDrawer({ open, onClose }: MoreDrawerProps) {
                 <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                   {section.items.map((item) => {
                     const Icon = item.icon;
+                    const isActive = Boolean(item.to && location.pathname === item.to);
                     const content = (
                       <>
                         <span className="flex min-w-0 items-center gap-3">
-                          <Icon size={17} className="shrink-0 text-primary" />
-                          <span className="truncate text-[13px] font-bold text-slate-800">{item.label}</span>
+                          <Icon size={17} className={`shrink-0 ${isActive ? "text-slate-900" : "text-primary"}`} />
+                          <span className={`truncate text-[13px] font-bold ${isActive ? "text-slate-900" : "text-slate-800"}`}>{item.label}</span>
                         </span>
                         <ChevronRight size={15} className="shrink-0 text-slate-400" />
                       </>
                     );
 
                     return item.to ? (
-                      <Link key={item.label} to={item.to} onClick={onClose} className="flex min-h-12 items-center justify-between gap-3 border-b border-slate-100 px-3.5 last:border-0 hover:bg-slate-50">
+                      <Link
+                        key={item.label}
+                        to={item.to}
+                        onClick={onClose}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`flex min-h-12 items-center justify-between gap-3 border-b border-slate-100 px-3.5 last:border-0 transition-all duration-200 ${
+                          isActive ? "bg-slate-100" : "hover:bg-slate-50 active:bg-slate-100"
+                        }`}
+                      >
                         {content}
                       </Link>
                     ) : (
-                      <button key={item.label} type="button" onClick={() => showUnavailable(item.label)} className="flex min-h-12 w-full items-center justify-between gap-3 border-b border-slate-100 px-3.5 text-left last:border-0 hover:bg-slate-50">
+                      <button
+                        key={item.label}
+                        type="button"
+                        onClick={() => showUnavailable(item.label)}
+                        className="flex min-h-12 w-full items-center justify-between gap-3 border-b border-slate-100 px-3.5 text-left last:border-0 transition-all duration-200 hover:bg-slate-50 active:bg-slate-100"
+                      >
                         {content}
                       </button>
                     );
@@ -157,12 +172,12 @@ export default function MoreDrawer({ open, onClose }: MoreDrawerProps) {
             <section className="pb-1">
               <h3 className="mb-1.5 px-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Account</h3>
               {user ? (
-                <button type="button" onClick={handleLogout} className="flex min-h-12 w-full items-center justify-between rounded-xl border border-red-100 bg-white px-3.5 text-left text-red-600 hover:bg-red-50">
+                <button type="button" onClick={handleLogout} className="flex min-h-12 w-full items-center justify-between rounded-xl border border-red-100 bg-white px-3.5 text-left text-red-600 hover:bg-red-50 active:bg-red-100">
                   <span className="flex items-center gap-3 text-[13px] font-bold"><LogOut size={17} /> Logout</span>
                   <ChevronRight size={15} className="text-red-300" />
                 </button>
               ) : (
-                <Link to="/login" onClick={onClose} className="flex min-h-12 items-center justify-between rounded-xl border border-blue-100 bg-white px-3.5 text-blue-700 hover:bg-blue-50">
+                <Link to="/login" onClick={onClose} className="flex min-h-12 items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-3.5 text-primary hover:bg-primary/10 active:bg-primary/15">
                   <span className="flex items-center gap-3 text-[13px] font-bold"><LogIn size={17} /> Sign in</span>
                   <ChevronRight size={15} className="text-blue-300" />
                 </Link>

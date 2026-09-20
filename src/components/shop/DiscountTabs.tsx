@@ -114,7 +114,7 @@ const DiscountTabs = ({
                 {isAdminMode && onQuickEdit && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); onQuickEdit(p); }}
-                    className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-black transition-all shadow-md active:scale-95"
+                    className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-emerald-600 transition-all shadow-md active:scale-95"
                     title="Quick Edit Product"
                   >
                     <Edit3 size={12} strokeWidth={2.5} />
