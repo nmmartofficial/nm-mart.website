@@ -16,11 +16,9 @@ export default function Addresses() {
     addressType: "Home",
     fullName: "",
     mobileNumber: "",
-    house: "",
     street: "",
     landmark: "",
     city: "",
-    state: "",
     pincode: "",
     is_default: false,
   });
@@ -43,11 +41,10 @@ export default function Addresses() {
 
     const fullName = form.fullName.trim();
     const mobileNumber = form.mobileNumber.trim();
-    const houseLine = form.house.trim();
     const streetLine = form.street.trim();
     const city = form.city.trim();
-    const state = form.state.trim();
     const pincode = form.pincode.trim();
+    const state = "Uttar Pradesh";
 
     if (!fullName) {
       toast.error("Enter full name for the delivery address.");
@@ -59,8 +56,8 @@ export default function Addresses() {
       return;
     }
 
-    if (!houseLine || !streetLine || !city || !state || !/^\d{6}$/.test(pincode)) {
-      toast.error("Fill in the full address, city, state, and valid 6-digit pincode.");
+    if (!streetLine || !city || !/^\d{6}$/.test(pincode)) {
+      toast.error("Fill in the address, city, and valid 6-digit pincode.");
       return;
     }
 
@@ -68,7 +65,7 @@ export default function Addresses() {
     try {
       const payload = {
         label: form.addressType || "Home",
-        address: [houseLine, streetLine].filter(Boolean).join(", "),
+        address: streetLine,
         landmark: form.landmark.trim(),
         city,
         state,
@@ -84,11 +81,9 @@ export default function Addresses() {
         addressType: "Home",
         fullName: profileName || "",
         mobileNumber: "",
-        house: "",
         street: "",
         landmark: "",
         city: "",
-        state: "",
         pincode: "",
         is_default: false,
       });
@@ -105,17 +100,14 @@ export default function Addresses() {
   const startEditing = (address: (typeof addresses)[number]) => {
     setEditingId(address.id);
     setShowForm(true);
-    const addressParts = (address.address || "").split(",").map((part) => part.trim());
     setForm({
       label: address.label,
       addressType: address.label || "Home",
       fullName: profileName || "Rahul Kumar",
       mobileNumber: "",
-      house: addressParts[0] || "",
-      street: addressParts.slice(1).join(", ") || "",
+      street: address.address || "",
       landmark: address.landmark || "",
       city: address.city || "",
-      state: address.state || "",
       pincode: address.pincode || "",
       is_default: !!address.is_default,
     });
@@ -129,11 +121,9 @@ export default function Addresses() {
       addressType: "Home",
       fullName: profileName || "",
       mobileNumber: "",
-      house: "",
       street: "",
       landmark: "",
       city: "",
-      state: "",
       pincode: "",
       is_default: false,
     });
@@ -155,11 +145,9 @@ export default function Addresses() {
       addressType: "Home",
       fullName: profileName || "",
       mobileNumber: "",
-      house: "",
       street: "",
       landmark: "",
       city: "",
-      state: "",
       pincode: "",
       is_default: false,
     });
@@ -332,17 +320,6 @@ export default function Addresses() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">House / Flat / Building</label>
-                  <input
-                    value={form.house}
-                    onChange={(event) => update("house", event.target.value)}
-                    placeholder="House / Flat / Building"
-                    disabled={saving || (addresses.length >= 5 && !editingId)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none transition focus:border-primary disabled:opacity-50"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
                   <label className="mb-2 block text-sm font-semibold text-slate-700">Street / Area</label>
                   <input
                     value={form.street}
@@ -370,17 +347,6 @@ export default function Addresses() {
                     value={form.city}
                     onChange={(event) => update("city", event.target.value)}
                     placeholder="City"
-                    disabled={saving || (addresses.length >= 5 && !editingId)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none transition focus:border-primary disabled:opacity-50"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">State</label>
-                  <input
-                    value={form.state}
-                    onChange={(event) => update("state", event.target.value)}
-                    placeholder="State"
                     disabled={saving || (addresses.length >= 5 && !editingId)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none transition focus:border-primary disabled:opacity-50"
                   />
