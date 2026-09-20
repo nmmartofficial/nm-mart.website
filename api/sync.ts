@@ -77,10 +77,7 @@ export default async function handler(req: any, res: any) {
 
       if (error) {
         console.error("Supabase UPSERT Error:", error.message);
-        return res.status(500).json({ 
-          success: false, 
-          error: 'Product sync failed.'
-        });
+        return res.status(500).json({ success: false, error: 'Product sync failed.' });
       }
 
       console.log(`Sync complete: ${sanitizedData.length} products processed successfully.`);

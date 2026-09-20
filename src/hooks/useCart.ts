@@ -1,6 +1,8 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Product, CartItem } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
+import { fetchCatalogProductsByIds } from "@/hooks/useProductCatalog";
+import { TABLES } from "@/lib/supabase/schema";
 
 const GUEST_CART_KEY = "nm_mart_cart_guest";
 
@@ -50,6 +52,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>(() => readCart(GUEST_CART_KEY));
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
+  const [cartHydrated, setCartHydrated] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -62,15 +65,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!nextUserId) {
         setUserId(null);
         setCart(readCart(GUEST_CART_KEY));
+        setCartHydrated(true);
         return;
       }
 
-      const savedCart = readCart(`nm_mart_cart_${nextUserId}`);
       const guestCart = readCart(GUEST_CART_KEY);
-      const mergedCart = mergeCarts(savedCart, guestCart);
-      setUserId(nextUserId);
-      setCart(mergedCart);
-      if (guestCart.length > 0) window.localStorage.removeItem(GUEST_CART_KEY);
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.cartItems)
+          .select("product_id, quantity")
+          .eq("user_id", nextUserId);
+        if (error) throw error;
+
+        const productIds = (data || []).map((item) => Number(item.product_id)).filter((id) => Number.isInteger(id) && id > 0);
+        const products = await fetchCatalogProductsByIds(productIds);
+        if (!mounted) return;
+        const remoteCart = products.map((product) => {
+          const row = (data || []).find((item) => Number(item.product_id) === product.product_id);
+          return { ...product, qty: Math.max(1, Number(row?.quantity || 1)) };
+        });
+        setCart(mergeCarts(remoteCart, guestCart));
+        if (guestCart.length > 0) window.localStorage.removeItem(GUEST_CART_KEY);
+      } catch (error) {
+        console.error("Unable to load Supabase cart; using local account cart.", error);
+        setCart(mergeCarts(readCart(`nm_mart_cart_${nextUserId}`), guestCart));
+      } finally {
+        if (mounted) {
+          setUserId(nextUserId);
+          setCartHydrated(true);
+        }
+      }
     };
 
     void loadUserCart();
@@ -84,9 +108,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const key = userId ? `nm_mart_cart_${userId}` : GUEST_CART_KEY;
-    if (userId !== undefined) window.localStorage.setItem(key, JSON.stringify(cart));
-  }, [cart, userId]);
+    if (userId === undefined || !cartHydrated) return;
+    if (!userId) {
+      window.localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+      return;
+    }
+
+    window.localStorage.setItem(`nm_mart_cart_${userId}`, JSON.stringify(cart));
+    const timer = window.setTimeout(async () => {
+      try {
+        const { error: deleteError } = await supabase.from(TABLES.cartItems).delete().eq("user_id", userId);
+        if (deleteError) throw deleteError;
+        const rows = cart
+          .filter((item) => Number.isInteger(Number(item.product_id)) && Number(item.product_id) > 0 && item.qty > 0)
+          .map((item) => ({ user_id: userId, product_id: Number(item.product_id), quantity: item.qty }));
+        if (rows.length === 0) return;
+        const { error: insertError } = await supabase.from(TABLES.cartItems).insert(rows);
+        if (insertError) throw insertError;
+      } catch (error) {
+        console.error("Unable to sync cart with Supabase.", error);
+      }
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [cart, cartHydrated, userId]);
 
   const isSameProduct = (cartItem: CartItem, product: Product) => {
     return sameProduct(cartItem, product);

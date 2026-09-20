@@ -1,3 +1,6 @@
+import { supabase } from "./client";
+import { TABLES } from "./schema";
+
 export type ProfileRecord = {
   id: string;
   full_name?: string | null;
@@ -15,12 +18,18 @@ export type ProfileRecord = {
   updated_at?: string | null;
 };
 
-export async function getProfileById(_userId: string): Promise<ProfileRecord | null> {
-  // Final Supabase wiring placeholder.
-  // Use a single centralized module once the final migration is executed.
-  return null;
+export async function getProfileById(userId: string): Promise<ProfileRecord | null> {
+  const { data, error } = await supabase.from(TABLES.profiles).select("*").eq("id", userId).maybeSingle();
+  if (error) throw error;
+  return data as ProfileRecord | null;
 }
 
-export async function updateProfile(_userId: string, _changes: Partial<ProfileRecord>): Promise<ProfileRecord | null> {
-  return null;
+export async function updateProfile(userId: string, changes: Partial<ProfileRecord>): Promise<ProfileRecord | null> {
+  const { data, error } = await supabase
+    .from(TABLES.profiles)
+    .upsert({ id: userId, ...changes, updated_at: new Date().toISOString() })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as ProfileRecord;
 }

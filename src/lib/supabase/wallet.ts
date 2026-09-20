@@ -1,3 +1,6 @@
+import { supabase } from "./client";
+import { TABLES } from "./schema";
+
 export type WalletRecord = {
   id: number;
   user_id: string;
@@ -21,11 +24,18 @@ export type WalletTransaction = {
   created_at?: string | null;
 };
 
-export async function getWallet(_userId: string): Promise<WalletRecord | null> {
-  // Final Supabase wiring placeholder.
-  return null;
+export async function getWallet(userId: string): Promise<WalletRecord | null> {
+  const { data, error } = await supabase.from(TABLES.wallets).select("*").eq("user_id", userId).maybeSingle();
+  if (error) throw error;
+  return data as WalletRecord | null;
 }
 
-export async function getWalletTransactions(_userId: string): Promise<WalletTransaction[]> {
-  return [];
+export async function getWalletTransactions(userId: string): Promise<WalletTransaction[]> {
+  const { data, error } = await supabase
+    .from(TABLES.walletTransactions)
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []) as WalletTransaction[];
 }

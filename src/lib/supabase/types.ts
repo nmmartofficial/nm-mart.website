@@ -179,6 +179,47 @@ export type Database = {
         Insert: Partial<Database["public"]["Tables"]["profiles"]["Row"]> & { id: string }
         Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>
       }
+      wallets: {
+        Row: {
+          id: number
+          user_id: string
+          balance: number
+          currency: string
+          status: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: Partial<Database["public"]["Tables"]["wallets"]["Row"]> & { user_id: string }
+        Update: Partial<Database["public"]["Tables"]["wallets"]["Row"]>
+      }
+      cart_items: {
+        Row: {
+          id: number
+          user_id: string
+          product_id: number
+          quantity: number
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: Partial<Database["public"]["Tables"]["cart_items"]["Row"]> & { user_id: string; product_id: number }
+        Update: Partial<Database["public"]["Tables"]["cart_items"]["Row"]>
+      }
+      wallet_transactions: {
+        Row: {
+          id: number
+          wallet_id: number
+          user_id: string
+          entry_type: string
+          amount: number
+          currency: string
+          reference_type: string | null
+          reference_id: string | null
+          reason: string | null
+          created_at: string | null
+        }
+        Insert: Partial<Database["public"]["Tables"]["wallet_transactions"]["Row"]>
+        Update: Partial<Database["public"]["Tables"]["wallet_transactions"]["Row"]>
+      }
       categories: {
         Row: {
           id: string

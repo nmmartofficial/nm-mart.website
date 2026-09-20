@@ -1,3 +1,5 @@
+import { supabase } from "./client";
+
 export type OrderRecord = {
   id: string;
   customer_id?: string | null;
@@ -16,8 +18,8 @@ export type OrderRecord = {
   updated_at?: string | null;
 };
 
-export async function placeWebsiteOrder(_payload: Record<string, unknown>): Promise<OrderRecord | null> {
-  // Final Supabase wiring placeholder.
-  // Use the canonical checkout RPC once the final migration is executed.
-  return null;
+export async function placeWebsiteOrder(payload: Record<string, unknown>): Promise<OrderRecord | null> {
+  const { data, error } = await supabase.rpc("place_website_order_atomic", payload);
+  if (error) throw error;
+  return (Array.isArray(data) ? data[0] : data) as OrderRecord | null;
 }

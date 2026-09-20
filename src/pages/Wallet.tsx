@@ -1,18 +1,42 @@
-import { ArrowLeft, Plus, TicketPercent, Wallet as WalletIcon } from "lucide-react";
+import { ArrowLeft, Plus, TicketPercent, Wallet as WalletIcon, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
-
-const walletBalance = 250.0;
-
-const transactions = [
-  { type: "credit", amount: 100, label: "Cashback", order: "Order #NM-XXXX", date: "20 Sep 2026" },
-  { type: "debit", amount: 50, label: "Used on Order", order: "Order #NM-XXXX", date: "19 Sep 2026" },
-  { type: "credit", amount: 200, label: "Refund Credit", order: "Order #NM-XXXX", date: "18 Sep 2026" },
-] as const;
+import { getWallet, getWalletTransactions, type WalletRecord, type WalletTransaction } from "@/lib/supabase/wallet";
+import { supabase } from "@/lib/supabase/client";
 
 export default function WalletPage() {
   const navigate = useNavigate();
+  const [wallet, setWallet] = useState<WalletRecord | null>(null);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadWallet = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        if (mounted) setLoading(false);
+        return;
+      }
+      try {
+        const [walletData, transactionData] = await Promise.all([getWallet(user.id), getWalletTransactions(user.id)]);
+        if (mounted) {
+          setWallet(walletData);
+          setTransactions(transactionData);
+        }
+      } catch (error) {
+        console.error("Unable to load wallet from Supabase.", error);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    void loadWallet();
+    return () => { mounted = false; };
+  }, []);
+
+  const walletBalance = Number(wallet?.balance ?? 0);
   const hasBalance = walletBalance > 0;
 
   return (
@@ -85,18 +109,22 @@ export default function WalletPage() {
               </div>
 
               <div className="space-y-3">
-                {transactions.map((item) => (
-                  <div key={`${item.label}-${item.date}`} className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8 text-slate-400"><Loader2 className="animate-spin" size={20} /></div>
+                ) : transactions.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-slate-500">No wallet activity yet.</p>
+                ) : transactions.map((item) => (
+                  <div key={item.id} className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <span className={`text-lg font-black ${item.type === "credit" ? "text-emerald-600" : "text-slate-700"}`}>
-                        {item.type === "credit" ? "+" : "-"} ₹{item.amount}
+                      <span className={`text-lg font-black ${item.entry_type === "debit" ? "text-slate-700" : "text-emerald-600"}`}>
+                        {item.entry_type === "debit" ? "-" : "+"} ₹{Number(item.amount).toFixed(2)}
                       </span>
                     </div>
 
                     <div className="flex-1 text-left">
-                      <p className="text-sm font-semibold text-slate-800">{item.label}</p>
-                      <p className="text-xs text-slate-500">{item.order}</p>
-                      <p className="mt-1 text-[11px] text-slate-400">{item.date}</p>
+                      <p className="text-sm font-semibold text-slate-800">{item.reason || item.entry_type}</p>
+                      <p className="text-xs text-slate-500">{item.reference_id || "Wallet transaction"}</p>
+                      <p className="mt-1 text-[11px] text-slate-400">{item.created_at ? new Date(item.created_at).toLocaleDateString() : ""}</p>
                     </div>
                   </div>
                 ))}

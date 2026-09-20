@@ -54,7 +54,8 @@ const DeliveryDashboard = () => {
       toast.error("Invalid admin credentials.");
       return;
     }
-    if (!(await isActiveAdminUser(supabase, data.user.id))) {
+    const activeAdmin = await isActiveAdminUser(supabase, data.user.id);
+    if (!activeAdmin) {
       await supabase.auth.signOut();
       toast.error("This account is not authorized for delivery administration.");
       return;
@@ -116,7 +117,13 @@ const DeliveryDashboard = () => {
             <div className="space-y-6 text-left">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Admin Email</label>
-                <input type="email" placeholder="admin@example.com" className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-4 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input
+                  type="email"
+                  placeholder="admin@example.com"
+                  className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-4 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-[2px] ml-1">Admin Password</label>

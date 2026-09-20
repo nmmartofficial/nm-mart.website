@@ -14,6 +14,9 @@ export const TABLES = {
   wishlistItems: "wishlist_items",
   storeAssets: "store_assets",
   customerAddresses: "customer_addresses",
+  wallets: "wallets",
+  walletTransactions: "wallet_transactions",
+  cartItems: "cart_items",
 } as const;
 
 /** Alias of Tables<"products"> from types.ts — always in sync with Supabase schema generation. */
@@ -27,6 +30,10 @@ export type DbCategoryRow = Tables<"categories">;
 
 /** Alias of Tables<"profiles"> from types.ts. */
 export type DbProfileRow = Tables<"profiles">;
+
+/** Alias of Tables<"cart_items"> from types.ts. */
+export type DbCartItemRow = Tables<"cart_items">;
+
 
 export function getProductBarcode(row: Partial<DbProductRow> | null | undefined): string {
   return String(row?.barcode ?? "").trim();
