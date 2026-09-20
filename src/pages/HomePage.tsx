@@ -257,10 +257,11 @@ export default function HomePage() {
     <div className="min-h-screen max-w-[100vw] overflow-x-clip bg-[#dfeefd] text-slate-900">
       <Header />
 
-      <main className="mx-auto w-full max-w-[100vw] overflow-x-clip px-3 py-2 md:px-3 lg:py-8">
-        <section className="mb-2 md:mb-4">
-          <HeroBanner banners={banners} loading={loadingBanners} />
-        </section>
+      <section className="w-full relative z-0">
+        <HeroBanner banners={banners} loading={loadingBanners} />
+      </section>
+
+      <main className="mx-auto w-full max-w-7xl overflow-x-clip px-3 pt-0 pb-2 md:px-6 lg:pt-0 lg:pb-8">
 
         <section id="categories" className="mb-3 rounded-[18px] border border-[#d7ebff] bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
           <div className="mb-2 flex items-end justify-between gap-3 md:mb-5">

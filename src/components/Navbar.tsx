@@ -20,6 +20,7 @@ import {
   Bookmark,
   Bell,
   Heart,
+  Gift
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "../lib/supabase/schema";
@@ -89,9 +90,15 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
 
   const headerStyle = theme.headerStyle || "classic";
 
-  const headerClass = "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#1f5fba] bg-[#0b3b78] text-white shadow-[0_10px_30px_-20px_rgba(11,59,120,0.45)]";
+  const headerClass = isHomeRoute
+    ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#0f4e9a] bg-[#0b3b78] text-white shadow-[0_10px_30px_-20px_rgba(11,59,120,0.45)]"
+    : headerStyle === "modern"
+      ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_12px_35px_-25px_rgba(15,23,42,0.35)]"
+      : headerStyle === "minimal"
+        ? "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden bg-background/60 backdrop-blur-md border-b border-border"
+        : "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(0,0,0,0.18)]";
 
-  const mobileHeaderClass = "bg-[#0b3b78] text-white";
+  const mobileHeaderClass = isHomeRoute ? "bg-[#0b3b78] text-white" : "bg-white text-slate-900";
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -331,7 +338,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
 
       {!isMoreSection && (
         <>
-          <div className={`flex items-center justify-between px-4 py-2.5 md:hidden ${isHomeRoute ? "bg-[#dfeefd]" : "bg-slate-50"}`}>
+          <div className={`flex items-center justify-between px-4 md:hidden ${isHomeRoute ? "bg-[#dfeefd] py-0" : "bg-slate-50 py-2.5"}`}>
             <div className={`flex items-center gap-2 ${isHomeRoute ? "text-[#0b3b78]" : "text-slate-900"}`}>
               <MapPin size={24} className={isHomeRoute ? "text-[#1d5fbf]" : "text-primary"} />
               <span className="text-[16px] font-bold tracking-tight text-slate-950">
@@ -347,8 +354,8 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
             </button>
           </div>
 
-          <div className="hidden border-t border-[#f0e9e2] bg-white md:block">
-            <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 py-2.5">
+          <div className={`hidden border-t border-[#f0e9e2] md:block ${isHomeRoute ? "bg-[#dfeefd]" : "bg-white"}`}>
+            <div className={`mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 ${isHomeRoute ? "py-1" : "py-2.5"}`}>
               <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700">
                 <MapPin size={16} className="shrink-0 text-primary" />
                 <span className="truncate">{resolveDeliveryDisplay()}</span>

@@ -628,15 +628,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
 
     switch (sectionId) {
       case 'hero':
-        return (
-          <div key="hero" className={`${isAdminMode ? 'pt-[116px]' : 'pt-20 md:pt-24'} mb-8 relative z-0`}>
-            <HeroBanner
-              onBannerClick={handleBannerClick}
-              banners={banners}
-              loading={homeLoading}
-            />
-          </div>
-        );
+        return null;
       case 'featured':
         return (featuredProducts?.length || 0) > 0 && (
           <div key="featured" id="featured-deals" className="mb-8 max-w-7xl mx-auto px-4 w-full scroll-mt-32">
@@ -1151,8 +1143,18 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
       )}
       <Navbar theme={theme} />
 
+      {!selectedCat && !selectedBrand && !query && (
+        <div className="w-full relative z-0">
+          <HeroBanner
+            onBannerClick={handleBannerClick}
+            banners={banners}
+            loading={homeLoading}
+          />
+        </div>
+      )}
+
       {/* Search Section - Professional & Prominent */}
-      <div className="sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-4 px-4 shadow-2xl transition-all duration-300 top-[72px]">
+      <div className="sticky z-40 bg-background/80 backdrop-blur-xl border-b border-border py-2 px-4 shadow-2xl transition-all duration-300 top-[72px]">
         <div className="max-w-5xl mx-auto">
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 rounded-3xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
@@ -1218,7 +1220,7 @@ export default function Index({ previewTheme, previewLayout }: IndexProps) {
 
       {/* Quick Action Chips */}
       {!selectedCat && !selectedBrand && !query && (
-        <div className="max-w-7xl mx-auto px-4 pt-4">
+        <div className="max-w-7xl mx-auto px-4 pt-2">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
