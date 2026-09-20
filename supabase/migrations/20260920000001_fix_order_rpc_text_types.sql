@@ -1,41 +1,38 @@
-CREATE OR REPLACE FUNCTION public.place_website_order_atomic(
-    customer_id text,
-    customer_name text,
-    customer_phone text,
-    shipping_address text,
-    landmark text,
-    pincode text,
-    payment_method text,
-    idempotency_key text,
-    items jsonb
-)
-RETURNS TABLE(
-    id text,
-    total numeric,
-    subtotal numeric,
-    status text,
-    payment_status text
-)
-LANGUAGE plpgsql
-AS $function$
+BEGIN;
+
+DO $$
+DECLARE
+  function_definition text;
+  original_definition text;
 BEGIN
-    RETURN QUERY
-    SELECT
-        r.id::text,
-        r.total::numeric,
-        r.subtotal::numeric,
-        r.status::text,
-        r.payment_status::text
-    FROM public.place_website_order_atomic_impl(
-        p_customer_id       => customer_id,
-        p_customer_name     => customer_name,
-        p_customer_phone    => customer_phone,
-        p_shipping_address  => shipping_address,
-        p_landmark          => landmark,
-        p_pincode           => pincode,
-        p_payment_method    => payment_method,
-        p_idempotency_key   => idempotency_key,
-        p_items             => items
-    ) AS r;
-END;
-$function$;
+  SELECT pg_get_functiondef(p.oid)
+  INTO function_definition
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.proname = 'place_website_order_atomic_impl';
+
+  IF function_definition IS NULL THEN
+    RAISE EXCEPTION 'place_website_order_atomic_impl was not found';
+  END IF;
+
+  original_definition := function_definition;
+  function_definition := replace(
+    function_definition,
+    'COALESCE(o.payment_status, ''pending'')',
+    '(COALESCE(o.payment_status, ''pending''))::text'
+  );
+  function_definition := replace(
+    function_definition,
+    'COALESCE(o.status, ''pending'')',
+    '(COALESCE(o.status, ''pending''))::text'
+  );
+
+  IF function_definition = original_definition THEN
+    RAISE EXCEPTION 'Expected order return expressions were not found';
+  END IF;
+
+  EXECUTE function_definition;
+END $$;
+
+COMMIT;
