@@ -125,15 +125,31 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
     if (!data) return;
     setProfileName(data.full_name || "");
 
-    const addrParts: string[] = [];
-    if (data.city) addrParts.push(data.city);
-    else if (data.address) addrParts.push(data.address);
-    if (data.state) addrParts.push(data.state);
-    if (addrParts.length > 0) {
-      setDeliveryAddress(addrParts[0]);
-    } else if (data.pincode) {
-      setDeliveryAddress(String(data.pincode));
-    }
+    const matchedCity = (data.city || "").trim();
+    const matchedPincode = String(data.pincode || "").trim();
+    const rawAddress = (data.address || "").trim();
+
+    const normalizeLocality = (value: string) => {
+      if (!value) return "";
+      const cleaned = value
+        .replace(/\s*,\s*/g, ", ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const parts = cleaned.split(",").map((part) => part.trim()).filter(Boolean);
+      if (parts.length >= 2) return parts[parts.length - 2];
+      return parts[0] || cleaned;
+    };
+
+    const localityFromAddress = normalizeLocality(rawAddress);
+    const localityFromPincode: Record<string, string> = {
+      "212207": "Manjhanpur",
+      "212201": "Bharwari",
+      "212202": "Manjhanpur",
+      "212210": "Manjhanpur",
+    };
+
+    const preferredLocality = matchedCity || localityFromPincode[matchedPincode] || localityFromAddress;
+    setDeliveryAddress(preferredLocality || "");
 
     setWelfareCard(null);
   };
