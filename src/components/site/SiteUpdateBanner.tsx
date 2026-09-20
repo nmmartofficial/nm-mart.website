@@ -20,7 +20,7 @@ export default function SiteUpdateBanner() {
     <div className="relative z-[60] w-full border-b border-[#f0e3d4] bg-[linear-gradient(180deg,#fffaf3_0%,#fffdf9_100%)] text-slate-800 shadow-[0_12px_28px_-26px_rgba(15,23,42,0.4)]">
       <div className="mx-auto max-w-[1500px] px-2.5 py-2 sm:px-3 sm:py-2.5 lg:px-6">
         <div className="flex flex-col items-center justify-center gap-1 text-center">
-          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[9.5px] font-white uppercase tracking-[0.14em] text-[#1f2937] sm:text-[10.5px] lg:text-[11px]">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[9.5px] font-white uppercase tracking-[0.14em] text-white sm:text-[10.5px] lg:text-[11px]">
             <span aria-hidden="true">🚧</span>
             <span>{announcementConfig.englishTitle}</span>
           </div>
