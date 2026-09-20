@@ -27,12 +27,32 @@ BEGIN
     'COALESCE(o.status, ''pending'')',
     '(COALESCE(o.status, ''pending''))::text'
   );
+  function_definition := regexp_replace(
+    function_definition,
+    'p_landmark,\s+p_pincode,\s+order_number',
+    'p_landmark, p_pincode, tenant_id, company_code, order_number',
+    'g'
+  );
+  function_definition := regexp_replace(
+    function_definition,
+    'p_landmark,\s+p_pincode,\s+''NM-''',
+    'p_landmark, p_pincode, 1, ''NMM001'', ''NM-''',
+    'g'
+  );
 
   IF function_definition = original_definition THEN
-    RAISE EXCEPTION 'Expected order return expressions were not found';
+    RAISE EXCEPTION 'Expected order function expressions were not found';
   END IF;
 
   EXECUTE function_definition;
 END $$;
+
+UPDATE public.orders
+SET tenant_id = 1,
+    company_code = 'NMM001',
+    updated_at = NOW()
+WHERE tenant_id IS NULL
+  AND company_code IS NULL
+  AND order_number LIKE 'NM-%';
 
 COMMIT;
