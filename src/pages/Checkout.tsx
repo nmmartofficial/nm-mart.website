@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
+  import { 
   ArrowLeft, MapPin, Phone, CreditCard, Banknote,
   Loader2, ShoppingBag,
-  ChevronRight, Landmark, Map as MapIcon
+  ChevronRight, Landmark, Map as MapIcon,
+  Check, Plus, Pencil
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getActiveSession, getSupabaseErrorMessage, logSupabaseDebug } from "@/lib/supabase";
