@@ -139,7 +139,6 @@ const ProductCard = memo(function ProductCard({
       aria-label={`View details for ${productName}`}
       onClick={goToProduct}
       onKeyDown={handleCardKeyDown}
-      style={{ contentVisibility: "auto", containIntrinsicSize: "280px 420px" }}
       className={`group/card bg-card ${cardClass} flex w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 ${className}`}
     >
       <div className={`relative isolate shrink-0 overflow-hidden ${imageHeightClass} bg-white`}>
