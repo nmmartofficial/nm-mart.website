@@ -86,32 +86,79 @@ function CustomerAuthGuard({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    const timeout = window.setTimeout(() => {
-      if (mounted) setStatus("denied");
-    }, 5000);
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted) {
-        window.clearTimeout(timeout);
-        setStatus(data.session ? "allowed" : "denied");
+
+    const restoreSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (error) {
+          console.error("[AUTH] Session restore error:", error);
+          setStatus("denied");
+          return;
+        }
+
+        if (data.session) {
+          setStatus("allowed");
+        } else {
+          setStatus("denied");
+        }
+      } catch (error) {
+        if (!mounted) return;
+
+        console.error("[AUTH] Session restore failed:", error);
+        setStatus("denied");
+      }
+    };
+
+    restoreSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
+      console.log(
+        "[AUTH] Event:",
+        event,
+        "User:",
+        session?.user?.id ?? "none"
+      );
+
+      if (session) {
+        setStatus("allowed");
+        return;
+      }
+
+      if (event === "SIGNED_OUT") {
+        setStatus("denied");
       }
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted && !session) setStatus("denied");
-    });
+
     return () => {
       mounted = false;
-      window.clearTimeout(timeout);
-      listener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
-  }, [location.hash, location.pathname, location.search]);
+  }, []);
 
   if (status === "loading") {
-    return <div className="flex min-h-screen items-center justify-center bg-slate-50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Checking your session...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+        Checking your session...
+      </div>
+    );
   }
 
   if (status === "denied") {
     const destination = `${location.pathname}${location.search}${location.hash}`;
-    return <Navigate to={`/login?next=${encodeURIComponent(destination)}`} replace />;
+
+    return (
+      <Navigate
+        to={`/login?next=${encodeURIComponent(destination)}`}
+        replace
+      />
+    );
   }
 
   return <>{children}</>;
