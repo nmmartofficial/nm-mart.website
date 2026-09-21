@@ -190,7 +190,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
 
   const resolveDeliveryDisplay = () => {
     if (deliveryAddress) return deliveryAddress;
-    const shortStore = "Naya Nagar, Dhata Road, Manjhanpur, Kaushambi";
+    const shortStore = "Manjhanpur";
     const baseAddress = STORE_DETAILS?.address ? STORE_DETAILS.address : shortStore;
     const parts = baseAddress.split(",").map((part) => part.trim()).filter(Boolean);
     if (parts.length >= 2) return parts[parts.length - 2];
@@ -241,7 +241,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
                 className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-colors hover:bg-white/20 md:hidden"
                 aria-label="Orders"
               >
-                <Bell size={22} className="text-white" />
+                <Bell size={22} className="text-[#155EEF]" />
               </button>
               <button
                 type="button"
@@ -249,7 +249,7 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
                 className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-colors hover:bg-white/20 md:hidden"
                 aria-label="Wishlist"
               >
-                <Heart size={18} className="text-white" fill="currentColor" />
+                <Heart size={18} className="text-[#155EEF]" fill="currentColor" />
               </button>
             </div>
 
