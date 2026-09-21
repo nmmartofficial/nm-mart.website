@@ -25,11 +25,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
       const { data } = await supabase
         .from(TABLES.wishlistItems)
-        .select("product_barcode")
+        .select("barcode")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (mounted) setWishlistBarcodes((data || []).map((item) => String(item.product_barcode)));
+      if (mounted) setWishlistBarcodes((data || []).map((item) => String(item.barcode)));
     };
 
     loadWishlist();
@@ -51,14 +51,14 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         .from(TABLES.wishlistItems)
         .delete()
         .eq("user_id", user.id)
-        .eq("product_barcode", barcode);
+        .eq("barcode", barcode);
       setWishlistBarcodes((current) => current.filter((item) => item !== barcode));
       return;
     }
 
     const { error } = await supabase.from(TABLES.wishlistItems).insert({
       user_id: user.id,
-      product_barcode: barcode,
+      barcode,
     });
     if (!error) setWishlistBarcodes((current) => [barcode, ...current]);
   }, [wishlistBarcodes]);
