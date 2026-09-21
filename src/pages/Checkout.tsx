@@ -21,7 +21,7 @@ import { useSavedAddresses } from "@/hooks/useSavedAddresses";
 const Checkout = () => {
   const navigate = useNavigate();
   const { cart, cartTotal, clearCart } = useCart();
-  const { addresses } = useSavedAddresses();
+  const { addresses, loading: addressesLoading } = useSavedAddresses();
   const subtotal = cart.reduce((sum, item) => sum + (Number(item.saleRate ?? item.price ?? 0) * item.qty), 0);
   const [loading, setLoading] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
@@ -259,14 +259,104 @@ const Checkout = () => {
                 </div>
 
                 {addresses.length > 0 && (
-                  <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-                    <label htmlFor="saved-address" className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Choose a saved address</label>
-                    <select id="saved-address" value={selectedAddressId} onChange={(event) => handleSavedAddressChange(event.target.value)} className="mt-2 w-full rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none">
-                      {addresses.map((address) => <option key={address.id} value={address.id}>{address.label} - {address.address}, {address.pincode}</option>)}
-                    </select>
-                    <button type="button" onClick={() => navigate("/addresses")} className="mt-2 text-[10px] font-black uppercase tracking-[0.14em] text-primary hover:underline">Manage saved addresses</button>
-                  </div>
+  <div className="mb-8 space-y-4">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+          Delivery Address
+        </p>
+        <p className="text-xs font-bold text-gray-400 mt-1">
+          Your saved address is selected automatically
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => navigate("/addresses")}
+        className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
+      >
+        <Pencil size={12} />
+        Change
+      </button>
+    </div>
+
+    {addresses.map((address) => {
+      const isSelected = String(address.id) === selectedAddressId;
+
+      return (
+        <button
+          key={address.id}
+          type="button"
+          onClick={() => handleSavedAddressChange(String(address.id))}
+          className={`w-full text-left rounded-2xl border-2 p-5 transition-all ${
+            isSelected
+              ? "border-primary bg-primary/5 shadow-sm"
+              : "border-gray-100 bg-white hover:border-primary/30"
+          }`}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div
+                className={`mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  isSelected
+                    ? "bg-primary text-white"
+                    : "bg-gray-50 text-gray-400"
+                }`}
+              >
+                {isSelected ? <Check size={18} /> : <MapPin size={18} />}
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-black uppercase text-slate-900">
+                    {address.label}
+                  </p>
+
+                  {address.is_default && (
+                    <span className="text-[8px] font-black uppercase tracking-wider bg-primary text-white px-2 py-1 rounded-full">
+                      Default
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs font-bold text-slate-600 mt-2 leading-5">
+                  {address.address}
+                </p>
+
+                {address.landmark && (
+                  <p className="text-[10px] font-semibold text-gray-400 mt-1">
+                    Landmark: {address.landmark}
+                  </p>
                 )}
+
+                <p className="text-[10px] font-bold text-gray-400 mt-1">
+                  {address.city ? `${address.city}, ` : ""}
+                  {address.state ? `${address.state} - ` : ""}
+                  {address.pincode}
+                </p>
+              </div>
+            </div>
+
+            {isSelected && (
+              <span className="text-[9px] font-black uppercase tracking-wider text-primary whitespace-nowrap">
+                Selected
+              </span>
+            )}
+          </div>
+        </button>
+      );
+    })}
+
+    <button
+      type="button"
+      onClick={() => navigate("/addresses")}
+      className="w-full border-2 border-dashed border-gray-200 rounded-2xl py-4 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider text-gray-500 hover:border-primary hover:text-primary transition-all"
+    >
+      <Plus size={16} />
+      Add New Address
+    </button>
+  </div>
+)}
 
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-2">
