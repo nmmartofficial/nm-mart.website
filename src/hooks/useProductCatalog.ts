@@ -122,7 +122,17 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
       else if (options.sort === "newest") query = query.order("created_at", { ascending: false });
       else query = query.order("is_favourite", { ascending: false }).order("updated_at", { ascending: false });
 
-      const { data, error: queryError } = await query.range(offset, offset + pageSize - 1);
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+      let data;
+      let queryError;
+      try {
+        ({ data, error: queryError } = await query
+          .abortSignal(controller.signal)
+          .range(offset, offset + pageSize - 1));
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
       if (queryError) throw queryError;
       if (requestKey.current !== queryKey) return;
 
