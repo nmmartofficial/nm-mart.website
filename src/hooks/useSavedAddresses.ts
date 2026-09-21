@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "@/lib/supabase/schema";
-import { getActiveSession, getSupabaseErrorMessage } from "@/lib/supabase";
+import { getSupabaseErrorMessage } from "@/lib/supabase";
 
 export type SavedAddress = {
   id: number;
@@ -14,6 +14,35 @@ export type SavedAddress = {
   is_default: boolean;
 };
 
+async function getAuthenticatedUser() {
+  // First try the current persisted session.
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    console.error("[SavedAddresses] Session error:", sessionError);
+  }
+
+  if (session?.user) {
+    return session.user;
+  }
+
+  // Fallback: ask Supabase Auth to resolve the current user.
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    console.error("[SavedAddresses] User lookup error:", userError);
+    return null;
+  }
+
+  return user ?? null;
+}
+
 export function useSavedAddresses() {
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,8 +51,7 @@ export function useSavedAddresses() {
     setLoading(true);
 
     try {
-      const session = await getActiveSession();
-      const user = session?.user;
+      const user = await getAuthenticatedUser();
 
       if (!user) {
         setAddresses([]);
@@ -41,7 +69,10 @@ export function useSavedAddresses() {
 
       if (error) {
         throw new Error(
-          getSupabaseErrorMessage(error, "Unable to load saved addresses.")
+          getSupabaseErrorMessage(
+            error,
+            "Unable to load saved addresses."
+          )
         );
       }
 
@@ -56,6 +87,22 @@ export function useSavedAddresses() {
 
   useEffect(() => {
     void loadAddresses();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "SIGNED_OUT"
+      ) {
+        void loadAddresses();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [loadAddresses]);
 
   const saveAddress = async (
@@ -63,8 +110,7 @@ export function useSavedAddresses() {
       is_default?: boolean;
     }
   ) => {
-    const session = await getActiveSession();
-    const user = session?.user;
+    const user = await getAuthenticatedUser();
 
     if (!user) {
       throw new Error("Please login before saving an address.");
@@ -84,7 +130,10 @@ export function useSavedAddresses() {
 
     if (error) {
       throw new Error(
-        getSupabaseErrorMessage(error, "Unable to save address.")
+        getSupabaseErrorMessage(
+          error,
+          "Unable to save address."
+        )
       );
     }
 
@@ -92,8 +141,7 @@ export function useSavedAddresses() {
   };
 
   const deleteAddress = async (id: number) => {
-    const session = await getActiveSession();
-    const user = session?.user;
+    const user = await getAuthenticatedUser();
 
     if (!user) {
       throw new Error("Please login before deleting an address.");
@@ -107,7 +155,10 @@ export function useSavedAddresses() {
 
     if (error) {
       throw new Error(
-        getSupabaseErrorMessage(error, "Unable to delete address.")
+        getSupabaseErrorMessage(
+          error,
+          "Unable to delete address."
+        )
       );
     }
 
@@ -120,8 +171,7 @@ export function useSavedAddresses() {
     id: number,
     address: Omit<SavedAddress, "id" | "is_default">
   ) => {
-    const session = await getActiveSession();
-    const user = session?.user;
+    const user = await getAuthenticatedUser();
 
     if (!user) {
       throw new Error("Please login before updating an address.");
@@ -135,7 +185,10 @@ export function useSavedAddresses() {
 
     if (error) {
       throw new Error(
-        getSupabaseErrorMessage(error, "Unable to update address.")
+        getSupabaseErrorMessage(
+          error,
+          "Unable to update address."
+        )
       );
     }
 
@@ -143,11 +196,12 @@ export function useSavedAddresses() {
   };
 
   const setDefaultAddress = async (id: number) => {
-    const session = await getActiveSession();
-    const user = session?.user;
+    const user = await getAuthenticatedUser();
 
     if (!user) {
-      throw new Error("Please login before selecting an address.");
+      throw new Error(
+        "Please login before selecting an address."
+      );
     }
 
     const clearDefault = await supabase
@@ -172,7 +226,10 @@ export function useSavedAddresses() {
 
     if (error) {
       throw new Error(
-        getSupabaseErrorMessage(error, "Unable to set default address.")
+        getSupabaseErrorMessage(
+          error,
+          "Unable to set default address."
+        )
       );
     }
 
