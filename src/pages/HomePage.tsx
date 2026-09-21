@@ -22,7 +22,11 @@ export default function HomePage() {
   const flat50Catalog = useProductCatalog({ pageSize: 8, minDiscount: 50 });
   const flat33Catalog = useProductCatalog({ pageSize: 8, minDiscount: 33, maxDiscount: 50 });
   const allProducts = popularCatalog.products;
-  const productsLoading = popularCatalog.loading || offersCatalog.loading || featuredCatalog.loading || flat50Catalog.loading || flat33Catalog.loading;
+  const popularLoading = popularCatalog.loading;
+  const offersLoading = offersCatalog.loading;
+  const featuredLoading = featuredCatalog.loading;
+  const flat50Loading = flat50Catalog.loading;
+  const flat33Loading = flat33Catalog.loading;
   const categories = popularCatalog.categories;
   const brands = popularCatalog.brands;
   const hasMore = popularCatalog.hasMore;
@@ -140,14 +144,14 @@ export default function HomePage() {
                 loading="lazy"
               />
             ) : (
-                <span className="text-[8px] font-black uppercase tracking-[0.12em] text-slate-500 md:text-[10px] md:tracking-[0.15em]">
+                <span className="text-[8px] font-[600] tracking-[0.12em] text-slate-500 uppercase md:text-[10px] md:tracking-[0.15em]">
                 {safeLabel ? safeLabel.slice(0, 2).toUpperCase() : "NM"}
               </span>
             )}
           </div>
         </button>
         {safeLabel && (
-          <p className="mt-2 max-w-[92px] text-center text-[11px] font-bold uppercase leading-[1.25] tracking-[0.08em] text-slate-700 line-clamp-2 sm:max-w-[100px] sm:text-[11.5px] md:max-w-none md:text-[12px]">
+          <p className="mt-2 max-w-[92px] text-center text-[11px] font-[600] leading-[1.25] tracking-[0.08em] text-slate-700 uppercase line-clamp-2 sm:max-w-[100px] sm:text-[11.5px] md:max-w-none md:text-[12px]">
             {safeLabel}
           </p>
         )}
@@ -226,7 +230,7 @@ export default function HomePage() {
 
   const EmptySectionState = ({ text }: { text: string }) => (
     <div className="flex min-h-[160px] items-center justify-center rounded-[22px] border border-dashed border-slate-200 bg-slate-50">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{text}</p>
+      <p className="text-[10px] font-[600] tracking-[0.12em] text-slate-500 uppercase">{text}</p>
     </div>
   );
 
@@ -241,11 +245,11 @@ export default function HomePage() {
   }) => (
     <div className="mb-2 flex items-center justify-between gap-3 md:mb-5">
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#1d5fbf] md:text-[10px]">{eyebrow}</p>
-        <h2 className="mt-1 text-[1.05rem] font-black uppercase tracking-[-0.06em] text-slate-900 md:mt-2 md:text-2xl">{title}</h2>
+        <p className="text-[9px] font-[700] tracking-[0.12em] text-[#1d5fbf] uppercase md:text-[10px]">{eyebrow}</p>
+        <h2 className="mt-1 text-[1.05rem] font-[800] tracking-[-0.06em] text-slate-900 md:mt-2 md:text-2xl">{title}</h2>
       </div>
       {meta && (
-        <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-600 md:flex">
+        <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-[600] tracking-[0.12em] text-slate-600 uppercase md:flex">
           <Search className="h-3.5 w-3.5" />
           {meta}
         </div>
@@ -323,7 +327,7 @@ export default function HomePage() {
               )}
             </div>
 
-            {productsLoading ? (
+            {popularLoading ? (
               <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-6">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div key={index} className="flex w-[92px] shrink-0 flex-col items-center sm:w-[100px] md:w-auto md:flex-1 md:items-stretch md:rounded-[22px] md:border md:border-slate-200 md:bg-slate-50 md:p-4">
@@ -348,7 +352,7 @@ export default function HomePage() {
           </section>
         )}
 
-        {liveFeatured.length > 0 && !productsLoading && (
+        {liveFeatured.length > 0 && !featuredLoading && (
           <section className="mb-4 rounded-[18px] border border-[#d7ebff] bg-gradient-to-r from-[#dfeefd] via-white to-[#edf6ff] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
             <SectionHeader eyebrow="Editor's pick" title="TOP PICKS FOR YOU" />
             <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -365,7 +369,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={handleLoadMoreFeatured}
-                  disabled={productsLoading}
+                  disabled={featuredLoading}
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
                 >
                   Load More Top Picks For You
@@ -379,7 +383,7 @@ export default function HomePage() {
         <section id="products" className="mb-4 rounded-[18px] border border-[#d7ebff] bg-gradient-to-r from-[#edf6ff] via-white to-[#dfeefd] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
           <SectionHeader eyebrow="Popular picks" title="CUSTOMER FAVORITES" />
 
-          {productsLoading ? (
+          {popularLoading ? (
             <ProductSkeletonGrid count={8} />
           ) : popularProducts.length === 0 ? (
             <EmptySectionState text="No products available right now" />
@@ -400,10 +404,10 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={handleLoadMorePopular}
-                    disabled={productsLoading}
+                    disabled={popularLoading}
                     className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#eaf3ff] hover:text-[#0b3b78] disabled:cursor-wait disabled:opacity-60"
                   >
-                    {productsLoading ? "Loading Products" : "Load More Products"}
+                    {popularLoading ? "Loading Products" : "Load More Products"}
                     <ChevronDown className="h-4 w-4" />
                   </button>
                 </div>
@@ -415,7 +419,7 @@ export default function HomePage() {
         <section className="mb-4 rounded-[28px] border border-[#d7ebff] bg-gradient-to-br from-[#edf6ff] via-white to-[#dfeefd] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
           <SectionHeader eyebrow="Special deals" title="HOT DEALS" />
 
-          {productsLoading ? (
+          {offersLoading ? (
             <ProductSkeletonGrid count={4} />
           ) : offerProducts.length === 0 ? (
             <EmptySectionState text="No active offers right now" />
@@ -435,7 +439,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={handleLoadMoreOffers}
-                    disabled={productsLoading}
+                    disabled={offersLoading}
                     className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
                   >
                     Load More Offers
@@ -447,7 +451,7 @@ export default function HomePage() {
           )}
         </section>
 
-        {liveFlat50.length > 0 && !productsLoading && (
+        {liveFlat50.length > 0 && !flat50Loading && (
           <section className="mb-4 rounded-[18px] border border-red-200 bg-gradient-to-r from-red-50 via-white to-rose-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
             <SectionHeader eyebrow="Big Savings" title="FLAT 50% OFF" />
             <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -464,7 +468,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={handleLoadMoreFlat50}
-                  disabled={productsLoading}
+                  disabled={flat50Loading}
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
                 >
                   Load More 50% Deals
@@ -475,7 +479,7 @@ export default function HomePage() {
           </section>
         )}
 
-        {liveFlat33.length > 0 && !productsLoading && (
+        {liveFlat33.length > 0 && !flat33Loading && (
           <section className="mb-4 rounded-[18px] border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-yellow-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
             <SectionHeader eyebrow="Great Value" title="UP TO 33% OFF" />
             <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -492,7 +496,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={handleLoadMoreFlat33}
-                  disabled={productsLoading}
+                  disabled={flat33Loading}
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
                 >
                   Load More 33% Deals

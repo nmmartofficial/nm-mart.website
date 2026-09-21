@@ -9,20 +9,20 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const PRESET_COLORS: Record<string, { primary: string; secondary: string }> = {
-  "NM Classic": { primary: "#1677E8", secondary: "#EAF3FF" },
-  "Sky Fresh": { primary: "#1677E8", secondary: "#E0F2FE" },
-  "Forest": { primary: "#10B981", secondary: "#D1FAE5" },
-  "Royal": { primary: "#8B5CF6", secondary: "#EDE9FE" },
-  "Festive": { primary: "#F97316", secondary: "#FFEDD5" },
-  "Luxury": { primary: "#111827", secondary: "#F3F4F6" }
+  "NM Classic": { primary: "#155EEF", secondary: "#EFF6FF" },
+  "Sky Fresh": { primary: "#155EEF", secondary: "#DBEAFE" },
+  "Deep Blue": { primary: "#0B1F3A", secondary: "#E2E8F0" },
+  "Retail Premium": { primary: "#155EEF", secondary: "#F8FAFC" },
+  "Sale Alert": { primary: "#E11D48", secondary: "#FEE2E2" },
+  "Luxury": { primary: "#0B1F3A", secondary: "#F8FAFC" }
 };
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<ThemeConfig>({
-    primaryColor: "#1D4ED8",
-    secondaryColor: "#E0F2FE",
-    backgroundColor: "#F7F9FC",
-    textColor: "#0F172A",
+    primaryColor: "#155EEF",
+    secondaryColor: "#EFF6FF",
+    backgroundColor: "#F8FAFC",
+    textColor: "#111827",
     highlightColor: "#DBEAFE",
     presetName: "NM Classic",
     storeName: "NM Mart",

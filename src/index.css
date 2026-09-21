@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,20 +6,21 @@
 
 @layer base {
   :root {
-    --nm-primary: #1677E8;
-    --nm-primary-dark: #0B3B78;
-    --nm-primary-light: #EAF3FF;
-    --nm-primary-border: #BBD8FF;
-    --nm-background: #F7F9FC;
+    --nm-primary: #155EEF;
+    --nm-primary-dark: #0B1F3A;
+    --nm-primary-light: #EFF6FF;
+    --nm-primary-border: #DBEAFE;
+    --nm-background: #F8FAFC;
     --nm-text: #111827;
     --nm-text-secondary: #64748B;
     --nm-border: #E2E8F0;
     --nm-success: #16A34A;
     --nm-danger: #DC2626;
     --nm-warning: #F59E0B;
-    --nm-orange: #F97316;
+    --nm-orange: #F59E0B;
+    --nm-sale: #E11D48;
     --nm-font-body: 'Inter', 'Segoe UI', sans-serif;
-    --nm-font-heading: 'Space Grotesk', 'Inter', sans-serif;
+    --nm-font-heading: 'Inter', 'Segoe UI', sans-serif;
 
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
@@ -27,23 +28,23 @@
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 214 84% 47%;
-    --primary-hover: 216 80% 31%;
-    --primary-active: 216 80% 27%;
-    --primary-soft: 214 100% 95%;
+    --primary: 220 89% 53%;
+    --primary-hover: 223 82% 38%;
+    --primary-active: 223 82% 33%;
+    --primary-soft: 214 100% 97%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 35% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 38%;
-    --accent: 214 84% 47%;
+    --accent: 220 89% 53%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 74% 46%;
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 90%;
     --border-strong: 214 26% 78%;
     --input: 214 32% 90%;
-    --ring: 214 84% 47%;
+    --ring: 220 89% 53%;
     --radius: 1.1rem;
     --surface: 0 0% 100%;
     --surface-muted: 210 40% 98%;
@@ -69,12 +70,10 @@
     min-height: 100vh;
     overflow-x: clip;
     max-width: 100vw;
-    background:
-      radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 22%),
-      linear-gradient(180deg, #f8fbff 0%, #f4f7fb 100%);
+    background: #F8FAFC;
     color: var(--nm-text);
     font-family: var(--nm-font-body);
-    font-weight: 500;
+    font-weight: 400;
     line-height: 1.6;
     letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
@@ -84,10 +83,15 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--nm-font-heading);
     color: var(--nm-text);
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em;
     line-height: 1.1;
     margin: 0;
+    font-weight: 700;
   }
+
+  h1 { font-weight: 800; }
+  h2 { font-weight: 700; }
+  h3 { font-weight: 700; }
 
   p, li, span, div, label {
     color: inherit;
@@ -151,8 +155,9 @@
   }
 
   .nm-btn-primary {
-    @apply inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-white transition-all duration-200 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-[var(--nm-primary-border)];
+    @apply inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-[700] tracking-[0.01em] text-white transition-all duration-200 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-[var(--nm-primary-border)];
     background: var(--nm-primary);
+    text-transform: none;
   }
 
   .nm-btn-primary:hover {
@@ -164,23 +169,26 @@
   }
 
   .nm-btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full border border-[var(--nm-primary-border)] bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-[var(--nm-primary)] transition-all duration-200 hover:bg-[var(--nm-primary-light)] hover:text-[var(--nm-primary-dark)] active:bg-[#DCEEFF] focus-visible:ring-2 focus-visible:ring-[var(--nm-primary-border)];
+    @apply inline-flex items-center justify-center rounded-full border border-[var(--nm-primary-border)] bg-white px-5 py-3 text-sm font-[600] tracking-[0.01em] text-[var(--nm-primary)] transition-all duration-200 hover:bg-[var(--nm-primary-light)] hover:text-[var(--nm-primary-dark)] active:bg-[#DCEEFF] focus-visible:ring-2 focus-visible:ring-[var(--nm-primary-border)];
+    text-transform: none;
   }
 
   .nm-btn-ghost {
-    @apply inline-flex items-center justify-center rounded-full px-3 py-2 text-sm font-bold text-[var(--nm-primary)] transition-all duration-200 hover:bg-[var(--nm-primary-light)] hover:text-[var(--nm-primary-dark)] active:bg-[#DCEEFF] focus-visible:ring-2 focus-visible:ring-[var(--nm-primary-border)];
+    @apply inline-flex items-center justify-center rounded-full px-3 py-2 text-sm font-[600] text-[var(--nm-primary)] transition-all duration-200 hover:bg-[var(--nm-primary-light)] hover:text-[var(--nm-primary-dark)] active:bg-[#DCEEFF] focus-visible:ring-2 focus-visible:ring-[var(--nm-primary-border)];
   }
 
   .nm-input {
     @apply w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10;
+    font-weight: 400;
   }
 
   .nm-section-label {
-    @apply text-[10px] font-black uppercase tracking-[0.2em] text-slate-500;
+    @apply text-[10px] font-[600] tracking-[0.08em] text-slate-500;
+    text-transform: uppercase;
   }
 
   .nm-heading {
-    @apply text-2xl font-black uppercase tracking-[-0.05em] text-slate-900 md:text-3xl;
+    @apply text-2xl font-[800] tracking-[-0.05em] text-slate-900 md:text-3xl;
   }
 
   .nm-pressed-surface {
@@ -188,11 +196,11 @@
   }
 
   .gradient-brand {
-    background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
   }
 
   .gradient-dark {
-    background: linear-gradient(135deg, #0f172a 0%, #111827 100%);
+    background: linear-gradient(135deg, #0B1F3A 0%, #111827 100%);
   }
 
   .text-brand {

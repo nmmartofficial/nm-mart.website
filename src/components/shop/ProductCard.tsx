@@ -87,7 +87,7 @@ const ProductCard = memo(function ProductCard({
     return true;
   }
 
-  const buttonClass = `h-[38px] w-full rounded-full text-[9px] md:h-[44px] md:text-[12px] font-black uppercase tracking-[0.1em] md:tracking-[0.14em] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+  const buttonClass = `h-[38px] w-full rounded-full text-[9px] md:h-[44px] md:text-[12px] font-[700] tracking-[0.01em] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
     buttonStyle === "gradient"
       ? "bg-primary text-white border-none shadow-[0_12px_24px_-16px_rgba(37,99,235,0.55)] hover:bg-primary-hover"
       : buttonStyle === "outline"
@@ -139,14 +139,13 @@ const ProductCard = memo(function ProductCard({
       aria-label={`View details for ${productName}`}
       onClick={goToProduct}
       onKeyDown={handleCardKeyDown}
-      style={{ contentVisibility: "auto", containIntrinsicSize: "280px 420px" }}
       className={`group/card bg-card ${cardClass} flex w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 ${className}`}
     >
       <div className={`relative isolate shrink-0 overflow-hidden ${imageHeightClass} bg-white`}>
         <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-1 md:p-1.5" />
 
         {discountPercent > 0 && (
-          <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-[#ff5a36] px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-white shadow-md">
+          <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-[#E11D48] px-2 py-1 text-[8px] font-[800] tracking-[0.08em] text-white shadow-md">
             {discountPercent}% OFF
           </span>
         )}
@@ -165,7 +164,7 @@ const ProductCard = memo(function ProductCard({
 
         {!hasStock && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/25 backdrop-blur-[1px]">
-            <span className="rounded-full bg-white/90 px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.18em] text-black">
+            <span className="rounded-full bg-white/90 px-3 py-1.5 text-[8px] font-[600] tracking-[0.12em] text-black uppercase">
               Out of stock
             </span>
           </div>
@@ -188,37 +187,37 @@ const ProductCard = memo(function ProductCard({
       </div>
 
       <div className="flex flex-col p-1.5 md:p-5">
-        <h3 className="mb-1 text-[10px] font-semibold leading-tight text-slate-900 line-clamp-2 break-words md:mb-1.5 md:text-[16px] md:leading-snug">
+        <h3 className="mb-1 text-[10px] font-[600] leading-tight text-slate-900 line-clamp-2 break-words md:mb-1.5 md:text-[16px] md:leading-snug">
           {productName}
         </h3>
 
         {product.brand && (
-          <p className="mb-1 text-[7px] font-bold uppercase tracking-[0.08em] text-slate-500 md:text-[10px] md:tracking-[0.12em]">{product.brand}</p>
+          <p className="mb-1 text-[7px] font-[500] tracking-[0.08em] text-slate-500 md:text-[10px] md:tracking-[0.12em] uppercase">{product.brand}</p>
         )}
 
         {productUnit && (
-          <p className="mb-1 text-[7px] font-medium uppercase tracking-[0.08em] text-slate-500 md:mb-1.5 md:text-[10px] md:tracking-[0.12em]">{productUnit}</p>
+          <p className="mb-1 text-[7px] font-[500] tracking-[0.08em] text-slate-500 md:mb-1.5 md:text-[10px] md:tracking-[0.12em] uppercase">{productUnit}</p>
         )}
 
         <div className="mb-2">
           <div className="flex items-end gap-2">
             {hasMrp && numericMrp > numericPrice && (
-              <span className="pb-0.5 text-[10.5px] font-medium text-slate-500 line-through decoration-slate-400">
+              <span className="pb-0.5 text-[10.5px] font-[500] text-slate-500 line-through decoration-slate-400">
                 ₹{numericMrp.toLocaleString("en-IN")}
               </span>
             )}
 
             {hasPrice ? (
-                <span className="text-[15px] font-black leading-none tracking-[-0.05em] text-slate-900 md:text-[1.75rem]">
+                <span className="text-[15px] font-[800] leading-none tracking-[-0.05em] text-[#155EEF] md:text-[1.75rem]">
                 ₹{numericPrice.toLocaleString("en-IN")}
               </span>
             ) : (
-              <span className="text-sm font-semibold text-slate-500">Price unavailable</span>
+              <span className="text-sm font-[600] text-slate-500">Price unavailable</span>
             )}
           </div>
 
           {savingsAmount > 0 && (
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[hsl(var(--success))]">
+            <p className="mt-1 text-[9px] font-[700] tracking-[0.08em] text-[#16A34A] uppercase">
               Save ₹{savingsAmount.toLocaleString("en-IN")}
             </p>
           )}

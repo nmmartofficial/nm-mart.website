@@ -37,7 +37,12 @@ const ResetPassword = () => {
         if (isMounted) {
           setSessionReady(false);
           setIsCheckingSession(false);
-          toast.error(error.message || "Unable to validate the reset link.");
+          const message = (error?.message || "").toLowerCase();
+          if (message.includes("auth") || message.includes("jwt") || message.includes("expired") || message.includes("invalid")) {
+            toast.error("This password reset link is invalid or has expired. Please request a new one.");
+          } else {
+            toast.error("Unable to validate the reset link. Please request a new one.");
+          }
         }
       }
     };
@@ -74,7 +79,14 @@ const ResetPassword = () => {
       setSuccess(true);
       toast.success("Your password has been updated successfully.");
     } catch (error: any) {
-      toast.error(error.message || "Failed to update password. Please try again.");
+      const message = (error?.message || "").toLowerCase();
+      if (message.includes("password") && (message.includes("weak") || message.includes("too short") || message.includes("minimum"))) {
+        toast.error("Password must be at least 8 characters long.");
+      } else if (message.includes("network") || message.includes("fetch") || message.includes("timeout")) {
+        toast.error("Unable to connect. Please try again.");
+      } else {
+        toast.error("Unable to update your password. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

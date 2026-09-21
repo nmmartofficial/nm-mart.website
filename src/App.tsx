@@ -66,7 +66,7 @@ function AdminGuard({ children }: { children: ReactNode }) {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-[10px] font-[600] tracking-[0.12em] text-slate-500 uppercase">
         Checking admin access...
       </div>
     );
@@ -106,7 +106,7 @@ function CustomerAuthGuard({ children }: { children: ReactNode }) {
   }, [location.hash, location.pathname, location.search]);
 
   if (status === "loading") {
-    return <div className="flex min-h-screen items-center justify-center bg-slate-50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Checking your session...</div>;
+    return <div className="flex min-h-screen items-center justify-center bg-slate-50 text-[10px] font-[600] tracking-[0.12em] text-slate-500 uppercase">Checking your session...</div>;
   }
 
   if (status === "denied") {
@@ -160,7 +160,7 @@ function App() {
         <CustomerScrollRestoration />
         <Toaster position="top-center" expand={false} richColors />
         <CustomerAnnouncement />
-        <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-xs font-bold uppercase tracking-widest text-slate-500">Loading NM Mart...</div>}>
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-xs font-[600] tracking-[0.12em] text-slate-500 uppercase">Loading NM Mart...</div>}>
           <div className="pb-safe-nav md:pb-0">
             <Routes>
               {/* Customer Routes */}

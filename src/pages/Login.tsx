@@ -14,6 +14,43 @@ export interface AuthFormInput {
   confirmPassword?: string;
 }
 
+const getFriendlyAuthError = (error: any, fallback: string): string => {
+  const message = (error?.message || "").toLowerCase();
+  const code = String(error?.code || "").toLowerCase();
+
+  if (
+    message.includes("invalid login credentials") ||
+    message.includes("invalid email or password") ||
+    message.includes("wrong password") ||
+    message.includes("invalid grant") ||
+    code === "invalid_credentials"
+  ) {
+    return "Invalid email or password.";
+  }
+
+  if (message.includes("user already registered") || code === "user_already_exists") {
+    return "An account with this email already exists. Please sign in or reset your password.";
+  }
+
+  if (message.includes("email not confirmed") || message.includes("confirm your email")) {
+    return "Please check your inbox and confirm this account before signing in.";
+  }
+
+  if (message.includes("too many requests") || message.includes("rate limit")) {
+    return "Too many attempts. Please wait a moment and try again.";
+  }
+
+  if (message.includes("oauth") || message.includes("provider") || message.includes("google")) {
+    return "Google sign-in could not be completed. Please try again.";
+  }
+
+  if (message.includes("network") || message.includes("fetch") || message.includes("timeout")) {
+    return "Unable to connect. Please try again.";
+  }
+
+  return fallback;
+};
+
 export const validateAuthForm = ({
   isSignUp,
   email,
@@ -32,6 +69,10 @@ export const validateAuthForm = ({
   if (isSignUp) {
     if (!trimmedFullName) {
       return "Please enter your full name.";
+    }
+
+    if (trimmedPassword.length < 8) {
+      return "Password must be at least 8 characters long.";
     }
 
     if (!confirmPassword || !confirmPassword.trim()) {
@@ -77,16 +118,16 @@ export const validateResetPasswordForm = ({
     return "Please enter a new password.";
   }
 
+  if (trimmedPassword.length < 8) {
+    return "Password must be at least 8 characters long.";
+  }
+
   if (!confirmPassword || !confirmPassword.trim()) {
     return "Please confirm your new password.";
   }
 
   if (trimmedPassword !== confirmPassword.trim()) {
     return "Passwords do not match.";
-  }
-
-  if (trimmedPassword.length < 6) {
-    return "Password must be at least 6 characters.";
   }
 
   return "";
@@ -140,7 +181,7 @@ const Login = () => {
       });
       if (error) throw error;
     } catch (err: any) {
-      toast.error(err.message || "Google login failed");
+      toast.error(getFriendlyAuthError(err, "Google sign-in could not be completed. Please try again."));
     }
   };
 
@@ -200,7 +241,7 @@ const Login = () => {
         }
       }
     } catch (err: any) {
-      toast.error(err.message || "Authentication failed. Please try again.");
+      toast.error(getFriendlyAuthError(err, "Authentication failed. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -228,7 +269,7 @@ const Login = () => {
       setResetEmailSent(true);
       toast.success("If an account exists for this email, reset instructions will be sent shortly.");
     } catch (err: any) {
-      toast.error(err.message || "Failed to request password reset. Please try again.");
+      toast.error(getFriendlyAuthError(err, "Failed to request password reset. Please try again."));
     } finally {
       setLoading(false);
     }

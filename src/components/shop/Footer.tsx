@@ -35,10 +35,10 @@ const Footer = () => {
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-black uppercase tracking-tight text-slate-900 md:text-2xl">
+                <span className="text-xl font-[800] tracking-tight text-slate-900 md:text-2xl">
                   {theme.storeName || "NM MART"}
                 </span>
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+                <span className="text-[10px] font-[600] tracking-[0.18em] text-slate-400 uppercase">
                   {SLOGAN}
                 </span>
               </div>
@@ -49,8 +49,8 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="mb-4 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Quick Links</h3>
-            <ul className="space-y-2 text-sm font-semibold text-slate-700">
+            <h3 className="mb-4 text-[11px] font-[700] tracking-[0.12em] text-slate-400 uppercase">Quick Links</h3>
+            <ul className="space-y-2 text-sm font-[500] text-slate-700">
               <li><Link to="/about" className={quickLinkClass("/about")}>About Us</Link></li>
               <li><Link to="/contact" className={quickLinkClass("/contact")}>Contact Us</Link></li>
               <li><Link to="/faq" className={quickLinkClass("/faq")}>FAQs</Link></li>
@@ -60,7 +60,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="mb-4 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Customer Support</h3>
+            <h3 className="mb-4 text-[11px] font-[700] tracking-[0.12em] text-slate-400 uppercase">Customer Support</h3>
             <ul className="space-y-4">
               <li>
                 <a
@@ -107,7 +107,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="mb-4 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Follow Us</h3>
+            <h3 className="mb-4 text-[11px] font-[700] tracking-[0.12em] text-slate-400 uppercase">Follow Us</h3>
             <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-slate-100 hover:text-[#25D366] active:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e8f9ef] text-[#149447] transition group-hover:bg-[#25D366] group-hover:text-white"><MessageCircle size={17} /></span>
               WhatsApp
@@ -116,7 +116,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="mb-4 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Download Our App</h3>
+            <h3 className="mb-4 text-[11px] font-[700] tracking-[0.12em] text-slate-400 uppercase">Download Our App</h3>
             <div className="space-y-2">
               <AppStoreLink href={ANDROID_APP_URL} label="Google Play Store" />
               <AppStoreLink href={IOS_APP_URL} label="Apple App Store" />
@@ -127,10 +127,10 @@ const Footer = () => {
 
       <div className="border-t border-slate-100 bg-slate-50/50 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
         <div className="mx-auto flex min-h-[50px] max-w-7xl flex-col items-center justify-center gap-2 px-4 py-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:text-left">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">© 2026 NM MART</p>
+          <p className="text-[11px] font-[500] tracking-[0.1em] text-slate-400 uppercase">© 2026 NM MART</p>
           <Link
             to="/privacy"
-            className={`text-[11px] font-bold uppercase tracking-widest transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${
+            className={`text-[11px] font-[600] tracking-[0.1em] uppercase transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${
               location.pathname === "/privacy"
                 ? "text-slate-700 underline underline-offset-4"
                 : "text-slate-400 hover:text-primary hover:underline hover:underline-offset-4 active:text-slate-600"

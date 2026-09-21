@@ -84,12 +84,12 @@ export interface OfferConfig {
 
 const DEFAULT_CONFIG: Record<string, any> = {
   theme: {
-    primaryColor: "#1D4ED8",
-    secondaryColor: "#E0F2FE",
-    backgroundColor: "#F7F9FC",
-    textColor: "#0F172A",
+    primaryColor: "#155EEF",
+    secondaryColor: "#EFF6FF",
+    backgroundColor: "#F8FAFC",
+    textColor: "#111827",
     highlightColor: "#DBEAFE",
-    accentColor: "#93C5FD",
+    accentColor: "#E11D48",
     presetName: "NM Classic",
     storeName: "NM Mart",
     storeLogo: "/nm-mart-logo.png",

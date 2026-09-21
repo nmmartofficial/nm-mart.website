@@ -86,8 +86,8 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
     const currentPath = location.pathname;
     return currentPath === path || currentPath.startsWith(`${path}/`);
   });
-  const headerClass = "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#0f4e9a] bg-[#0b3b78] text-white shadow-[0_10px_30px_-20px_rgba(11,59,120,0.45)]";
-  const mobileHeaderClass = "bg-[#0b3b78] text-white";
+  const headerClass = "sticky top-0 z-50 w-full max-w-[100vw] overflow-x-hidden border-b border-[#E2E8F0] bg-white text-[#0B1F3A] shadow-[0_10px_30px_-20px_rgba(21,94,239,0.18)]";
+  const mobileHeaderClass = "bg-white text-[#0B1F3A]";
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -204,10 +204,10 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
         <div className="flex h-[52px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
           <Link to="/" className="group flex min-w-0 shrink items-center justify-center text-left md:flex-1">
             <div className="flex w-[170px] max-w-[45vw] flex-col items-center justify-center leading-none text-white md:w-[220px]">
-              <span className="text-center text-[26px] font-black uppercase tracking-[-0.06em] text-[#f8d86a] md:text-[34px]">
+              <span className="text-center text-[26px] font-[800] tracking-[-0.06em] text-[#155EEF] md:text-[34px]">
                 NM Mart
               </span>
-              <span className="mt-1 w-full text-center text-[7px] font-black uppercase tracking-[0.18em] text-white/80 md:text-[9px]">
+              <span className="mt-1 w-full text-center text-[7px] font-[600] tracking-[0.12em] text-[#0B1F3A]/70 uppercase md:text-[9px]">
                 {theme.storeSlogan || "Shop More, Save More"}
               </span>
             </div>
@@ -216,17 +216,17 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
           {!isMoreSection && (
             <div className="hidden flex-1 md:block mx-6 lg:mx-8">
               <form
-                className="flex items-center gap-3 rounded-full border border-[#1d5fbf] bg-[#1d5fbf]/90 px-4 py-2.5 shadow-sm"
+                className="flex items-center gap-3 rounded-full border border-[#DBEAFE] bg-[#EFF6FF] px-4 py-2.5 shadow-sm"
                 onSubmit={handleSearchSubmit}
               >
-                <Search className="h-4 w-4 text-white/90" />
+                <Search className="h-4 w-4 text-[#155EEF]" />
                 <input
                   type="search"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   aria-label="Search products"
                   placeholder="Search products, brands & categories"
-                  className="w-full border-0 bg-transparent text-sm text-white placeholder:text-white/70 focus:outline-none"
+                  className="w-full border-0 bg-transparent text-sm font-[500] text-[#0B1F3A] placeholder:text-[#64748B] focus:outline-none"
                 />
               </form>
             </div>
@@ -257,48 +257,48 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
               <button
                 type="button"
                 onClick={() => navigate("/wishlist")}
-                className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white shadow-sm transition hover:bg-white/20"
+                className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#DBEAFE] bg-[#EFF6FF] text-[#155EEF] shadow-sm transition hover:bg-[#EAF3FF]"
                 aria-label="Open wishlist"
               >
-                <Bookmark size={17} className="text-white" />
-                {wishlistBarcodes.length > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-rose-500 px-1 text-[9px] font-black text-white">{wishlistBarcodes.length}</span>}
+                <Bookmark size={17} className="text-[#155EEF]" />
+                {wishlistBarcodes.length > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-[#E11D48] px-1 text-[9px] font-black text-white">{wishlistBarcodes.length}</span>}
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/orders")}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white shadow-sm transition hover:bg-white/20"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#DBEAFE] bg-[#EFF6FF] text-[#155EEF] shadow-sm transition hover:bg-[#EAF3FF]"
                 aria-label="Open order notifications"
               >
-                <Bell size={17} className="text-white" />
+                <Bell size={17} className="text-[#155EEF]" />
               </button>
             </div>
 
             <button
               type="button"
               onClick={() => navigate("/wallet")}
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white shadow-sm transition hover:bg-white/20 md:order-2"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#DBEAFE] bg-[#EFF6FF] text-[#155EEF] shadow-sm transition hover:bg-[#EAF3FF] md:order-2"
               aria-label="Wallet"
             >
-              <Wallet size={18} className="text-white" />
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#d83b3b] text-[9px] font-black text-white shadow-sm">
+              <Wallet size={18} className="text-[#155EEF]" />
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#E11D48] text-[9px] font-black text-white shadow-sm">
                 1
               </span>
             </button>
             <button
               type="button"
               onClick={() => navigate("/cart")}
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white shadow-sm transition hover:bg-white/20 md:order-3 md:h-11 md:w-auto md:px-4"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#DBEAFE] bg-[#EFF6FF] text-[#155EEF] shadow-sm transition hover:bg-[#EAF3FF] md:order-3 md:h-11 md:w-auto md:px-4"
             >
-              <ShoppingCart size={21} className="text-white md:size-[15px]" />
-              <span className="hidden md:inline ml-2 text-[10px] font-black uppercase tracking-[0.18em] text-white">Cart</span>
-              <span className="absolute -top-1.5 -right-1.5 flex min-w-[1.2rem] items-center justify-center rounded-full bg-red-500 px-1 py-0.5 text-[9px] font-bold text-white md:static md:ml-1.5 md:bg-red-500 md:text-[10px]">
+              <ShoppingCart size={21} className="text-[#155EEF] md:size-[15px]" />
+              <span className="hidden md:inline ml-2 text-[10px] font-[700] tracking-[0.12em] text-[#0B1F3A] uppercase">Cart</span>
+              <span className="absolute -top-1.5 -right-1.5 flex min-w-[1.2rem] items-center justify-center rounded-full bg-[#E11D48] px-1 py-0.5 text-[9px] font-[700] text-white md:static md:ml-1.5 md:text-[10px]">
                 {cartCount > 99 ? "100+" : cartCount}
               </span>
             </button>
             <button
               type="button"
               onClick={() => setMoreOpen(true)}
-              className="hidden items-center justify-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-sm transition hover:bg-white/20 md:order-4 md:inline-flex"
+              className="hidden items-center justify-center rounded-full border border-[#DBEAFE] bg-[#EFF6FF] px-4 py-2 text-[10px] font-[700] tracking-[0.12em] text-[#0B1F3A] uppercase shadow-sm transition hover:bg-[#EAF3FF] md:order-4 md:inline-flex"
               aria-label="Open More menu"
             >
               More
