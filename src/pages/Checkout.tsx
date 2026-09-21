@@ -21,7 +21,12 @@ import { useSavedAddresses } from "@/hooks/useSavedAddresses";
 const Checkout = () => {
   const navigate = useNavigate();
   const { cart, cartTotal, clearCart } = useCart();
-  const { addresses, loading: addressesLoading } = useSavedAddresses();
+  const {
+  addresses,
+  loading: addressesLoading,
+  saveAddress,
+} = useSavedAddresses();
+const [saveAddressForFuture, setSaveAddressForFuture] = useState(false);
   const subtotal = cart.reduce((sum, item) => sum + (Number(item.saleRate ?? item.price ?? 0) * item.qty), 0);
   const [loading, setLoading] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
@@ -178,26 +183,51 @@ const Checkout = () => {
       }
 
       const fullAddress = `${formData.street}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.pincode}`;
-      const payload = buildServerOrderPayload(cart, {
-        customer_id: session.user.id,
-        customer_name: formData.fullName.trim(),
-        customer_phone: formData.phone.trim(),
-        shipping_address: fullAddress.trim(),
-        landmark: formData.landmark.trim(),
-        pincode: formData.pincode.trim(),
-        payment_method: "cod",
-        idempotency_key: `${session.user.id}:${Date.now()}:${crypto.randomUUID()}`,
-      });
 
-      const { data, error } = await supabase.rpc("place_website_order_atomic", payload);
-      if (error) throw error;
+const payload = buildServerOrderPayload(cart, {
+  customer_id: session.user.id,
+  customer_name: formData.fullName.trim(),
+  customer_phone: formData.phone.trim(),
+  shipping_address: fullAddress.trim(),
+  landmark: formData.landmark.trim(),
+  pincode: formData.pincode.trim(),
+  payment_method: "cod",
+  idempotency_key: `${session.user.id}:${Date.now()}:${crypto.randomUUID()}`,
+});
 
-      const returnedOrder = Array.isArray(data) ? data[0] : data;
-      const createdOrderId = returnedOrder?.id ?? returnedOrder?.order_id ?? returnedOrder?.orderId;
-      if (!createdOrderId) {
-        throw new Error("The secure checkout returned no order ID.");
-      }
+const { data, error } = await supabase.rpc("place_website_order_atomic", payload);
 
+if (error) throw error;
+
+const returnedOrder = Array.isArray(data) ? data[0] : data;
+const createdOrderId =
+  returnedOrder?.id ??
+  returnedOrder?.order_id ??
+  returnedOrder?.orderId;
+
+if (!createdOrderId) {
+  throw new Error("The secure checkout returned no order ID.");
+}
+
+if (saveAddressForFuture) {
+  try {
+    await saveAddress({
+      label: "Home",
+      address: formData.street.trim(),
+      landmark: formData.landmark.trim() || null,
+      city: null,
+      state: null,
+      pincode: formData.pincode.trim(),
+    });
+  } catch (addressError) {
+    logSupabaseDebug(
+      "checkoutSaveAddress:error",
+      { userId: session.user.id },
+      addressError
+    );
+    toast.warning("Order placed, but your address could not be saved.");
+  }
+}
       clearCart();
       toast.success("Order placed successfully!");
       navigate(`/order-confirmation/${encodeURIComponent(String(createdOrderId))}`, { replace: true });
@@ -356,6 +386,26 @@ const Checkout = () => {
       Add New Address
     </button>
   </div>
+)}
+
+{addresses.length === 0 && (
+  <label className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50/70 p-4 cursor-pointer">
+    <input
+      type="checkbox"
+      checked={saveAddressForFuture}
+      onChange={(e) => setSaveAddressForFuture(e.target.checked)}
+      className="h-4 w-4 accent-primary"
+    />
+
+    <div>
+      <p className="text-xs font-black uppercase text-slate-800">
+        Save this address for future orders
+      </p>
+      <p className="text-[10px] font-semibold text-gray-400 mt-1">
+        You won't need to enter this address again.
+      </p>
+    </div>
+  </label>
 )}
 
                 <div className="grid md:grid-cols-2 gap-8">
