@@ -21,6 +21,26 @@ import {
 } from "@/lib/supabase/schema";
 
 const PRODUCT_COLUMNS = "barcode,name,mrp,sale_rate,retail_rate,restrate,onlinerate,online_rate,selling_price,stock,opstock,opening_stock,category_name,item_group_name,item_group,brand_name,subcategory_name,sub_category_name,discount_percent,discount_pct,discperc,discount,image_url,picture,is_active,is_deleted,is_favourite,isfav,unit_name,unitcode,description,item_description,itemdescription,id,created_at,updated_at";
+let categoriesRequest: Promise<string[]> | null = null;
+
+function loadActiveCategories(): Promise<string[]> {
+  if (!categoriesRequest) {
+    categoriesRequest = supabase
+      .from(TABLES.categories)
+      .select("name, is_active")
+      .eq("is_active", true)
+      .order("name")
+      .then(({ data, error }) => {
+        if (error) throw error;
+        return (data || []).map((item) => String(item.name || "").trim()).filter(isDisplayLabel);
+      })
+      .catch((error) => {
+        categoriesRequest = null;
+        throw error;
+      });
+  }
+  return categoriesRequest;
+}
 
 export type ProductCatalogOptions = {
   pageSize?: number;
@@ -167,8 +187,10 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
 
   useEffect(() => {
     let mounted = true;
-    supabase.from(TABLES.categories).select("name, is_active").eq("is_active", true).order("name").then(({ data }) => {
-      if (mounted) setCategories((data || []).map((item) => String(item.name || "").trim()).filter(isDisplayLabel));
+    void loadActiveCategories().then((names) => {
+      if (mounted) setCategories(names);
+    }).catch(() => {
+      if (mounted) setCategories([]);
     });
     return () => { mounted = false; };
   }, []);
