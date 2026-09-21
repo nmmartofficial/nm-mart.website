@@ -407,7 +407,7 @@ export default function HomePage() {
                     disabled={popularLoading}
                     className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#eaf3ff] hover:text-[#0b3b78] disabled:cursor-wait disabled:opacity-60"
                   >
-                    {productsLoading ? "Loading Products" : "Load More Products"}
+                    {popularLoading ? "Loading Products" : "Load More Products"}
                     <ChevronDown className="h-4 w-4" />
                   </button>
                 </div>
