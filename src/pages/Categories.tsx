@@ -94,7 +94,7 @@ export default function Categories() {
                     onClick={() => setSearchParams({ category: selectedCategory })}
                     className={`flex w-full min-w-0 flex-col items-center rounded-lg px-1 py-2 text-center transition ${selectedSubcategory === "all" ? "bg-[#eaf3ff] text-[#0b3b78]" : "text-slate-600 hover:bg-slate-50"}`}
                   >
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-1 ring-slate-200">
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-100 ring-1 ring-slate-200">
                       <LayoutGrid className="h-4 w-4 text-slate-500" />
                     </span>
                     <span className="mt-1 line-clamp-2 text-[9px] font-bold leading-tight">All {selectedCategory}</span>
@@ -106,7 +106,7 @@ export default function Categories() {
                       onClick={() => setSearchParams({ category: selectedCategory, subcategory })}
                       className={`flex w-full min-w-0 flex-col items-center rounded-lg px-1 py-2 text-center transition ${selectedSubcategory === subcategory ? "bg-[#eaf3ff] text-[#0b3b78]" : "text-slate-600 hover:bg-slate-50"}`}
                     >
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-[9px] font-black uppercase text-slate-500 ring-1 ring-slate-200">
+               <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-[9px] font-black uppercase text-slate-500 ring-1 ring-slate-200">
                         {subcategoryImages[subcategory.toLowerCase()] ? (
                           <img src={subcategoryImages[subcategory.toLowerCase()]} alt="" className="h-full w-full object-contain p-1" loading="lazy" />
                         ) : (
