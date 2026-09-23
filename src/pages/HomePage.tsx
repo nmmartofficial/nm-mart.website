@@ -435,7 +435,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="hide-scrollbar grid gap-2.5 pb-1 md:grid-cols-3 md:gap-4 lg:grid-cols-6">
+              <<div className="hide-scrollbar grid grid-cols-3 gap-x-2.5 gap-y-6 pb-1 md:grid-cols-3 md:gap-4 lg:grid-cols-6">
                 {liveBrands.map((brand) => (
                   <BrandCategoryCard
                     key={brand}
