@@ -46,6 +46,7 @@ function loadActiveCategories(): Promise<string[]> {
 export type ProductCatalogOptions = {
   pageSize?: number;
   category?: string;
+  subcategory?: string;
   brand?: string;
   search?: string;
   offersOnly?: boolean;
@@ -124,6 +125,12 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
       let query = supabase.from(TABLES.products).select(PRODUCT_COLUMNS);
       query = query.eq("is_active", true).neq("is_deleted", true).gt("stock", 0);
       if (options.category) query = query.ilike("category_name", options.category);
+      if (options.subcategory) {
+        const sub = options.subcategory.trim();
+        if (sub) {
+          query = query.or(`subcategory_name.ilike.%${sub}%,sub_category_name.ilike.%${sub}%`);
+        }
+      }
       if (options.brand) query = query.ilike("brand_name", options.brand);
       if (options.search?.trim()) {
         const search = options.search.trim().replace(/[,()]/g, " ");

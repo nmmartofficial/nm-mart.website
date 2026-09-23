@@ -111,6 +111,23 @@ export function normalizeBannerType(value?: string | null): string {
     .replace(/-+/g, "_");
 }
 
+export function getBannerPlacementKey(banner: Partial<WebsiteBanner> | null | undefined): "top" | "middle" | "bottom" | "other" {
+  const haystack = normalizeBannerType([
+    banner?.banner_type,
+    banner?.name,
+    banner?.title,
+    banner?.description,
+    banner?.action_type,
+    banner?.action_value,
+  ].join(" "));
+
+  if (!haystack) return "other";
+  if (/(^|_)(top|hero|slider|main)(_|$)/.test(haystack) || haystack.includes("top_slider")) return "top";
+  if (/(^|_)(middle|promo|feature|category|product_section|offer)(_|$)/.test(haystack) || haystack.includes("mid_")) return "middle";
+  if (/(^|_)(bottom|footer|app|popup)(_|$)/.test(haystack)) return "bottom";
+  return "other";
+}
+
 export function matchesBannerType(banner: Partial<WebsiteBanner> | null | undefined, allowedTypes: string[]): boolean {
   const bannerType = normalizeBannerType(banner?.banner_type ?? banner?.name ?? "");
   if (!bannerType) return false;

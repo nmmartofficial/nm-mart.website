@@ -17,6 +17,18 @@ export default function Categories() {
     return images;
   }, [allProducts]);
 
+  const subcategoriesByCategory = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (const product of allProducts) {
+      const category = String(product.category || "").trim();
+      const subcategory = String(product.subCategory || "").trim();
+      if (!category || !subcategory) continue;
+      if (!map[category]) map[category] = [];
+      if (!map[category].includes(subcategory)) map[category].push(subcategory);
+    }
+    return map;
+  }, [allProducts]);
+
   const liveCategories = categories.filter(Boolean);
 
   return (
@@ -46,18 +58,38 @@ export default function Categories() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {liveCategories.map((category) => {
               const image = imageByCategory[category.toUpperCase()];
+              const subcategories = (subcategoriesByCategory[category] || []).slice(0, 4);
               return (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => navigate(`/shop?category=${encodeURIComponent(category)}`)}
-                  className="group flex min-h-[170px] flex-col items-center justify-center rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:border-orange-300 hover:shadow-md"
-                >
-                  <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-slate-50 ring-1 ring-slate-100">
-                    {image ? <img src={image} alt={category} className="h-full w-full object-contain p-2" loading="lazy" /> : <LayoutGrid className="h-8 w-8 text-slate-400" />}
-                  </div>
-                  <span className="mt-4 text-center text-[10px] font-black uppercase tracking-[0.12em] text-slate-700 group-hover:text-orange-600">{category}</span>
-                </button>
+                <div key={category} className="group flex min-h-[170px] flex-col rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:border-orange-300 hover:shadow-md">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/shop?category=${encodeURIComponent(category)}`)}
+                    className="flex flex-col items-center justify-center"
+                  >
+                    <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-slate-50 ring-1 ring-slate-100">
+                      {image ? <img src={image} alt={category} className="h-full w-full object-contain p-2" loading="lazy" /> : <LayoutGrid className="h-8 w-8 text-slate-400" />}
+                    </div>
+                    <span className="mt-4 text-center text-[10px] font-black uppercase tracking-[0.12em] text-slate-700 group-hover:text-orange-600">{category}</span>
+                  </button>
+
+                  {subcategories.length > 0 && (
+                    <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                      {subcategories.map((subcategory) => (
+                        <button
+                          key={`${category}-${subcategory}`}
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(`/shop?category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}`);
+                          }}
+                          className="rounded-full border border-orange-200 bg-orange-50 px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-orange-700 transition hover:border-orange-300 hover:bg-orange-100"
+                        >
+                          {subcategory}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

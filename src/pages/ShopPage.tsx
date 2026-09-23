@@ -33,6 +33,10 @@ const ShopPage = () => {
     const category = searchParams.get("category");
     return category || "all";
   });
+  const [selectedSubcategory, setSelectedSubcategory] = useState(() => {
+    const subcategory = searchParams.get("subcategory");
+    return subcategory || "all";
+  });
   const [selectedBrand, setSelectedBrand] = useState(() => {
     const brand = searchParams.get("brand");
     return brand || "all";
@@ -56,6 +60,7 @@ const ShopPage = () => {
     pageSize: 20,
     search: query,
     category: selectedCategory === "all" ? undefined : selectedCategory,
+    subcategory: selectedSubcategory === "all" ? undefined : selectedSubcategory,
     brand: selectedBrand === "all" ? undefined : selectedBrand,
     offersOnly,
     sort: sortBy,
@@ -73,12 +78,14 @@ const ShopPage = () => {
   useEffect(() => {
     const nextQuery = searchParams.get("search") || searchParams.get("q") || "";
     const nextCategory = searchParams.get("category") || "all";
+    const nextSubcategory = searchParams.get("subcategory") || "all";
     const nextBrand = searchParams.get("brand") || "all";
     const nextPriceMin = searchParams.get("priceMin") || "";
     const nextPriceMax = searchParams.get("priceMax") || "";
     const nextSort = searchParams.get("sort");
     setQuery(nextQuery);
     setSelectedCategory(nextCategory);
+    setSelectedSubcategory(nextSubcategory);
     setSelectedBrand(nextBrand);
     setPriceMin(nextPriceMin);
     setPriceMax(nextPriceMax);
@@ -90,6 +97,7 @@ const ShopPage = () => {
 
     if (query.trim()) nextParams.set("search", query.trim());
     if (selectedCategory !== "all") nextParams.set("category", selectedCategory);
+    if (selectedSubcategory !== "all") nextParams.set("subcategory", selectedSubcategory);
     if (selectedBrand !== "all") nextParams.set("brand", selectedBrand);
     if (priceMin.trim()) nextParams.set("priceMin", priceMin.trim());
     if (priceMax.trim()) nextParams.set("priceMax", priceMax.trim());
@@ -103,7 +111,7 @@ const ShopPage = () => {
     if (nextSearch !== currentSearch) {
       setSearchParams(nextSearch ? `?${nextSearch}` : "", { replace: true });
     }
-  }, [collection, offersOnly, query, selectedCategory, selectedBrand, priceMin, priceMax, sortBy, searchParams, setSearchParams]);
+  }, [collection, offersOnly, query, selectedCategory, selectedSubcategory, selectedBrand, priceMin, priceMax, sortBy, searchParams, setSearchParams]);
 
   const filteredProducts = useMemo(() => {
     const minValue = Number(priceMin);
@@ -117,6 +125,7 @@ const ShopPage = () => {
   const clearFilters = () => {
     setQuery("");
     setSelectedCategory("all");
+    setSelectedSubcategory("all");
     setSelectedBrand("all");
     setPriceMin("");
     setPriceMax("");
@@ -185,6 +194,32 @@ const ShopPage = () => {
               {category}
             </option>
           ))}
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="shop-subcategory" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+          Subcategory
+        </label>
+        <select
+          id="shop-subcategory"
+          value={selectedSubcategory}
+          onChange={(event) => setSelectedSubcategory(event.target.value)}
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-orange-300"
+        >
+          <option value="all">All subcategories</option>
+          {(() => {
+            const subcats = new Set<string>();
+            for (const product of allProducts) {
+              const value = String(product.subCategory || "").trim();
+              if (value) subcats.add(value);
+            }
+            return [...subcats].sort().map((subcategory) => (
+              <option key={subcategory} value={subcategory}>
+                {subcategory}
+              </option>
+            ));
+          })()}
         </select>
       </div>
 

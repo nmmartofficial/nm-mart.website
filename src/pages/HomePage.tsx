@@ -7,7 +7,7 @@ import Header from "@/components/shop/Header";
 import HeroBanner from "@/components/shop/HeroBanner";
 import ProductCard from "@/components/shop/ProductCard";
 import Footer from "@/components/shop/Footer";
-import { fetchActiveBanners, fetchActiveBannersByType } from "@/lib/supabase";
+import { fetchActiveBanners, getBannerPlacementKey } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase/client";
 import { subscribeToCatalogChanges } from "@/lib/supabase/realtime";
 import { TABLES } from "../lib/supabase/schema";
@@ -175,25 +175,14 @@ export default function HomePage() {
         const fetchedBanners = await fetchActiveBanners();
         if (!mounted) return;
 
-        const top = fetchedBanners.filter((banner) => {
-          const type = String(banner.banner_type ?? "").toLowerCase();
-          return type.includes("top") || type.includes("slider") || type.includes("hero");
-        });
-
-        const middle = fetchedBanners.filter((banner) => {
-          const type = String(banner.banner_type ?? "").toLowerCase();
-          return type.includes("middle") || type.includes("promo") || type.includes("category") || type.includes("product");
-        });
-
-        const bottom = fetchedBanners.filter((banner) => {
-          const type = String(banner.banner_type ?? "").toLowerCase();
-          return type.includes("bottom") || type.includes("offer") || type.includes("popup") || type.includes("app");
-        });
+        const top = fetchedBanners.filter((banner) => getBannerPlacementKey(banner) === "top");
+        const middle = fetchedBanners.filter((banner) => getBannerPlacementKey(banner) === "middle");
+        const bottom = fetchedBanners.filter((banner) => getBannerPlacementKey(banner) === "bottom");
 
         setBanners(fetchedBanners);
         setTopBanners(top.length > 0 ? top : fetchedBanners.slice(0, 1));
-        setMiddleBanners(middle);
-        setBottomBanners(bottom);
+        setMiddleBanners(middle.length > 0 ? middle : fetchedBanners.filter((banner) => banner.id !== top[0]?.id).slice(0, 2));
+        setBottomBanners(bottom.length > 0 ? bottom : fetchedBanners.filter((banner) => banner.id !== top[0]?.id && !middle.some((item) => item.id === banner.id)).slice(0, 2));
       } catch (error) {
         if (mounted) {
           setBanners([]);
