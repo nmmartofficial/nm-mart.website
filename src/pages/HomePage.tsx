@@ -393,7 +393,7 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-      <div className="hide-scrollbar grid grid-cols-3 gap-x-2.5 gap-y-6 pb-1 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6">
+<div className="hide-scrollbar grid grid-cols-3 gap-x-2.5 gap-y-6 pb-1 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6 [&>*:nth-child(n+7)]:hidden md:[&>*:nth-child(n+7)]:block">
               {liveCategories.map((category) => (
                 <BrandCategoryCard
                   key={category}
