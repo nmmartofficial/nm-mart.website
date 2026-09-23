@@ -48,7 +48,7 @@ export default function HomePage() {
   const [visibleFeaturedCount, setVisibleFeaturedCount] = useState(8);
   const [visibleFlat50Count, setVisibleFlat50Count] = useState(8);
   const [visibleFlat33Count, setVisibleFlat33Count] = useState(8);
-  const [visibleCategoryCount] = useState(6);
+  const [visibleCategoryCount] = useState(12);
   const [visibleBrandCount] = useState(12);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [brandImages, setBrandImages] = useState<Record<string, string>>({});
@@ -57,8 +57,8 @@ export default function HomePage() {
   const liveCategories = allLiveCategories.slice(0, visibleCategoryCount);
   const allLiveBrands = (brandNames.length > 0 ? brandNames : brands || []).filter(Boolean);
   const liveBrands = allLiveBrands.slice(0, visibleBrandCount);
-  const hasMoreCategories = allLiveCategories.length > visibleCategoryCount;
-  const hasMoreBrands = allLiveBrands.length > visibleBrandCount;
+  const hasMoreCategories = allLiveCategories.length > 6;
+  const hasMoreBrands = allLiveBrands.length > 6;
   const allLiveFeatured = (featuredProducts || []).filter((p: Product) => Number(p.stock) > 0);
   const allLiveFlat50 = (flat50 || []).filter((p: Product) => Number(p.stock) > 0);
   const allLiveFlat33 = (flat33 || []).filter((p: Product) => Number(p.stock) > 0);
