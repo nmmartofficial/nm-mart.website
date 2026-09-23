@@ -181,6 +181,7 @@ function App() {
               <Route path="/order-confirmation/:orderId" element={<CustomerAuthGuard><OrderConfirmation /></CustomerAuthGuard>} />
               <Route path="/tracker" element={<OrderTracker />} />
               <Route path="/shop" element={<ShopPage />} />
+              <Route path="/brands" element={<BrandsPage />} />
               <Route path="/categories" element={<Categories />} />
               <Route path="/addresses" element={<CustomerAuthGuard><Addresses /></CustomerAuthGuard>} />
               <Route path="/wallet" element={<CustomerAuthGuard><Wallet /></CustomerAuthGuard>} />
