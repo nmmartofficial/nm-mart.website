@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  ArrowLeft,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Mail,
+  LockKeyhole,
+  UserRound,
+  ShoppingCart,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 
 export interface AuthFormInput {
@@ -28,23 +37,40 @@ const getFriendlyAuthError = (error: any, fallback: string): string => {
     return "Invalid email or password.";
   }
 
-  if (message.includes("user already registered") || code === "user_already_exists") {
+  if (
+    message.includes("user already registered") ||
+    code === "user_already_exists"
+  ) {
     return "An account with this email already exists. Please sign in or reset your password.";
   }
 
-  if (message.includes("email not confirmed") || message.includes("confirm your email")) {
-    return "Please check your inbox and confirm this account before signing in.";
+  if (
+    message.includes("email not confirmed") ||
+    message.includes("confirm your email")
+  ) {
+    return "Please check your inbox and confirm your account before signing in.";
   }
 
-  if (message.includes("too many requests") || message.includes("rate limit")) {
+  if (
+    message.includes("too many requests") ||
+    message.includes("rate limit")
+  ) {
     return "Too many attempts. Please wait a moment and try again.";
   }
 
-  if (message.includes("oauth") || message.includes("provider") || message.includes("google")) {
+  if (
+    message.includes("oauth") ||
+    message.includes("provider") ||
+    message.includes("google")
+  ) {
     return "Google sign-in could not be completed. Please try again.";
   }
 
-  if (message.includes("network") || message.includes("fetch") || message.includes("timeout")) {
+  if (
+    message.includes("network") ||
+    message.includes("fetch") ||
+    message.includes("timeout")
+  ) {
     return "Unable to connect. Please try again.";
   }
 
@@ -136,22 +162,37 @@ export const validateResetPasswordForm = ({
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
   const requestedNextPath = searchParams.get("next") || "";
-  const nextPath = requestedNextPath.startsWith("/") && !requestedNextPath.startsWith("//") ? requestedNextPath : "/";
+
+  const nextPath =
+    requestedNextPath.startsWith("/") &&
+    !requestedNextPath.startsWith("//")
+      ? requestedNextPath
+      : "/";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
     const redirectIfLoggedIn = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (isMounted && session) {
         navigate(nextPath, { replace: true });
       }
@@ -159,7 +200,9 @@ const Login = () => {
 
     redirectIfLoggedIn();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (isMounted && session) {
         navigate(nextPath, { replace: true });
       }
@@ -176,12 +219,20 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/login?next=${encodeURIComponent(nextPath)}`,
+          redirectTo: `${window.location.origin}/login?next=${encodeURIComponent(
+            nextPath
+          )}`,
         },
       });
+
       if (error) throw error;
     } catch (err: any) {
-      toast.error(getFriendlyAuthError(err, "Google sign-in could not be completed. Please try again."));
+      toast.error(
+        getFriendlyAuthError(
+          err,
+          "Google sign-in could not be completed. Please try again."
+        )
+      );
     }
   };
 
@@ -189,6 +240,7 @@ const Login = () => {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
     const trimmedName = fullName.trim();
+
     const validationError = validateAuthForm({
       isSignUp,
       email: trimmedEmail,
@@ -203,6 +255,7 @@ const Login = () => {
     }
 
     setLoading(true);
+
     try {
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({
@@ -223,15 +276,19 @@ const Login = () => {
           return;
         }
 
-        toast.success("Account created. Please check your email to confirm your account.");
+        toast.success(
+          "Account created. Please check your email to confirm your account."
+        );
+
         setIsSignUp(false);
         setPassword("");
         setConfirmPassword("");
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: trimmedEmail,
-          password: trimmedPassword,
-        });
+        const { data, error } =
+          await supabase.auth.signInWithPassword({
+            email: trimmedEmail,
+            password: trimmedPassword,
+          });
 
         if (error) throw error;
 
@@ -241,7 +298,12 @@ const Login = () => {
         }
       }
     } catch (err: any) {
-      toast.error(getFriendlyAuthError(err, "Authentication failed. Please try again."));
+      toast.error(
+        getFriendlyAuthError(
+          err,
+          "Authentication failed. Please try again."
+        )
+      );
     } finally {
       setLoading(false);
     }
@@ -249,6 +311,7 @@ const Login = () => {
 
   const handleForgotPassword = async () => {
     const trimmedEmail = email.trim();
+
     const validationError = validateRecoveryEmail(trimmedEmail);
 
     if (validationError) {
@@ -260,230 +323,530 @@ const Login = () => {
     setResetEmailSent(false);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      const { error } =
+        await supabase.auth.resetPasswordForEmail(
+          trimmedEmail,
+          {
+            redirectTo: `${window.location.origin}/reset-password`,
+          }
+        );
 
       if (error) throw error;
 
       setResetEmailSent(true);
-      toast.success("If an account exists for this email, reset instructions will be sent shortly.");
+
+      toast.success(
+        "If an account exists for this email, reset instructions will be sent shortly."
+      );
     } catch (err: any) {
-      toast.error(getFriendlyAuthError(err, "Failed to request password reset. Please try again."));
+      toast.error(
+        getFriendlyAuthError(
+          err,
+          "Failed to request password reset. Please try again."
+        )
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const switchAuthMode = () => {
+    setIsSignUp((current) => !current);
+    setConfirmPassword("");
+    setPassword("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setForgotPasswordMode(false);
+    setResetEmailSent(false);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      <Header />
+    <div className="min-h-screen bg-[#F5F9FF] text-[#0B1F3A] flex flex-col font-sans">
 
-      <main className="flex-1 flex flex-col items-center py-12 px-4 relative">
-        <div className="absolute top-6 left-6 hidden md:block">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-3 bg-white border border-gray-100 px-5 py-2.5 rounded-2xl text-gray-400 hover:text-primary hover:border-primary transition-all shadow-sm group"
-          >
-            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-xs font-black uppercase tracking-widest italic">Back to Shop</span>
-          </button>
-        </div>
+      {/* Login page header - website search/header intentionally removed */}
+      <header className="w-full border-b border-[#E4ECF7] bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 md:px-8">
 
-        <div className="w-full max-w-[350px] mb-6 md:hidden">
           <button
+            type="button"
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-gray-400 hover:text-primary transition-colors text-[11px] font-black uppercase tracking-widest italic group"
+            className="flex flex-col items-start leading-none"
+            aria-label="NM Mart Home"
           >
-            <div className="bg-white p-2 rounded-full shadow-sm border border-gray-100">
-              <ArrowLeft size={14} />
+            <div className="flex items-center">
+              <span className="text-[34px] font-[900] tracking-[-0.07em] text-[#155EEF] md:text-[42px]">
+                NM
+              </span>
+
+              <span className="text-[34px] font-[900] tracking-[-0.07em] text-[#0B1F3A] md:text-[42px]">
+                Mart
+              </span>
+
+              <ShoppingCart
+                size={25}
+                strokeWidth={2.5}
+                className="ml-1 text-[#155EEF] md:h-8 md:w-8"
+              />
             </div>
-            Back to Home
+
+            <span className="mt-1 text-[7px] font-bold tracking-[0.18em] text-[#0B1F3A]/60 uppercase md:text-[9px]">
+              SHOP MORE, SAVE MORE
+            </span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 rounded-full border border-[#DCE7FA] bg-[#F5F9FF] px-3 py-2 text-[11px] font-bold text-[#155EEF] transition hover:bg-[#EAF2FF] md:px-4 md:text-xs"
+          >
+            <ArrowLeft size={15} />
+            <span>Back to Home</span>
+          </button>
+
         </div>
+      </header>
 
-        <div className="w-full max-w-[350px] space-y-4">
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-            {forgotPasswordMode ? (
-              <div className="space-y-4">
-                <button
-                  onClick={() => {
-                    setForgotPasswordMode(false);
-                    setResetEmailSent(false);
-                  }}
-                  className="flex items-center gap-2 text-gray-400 hover:text-black transition-colors text-[10px] font-black uppercase tracking-widest mb-4"
-                >
-                  <ArrowLeft size={14} /> Back to Sign In
-                </button>
+      <main className="flex-1 px-4 py-8 md:px-8 md:py-12">
 
-                <h2 className="text-[28px] font-normal mb-2">Password assistance</h2>
+        <div className="mx-auto w-full max-w-[500px]">
 
-                {resetEmailSent ? (
-                  <div className="space-y-4">
-                    <div className="bg-green-50 border border-green-100 p-4 rounded-lg flex items-start gap-3">
-                      <CheckCircle2 size={18} className="text-green-600 mt-0.5" />
-                      <p className="text-xs text-green-800 leading-relaxed">
-                        If an account exists for <b>{email}</b>, you will receive instructions shortly.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setForgotPasswordMode(false)}
-                      className="w-full bg-primary text-white py-2.5 rounded shadow-sm hover:bg-primary-hover transition-all text-sm font-bold"
-                    >
-                      Return to Sign In
-                    </button>
-                  </div>
+          <div className="overflow-hidden rounded-[24px] border border-[#DDE7F5] bg-white shadow-[0_18px_60px_rgba(21,94,239,0.10)]">
+
+            {/* Blue title area */}
+            <div className="bg-[#155EEF] px-5 py-6 text-center text-white md:px-8 md:py-7">
+
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
+                {isSignUp ? (
+                  <UserRound size={24} />
                 ) : (
-                  <div className="space-y-4">
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      Enter the email address associated with your NM Mart account.
-                    </p>
-
-                    <div className="space-y-1">
-                      <label className="text-sm font-bold block">Email</label>
-                      <input
-                        type="email"
-                        placeholder="Email address"
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                        className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                        autoComplete="username"
-                      />
-                    </div>
-
-                    <button
-                      onClick={handleForgotPassword}
-                      disabled={loading}
-                      className="w-full bg-primary text-white py-2.5 rounded shadow-sm hover:bg-primary-hover transition-all text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                      {loading ? <Loader2 className="animate-spin" size={16} /> : "Continue"}
-                    </button>
-                  </div>
+                  <ShoppingCart size={24} />
                 )}
               </div>
-            ) : (
-              <>
-                <h2 className="text-[28px] font-normal mb-4">
-                  {isSignUp ? "Create account" : "Sign in"}
-                </h2>
 
-                <div className="space-y-4">
-                  {isSignUp && (
-                    <div className="space-y-1">
-                      <label className="text-sm font-bold block">Your name</label>
-                      <input
-                        type="text"
-                        placeholder="First and last name"
-                        value={fullName}
-                        onChange={(event) => setFullName(event.target.value)}
-                        className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                        autoComplete="name"
-                      />
-                    </div>
-                  )}
+              <h1 className="text-[27px] font-[900] tracking-[-0.03em] md:text-[31px]">
+                {forgotPasswordMode
+                  ? "Reset Password"
+                  : isSignUp
+                    ? "Create Your Account"
+                    : "Welcome Back!"}
+              </h1>
 
-                  <div className="space-y-1">
-                    <label className="text-sm font-bold block">Email</label>
-                    <input
-                      type="email"
-                      placeholder="Email address"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                      autoComplete="username"
-                    />
+              <p className="mt-1 text-[12px] font-medium text-white/85 md:text-sm">
+                {forgotPasswordMode
+                  ? "Reset your NM Mart account password"
+                  : isSignUp
+                    ? "Join NM Mart and shop more, save more"
+                    : "Sign in to your NM Mart account"}
+              </p>
+
+            </div>
+
+            <div className="p-5 md:p-7">
+
+              {/* Sign In / Sign Up tabs */}
+              {!forgotPasswordMode && (
+                <div className="mb-6 rounded-xl bg-[#F1F5FB] p-1">
+                  <div className="grid grid-cols-2 gap-1">
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSignUp(false);
+                        setPassword("");
+                        setConfirmPassword("");
+                      }}
+                      className={`rounded-lg py-2.5 text-sm font-extrabold transition-all ${
+                        !isSignUp
+                          ? "bg-white text-[#155EEF] shadow-sm"
+                          : "text-[#68778C]"
+                      }`}
+                    >
+                      Sign In
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSignUp(true);
+                        setPassword("");
+                        setConfirmPassword("");
+                      }}
+                      className={`rounded-lg py-2.5 text-sm font-extrabold transition-all ${
+                        isSignUp
+                          ? "bg-white text-[#155EEF] shadow-sm"
+                          : "text-[#68778C]"
+                      }`}
+                    >
+                      Create Account
+                    </button>
+
                   </div>
+                </div>
+              )}
 
-                  <div className="space-y-1">
-                    <label className="text-sm font-bold block">Password</label>
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                      autoComplete={isSignUp ? "new-password" : "current-password"}
-                    />
-                  </div>
+              {/* Forgot password */}
+              {forgotPasswordMode ? (
+                <div className="space-y-5">
 
-                  {isSignUp && (
-                    <div className="space-y-1">
-                      <label className="text-sm font-bold block">Confirm password</label>
-                      <input
-                        type="password"
-                        placeholder="Confirm password"
-                        value={confirmPassword}
-                        onChange={(event) => setConfirmPassword(event.target.value)}
-                        className="w-full border border-[#a6a6a6] px-3 py-2 rounded shadow-inner text-sm outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                        autoComplete="new-password"
-                      />
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotPasswordMode(false);
+                      setResetEmailSent(false);
+                    }}
+                    className="flex items-center gap-2 text-xs font-bold text-[#718096] hover:text-[#155EEF]"
+                  >
+                    <ArrowLeft size={15} />
+                    Back to Sign In
+                  </button>
 
-                  {!isSignUp && (
-                    <div className="flex justify-end">
+                  {resetEmailSent ? (
+                    <div className="space-y-4">
+
+                      <div className="flex items-start gap-3 rounded-2xl border border-green-100 bg-green-50 p-4">
+                        <CheckCircle2
+                          size={19}
+                          className="mt-0.5 shrink-0 text-green-600"
+                        />
+
+                        <p className="text-xs leading-5 text-green-800">
+                          If an account exists for{" "}
+                          <b>{email}</b>, you will receive
+                          reset instructions shortly.
+                        </p>
+                      </div>
+
                       <button
                         type="button"
-                        onClick={() => setForgotPasswordMode(true)}
-                        className="text-xs text-[#0066c0] hover:text-[#c45500] hover:underline"
+                        onClick={() => {
+                          setForgotPasswordMode(false);
+                          setResetEmailSent(false);
+                        }}
+                        className="w-full rounded-xl bg-[#155EEF] py-3 text-sm font-extrabold text-white transition hover:bg-[#0E4CC7]"
                       >
-                        Forgot your password?
+                        Return to Sign In
                       </button>
+
                     </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Email address
+                        </label>
+
+                        <div className="relative">
+                          <Mail
+                            size={18}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8290A3]"
+                          />
+
+                          <input
+                            type="email"
+                            placeholder="Email address"
+                            value={email}
+                            onChange={(event) =>
+                              setEmail(event.target.value)
+                            }
+                            className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-4 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
+                            autoComplete="username"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        disabled={loading}
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#155EEF] text-sm font-extrabold text-white transition hover:bg-[#0E4CC7] disabled:opacity-60"
+                      >
+                        {loading ? (
+                          <Loader2
+                            size={18}
+                            className="animate-spin"
+                          />
+                        ) : (
+                          "Continue"
+                        )}
+                      </button>
+                    </>
                   )}
 
-                  <button
-                    onClick={handleAuth}
-                    disabled={loading}
-                    className="w-full bg-primary text-white py-2.5 rounded shadow-sm hover:bg-primary-hover transition-all text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {loading ? <Loader2 className="animate-spin" size={16} /> : isSignUp ? "Create Account" : "Sign In"}
-                  </button>
-
-                  <div className="relative py-2 text-center">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
-                    <span className="relative bg-white px-2 text-xs text-gray-500 italic">or</span>
-                  </div>
-
-                  <button
-                    onClick={handleGoogleLogin}
-                    className="w-full bg-slate-900 text-white py-2.5 rounded shadow-sm hover:bg-primary transition-all text-sm font-bold flex items-center justify-center gap-3 border border-slate-900"
-                  >
-                    <div className="bg-white p-1 rounded-sm">
-                      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-4 h-4" />
-                    </div>
-                    Continue with Google
-                  </button>
-
-                  <p className="text-[10px] leading-relaxed text-gray-500 italic text-center">
-                    By continuing, you agree to NM Mart's <span className="text-slate-900 hover:underline cursor-pointer font-bold">Conditions of Use</span> and <span className="text-slate-900 hover:underline cursor-pointer font-bold">Privacy Notice</span>.
-                  </p>
                 </div>
-              </>
-            )}
+              ) : (
+                <>
+                  <div className="space-y-4">
+
+                    {/* Name */}
+                    {isSignUp && (
+                      <div>
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Your name
+                        </label>
+
+                        <div className="relative">
+                          <UserRound
+                            size={18}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8290A3]"
+                          />
+
+                          <input
+                            type="text"
+                            placeholder="First and last name"
+                            value={fullName}
+                            onChange={(event) =>
+                              setFullName(event.target.value)
+                            }
+                            className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-4 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
+                            autoComplete="name"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Email */}
+                    <div>
+                      <label className="mb-2 block text-sm font-extrabold">
+                        Email
+                      </label>
+
+                      <div className="relative">
+                        <Mail
+                          size={18}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8290A3]"
+                        />
+
+                        <input
+                          type="email"
+                          placeholder="Email address"
+                          value={email}
+                          onChange={(event) =>
+                            setEmail(event.target.value)
+                          }
+                          className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-4 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
+                          autoComplete="username"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                      <label className="mb-2 block text-sm font-extrabold">
+                        Password
+                      </label>
+
+                      <div className="relative">
+                        <LockKeyhole
+                          size={18}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8290A3]"
+                        />
+
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Password"
+                          value={password}
+                          onChange={(event) =>
+                            setPassword(event.target.value)
+                          }
+                          className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-12 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
+                          autoComplete={
+                            isSignUp
+                              ? "new-password"
+                              : "current-password"
+                          }
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowPassword((current) => !current)
+                          }
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8290A3] hover:text-[#155EEF]"
+                          aria-label={
+                            showPassword
+                              ? "Hide password"
+                              : "Show password"
+                          }
+                        >
+                          {showPassword ? (
+                            <EyeOff size={18} />
+                          ) : (
+                            <Eye size={18} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Confirm password */}
+                    {isSignUp && (
+                      <div>
+                        <label className="mb-2 block text-sm font-extrabold">
+                          Confirm password
+                        </label>
+
+                        <div className="relative">
+                          <LockKeyhole
+                            size={18}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8290A3]"
+                          />
+
+                          <input
+                            type={
+                              showConfirmPassword
+                                ? "text"
+                                : "password"
+                            }
+                            placeholder="Confirm password"
+                            value={confirmPassword}
+                            onChange={(event) =>
+                              setConfirmPassword(event.target.value)
+                            }
+                            className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-12 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
+                            autoComplete="new-password"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmPassword(
+                                (current) => !current
+                              )
+                            }
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8290A3] hover:text-[#155EEF]"
+                            aria-label={
+                              showConfirmPassword
+                                ? "Hide confirm password"
+                                : "Show confirm password"
+                            }
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff size={18} />
+                            ) : (
+                              <Eye size={18} />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Forgot password */}
+                    {!isSignUp && (
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForgotPasswordMode(true)
+                          }
+                          className="text-xs font-bold text-[#155EEF] hover:underline"
+                        >
+                          Forgot your password?
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Main auth button */}
+                    <button
+                      type="button"
+                      onClick={handleAuth}
+                      disabled={loading}
+                      className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#155EEF] text-sm font-extrabold text-white shadow-[0_7px_20px_rgba(21,94,239,0.18)] transition hover:bg-[#0E4CC7] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {loading ? (
+                        <Loader2
+                          size={18}
+                          className="animate-spin"
+                        />
+                      ) : isSignUp ? (
+                        <>
+                          Create Account
+                          <span className="text-lg">→</span>
+                        </>
+                      ) : (
+                        <>
+                          Sign In
+                          <span className="text-lg">→</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* OR */}
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="h-px flex-1 bg-[#E5EAF1]" />
+
+                      <span className="text-[11px] font-bold uppercase tracking-widest text-[#8995A6]">
+                        OR
+                      </span>
+
+                      <div className="h-px flex-1 bg-[#E5EAF1]" />
+                    </div>
+
+                    {/* Google */}
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      disabled={loading}
+                      className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-[#CBD5E1] bg-white text-sm font-extrabold text-[#0B1F3A] transition hover:border-[#155EEF] hover:bg-[#F8FBFF] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white">
+                        <img
+                          src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                          alt="Google"
+                          className="h-5 w-5"
+                        />
+                      </div>
+
+                      Continue with Google
+                    </button>
+
+                    {/* Terms */}
+                    <p className="px-2 text-center text-[9px] leading-5 text-[#7A879A]">
+                      By continuing, you agree to NM Mart's{" "}
+                      <span className="font-bold text-[#0B1F3A]">
+                        Conditions of Use
+                      </span>{" "}
+                      and{" "}
+                      <span className="font-bold text-[#0B1F3A]">
+                        Privacy Notice
+                      </span>
+                      .
+                    </p>
+
+                  </div>
+                </>
+              )}
+
+            </div>
           </div>
 
-          <div className="relative py-4 text-center">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
-            <span className="relative bg-slate-50 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest italic">New to NM Mart?</span>
-          </div>
+          {/* Account switch */}
+          {!forgotPasswordMode && (
+            <div className="mt-5 rounded-2xl border border-[#DCE7F5] bg-white p-4 text-center shadow-sm">
 
-          <button
-            onClick={() => {
-              setIsSignUp((current) => !current);
-              setConfirmPassword("");
-              setPassword("");
-            }}
-            className="w-full bg-white border border-slate-200 text-slate-900 py-2.5 rounded shadow-sm hover:bg-slate-50 transition-all text-sm font-bold"
-          >
-            {isSignUp ? "Already have an account? Sign in" : "Create your NM Mart account"}
-          </button>
+              <p className="text-xs font-semibold text-[#718096]">
+                {isSignUp
+                  ? "Already have an account?"
+                  : "New to NM Mart?"}
+              </p>
 
-          <div className="text-center pt-4">
-            <p className="text-[10px] font-black text-black uppercase tracking-[2px] italic">
+              <button
+                type="button"
+                onClick={switchAuthMode}
+                className="mt-1 text-sm font-extrabold text-[#155EEF] hover:underline"
+              >
+                {isSignUp
+                  ? "Sign in to your account"
+                  : "Create your NM Mart account"}
+              </button>
+
+            </div>
+          )}
+
+          <div className="pb-5 pt-5 text-center">
+            <p className="text-[9px] font-black uppercase tracking-[3px] text-[#64748B]">
               Powered by NM Mart
             </p>
           </div>
+
         </div>
       </main>
 
