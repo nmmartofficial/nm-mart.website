@@ -89,7 +89,7 @@ export default function Categories() {
                 <h1 className="text-base font-black uppercase tracking-[-0.04em] text-slate-900 md:text-xl">{selectedCategory}</h1>
                 <span className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Shop by category</span>
               </div>
-              <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2 md:grid-cols-[260px_minmax(0,1fr)] md:gap-3 lg:grid-cols-[300px_minmax(0,1fr)]">
+         <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[20%_minmax(0,1fr)] gap-2 md:grid-cols-[260px_minmax(0,1fr)] md:gap-3 lg:grid-cols-[300px_minmax(0,1fr)]">
               <aside className="min-h-0 min-w-0 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 md:p-3">
                 <p className="mb-2 text-center text-[8px] font-black uppercase tracking-[0.12em] text-slate-500">Sub categories</p>
                 <div className="grid grid-cols-2 gap-1.5 md:grid-cols-5 md:gap-2">
