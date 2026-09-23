@@ -49,9 +49,10 @@ export default function HomePage() {
   const [visibleBrandCount] = useState(8);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [brandImages, setBrandImages] = useState<Record<string, string>>({});
+  const [brandNames, setBrandNames] = useState<string[]>([]);
   const allLiveCategories = (categories || []).filter(Boolean);
   const liveCategories = allLiveCategories.slice(0, visibleCategoryCount);
-  const allLiveBrands = (brands || []).filter(Boolean);
+  const allLiveBrands = (brandNames.length > 0 ? brandNames : brands || []).filter(Boolean);
   const liveBrands = allLiveBrands.slice(0, visibleBrandCount);
   const allLiveFeatured = (featuredProducts || []).filter((p: Product) => Number(p.stock) > 0);
   const allLiveFlat50 = (flat50 || []).filter((p: Product) => Number(p.stock) > 0);
@@ -202,11 +203,14 @@ export default function HomePage() {
       if (error || !mounted) return;
 
       const images: Record<string, string> = {};
+      const names: string[] = [];
       for (const brand of data || []) {
         const name = String(brand?.name || "").trim().toUpperCase();
         const image = resolveStorageImageUrl(brand?.image_url || brand?.logo_url, "brands");
+        if (name) names.push(name);
         if (name && image) images[name] = image;
       }
+      setBrandNames([...new Set(names)]);
       setBrandImages(images);
     };
 
