@@ -92,7 +92,7 @@ export default function Categories() {
          <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[20%_minmax(0,1fr)] gap-2 md:grid-cols-[260px_minmax(0,1fr)] md:gap-3 lg:grid-cols-[300px_minmax(0,1fr)]">
               <aside className="min-h-0 min-w-0 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 md:p-3">
                 <p className="mb-2 text-center text-[8px] font-black uppercase tracking-[0.12em] text-slate-500">Sub categories</p>
-                <div className="grid grid-cols-2 gap-1.5 md:grid-cols-5 md:gap-2">
+            <div className="flex flex-col gap-2 md:grid md:grid-cols-5 md:gap-2">
                   <button
                     type="button"
                     onClick={() => setSearchParams({ category: selectedCategory })}
