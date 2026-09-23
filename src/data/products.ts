@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { TABLES } from "@/lib/supabase/schema";
+import { TABLES, isProductInStock } from "@/lib/supabase/schema";
 
 /** Mapped storefront product DTO (output of fetchLiveProducts, NOT a raw Supabase row).
  *  Field names here are local contract; actual Supabase column names are used in select() and mapping below.
@@ -32,6 +32,7 @@ export const fetchLiveProducts = async (): Promise<Product[]> => {
     }
 
     return (data ?? [])
+      .filter((item: any) => isProductInStock(item))
       .map((item: any) => ({
         barcode: String(item?.barcode ?? "").trim(),
         name: String(item?.name ?? "").trim(),
@@ -44,7 +45,7 @@ export const fetchLiveProducts = async (): Promise<Product[]> => {
         category: String(item?.category_name ?? item?.item_group_name ?? item?.item_group ?? item?.item_category ?? "General").trim() || "General",
         image: String(item?.image_url ?? item?.picture ?? "").trim(),
         // stock helpers order: stock > opstock > opening_stock
-        stock: Number(item?.stock ?? item?.opstock ?? item?.opening_stock ?? 0) > 0 ? "in-stock" : "out-of-stock",
+        stock: "in-stock",
       }))
       .filter((item) => item.barcode && item.name);
   } catch (err) {

@@ -56,6 +56,10 @@ export function getProductStock(row: Partial<DbProductRow> | null | undefined): 
   return Number(row?.stock ?? row?.opstock ?? row?.opening_stock ?? 0);
 }
 
+export function isProductInStock(row: Partial<DbProductRow> | null | undefined): boolean {
+  return getProductStock(row) > 0;
+}
+
 export function getProductCategory(row: Partial<DbProductRow> | null | undefined): string {
   return String(row?.category_name ?? row?.item_group_name ?? row?.item_group ?? row?.item_category ?? "GENERAL").trim();
 }

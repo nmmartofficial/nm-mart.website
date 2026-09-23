@@ -122,3 +122,8 @@ export function parseProductSlug(slug: string): { name: string; barcode: string 
   const parts = decoded.split("__");
   return { name: parts[0] || "", barcode: parts[1] || "" };
 }
+
+export function isProductStockAvailable(value: unknown): boolean {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) && numericValue > 0;
+}

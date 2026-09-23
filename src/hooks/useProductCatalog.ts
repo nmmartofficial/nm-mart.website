@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { calculateSalePrice, isDisplayLabel, normalizeCategory, type Product } from "@/lib/store-utils";
+import { calculateSalePrice, isDisplayLabel, isProductStockAvailable, normalizeCategory, type Product } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
 import { subscribeToCatalogChanges } from "@/lib/supabase/realtime";
 import {
@@ -157,7 +157,9 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
       if (queryError) throw queryError;
       if (requestKey.current !== queryKey) return;
 
-      const mapped = ((data || []) as DbProductRow[]).filter((item) => isProductActive(item) && getProductStock(item) > 0).map(mapProduct);
+      const mapped = ((data || []) as DbProductRow[])
+        .filter((item) => isProductActive(item) && isProductStockAvailable(getProductStock(item)))
+        .map(mapProduct);
       setProducts((current) => replace ? mapped : [...current, ...mapped.filter((item) => !current.some((existing) => existing.id === item.id))]);
       setTotalCount(offset + mapped.length);
       setHasMore(mapped.length === pageSize);
@@ -184,6 +186,28 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
     setBrands([]);
     setHasMore(true);
     void fetchPage(0, true);
+  }, [fetchPage, queryKey]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("products-catalog-sync")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: TABLES.products },
+        () => {
+          requestKey.current = queryKey;
+          nextOffset.current = 0;
+          setProducts([]);
+          setBrands([]);
+          setHasMore(true);
+          void fetchPage(0, true);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchPage, queryKey]);
 
   useEffect(() => {
