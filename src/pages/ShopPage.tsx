@@ -381,42 +381,114 @@ const ShopPage = () => {
           </div>
         )}
 
-        <div className="mb-6 flex items-center justify-between gap-3 md:hidden">
+  {selectedCategory !== "all" ? (
+  <div className="mb-6 grid grid-cols-[20%_minmax(0,1fr)] gap-2 md:hidden">
+    {/* Mobile Subcategories — adjustable 20% */}
+    <aside className="min-w-0">
+      <div className="sticky top-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="max-h-[70vh] overflow-y-auto overscroll-contain">
           <button
             type="button"
-            onClick={() => setMobileFiltersOpen((open) => !open)}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            onClick={() => setSelectedSubcategory("all")}
+            className={`w-full px-1.5 py-3 text-center text-[8px] font-bold leading-tight transition ${
+              selectedSubcategory === "all"
+                ? "bg-orange-50 text-orange-700"
+                : "text-slate-600 hover:bg-slate-50"
+            }`}
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Filters
+            All
           </button>
-          <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
-            <span>{displayedProducts.length} result{displayedProducts.length === 1 ? "" : "s"} shown</span>
-          </div>
-        </div>
 
-        {mobileFiltersOpen && (
-          <div className="fixed inset-0 z-40 bg-slate-950/35 backdrop-blur-[1px] lg:hidden" onClick={() => setMobileFiltersOpen(false)}>
-            <div
-              className="absolute left-0 top-0 h-full w-[85%] max-w-sm overflow-y-auto border-r border-slate-200 bg-white p-4 shadow-2xl transition-transform duration-200 ease-out"
-              onClick={(event) => event.stopPropagation()}
+          {subcategories.map((subcategory) => (
+            <button
+              key={subcategory}
+              type="button"
+              onClick={() => setSelectedSubcategory(subcategory)}
+              className={`w-full border-t border-slate-100 px-1.5 py-3 text-center text-[8px] font-semibold leading-tight transition ${
+                selectedSubcategory === subcategory
+                  ? "bg-orange-50 text-orange-700"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
             >
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">Filters</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setMobileFiltersOpen(false)}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-600"
-                >
-                  Close
-                </button>
-              </div>
-              {filterPanel}
-            </div>
+              <span className="block break-words">
+                {subcategory}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </aside>
+
+    {/* Mobile Products — remaining 80% */}
+    <div className="min-w-0">
+      <div className="mb-2 flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => setMobileFiltersOpen((open) => !open)}
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-700 shadow-sm"
+        >
+          <SlidersHorizontal className="h-3 w-3" />
+          Filters
+        </button>
+      </div>
+
+      {mobileFiltersOpen && (
+        <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-2">
+          {filterPanel}
+        </div>
+      )}
+    </div>
+  </div>
+) : (
+  <>
+    {/* Existing Shop-All mobile filter button */}
+    <div className="mb-6 flex items-center justify-between gap-3 md:hidden">
+      <button
+        type="button"
+        onClick={() => setMobileFiltersOpen((open) => !open)}
+        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      >
+        <SlidersHorizontal className="h-3.5 w-3.5" />
+        Filters
+      </button>
+
+      <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+        <span>
+          {displayedProducts.length} result
+          {displayedProducts.length === 1 ? "" : "s"} shown
+        </span>
+      </div>
+    </div>
+
+    {mobileFiltersOpen && (
+      <div
+        className="fixed inset-0 z-40 bg-slate-950/35 backdrop-blur-[1px] lg:hidden"
+        onClick={() => setMobileFiltersOpen(false)}
+      >
+        <div
+          className="absolute left-0 top-0 h-full w-[85%] max-w-sm overflow-y-auto border-r border-slate-200 bg-white p-4 shadow-2xl"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">
+              Filters
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(false)}
+              className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-600"
+            >
+              Close
+            </button>
           </div>
-        )}
+
+          {filterPanel}
+        </div>
+      </div>
+    )}
+  </>
+)}
 
         <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:gap-10">
           <div className="hidden lg:block">{filterPanel}</div>
