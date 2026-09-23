@@ -7,7 +7,7 @@ import Header from "@/components/shop/Header";
 import HeroBanner from "@/components/shop/HeroBanner";
 import ProductCard from "@/components/shop/ProductCard";
 import Footer from "@/components/shop/Footer";
-import { fetchActiveBanners } from "@/lib/supabase";
+import { fetchActiveBanners, fetchActiveBannersByType } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase/client";
 import { subscribeToCatalogChanges } from "@/lib/supabase/realtime";
 import { TABLES } from "../lib/supabase/schema";
@@ -39,6 +39,9 @@ export default function HomePage() {
   const hasMoreFeatured = featuredCatalog.hasMore;
   const { addToCart } = useCart();
   const [banners, setBanners] = useState<WebsiteBanner[]>([]);
+  const [topBanners, setTopBanners] = useState<WebsiteBanner[]>([]);
+  const [middleBanners, setMiddleBanners] = useState<WebsiteBanner[]>([]);
+  const [bottomBanners, setBottomBanners] = useState<WebsiteBanner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
   const [visiblePopularCount, setVisiblePopularCount] = useState(8);
   const [visibleOfferCount, setVisibleOfferCount] = useState(8);
@@ -170,12 +173,33 @@ export default function HomePage() {
 
       try {
         const fetchedBanners = await fetchActiveBanners();
-        if (mounted) {
-          setBanners(fetchedBanners);
-        }
+        if (!mounted) return;
+
+        const top = fetchedBanners.filter((banner) => {
+          const type = String(banner.banner_type ?? "").toLowerCase();
+          return type.includes("top") || type.includes("slider") || type.includes("hero");
+        });
+
+        const middle = fetchedBanners.filter((banner) => {
+          const type = String(banner.banner_type ?? "").toLowerCase();
+          return type.includes("middle") || type.includes("promo") || type.includes("category") || type.includes("product");
+        });
+
+        const bottom = fetchedBanners.filter((banner) => {
+          const type = String(banner.banner_type ?? "").toLowerCase();
+          return type.includes("bottom") || type.includes("offer") || type.includes("popup") || type.includes("app");
+        });
+
+        setBanners(fetchedBanners);
+        setTopBanners(top.length > 0 ? top : fetchedBanners.slice(0, 1));
+        setMiddleBanners(middle);
+        setBottomBanners(bottom);
       } catch (error) {
         if (mounted) {
           setBanners([]);
+          setTopBanners([]);
+          setMiddleBanners([]);
+          setBottomBanners([]);
         }
       } finally {
         if (mounted) {
@@ -184,7 +208,7 @@ export default function HomePage() {
       }
     };
 
-    loadBanners();
+    void loadBanners();
 
     return () => {
       mounted = false;
@@ -294,13 +318,58 @@ export default function HomePage() {
     </div>
   );
 
+  const renderBannerPlacement = (
+    placement: "top" | "middle" | "bottom",
+    items: WebsiteBanner[],
+    compact = false,
+  ) => {
+    if (!items.length) return null;
+
+    const bannerClass = compact
+      ? "relative block aspect-[3/1] w-full overflow-hidden rounded-2xl border border-slate-200 shadow-sm"
+      : "relative block aspect-[3.2/1] w-full overflow-hidden rounded-[22px] border border-slate-200 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)]";
+
+    return (
+      <section className="mb-3 w-full px-3 md:mb-6 md:px-6">
+        <div className="space-y-3">
+          {items.map((banner) => (
+            <a
+              key={`${placement}-${banner.id}`}
+              href={banner.link_url || banner.banner_link || banner.whatsapp_link || "#"}
+              target={banner.link_url || banner.banner_link ? "_blank" : undefined}
+              rel={banner.link_url || banner.banner_link ? "noreferrer" : undefined}
+              className={bannerClass}
+              aria-label={banner.title || "Promotional banner"}
+            >
+              <img
+                src={banner.image_url || ""}
+                alt={banner.title || "Promotional banner"}
+                className="h-full w-full object-cover object-center"
+                loading="lazy"
+              />
+              {banner.title && (
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent p-3 md:p-4">
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/80 md:text-[10px]">
+                    {banner.title}
+                  </p>
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
   return (
     <div className="min-h-screen max-w-[100vw] overflow-x-clip bg-[#dfeefd] text-slate-900">
       <Header />
 
       <section className="w-full relative z-0">
-        <HeroBanner banners={banners} loading={loadingBanners} />
+        <HeroBanner banners={topBanners.length > 0 ? topBanners : banners} loading={loadingBanners} />
       </section>
+
+      {renderBannerPlacement("middle", middleBanners, false)}
       <main className="w-full px-0 pt-0 pb-2 md:pb-8 lg:pt-0 lg:pb-8">
 
         <section id="categories" className="mb-3 w-full rounded-[18px] border border-[#d7ebff] bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
@@ -545,6 +614,7 @@ export default function HomePage() {
         )}
       </main>
 
+      {renderBannerPlacement("bottom", bottomBanners, true)}
       <Footer />
     </div>
   );

@@ -189,28 +189,6 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
   }, [fetchPage, queryKey]);
 
   useEffect(() => {
-    const channel = supabase
-      .channel("products-catalog-sync")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: TABLES.products },
-        () => {
-          requestKey.current = queryKey;
-          nextOffset.current = 0;
-          setProducts([]);
-          setBrands([]);
-          setHasMore(true);
-          void fetchPage(0, true);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchPage, queryKey]);
-
-  useEffect(() => {
     let mounted = true;
     void loadActiveCategories().then((names) => {
       if (mounted) setCategories(names);

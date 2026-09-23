@@ -103,13 +103,67 @@ export async function getActiveSession(): Promise<Session | null> {
   return data.session ?? null;
 }
 
+export function normalizeBannerType(value?: string | null): string {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/-+/g, "_");
+}
+
+export function matchesBannerType(banner: Partial<WebsiteBanner> | null | undefined, allowedTypes: string[]): boolean {
+  const bannerType = normalizeBannerType(banner?.banner_type ?? banner?.name ?? "");
+  if (!bannerType) return false;
+  return allowedTypes.some((type) => bannerType === type || bannerType.includes(type));
+}
+
+export async function fetchActiveBannersByType(types: string | string[]): Promise<WebsiteBanner[]> {
+  const allowedTypes = (Array.isArray(types) ? types : [types])
+    .map((type) => normalizeBannerType(type))
+    .filter(Boolean);
+
+  if (allowedTypes.length === 0) {
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from(TABLES.banners)
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    if (error) throw error;
+
+    const banners = (data || [])
+      .filter((banner: any) => banner?.image_url && banner?.is_active !== false && banner?.is_deleted !== true)
+      .filter((banner: any) => matchesBannerType(banner, allowedTypes))
+      .map((banner: any, index: number) => ({
+        ...banner,
+        image_url: resolveStorageImageUrl(banner.image_url, "banners"),
+        title: banner.title ?? banner.name ?? "NM Mart",
+        subtitle: banner.description ?? "",
+        whatsapp_link: banner.link_url ?? null,
+        banner_link: banner.link_url ?? null,
+        link: banner.link_url ?? null,
+        active: banner.is_active !== false,
+        display_order: typeof banner.sort_order === "number" ? banner.sort_order : index,
+      }));
+
+    logSupabaseDebug("fetchActiveBannersByType", { types: allowedTypes, count: banners.length });
+    return banners;
+  } catch (error: any) {
+    logSupabaseDebug("fetchActiveBannersByType:error", { types: allowedTypes }, error);
+    return [];
+  }
+}
+
 export async function fetchActiveBanners(): Promise<WebsiteBanner[]> {
   try {
     const { data, error } = await supabase
       .from(TABLES.banners)
       .select("*")
       .eq("is_active", true)
-      .eq("is_deleted", false)
       .order("sort_order", { ascending: true });
 
     if (error) throw error;
@@ -128,8 +182,9 @@ export async function fetchActiveBanners(): Promise<WebsiteBanner[]> {
         display_order: typeof banner.sort_order === "number" ? banner.sort_order : index,
       }));
 
-    logSupabaseDebug("fetchActiveBanners", { count: banners.length });
-    return banners;
+    const ordered = [...banners].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    logSupabaseDebug("fetchActiveBanners", { count: ordered.length });
+    return ordered;
   } catch (error: any) {
     logSupabaseDebug("fetchActiveBanners:error", undefined, error);
     return [];
