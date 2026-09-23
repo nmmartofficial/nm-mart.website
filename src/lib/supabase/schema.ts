@@ -7,6 +7,7 @@ import { resolveStorageImageUrl } from "./productImagesStorage";
 
 export const TABLES = {
   products: "products",
+  brands: "brands",
   orders: "orders",
   profiles: "profiles",
   categories: "categories",

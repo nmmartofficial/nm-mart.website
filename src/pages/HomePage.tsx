@@ -9,6 +9,7 @@ import ProductCard from "@/components/shop/ProductCard";
 import Footer from "@/components/shop/Footer";
 import { fetchActiveBanners } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase/client";
+import { subscribeToCatalogChanges } from "@/lib/supabase/realtime";
 import { TABLES } from "../lib/supabase/schema";
 import { resolveStorageImageUrl } from "@/lib/supabase/productImagesStorage";
 import type { Product } from "@/lib/store-utils";
@@ -47,6 +48,7 @@ export default function HomePage() {
   const [visibleCategoryCount] = useState(12);
   const [visibleBrandCount] = useState(8);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
+  const [brandImages, setBrandImages] = useState<Record<string, string>>({});
   const allLiveCategories = (categories || []).filter(Boolean);
   const liveCategories = allLiveCategories.slice(0, visibleCategoryCount);
   const allLiveBrands = (brands || []).filter(Boolean);
@@ -185,6 +187,37 @@ export default function HomePage() {
 
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadBrandImages = async () => {
+      const { data, error } = await supabase
+        .from(TABLES.brands)
+        .select("name, image_url, logo_url, is_active")
+        .eq("is_active", true);
+
+      if (error || !mounted) return;
+
+      const images: Record<string, string> = {};
+      for (const brand of data || []) {
+        const name = String(brand?.name || "").trim().toUpperCase();
+        const image = resolveStorageImageUrl(brand?.image_url || brand?.logo_url, "brands");
+        if (name && image) images[name] = image;
+      }
+      setBrandImages(images);
+    };
+
+    void loadBrandImages();
+    const unsubscribe = subscribeToCatalogChanges((payload) => {
+      if (payload.table === "brands") void loadBrandImages();
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
     };
   }, []);
 
@@ -342,7 +375,7 @@ export default function HomePage() {
                   <BrandCategoryCard
                     key={brand}
                     label={brand}
-                    image={productImageByBrand[brand.toUpperCase()]}
+                    image={brandImages[brand.toUpperCase()] || productImageByBrand[brand.toUpperCase()]}
                     alt={`${brand} brand`}
                     onClick={() => handleBrandClick(brand)}
                   />
