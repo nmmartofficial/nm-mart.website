@@ -20,6 +20,7 @@ const ProductDetail = lazy(() => import("@/pages/ProductDetail"));
 const Checkout = lazy(() => import("@/pages/Checkout"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const ShopPage = lazy(() => import("@/pages/ShopPage"));
+const BrandsPage = lazy(() => import("@/pages/BrandsPage"));
 const Categories = lazy(() => import("@/pages/Categories"));
 const Addresses = lazy(() => import("@/pages/Addresses"));
 const Wallet = lazy(() => import("@/pages/Wallet"));
