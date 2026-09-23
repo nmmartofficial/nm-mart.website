@@ -140,11 +140,10 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
     const localityFromPincode: Record<string, string> = {
       "212207": "Manjhanpur",
       "212201": "Bharwari",
-      "212202": "Manjhanpur",
-      "212210": "Manjhanpur",
     };
 
-    const preferredLocality = matchedCity || localityFromPincode[matchedPincode] || localityFromAddress;
+    const preferredLocality =
+  localityFromPincode[matchedPincode] || matchedCity || localityFromAddress;
     setDeliveryAddress(preferredLocality || "");
 
     setWelfareCard(null);
