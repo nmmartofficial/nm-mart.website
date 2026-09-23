@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { calculateSalePrice, isDisplayLabel, Product, normalizeCategory } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
+import { subscribeToCatalogChanges } from "@/lib/supabase/realtime";
 import { logSupabaseDebug } from "@/lib/supabase";
 import {
   TABLES,
@@ -236,6 +237,12 @@ export function useProducts() {
 
   useEffect(() => {
     fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    return subscribeToCatalogChanges(() => {
+      void fetchProducts(0);
+    });
   }, []);
 
   const loadMore = () => {

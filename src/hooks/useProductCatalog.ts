@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { calculateSalePrice, isDisplayLabel, normalizeCategory, type Product } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
+import { subscribeToCatalogChanges } from "@/lib/supabase/realtime";
 import {
   TABLES,
   getProductBarcode,
@@ -194,6 +195,12 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
     });
     return () => { mounted = false; };
   }, []);
+
+  useEffect(() => {
+    return subscribeToCatalogChanges(() => {
+      void fetchPage(0, true);
+    });
+  }, [fetchPage]);
 
   const loadMore = useCallback(() => {
     if (!loading && !loadingMore && hasMore) void fetchPage(nextOffset.current, false);
