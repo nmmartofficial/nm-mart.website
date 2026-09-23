@@ -417,7 +417,7 @@ export default function HomePage() {
               {hasMoreBrands && (
                 <button
                   type="button"
-                  onClick={() => navigate('/shop')}
+                  onClick={() => navigate('/brands')}
                   className="mb-1 shrink-0 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] md:px-4 md:text-[10px]"
                 >
                   Load more brands
