@@ -22,6 +22,24 @@ import {
 } from "@/lib/supabase/schema";
 
 const PRODUCT_COLUMNS = "barcode,name,mrp,sale_rate,retail_rate,restrate,onlinerate,online_rate,selling_price,stock,opstock,opening_stock,category_name,item_group_name,item_group,brand_name,subcategory_name,sub_category_name,discount_percent,discount_pct,discperc,discount,image_url,picture,is_active,is_deleted,is_favourite,isfav,unit_name,unitcode,description,item_description,itemdescription,id,created_at,updated_at";
+
+export function extractUniqueBrandNames(rows: Array<{ brand_name?: string | null } | { brand?: string | null } | { name?: string | null } | null | undefined>): string[] {
+  const seen = new Set<string>();
+  const values: string[] = [];
+
+  for (const row of rows) {
+    const raw = (row as any)?.brand_name ?? (row as any)?.brand ?? (row as any)?.name ?? "";
+    const value = String(raw ?? "").trim();
+    if (!isDisplayLabel(value)) continue;
+    const normalized = value.replace(/\s+/g, " ").trim();
+    if (!normalized || seen.has(normalized.toLowerCase())) continue;
+    seen.add(normalized.toLowerCase());
+    values.push(normalized);
+  }
+
+  return values;
+}
+
 let categoriesRequest: Promise<string[]> | null = null;
 
 function loadActiveCategories(): Promise<string[]> {
@@ -105,6 +123,7 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
   const queryKey = JSON.stringify({ ...options, pageSize });
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [subcategories, setSubcategories] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -171,8 +190,26 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
       setTotalCount(offset + mapped.length);
       setHasMore(mapped.length === pageSize);
       nextOffset.current = offset + mapped.length;
-      const pageBrands = mapped.map((item) => item.brand).filter(isDisplayLabel);
-      setBrands((current) => [...new Set([...current, ...pageBrands])]);
+
+      const { data: activeBrandRows, error: activeBrandError } = await supabase
+        .from(TABLES.brands)
+        .select("name, is_active")
+        .eq("is_active", true)
+        .order("name");
+
+      if (!activeBrandError) {
+        setBrands(extractUniqueBrandNames(activeBrandRows ?? []));
+      } else {
+        const pageBrands = extractUniqueBrandNames(mapped.map((item) => ({ brand_name: item.brand })));
+        setBrands((current) => {
+          const merged = [...current, ...pageBrands];
+          const unique = new Map<string, string>();
+          for (const brand of merged) {
+            unique.set(brand.toLowerCase(), brand);
+          }
+          return Array.from(unique.values());
+        });
+      }
     } catch (err) {
       if (requestKey.current === queryKey) {
         if (replace) setError("Unable to load products right now.");
@@ -184,7 +221,7 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [options.brand, options.category, options.featuredOnly, options.maxDiscount, options.maxPrice, options.minDiscount, options.minPrice, options.offersOnly, options.search, options.sort, pageSize, queryKey]);
+  }, [options.brand, options.category, options.featuredOnly, options.maxDiscount, options.maxPrice, options.minDiscount, options.minPrice, options.offersOnly, options.search, options.sort, options.subcategory, pageSize, queryKey]);
 
   useEffect(() => {
     requestKey.current = queryKey;
@@ -194,6 +231,34 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
     setHasMore(true);
     void fetchPage(0, true);
   }, [fetchPage, queryKey]);
+
+  useEffect(() => {
+    let mounted = true;
+    setSubcategories([]);
+    if (!options.category) return () => { mounted = false; };
+
+    const loadSubcategories = async () => {
+      const { data, error: subcategoryError } = await supabase
+        .from(TABLES.products)
+        .select("subcategory_name, sub_category_name")
+        .ilike("category_name", options.category)
+        .eq("is_active", true)
+        .neq("is_deleted", true)
+        .gt("stock", 0)
+        .limit(1000);
+      if (subcategoryError || !mounted) return;
+
+      const unique = new Map<string, string>();
+      for (const row of data || []) {
+        const value = String(row.subcategory_name ?? row.sub_category_name ?? "").trim();
+        if (value) unique.set(value.toLowerCase(), value);
+      }
+      setSubcategories(Array.from(unique.values()).sort((left, right) => left.localeCompare(right)));
+    };
+
+    void loadSubcategories();
+    return () => { mounted = false; };
+  }, [options.category]);
 
   useEffect(() => {
     let mounted = true;
@@ -227,6 +292,7 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
   return {
     products,
     categories,
+    subcategories,
     brands: useMemo(() => brands, [brands]),
     loading,
     loadingMore,

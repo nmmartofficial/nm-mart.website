@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Filter, Search, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Filter, Search, SlidersHorizontal } from "lucide-react";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 import ProductCard from "@/components/shop/ProductCard";
@@ -68,7 +68,7 @@ const ShopPage = () => {
     maxPrice: priceMax.trim() ? Number(priceMax) : undefined,
     ...collectionOptions,
   });
-  const { products: allProducts, loading, loadingMore, error, loadMoreError, categories, brands, hasMore, loadMore, retry: refetchProducts, retryLoadMore } = catalog;
+  const { products: allProducts, loading, loadingMore, error, loadMoreError, categories, subcategories, brands, hasMore, loadMore, retry: refetchProducts, retryLoadMore } = catalog;
   const validCategories = useMemo(() => (categories || []).filter((category): category is string => Boolean(category && typeof category === "string" && category.trim())), [categories]);
   const validBrands = useMemo(() => (brands || []).filter((brand): brand is string => Boolean(brand && typeof brand === "string" && brand.trim())), [brands]);
   const validCategorySet = useMemo(() => new Set(validCategories), [validCategories]);
@@ -179,22 +179,59 @@ const ShopPage = () => {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="shop-category" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
-          Category
-        </label>
-        <select
-          id="shop-category"
-          value={selectedCategory}
-          onChange={(event) => setSelectedCategory(event.target.value)}
-          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-orange-300"
-        >
-          <option value="all">All categories</option>
-          {(categories || []).map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Category</p>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedCategory("all");
+              setSelectedSubcategory("all");
+            }}
+            className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm font-semibold transition ${selectedCategory === "all" ? "bg-orange-50 text-orange-700" : "text-slate-700 hover:bg-white"}`}
+          >
+            All categories
+          </button>
+          {validCategories.map((category) => {
+            const isSelected = selectedCategory === category;
+            return (
+              <div key={category} className="border-t border-slate-200/80">
+                <button
+                  type="button"
+                  aria-expanded={isSelected}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setSelectedSubcategory("all");
+                  }}
+                  className={`flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm font-semibold transition ${isSelected ? "bg-white text-orange-700" : "text-slate-700 hover:bg-white"}`}
+                >
+                  <span className="truncate">{category}</span>
+                  <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isSelected ? "rotate-180 text-orange-500" : "text-slate-400"}`} />
+                </button>
+                {isSelected && subcategories.length > 0 && (
+                  <div className="grid grid-cols-2 gap-3 border-t border-slate-100 bg-white px-3 py-2 md:grid-cols-3 lg:grid-cols-5">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSubcategory("all")}
+                      className={`min-w-0 rounded-lg px-2.5 py-1.5 text-left text-xs transition ${selectedSubcategory === "all" ? "bg-orange-50 font-bold text-orange-700" : "text-slate-500 hover:bg-slate-50"}`}
+                    >
+                      All {category}
+                    </button>
+                    {subcategories.map((subcategory) => (
+                      <button
+                        key={subcategory}
+                        type="button"
+                        onClick={() => setSelectedSubcategory(subcategory)}
+                        className={`min-w-0 rounded-lg px-2.5 py-1.5 text-left text-xs transition ${selectedSubcategory === subcategory ? "bg-orange-50 font-bold text-orange-700" : "text-slate-500 hover:bg-slate-50"}`}
+                      >
+                        <span className="block break-words">{subcategory}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <div className="space-y-2">

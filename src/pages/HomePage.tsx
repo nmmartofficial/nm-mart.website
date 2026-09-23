@@ -49,7 +49,7 @@ export default function HomePage() {
   const [visibleFlat50Count, setVisibleFlat50Count] = useState(8);
   const [visibleFlat33Count, setVisibleFlat33Count] = useState(8);
   const [visibleCategoryCount] = useState(12);
-  const [visibleBrandCount] = useState(8);
+  const [visibleBrandCount] = useState(12);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [brandImages, setBrandImages] = useState<Record<string, string>>({});
   const [brandNames, setBrandNames] = useState<string[]>([]);
@@ -57,6 +57,8 @@ export default function HomePage() {
   const liveCategories = allLiveCategories.slice(0, visibleCategoryCount);
   const allLiveBrands = (brandNames.length > 0 ? brandNames : brands || []).filter(Boolean);
   const liveBrands = allLiveBrands.slice(0, visibleBrandCount);
+  const hasMoreCategories = allLiveCategories.length > visibleCategoryCount;
+  const hasMoreBrands = allLiveBrands.length > visibleBrandCount;
   const allLiveFeatured = (featuredProducts || []).filter((p: Product) => Number(p.stock) > 0);
   const allLiveFlat50 = (flat50 || []).filter((p: Product) => Number(p.stock) > 0);
   const allLiveFlat33 = (flat33 || []).filter((p: Product) => Number(p.stock) > 0);
@@ -85,7 +87,7 @@ export default function HomePage() {
   const offerProducts = allOfferProducts.slice(0, visibleOfferCount);
 
   const handleCategoryClick = (category: string) => {
-    navigate(`/shop?category=${encodeURIComponent(category)}`);
+    navigate(`/categories?category=${encodeURIComponent(category)}`);
   };
 
   const handleBrandClick = (brand: string) => {
@@ -370,13 +372,13 @@ export default function HomePage() {
                 meta={`${allLiveCategories.length} live`}
               />
             </div>
-            {allLiveCategories.length > visibleCategoryCount && (
+            {hasMoreCategories && (
               <button
                 type="button"
-                onClick={() => setVisibleCategoryCount(allLiveCategories.length)}
+                onClick={() => navigate('/categories')}
                 className="mb-1 shrink-0 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] md:px-4 md:text-[10px]"
               >
-                Load more N categories
+                Load more categories
               </button>
             )}
           </div>
@@ -403,6 +405,7 @@ export default function HomePage() {
               ))}
             </div>
           )}
+
         </section>
 
         {liveBrands.length > 0 && (
@@ -411,10 +414,10 @@ export default function HomePage() {
               <div className="min-w-0 flex-1">
                 <SectionHeader eyebrow="TOP BRANDS" title="BRANDS " />
               </div>
-              {allLiveBrands.length > visibleBrandCount && (
+              {hasMoreBrands && (
                 <button
                   type="button"
-                  onClick={() => setVisibleBrandCount(allLiveBrands.length)}
+                  onClick={() => navigate('/shop')}
                   className="mb-1 shrink-0 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] md:px-4 md:text-[10px]"
                 >
                   Load more brands
@@ -432,7 +435,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="hide-scrollbar flex gap-2.5 overflow-x-auto pb-1 md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-6">
+              <div className="hide-scrollbar grid gap-2.5 pb-1 md:grid-cols-3 md:gap-4 lg:grid-cols-6">
                 {liveBrands.map((brand) => (
                   <BrandCategoryCard
                     key={brand}
