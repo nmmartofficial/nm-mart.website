@@ -123,8 +123,8 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
     try {
       let query = supabase.from(TABLES.products).select(PRODUCT_COLUMNS);
       query = query.eq("is_active", true).neq("is_deleted", true).gt("stock", 0);
-      if (options.category) query = query.eq("category_name", options.category);
-      if (options.brand) query = query.eq("brand_name", options.brand);
+      if (options.category) query = query.ilike("category_name", options.category);
+      if (options.brand) query = query.ilike("brand_name", options.brand);
       if (options.search?.trim()) {
         const search = options.search.trim().replace(/[,()]/g, " ");
         query = query.or(`name.ilike.%${search}%,brand_name.ilike.%${search}%,category_name.ilike.%${search}%,barcode.ilike.%${search}%`);
