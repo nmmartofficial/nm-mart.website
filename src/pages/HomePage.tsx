@@ -48,7 +48,7 @@ export default function HomePage() {
   const [visibleFeaturedCount, setVisibleFeaturedCount] = useState(8);
   const [visibleFlat50Count, setVisibleFlat50Count] = useState(8);
   const [visibleFlat33Count, setVisibleFlat33Count] = useState(8);
-  const [visibleCategoryCount] = useState(12);
+  const [visibleCategoryCount] = useState(6);
   const [visibleBrandCount] = useState(12);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [brandImages, setBrandImages] = useState<Record<string, string>>({});
@@ -393,7 +393,7 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-            <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6">
+      <div className="hide-scrollbar grid grid-cols-3 gap-x-2.5 gap-y-6 pb-1 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6">
               {liveCategories.map((category) => (
                 <BrandCategoryCard
                   key={category}
@@ -435,7 +435,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="hide-scrollbar grid grid-cols-3 gap-x-2.5 gap-y-6 pb-1 md:grid-cols-3 md:gap-4 lg:grid-cols-6">
+           <div className="hide-scrollbar grid grid-cols-3 gap-x-2.5 gap-y-6 pb-1 md:grid-cols-3 md:gap-4 lg:grid-cols-6 [&>*:nth-child(n+7)]:hidden md:[&>*:nth-child(n+7)]:block">
                 {liveBrands.map((brand) => (
                   <BrandCategoryCard
                     key={brand}
