@@ -202,16 +202,41 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
       <div className="w-full max-w-[100vw] overflow-x-hidden px-3 pt-2 pb-0 md:px-5 md:py-3">
         {/* Top Row: Logo and Mobile Actions */}
         <div className="flex h-[52px] items-center justify-between gap-2 md:h-[72px] md:gap-4">
-          <Link to="/" className="group flex min-w-0 shrink items-center justify-center text-left md:flex-1">
-            <div className="flex w-[170px] max-w-[45vw] flex-col items-center justify-center leading-none text-white md:w-[220px]">
-              <span className="text-center text-[26px] font-[800] tracking-[-0.06em] text-[#155EEF] md:text-[34px]">
-                NM Mart
-              </span>
-              <span className="mt-1 w-full text-center text-[7px] font-[600] tracking-[0.12em] text-[#0B1F3A]/70 uppercase md:text-[9px]">
-                {theme.storeSlogan || "Shop More, Save More"}
-              </span>
-            </div>
-          </Link>
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+  <Link to="/" className="group flex shrink-0 items-center justify-start text-left">
+    <div className="flex w-[92px] flex-col items-start justify-center leading-none md:w-[220px] md:items-center">
+      <span className="text-[23px] font-[800] tracking-[-0.06em] text-[#155EEF] md:text-[34px]">
+        NM Mart
+      </span>
+      <span className="mt-1 text-[6px] font-[600] tracking-[0.10em] text-[#0B1F3A]/70 uppercase md:text-[9px]">
+        {theme.storeSlogan || "Shop More, Save More"}
+      </span>
+    </div>
+  </Link>
+
+  <div className="min-w-0 flex-1 md:hidden">
+    <div className="flex items-center gap-1">
+      <MapPin size={15} className="shrink-0 text-[#155EEF]" />
+      <span className="truncate text-[12px] font-bold text-slate-900">
+        {resolveDeliveryDisplay()}
+      </span>
+    </div>
+
+    <div className="mt-0.5 flex items-center gap-1">
+      <Truck size={11} className="shrink-0 text-[#16A34A]" />
+      <span className="truncate text-[9px] font-bold text-[#15803D]">
+        Delivery in 7 minutes
+      </span>
+      <button
+        type="button"
+        onClick={() => navigate("/addresses")}
+        className="ml-1 shrink-0 text-[9px] font-bold text-[#155EEF]"
+      >
+        Change
+      </button>
+    </div>
+  </div>
+</div>
 
           {!isMoreSection && (
             <div className="hidden flex-1 md:block mx-6 lg:mx-8">
@@ -327,21 +352,6 @@ const Navbar = ({ theme: propsTheme }: NavbarProps) => {
 
       {!isMoreSection && (
         <>
-          <div className="flex items-center justify-between bg-[#dfeefd] px-4 py-0 md:hidden">
-            <div className="flex items-center gap-2 text-[#0b3b78]">
-              <MapPin size={24} className="text-[#1d5fbf]" />
-              <span className="text-[16px] font-bold tracking-tight text-slate-950">
-                {resolveDeliveryDisplay()}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate("/addresses")}
-              className="text-[16px] font-bold text-[#0b3b78]"
-            >
-              Change
-            </button>
-          </div>
 
           <div className="hidden border-t border-[#b9d8f7] bg-[#dfeefd] md:block">
             <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 py-1">
