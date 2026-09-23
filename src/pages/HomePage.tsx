@@ -48,7 +48,7 @@ export default function HomePage() {
   const [visibleFeaturedCount, setVisibleFeaturedCount] = useState(8);
   const [visibleFlat50Count, setVisibleFlat50Count] = useState(8);
   const [visibleFlat33Count, setVisibleFlat33Count] = useState(8);
-  const [visibleCategoryCount] = useState(12);
+  const [visibleCategoryCount] = useState(6);
   const [visibleBrandCount] = useState(12);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [brandImages, setBrandImages] = useState<Record<string, string>>({});
