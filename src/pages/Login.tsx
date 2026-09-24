@@ -202,13 +202,15 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     redirectIfLoggedIn();
 
-    const {
-      data: { subscription },
-  supabase.auth.onAuthStateChange((_event, session) => {
-  if (isMounted && session && !isRecoveryFlow) {
-    navigate(nextPath, { replace: true });
+const authListener = supabase.auth.onAuthStateChange(
+  (_event, session) => {
+    if (isMounted && session && !isRecoveryFlow) {
+      navigate(nextPath, { replace: true });
+    }
   }
-});
+);
+
+const subscription = authListener.data.subscription;
 
     return () => {
       isMounted = false;
