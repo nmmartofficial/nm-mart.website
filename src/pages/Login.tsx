@@ -179,11 +179,13 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
 
-  const [resetEmailSent, setResetEmailSent] = useState(false);
-  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+ const [resetEmailSent, setResetEmailSent] = useState(false);
+const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+const [resetOtp, setResetOtp] = useState("");
+const [isRecoveryFlow, setIsRecoveryFlow] = useState(false);
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+const [showPassword, setShowPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -202,11 +204,11 @@ const Login = () => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted && session) {
-        navigate(nextPath, { replace: true });
-      }
-    });
+  supabase.auth.onAuthStateChange((_event, session) => {
+  if (isMounted && session && !isRecoveryFlow) {
+    navigate(nextPath, { replace: true });
+  }
+});
 
     return () => {
       isMounted = false;
@@ -323,34 +325,100 @@ const Login = () => {
     setResetEmailSent(false);
 
     try {
-      const { error } =
-        await supabase.auth.resetPasswordForEmail(
-          trimmedEmail,
-          {
-            redirectTo: `${window.location.origin}/reset-password`,
-          }
-        );
+   const { error } =
+  await supabase.auth.resetPasswordForEmail(
+    trimmedEmail
+  );
 
       if (error) throw error;
 
       setResetEmailSent(true);
+setIsRecoveryFlow(true);
 
-      toast.success(
-        "If an account exists for this email, reset instructions will be sent shortly."
-      );
-    } catch (err: any) {
+toast.success(
+  "Password reset OTP has been sent to your email."
+);
+} catch (err: any) {
+  setIsRecoveryFlow(false);
+
+  toast.error(
+    getFriendlyAuthError(
+      err,
+      "Failed to send password reset OTP. Please try again."
+    )
+  );
+} finally {
+  setLoading(false);
+}
+};
+
+const handleVerifyResetOtp = async () => {
+  const trimmedOtp = resetOtp.trim();
+  const trimmedEmail = email.trim();
+
+  if (!trimmedEmail) {
+    toast.error("Please enter your email address.");
+    return;
+  }
+
+  if (!/^\d{6}$/.test(trimmedOtp)) {
+    toast.error("Please enter the 6-digit OTP.");
+    return;
+  }
+
+  setLoading(true);
+  setIsRecoveryFlow(true);
+
+  try {
+    const { error } = await supabase.auth.verifyOtp({
+      email: trimmedEmail,
+      token: trimmedOtp,
+      type: "recovery",
+    });
+
+    if (error) throw error;
+
+    toast.success("OTP verified successfully.");
+
+    navigate("/reset-password", {
+      replace: true,
+    });
+  } catch (err: any) {
+    const message = (err?.message || "").toLowerCase();
+
+    if (
+      message.includes("expired") ||
+      message.includes("otp_expired")
+    ) {
       toast.error(
-        getFriendlyAuthError(
-          err,
-          "Failed to request password reset. Please try again."
-        )
+        "This OTP has expired. Please request a new OTP."
       );
-    } finally {
-      setLoading(false);
+    } else if (
+      message.includes("invalid") ||
+      message.includes("otp")
+    ) {
+      toast.error(
+        "Invalid OTP. Please check the code and try again."
+      );
+    } else if (
+      message.includes("network") ||
+      message.includes("fetch") ||
+      message.includes("timeout")
+    ) {
+      toast.error(
+        "Unable to connect. Please try again."
+      );
+    } else {
+      toast.error(
+        "OTP verification failed. Please try again."
+      );
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const switchAuthMode = () => {
+const switchAuthMode = () => {
     setIsSignUp((current) => !current);
     setConfirmPassword("");
     setPassword("");
