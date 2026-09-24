@@ -7,7 +7,7 @@ import {
   EyeOff,
   Loader2,
   LockKeyhole,
-  ShieldAlert,
+  ShieldCheck,
   ShoppingCart,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
@@ -23,6 +23,7 @@ const ResetPassword = () => {
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
   const [sessionReady, setSessionReady] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
@@ -32,7 +33,7 @@ const ResetPassword = () => {
   useEffect(() => {
     let isMounted = true;
 
-    const checkSession = async () => {
+    const checkRecoverySession = async () => {
       try {
         const {
           data: { session },
@@ -48,7 +49,7 @@ const ResetPassword = () => {
 
         if (!session) {
           toast.error(
-            "This password reset link is invalid or has expired. Please request a new one."
+            "Please verify the password reset OTP first."
           );
         }
       } catch (error: any) {
@@ -57,7 +58,9 @@ const ResetPassword = () => {
         setSessionReady(false);
         setIsCheckingSession(false);
 
-        const message = (error?.message || "").toLowerCase();
+        const message = (
+          error?.message || ""
+        ).toLowerCase();
 
         if (
           message.includes("auth") ||
@@ -66,17 +69,17 @@ const ResetPassword = () => {
           message.includes("invalid")
         ) {
           toast.error(
-            "This password reset link is invalid or has expired. Please request a new one."
+            "Your password reset verification is no longer valid. Please request a new OTP."
           );
         } else {
           toast.error(
-            "Unable to validate the reset link. Please request a new one."
+            "Unable to verify your password reset session. Please try again."
           );
         }
       }
     };
 
-    checkSession();
+    checkRecoverySession();
 
     return () => {
       isMounted = false;
@@ -99,38 +102,74 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) throw sessionError;
+
+      if (!session) {
+        toast.error(
+          "Your OTP verification session has expired. Please request a new OTP."
+        );
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: password.trim(),
       });
 
       if (error) throw error;
 
-      setSuccess(true);
+      await supabase.auth.signOut();
 
       setPassword("");
       setConfirmPassword("");
       setShowPassword(false);
       setShowConfirmPassword(false);
+      setSuccess(true);
 
-      toast.success("Your password has been updated successfully.");
+      toast.success(
+        "Your password has been updated successfully."
+      );
     } catch (error: any) {
-      const message = (error?.message || "").toLowerCase();
+      const message = (
+        error?.message || ""
+      ).toLowerCase();
 
       if (
         message.includes("password") &&
-        (message.includes("weak") ||
+        (
+          message.includes("weak") ||
           message.includes("too short") ||
-          message.includes("minimum"))
+          message.includes("minimum")
+        )
       ) {
-        toast.error("Password must be at least 8 characters long.");
+        toast.error(
+          "Password must be at least 8 characters long."
+        );
+      } else if (
+        message.includes("session") ||
+        message.includes("jwt") ||
+        message.includes("expired") ||
+        message.includes("not authenticated")
+      ) {
+        toast.error(
+          "Your OTP verification session has expired. Please request a new OTP."
+        );
       } else if (
         message.includes("network") ||
         message.includes("fetch") ||
         message.includes("timeout")
       ) {
-        toast.error("Unable to connect. Please try again.");
+        toast.error(
+          "Unable to connect. Please try again."
+        );
       } else {
-        toast.error("Unable to update your password. Please try again.");
+        toast.error(
+          "Unable to update your password. Please try again."
+        );
       }
     } finally {
       setLoading(false);
@@ -144,7 +183,6 @@ const ResetPassword = () => {
   if (success) {
     return (
       <div className="min-h-screen bg-[#F5F9FF] text-[#0B1F3A] flex flex-col font-sans">
-        {/* Header */}
         <header className="w-full border-b border-[#E4ECF7] bg-white">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 md:px-8">
             <button
@@ -213,8 +251,9 @@ const ResetPassword = () => {
                   </h2>
 
                   <p className="mt-2 text-sm leading-6 text-green-800">
-                    Your new password is active. You can now sign in to your NM
-                    Mart account using your new password.
+                    Your new password is active. You can now
+                    sign in to your NM Mart account using your
+                    new password.
                   </p>
                 </div>
 
@@ -245,7 +284,74 @@ const ResetPassword = () => {
   if (isCheckingSession) {
     return (
       <div className="min-h-screen bg-[#F5F9FF] text-[#0B1F3A] flex flex-col font-sans">
-        {/* Header */}
+        <header className="w-full border-b border-[#E4ECF7] bg-white">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 md:px-8">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="flex flex-col items-start leading-none"
+              aria-label="NM Mart Home"
+            >
+              <div className="flex items-center">
+                <span className="text-[34px] font-[900] tracking-[-0.07em] text-[#155EEF] md:text-[42px]">
+                  NM
+                </span>
+
+                <span className="text-[34px] font-[900] tracking-[-0.07em] text-[#0B1F3A] md:text-[42px]">
+                  Mart
+                </span>
+
+                <ShoppingCart
+                  size={25}
+                  strokeWidth={2.5}
+                  className="ml-1 text-[#155EEF] md:h-8 md:w-8"
+                />
+              </div>
+
+              <span className="mt-1 text-[7px] font-bold tracking-[0.18em] text-[#0B1F3A]/60 uppercase md:text-[9px]">
+                SHOP MORE, SAVE MORE
+              </span>
+            </button>
+          </div>
+        </header>
+
+        <main className="flex-1 flex items-center justify-center px-4 py-10">
+          <div className="w-full max-w-[500px] overflow-hidden rounded-[24px] border border-[#DDE7F5] bg-white shadow-[0_18px_60px_rgba(21,94,239,0.10)]">
+            <div className="bg-[#155EEF] px-5 py-7 text-center text-white">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
+                <ShieldCheck size={24} />
+              </div>
+
+              <h1 className="text-[27px] font-[900] tracking-[-0.03em]">
+                Verify Reset
+              </h1>
+
+              <p className="mt-1 text-[12px] font-medium text-white/85">
+                Checking your secure OTP verification
+              </p>
+            </div>
+
+            <div className="p-7 text-center">
+              <Loader2
+                className="mx-auto animate-spin text-[#155EEF]"
+                size={34}
+              />
+
+              <p className="mt-4 text-sm font-semibold text-[#64748B]">
+                Checking your OTP verification...
+              </p>
+            </div>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!sessionReady) {
+    return (
+      <div className="min-h-screen bg-[#F5F9FF] text-[#0B1F3A] flex flex-col font-sans">
         <header className="w-full border-b border-[#E4ECF7] bg-white">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 md:px-8">
             <button
@@ -285,88 +391,20 @@ const ResetPassword = () => {
               </div>
 
               <h1 className="text-[27px] font-[900] tracking-[-0.03em]">
-                Reset Password
+                OTP Verification Required
               </h1>
 
               <p className="mt-1 text-[12px] font-medium text-white/85">
-                Checking your secure reset link
-              </p>
-            </div>
-
-            <div className="p-7 text-center">
-              <Loader2
-                className="mx-auto animate-spin text-[#155EEF]"
-                size={34}
-              />
-
-              <p className="mt-4 text-sm font-semibold text-[#64748B]">
-                Checking your secure reset link...
-              </p>
-            </div>
-          </div>
-        </main>
-
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!sessionReady) {
-    return (
-      <div className="min-h-screen bg-[#F5F9FF] text-[#0B1F3A] flex flex-col font-sans">
-        {/* Header */}
-        <header className="w-full border-b border-[#E4ECF7] bg-white">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 md:px-8">
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="flex flex-col items-start leading-none"
-              aria-label="NM Mart Home"
-            >
-              <div className="flex items-center">
-                <span className="text-[34px] font-[900] tracking-[-0.07em] text-[#155EEF] md:text-[42px]">
-                  NM
-                </span>
-
-                <span className="text-[34px] font-[900] tracking-[-0.07em] text-[#0B1F3A] md:text-[42px]">
-                  Mart
-                </span>
-
-                <ShoppingCart
-                  size={25}
-                  strokeWidth={2.5}
-                  className="ml-1 text-[#155EEF] md:h-8 md:w-8"
-                />
-              </div>
-
-              <span className="mt-1 text-[7px] font-bold tracking-[0.18em] text-[#0B1F3A]/60 uppercase md:text-[9px]">
-                SHOP MORE, SAVE MORE
-              </span>
-            </button>
-          </div>
-        </header>
-
-        <main className="flex-1 flex items-center justify-center px-4 py-10">
-          <div className="w-full max-w-[500px] overflow-hidden rounded-[24px] border border-[#DDE7F5] bg-white shadow-[0_18px_60px_rgba(21,94,239,0.10)]">
-            <div className="bg-[#155EEF] px-5 py-7 text-center text-white">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
-                <ShieldAlert size={25} />
-              </div>
-
-              <h1 className="text-[27px] font-[900] tracking-[-0.03em]">
-                Reset Link Expired
-              </h1>
-
-              <p className="mt-1 text-[12px] font-medium text-white/85">
-                Your password reset link is no longer valid
+                Verify your password reset OTP first
               </p>
             </div>
 
             <div className="p-5 md:p-7">
-              <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-center">
-                <p className="text-sm leading-6 text-red-800">
-                  This recovery link is invalid or has already expired. Please
-                  request a new password reset email.
+              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5 text-center">
+                <p className="text-sm leading-6 text-amber-800">
+                  Your password reset session is not active.
+                  Please go back to Sign In and request a new
+                  password reset OTP.
                 </p>
               </div>
 
@@ -389,7 +427,6 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-[#F5F9FF] text-[#0B1F3A] flex flex-col font-sans">
-      {/* Header */}
       <header className="w-full border-b border-[#E4ECF7] bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 md:px-8">
           <button
@@ -433,7 +470,6 @@ const ResetPassword = () => {
       <main className="flex-1 px-4 py-8 md:px-8 md:py-12">
         <div className="mx-auto w-full max-w-[500px]">
           <div className="overflow-hidden rounded-[24px] border border-[#DDE7F5] bg-white shadow-[0_18px_60px_rgba(21,94,239,0.10)]">
-            {/* Blue title area */}
             <div className="bg-[#155EEF] px-5 py-7 text-center text-white md:px-8 md:py-8">
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
                 <LockKeyhole size={25} />
@@ -449,7 +485,6 @@ const ResetPassword = () => {
             </div>
 
             <div className="p-5 md:p-7">
-              {/* Back to login */}
               <button
                 type="button"
                 onClick={handleBackToLogin}
@@ -459,8 +494,22 @@ const ResetPassword = () => {
                 Back to Sign In
               </button>
 
-              <form onSubmit={handleReset} className="space-y-5">
-                {/* New Password */}
+              <div className="mb-5 flex items-start gap-3 rounded-2xl border border-green-100 bg-green-50 p-4">
+                <ShieldCheck
+                  size={19}
+                  className="mt-0.5 shrink-0 text-green-600"
+                />
+
+                <p className="text-xs leading-5 text-green-800">
+                  OTP verified successfully. You can now
+                  create your new password.
+                </p>
+              </div>
+
+              <form
+                onSubmit={handleReset}
+                className="space-y-5"
+              >
                 <div>
                   <label
                     htmlFor="new-password"
@@ -477,10 +526,16 @@ const ResetPassword = () => {
 
                     <input
                       id="new-password"
-                      type={showPassword ? "text" : "password"}
+                      type={
+                        showPassword
+                          ? "text"
+                          : "password"
+                      }
                       placeholder="Enter your new password"
                       value={password}
-                      onChange={(event) => setPassword(event.target.value)}
+                      onChange={(event) =>
+                        setPassword(event.target.value)
+                      }
                       autoComplete="new-password"
                       className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-12 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
                       required
@@ -489,11 +544,15 @@ const ResetPassword = () => {
                     <button
                       type="button"
                       onClick={() =>
-                        setShowPassword((current) => !current)
+                        setShowPassword(
+                          (current) => !current
+                        )
                       }
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8290A3] transition hover:text-[#155EEF]"
                       aria-label={
-                        showPassword ? "Hide password" : "Show password"
+                        showPassword
+                          ? "Hide password"
+                          : "Show password"
                       }
                     >
                       {showPassword ? (
@@ -509,7 +568,6 @@ const ResetPassword = () => {
                   </p>
                 </div>
 
-                {/* Confirm Password */}
                 <div>
                   <label
                     htmlFor="confirm-password"
@@ -526,11 +584,17 @@ const ResetPassword = () => {
 
                     <input
                       id="confirm-password"
-                      type={showConfirmPassword ? "text" : "password"}
+                      type={
+                        showConfirmPassword
+                          ? "text"
+                          : "password"
+                      }
                       placeholder="Confirm your new password"
                       value={confirmPassword}
                       onChange={(event) =>
-                        setConfirmPassword(event.target.value)
+                        setConfirmPassword(
+                          event.target.value
+                        )
                       }
                       autoComplete="new-password"
                       className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-12 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
@@ -540,7 +604,9 @@ const ResetPassword = () => {
                     <button
                       type="button"
                       onClick={() =>
-                        setShowConfirmPassword((current) => !current)
+                        setShowConfirmPassword(
+                          (current) => !current
+                        )
                       }
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8290A3] transition hover:text-[#155EEF]"
                       aria-label={
@@ -558,15 +624,13 @@ const ResetPassword = () => {
                   </div>
                 </div>
 
-                {/* Security note */}
                 <div className="rounded-xl border border-[#DCE7FA] bg-[#F5F9FF] px-4 py-3">
                   <p className="text-[11px] leading-5 text-[#5E6F85]">
-                    For your security, choose a password that you do not use on
-                    other websites.
+                    For your security, choose a password
+                    that you do not use on other websites.
                   </p>
                 </div>
 
-                {/* Update Password */}
                 <button
                   type="submit"
                   disabled={loading}
@@ -574,7 +638,10 @@ const ResetPassword = () => {
                 >
                   {loading ? (
                     <>
-                      <Loader2 size={18} className="animate-spin" />
+                      <Loader2
+                        size={18}
+                        className="animate-spin"
+                      />
                       Updating Password...
                     </>
                   ) : (
