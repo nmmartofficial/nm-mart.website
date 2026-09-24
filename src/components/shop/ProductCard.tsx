@@ -100,8 +100,16 @@ const ProductCard = memo(function ProductCard({
   const imageHeightClass = productStyle === "premium" ? "h-[106px] md:h-[235px]" : productStyle === "offer" ? "h-[102px] md:h-[225px]" : "h-[106px] md:h-[235px]";
 
   const productName = (product?.name || "Product").trim() || "Product";
-  const rawProductUnit = (product?.unit || product?.subCategory || "").trim();
-  const productUnit = shouldDisplayLabel(rawProductUnit) ? rawProductUnit : "";
+const rawProductUnit = String(product?.unit || "").trim();
+const rawSubCategory = String(product?.subCategory || "").trim();
+
+const productUnit = shouldDisplayLabel(rawProductUnit)
+  ? rawProductUnit
+  : "";
+
+const productSubCategory = shouldDisplayLabel(rawSubCategory)
+  ? rawSubCategory
+  : "";
   const numericPrice = Number(product?.price ?? (product as Product & { selling_price?: number }).selling_price ?? product?.saleRate ?? 0);
   const numericMrp = Number(product?.mrp ?? 0);
   const numericStock = Number(product?.stock ?? 0);
