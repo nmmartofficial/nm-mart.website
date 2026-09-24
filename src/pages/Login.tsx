@@ -822,10 +822,6 @@ const Login = () => {
           {!forgotPasswordMode && (
             <div className="mt-5 rounded-2xl border border-[#DCE7F5] bg-white p-4 text-center shadow-sm">
 
-              <p className="text-xs font-semibold text-[#718096]">
-                {isSignUp
-                  ? "Already have an account?"
-                  : "New to NM Mart?"}
               </p>
 
               <button
