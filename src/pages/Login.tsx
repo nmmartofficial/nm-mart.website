@@ -818,25 +818,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Account switch */}
-          {!forgotPasswordMode && (
-            <div className="mt-5 rounded-2xl border border-[#DCE7F5] bg-white p-4 text-center shadow-sm">
-
-              </p>
-
-              <button
-                type="button"
-                onClick={switchAuthMode}
-                className="mt-1 text-sm font-extrabold text-[#155EEF] hover:underline"
-              >
-                {isSignUp
-                  ? "Sign in to your account"
-                  : "Create your NM Mart account"}
-              </button>
-
-            </div>
-          )}
-
           <div className="pb-5 pt-5 text-center">
             <p className="text-[9px] font-black uppercase tracking-[3px] text-[#64748B]">
               Powered by NM Mart
