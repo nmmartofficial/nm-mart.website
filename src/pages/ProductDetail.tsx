@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, ShoppingCart, Star, Share2, Loader2, Package, CheckCircle2, Plus, Minus, ChevronRight } from "lucide-react";
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 import { useCart } from "@/hooks/useCart";
-import { calculateSalePrice, parseProductSlug, normalizeCategory, Product, productSlug } from "@/lib/store-utils";
+import { calculateSalePrice, formatDisplayName, parseProductSlug, normalizeCategory, Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "@/components/shop/ProductImageDisplay";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
@@ -103,10 +103,11 @@ const ProductDetail = () => {
 
   useEffect(() => {
     if (product) {
-      document.title = `${product.name} | NM Mart - Best Wholesale Price in Manjhanpur`;
+      const displayName = formatDisplayName(product.name);
+      document.title = `${displayName} | NM Mart - Best Wholesale Price in Manjhanpur`;
       const metaDesc = document.querySelector('meta[name="description"]');
       if (metaDesc) {
-        metaDesc.setAttribute('content', `Buy ${product.name} at wholesale price ₹${product.price}. Shop daily essentials, grocery, and more at NM Mart Manjhanpur.`);
+        metaDesc.setAttribute('content', `Buy ${displayName} at wholesale price ₹${product.price}. Shop daily essentials, grocery, and more at NM Mart Manjhanpur.`);
       }
     }
   }, [product]);
@@ -202,7 +203,7 @@ const ProductDetail = () => {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="bg-primary/5 border border-primary/20 text-primary text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest italic">
-                    {product.category}
+                    {formatDisplayName(product.category)}
                   </span>
                   <span className={`text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest italic ${product.stock && product.stock > 0 ? "bg-green-50 border border-green-200 text-green-600" : "bg-red-50 border border-red-200 text-red-600"}`}>
                     {product.stock && product.stock > 0 ? "In Stock" : "Out of Stock"}
@@ -212,18 +213,18 @@ const ProductDetail = () => {
                   )}
                   {product.subCategory && (
                     <span className="text-gray-400 text-[9px] font-black uppercase tracking-widest italic">
-                      {product.subCategory}
+                      {formatDisplayName(product.subCategory)}
                     </span>
                   )}
                 </div>
                 
                 <h1 className="text-3xl md:text-4xl font-black text-black uppercase tracking-tighter leading-tight italic">
-                  {product.name}
+                  {formatDisplayName(product.name)}
                 </h1>
 
                 <div className="flex flex-wrap items-center gap-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
-                  {product.brand && <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">{product.brand}</span>}
-                  {product.unit && <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">{product.unit}</span>}
+                  {product.brand && <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">{formatDisplayName(product.brand)}</span>}
+                  {product.unit && <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">{formatDisplayName(product.unit)}</span>}
                   {product.stock !== undefined && (
                     <span className={`rounded-full border px-2.5 py-1 ${product.stock > 0 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-700"}`}>
                       {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}

@@ -48,8 +48,8 @@ export default function HomePage() {
   const [visibleFeaturedCount, setVisibleFeaturedCount] = useState(8);
   const [visibleFlat50Count, setVisibleFlat50Count] = useState(8);
   const [visibleFlat33Count, setVisibleFlat33Count] = useState(8);
-  const [visibleCategoryCount] = useState(6);
-  const [visibleBrandCount] = useState(12);
+  const [visibleCategoryCount] = useState(8);
+  const [visibleBrandCount] = useState(8);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [brandImages, setBrandImages] = useState<Record<string, string>>({});
   const [brandNames, setBrandNames] = useState<string[]>([]);
@@ -57,8 +57,8 @@ export default function HomePage() {
   const liveCategories = allLiveCategories.slice(0, visibleCategoryCount);
   const allLiveBrands = (brandNames.length > 0 ? brandNames : brands || []).filter(Boolean);
   const liveBrands = allLiveBrands.slice(0, visibleBrandCount);
-  const hasMoreCategories = allLiveCategories.length > 6;
-  const hasMoreBrands = allLiveBrands.length > 6;
+  const hasMoreCategories = allLiveCategories.length > 8;
+  const hasMoreBrands = allLiveBrands.length > 8;
   const allLiveFeatured = (featuredProducts || []).filter((p: Product) => Number(p.stock) > 0);
   const allLiveFlat50 = (flat50 || []).filter((p: Product) => Number(p.stock) > 0);
   const allLiveFlat33 = (flat33 || []).filter((p: Product) => Number(p.stock) > 0);
@@ -136,14 +136,14 @@ export default function HomePage() {
   }) => {
     const safeLabel = shouldDisplayBrandLabel(label) ? label : "";
     return (
-      <div className="flex w-[72px] shrink-0 flex-col items-center sm:w-[84px] md:w-auto md:flex-1">
+      <div className="flex min-w-0 flex-col items-center">
         <button
           type="button"
           onClick={onClick}
           className="group flex items-center justify-center rounded-full transition-transform duration-200 hover:-translate-y-0.5"
           aria-label={alt}
         >
-          <div className="flex h-[68px] w-[68px] items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_10px_22px_-16px_rgba(15,23,42,0.45)] ring-1 ring-slate-100 sm:h-[76px] sm:w-[76px] md:h-[110px] md:w-[110px]">
+          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_10px_22px_-16px_rgba(15,23,42,0.45)] ring-1 ring-slate-100 sm:h-[68px] sm:w-[68px] md:h-[110px] md:w-[110px]">
             {image ? (
               <img
                 src={image}
@@ -159,7 +159,7 @@ export default function HomePage() {
           </div>
         </button>
         {safeLabel && (
-          <p className="mt-2 max-w-[92px] text-center text-[11px] font-[600] leading-[1.25] tracking-[0.08em] text-slate-700 uppercase line-clamp-2 sm:max-w-[100px] sm:text-[11.5px] md:max-w-none md:text-[12px]">
+          <p className="mt-2 w-full max-w-[78px] text-center text-[10px] font-[600] leading-[1.25] tracking-[0.05em] text-slate-700 uppercase line-clamp-2 sm:max-w-[100px] sm:text-[11.5px] md:max-w-none md:text-[12px]">
             {safeLabel}
           </p>
         )}
@@ -429,7 +429,7 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-<div className="hide-scrollbar grid grid-cols-3 gap-x-2.5 gap-y-6 pb-1 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6 [&>*:nth-child(n+7)]:hidden md:[&>*:nth-child(n+7)]:block">
+<div className="grid grid-cols-4 gap-x-2 gap-y-5 pb-1 md:grid-cols-4 md:gap-4 lg:grid-cols-6 xl:grid-cols-8">
               {liveCategories.map((category) => (
                 <BrandCategoryCard
                   key={category}
@@ -471,7 +471,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-           <div className="hide-scrollbar grid grid-cols-3 gap-x-2.5 gap-y-6 pb-1 md:grid-cols-3 md:gap-4 lg:grid-cols-6 [&>*:nth-child(n+7)]:hidden md:[&>*:nth-child(n+7)]:block">
+           <div className="grid grid-cols-4 gap-x-2 gap-y-5 pb-1 md:grid-cols-4 md:gap-4 lg:grid-cols-6 xl:grid-cols-8">
                 {liveBrands.map((brand) => (
                   <BrandCategoryCard
                     key={brand}

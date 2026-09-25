@@ -117,6 +117,14 @@ export function isDisplayLabel(value: string | null | undefined): boolean {
   return /\p{L}/u.test(String(value ?? "").trim());
 }
 
+export function formatDisplayName(value: string | null | undefined): string {
+  const normalized = String(value ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+  return normalized
+    .split(" ")
+    .map((word) => word.replace(/^\p{L}/u, (character) => character.toLocaleUpperCase()).replace(/(-)(\p{L})/gu, (_, separator, character) => `${separator}${character.toLocaleUpperCase()}`))
+    .join(" ");
+}
+
 export function parseProductSlug(slug: string): { name: string; barcode: string } {
   const decoded = decodeURIComponent(slug);
   const parts = decoded.split("__");

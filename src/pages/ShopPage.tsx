@@ -4,6 +4,7 @@ import { ChevronDown, Filter, Search, SlidersHorizontal } from "lucide-react";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 import ProductCard from "@/components/shop/ProductCard";
+import { formatDisplayName } from "@/lib/store-utils";
 import { useCart } from "@/hooks/useCart";
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 
@@ -204,7 +205,7 @@ const ShopPage = () => {
                   }}
                   className={`flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm font-semibold transition ${isSelected ? "bg-white text-orange-700" : "text-slate-700 hover:bg-white"}`}
                 >
-                  <span className="truncate">{category}</span>
+                  <span className="truncate">{formatDisplayName(category)}</span>
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isSelected ? "rotate-180 text-orange-500" : "text-slate-400"}`} />
                 </button>
                 {isSelected && subcategories.length > 0 && (
@@ -214,7 +215,7 @@ const ShopPage = () => {
                       onClick={() => setSelectedSubcategory("all")}
                       className={`min-w-0 rounded-lg px-2.5 py-1.5 text-left text-xs transition ${selectedSubcategory === "all" ? "bg-orange-50 font-bold text-orange-700" : "text-slate-500 hover:bg-slate-50"}`}
                     >
-                      All {category}
+                      All {formatDisplayName(category)}
                     </button>
                     {subcategories.map((subcategory) => (
                       <button
@@ -223,7 +224,7 @@ const ShopPage = () => {
                         onClick={() => setSelectedSubcategory(subcategory)}
                         className={`min-w-0 rounded-lg px-2.5 py-1.5 text-left text-xs transition ${selectedSubcategory === subcategory ? "bg-orange-50 font-bold text-orange-700" : "text-slate-500 hover:bg-slate-50"}`}
                       >
-                        <span className="block break-words">{subcategory}</span>
+                        <span className="block break-words">{formatDisplayName(subcategory)}</span>
                       </button>
                     ))}
                   </div>
@@ -253,7 +254,7 @@ const ShopPage = () => {
             }
             return [...subcats].sort().map((subcategory) => (
               <option key={subcategory} value={subcategory}>
-                {subcategory}
+                {formatDisplayName(subcategory)}
               </option>
             ));
           })()}
@@ -273,7 +274,7 @@ const ShopPage = () => {
           <option value="all">All brands</option>
           {(brands || []).map((brand) => (
             <option key={brand} value={brand}>
-              {brand}
+                {formatDisplayName(brand)}
             </option>
           ))}
         </select>
@@ -411,7 +412,7 @@ const ShopPage = () => {
               }`}
             >
               <span className="block break-words">
-                {subcategory}
+                {formatDisplayName(subcategory)}
               </span>
             </button>
           ))}

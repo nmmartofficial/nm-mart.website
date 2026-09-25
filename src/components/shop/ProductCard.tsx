@@ -1,7 +1,7 @@
 import { memo, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ShoppingCart, Pen, Heart } from "lucide-react";
-import { Product, productSlug } from "@/lib/store-utils";
+import { formatDisplayName, Product, productSlug } from "@/lib/store-utils";
 import ProductImageDisplay from "./ProductImageDisplay";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/lib/ThemeProvider";
@@ -99,12 +99,12 @@ const ProductCard = memo(function ProductCard({
 
   const imageHeightClass = productStyle === "premium" ? "h-[106px] md:h-[235px]" : productStyle === "offer" ? "h-[102px] md:h-[225px]" : "h-[106px] md:h-[235px]";
 
-  const productName = (product?.name || "Product").trim() || "Product";
+  const productName = formatDisplayName((product?.name || "Product").trim() || "Product");
 const rawProductUnit = String(product?.unit || "").trim();
 const rawSubCategory = String(product?.subCategory || "").trim();
 
 const productUnit = shouldDisplayLabel(rawProductUnit)
-  ? rawProductUnit
+  ? formatDisplayName(rawProductUnit)
   : "";
 
 const productSubCategory = shouldDisplayLabel(rawSubCategory)
@@ -147,7 +147,7 @@ const productSubCategory = shouldDisplayLabel(rawSubCategory)
       aria-label={`View details for ${productName}`}
       onClick={goToProduct}
       onKeyDown={handleCardKeyDown}
-      className={`group/card bg-card ${cardClass} flex w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 ${className}`}
+      className={`group/card bg-card ${cardClass} flex h-full min-h-[242px] w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 ${className}`}
     >
       <div className={`relative isolate shrink-0 overflow-hidden ${imageHeightClass} bg-white`}>
         <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-1 md:p-1.5" />
@@ -194,20 +194,16 @@ const productSubCategory = shouldDisplayLabel(rawSubCategory)
         ) : null}
       </div>
 
-      <div className="flex flex-col p-1.5 md:p-5">
-        <h3 className="mb-1 text-[10px] font-[600] leading-tight text-slate-900 line-clamp-2 break-words md:mb-1.5 md:text-[16px] md:leading-snug">
+      <div className="flex min-h-0 flex-1 flex-col p-1.5 md:p-5">
+        <h3 className="mb-1 min-h-[2.5em] text-[10px] font-[600] leading-tight text-slate-900 line-clamp-2 break-words md:mb-1.5 md:min-h-[2.7em] md:text-[16px] md:leading-snug">
           {productName}
         </h3>
 
-        {product.brand && (
-          <p className="mb-1 text-[7px] font-[500] tracking-[0.08em] text-slate-500 md:text-[10px] md:tracking-[0.12em] uppercase">{product.brand}</p>
-        )}
+        <p className="mb-1 min-h-[1.25em] text-[7px] font-[500] tracking-[0.08em] text-slate-500 md:text-[10px] md:tracking-[0.12em] uppercase">{product.brand ? formatDisplayName(product.brand) : "\u00a0"}</p>
 
-        {productUnit && (
-          <p className="mb-1 text-[7px] font-[500] tracking-[0.08em] text-slate-500 md:mb-1.5 md:text-[10px] md:tracking-[0.12em] uppercase">{productUnit}</p>
-        )}
+        <p className="mb-1 min-h-[1.25em] text-[7px] font-[500] tracking-[0.08em] text-slate-500 md:mb-1.5 md:text-[10px] md:tracking-[0.12em] uppercase">{productUnit || "\u00a0"}</p>
 
-        <div className="mb-2">
+        <div className="mb-2 min-h-[2.5rem]">
           <div className="flex items-end gap-2">
             {hasMrp && numericMrp > numericPrice && (
               <span className="pb-0.5 text-[10.5px] font-[500] text-slate-500 line-through decoration-slate-400">
@@ -224,11 +220,9 @@ const productSubCategory = shouldDisplayLabel(rawSubCategory)
             )}
           </div>
 
-          {savingsAmount > 0 && (
-            <p className="mt-1 text-[9px] font-[700] tracking-[0.08em] text-[#16A34A] uppercase">
-              Save ₹{savingsAmount.toLocaleString("en-IN")}
-            </p>
-          )}
+          <p className="mt-1 min-h-[1.25em] text-[9px] font-[700] tracking-[0.08em] text-[#16A34A] uppercase">
+            {savingsAmount > 0 ? `Save ₹${savingsAmount.toLocaleString("en-IN")}` : "\u00a0"}
+          </p>
         </div>
 
         <div className="mt-1 md:mt-auto">

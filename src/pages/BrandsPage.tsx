@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import Header from "@/components/shop/Header";
+import { formatDisplayName } from "@/lib/store-utils";
 import Footer from "@/components/shop/Footer";
 import { supabase } from "@/lib/supabase/client";
 import { TABLES } from "@/lib/supabase/schema";
@@ -172,7 +173,7 @@ const BrandsPage = () => {
 
                   {/* Brand Name */}
                   <p className="mt-2.5 w-full max-w-[105px] text-center text-[10px] font-[700] leading-[1.25] tracking-[0.08em] text-slate-700 uppercase sm:text-[11px] md:max-w-[125px] md:text-[12px]">
-                    {brand.name}
+                    {formatDisplayName(brand.name)}
                   </p>
                 </button>
               ))}

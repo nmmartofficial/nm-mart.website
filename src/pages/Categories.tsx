@@ -5,6 +5,7 @@ import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 import ProductCard from "@/components/shop/ProductCard";
 import { useCart } from "@/hooks/useCart";
+import { formatDisplayName } from "@/lib/store-utils";
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 
 export default function Categories() {
@@ -113,7 +114,7 @@ export default function Categories() {
                           subcategory.slice(0, 2)
                         )}
                       </span>
-                      <span className="mt-1 line-clamp-2 text-[9px] font-semibold leading-tight">{subcategory}</span>
+                      <span className="mt-1 line-clamp-2 text-[9px] font-semibold leading-tight">{formatDisplayName(subcategory)}</span>
                     </button>
                   ))}
                 </div>
@@ -176,7 +177,7 @@ export default function Categories() {
                     <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-slate-50 ring-1 ring-slate-100">
                       {image ? <img src={image} alt={category} className="h-full w-full object-contain p-2" loading="lazy" /> : <LayoutGrid className="h-8 w-8 text-slate-400" />}
                     </div>
-                    <span className="mt-4 text-center text-[10px] font-black uppercase tracking-[0.12em] text-slate-700 group-hover:text-orange-600">{category}</span>
+                    <span className="mt-4 text-center text-[10px] font-black uppercase tracking-[0.12em] text-slate-700 group-hover:text-orange-600">{formatDisplayName(category)}</span>
                   </button>
 
                   {subcategories.length > 0 && (
@@ -191,7 +192,7 @@ export default function Categories() {
                           }}
                           className="rounded-full border border-orange-200 bg-orange-50 px-2 py-1 text-[8px] font-black uppercase tracking-[0.12em] text-orange-700 transition hover:border-orange-300 hover:bg-orange-100"
                         >
-                          {subcategory}
+                          {formatDisplayName(subcategory)}
                         </button>
                       ))}
                     </div>
