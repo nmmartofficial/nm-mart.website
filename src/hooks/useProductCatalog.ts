@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { calculateSalePrice, isDisplayLabel, isProductStockAvailable, normalizeCategory, type Product } from "@/lib/store-utils";
+import { calculateSalePrice, isDisplayLabel, normalizeCategory, type Product } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
 import { subscribeToCatalogChanges } from "@/lib/supabase/realtime";
 import {
@@ -7,28 +7,31 @@ import {
   getProductBarcode,
   getProductBrand,
   getProductCategory,
+  getCurrentProductStock,
   getProductDescription,
   getProductDiscount,
   getProductImageUrl,
   getProductMrp,
   getProductName,
   getProductSaleRate,
-  getProductStock,
   getProductSubcategory,
   getProductUnit,
   isProductActive,
+  isCustomerVisibleProductRow,
   isProductFeatured,
   type DbProductRow,
 } from "@/lib/supabase/schema";
 
-const PRODUCT_COLUMNS = "barcode,name,mrp,sale_rate,retail_rate,restrate,onlinerate,online_rate,selling_price,stock,opstock,opening_stock,category_name,item_group_name,item_group,brand_name,subcategory_name,sub_category_name,discount_percent,discount_pct,discperc,discount,image_url,picture,is_active,is_deleted,is_favourite,isfav,unit_name,unitcode,description,item_description,itemdescription,id,created_at,updated_at";
+const PRODUCT_COLUMNS = "barcode,name,mrp,sale_rate,retail_rate,restrate,onlinerate,online_rate,selling_price,stock,opstock,opening_stock,category_name,item_group_name,item_group,item_category,category_id,category_code,brand_name,brand_id,brand_code,subcategory_name,sub_category_name,subcategory_id,sub_category_code,discount_percent,discount_pct,discperc,discount,image_url,picture,is_active,is_deleted,is_favourite,isfav,unit_name,unitcode,description,item_description,itemdescription,id,created_at,updated_at";
 
-export function extractUniqueBrandNames(rows: Array<{ brand_name?: string | null } | { brand?: string | null } | { name?: string | null } | null | undefined>): string[] {
+type BrandNameRow = { brand_name?: unknown; brand?: unknown; name?: unknown } | null | undefined;
+
+export function extractUniqueBrandNames(rows: BrandNameRow[]): string[] {
   const seen = new Set<string>();
   const values: string[] = [];
 
   for (const row of rows) {
-    const raw = (row as any)?.brand_name ?? (row as any)?.brand ?? (row as any)?.name ?? "";
+    const raw = row?.brand_name ?? row?.brand ?? row?.name ?? "";
     const value = String(raw ?? "").trim();
     if (!isDisplayLabel(value)) continue;
     const normalized = value.replace(/\s+/g, " ").trim();
@@ -94,7 +97,7 @@ function mapProduct(item: DbProductRow): Product {
     subCategory: getProductSubcategory(item),
     imageUrl: getProductImageUrl(item),
     discount,
-    stock: getProductStock(item),
+    stock: getCurrentProductStock(item),
     unit: getProductUnit(item),
     description: getProductDescription(item) || undefined,
     isFeatured: isProductFeatured(item),
@@ -114,7 +117,7 @@ export async function fetchCatalogProductsByIds(ids: number[]): Promise<Product[
   if (error) throw error;
 
   return ((data || []) as DbProductRow[])
-    .filter((item) => isProductActive(item) && getProductStock(item) > 0)
+    .filter(isCustomerVisibleProductRow)
     .map(mapProduct);
 }
 
@@ -143,55 +146,59 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
     if (replace) setError(null);
     let retryScheduled = false;
     try {
-      let query = supabase.from(TABLES.products).select(PRODUCT_COLUMNS);
-      query = query.eq("is_active", true).neq("is_deleted", true).gt("stock", 0);
-      if (options.category) query = query.ilike("category_name", options.category);
-      if (options.subcategory) {
-        const sub = options.subcategory.trim();
-        if (sub) {
-          query = query.or(`subcategory_name.ilike.%${sub}%,sub_category_name.ilike.%${sub}%`);
+      let rawOffset = offset;
+      let reachedEnd = false;
+      const validRows: DbProductRow[] = [];
+
+      while (validRows.length < pageSize && !reachedEnd) {
+        let query = supabase.from(TABLES.products).select(PRODUCT_COLUMNS);
+        query = query.eq("is_active", true).neq("is_deleted", true).gt("stock", 0);
+        if (options.category) query = query.ilike("category_name", options.category);
+        if (options.subcategory) {
+          const sub = options.subcategory.trim();
+          if (sub) query = query.or(`subcategory_name.ilike.%${sub}%,sub_category_name.ilike.%${sub}%`);
         }
-      }
-      if (options.brand) query = query.ilike("brand_name", options.brand);
-      if (options.search?.trim()) {
-        const search = options.search.trim().replace(/[,()]/g, " ");
-        query = query.or(`name.ilike.%${search}%,brand_name.ilike.%${search}%,category_name.ilike.%${search}%,barcode.ilike.%${search}%`);
-      }
-      if (options.featuredOnly) query = query.or("is_favourite.eq.true,isfav.eq.true");
-      if (options.offersOnly) query = query.gt("discount_percent", 25);
-      if (options.minDiscount !== undefined) query = query.gte("discount_percent", options.minDiscount);
-      if (options.maxDiscount !== undefined) query = query.lt("discount_percent", options.maxDiscount);
-      if (options.minPrice !== undefined && Number.isFinite(options.minPrice)) query = query.gte("sale_rate", options.minPrice);
-      if (options.maxPrice !== undefined && Number.isFinite(options.maxPrice)) query = query.lte("sale_rate", options.maxPrice);
+        if (options.brand) query = query.ilike("brand_name", options.brand);
+        if (options.search?.trim()) {
+          const search = options.search.trim().replace(/[,()]/g, " ");
+          query = query.or(`name.ilike.%${search}%,brand_name.ilike.%${search}%,category_name.ilike.%${search}%,barcode.ilike.%${search}%`);
+        }
+        if (options.featuredOnly) query = query.or("is_favourite.eq.true,isfav.eq.true");
+        if (options.offersOnly) query = query.gt("discount_percent", 25);
+        if (options.minDiscount !== undefined) query = query.gte("discount_percent", options.minDiscount);
+        if (options.maxDiscount !== undefined) query = query.lt("discount_percent", options.maxDiscount);
+        if (options.minPrice !== undefined && Number.isFinite(options.minPrice)) query = query.gte("sale_rate", options.minPrice);
+        if (options.maxPrice !== undefined && Number.isFinite(options.maxPrice)) query = query.lte("sale_rate", options.maxPrice);
 
-      if (options.sort === "price-asc") query = query.order("sale_rate", { ascending: true });
-      else if (options.sort === "price-desc") query = query.order("sale_rate", { ascending: false });
-      else if (options.sort === "name-asc") query = query.order("name", { ascending: true });
-      else if (options.sort === "name-desc") query = query.order("name", { ascending: false });
-      else if (options.sort === "newest") query = query.order("created_at", { ascending: false });
-      else query = query.order("is_favourite", { ascending: false }).order("updated_at", { ascending: false });
+        if (options.sort === "price-asc") query = query.order("sale_rate", { ascending: true });
+        else if (options.sort === "price-desc") query = query.order("sale_rate", { ascending: false });
+        else if (options.sort === "name-asc") query = query.order("name", { ascending: true });
+        else if (options.sort === "name-desc") query = query.order("name", { ascending: false });
+        else if (options.sort === "newest") query = query.order("created_at", { ascending: false });
+        else query = query.order("is_favourite", { ascending: false }).order("updated_at", { ascending: false });
 
-      const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 8000);
-      let data;
-      let queryError;
-      try {
-        ({ data, error: queryError } = await query
-          .abortSignal(controller.signal)
-          .range(offset, offset + pageSize - 1));
-      } finally {
-        window.clearTimeout(timeoutId);
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+        let data;
+        let queryError;
+        try {
+          ({ data, error: queryError } = await query.abortSignal(controller.signal).range(rawOffset, rawOffset + pageSize - 1));
+        } finally {
+          window.clearTimeout(timeoutId);
+        }
+        if (queryError) throw queryError;
+        const rawRows = (data || []) as DbProductRow[];
+        validRows.push(...rawRows.filter(isCustomerVisibleProductRow));
+        rawOffset += rawRows.length;
+        reachedEnd = rawRows.length < pageSize;
       }
-      if (queryError) throw queryError;
       if (requestKey.current !== queryKey) return;
 
-      const mapped = ((data || []) as DbProductRow[])
-        .filter((item) => isProductActive(item) && isProductStockAvailable(getProductStock(item)))
-        .map(mapProduct);
+      const mapped = validRows.map(mapProduct);
       setProducts((current) => replace ? mapped : [...current, ...mapped.filter((item) => !current.some((existing) => existing.id === item.id))]);
       setTotalCount(offset + mapped.length);
-      setHasMore(mapped.length === pageSize);
-      nextOffset.current = offset + mapped.length;
+      setHasMore(!reachedEnd);
+      nextOffset.current = rawOffset;
       retryCount.current = 0;
       const { data: activeBrandRows, error: activeBrandError } = await supabase
         .from(TABLES.brands)

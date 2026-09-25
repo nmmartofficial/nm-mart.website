@@ -94,7 +94,7 @@ const ProductCard = memo(function ProductCard({
         ? "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-white"
         : buttonStyle === "shadow"
           ? "bg-primary text-white shadow-[0_10px_18px_-14px_rgba(37,99,235,0.35)] hover:bg-primary-hover"
-          : "bg-slate-900 text-white hover:bg-primary"
+          : "bg-primary text-white hover:bg-primary-hover"
   }`;
 
   const imageHeightClass = productStyle === "premium" ? "h-[106px] md:h-[235px]" : productStyle === "offer" ? "h-[102px] md:h-[225px]" : "h-[106px] md:h-[235px]";
@@ -216,7 +216,7 @@ const productSubCategory = shouldDisplayLabel(rawSubCategory)
             )}
 
             {hasPrice ? (
-                <span className="text-[15px] font-[800] leading-none tracking-[-0.05em] text-[#155EEF] md:text-[1.75rem]">
+                <span className="text-[15px] font-[800] leading-none tracking-[-0.05em] text-primary md:text-[1.75rem]">
                 ₹{numericPrice.toLocaleString("en-IN")}
               </span>
             ) : (

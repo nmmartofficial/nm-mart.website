@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { TABLES, isProductInStock } from "@/lib/supabase/schema";
+import { isCustomerVisibleProductRow, TABLES } from "@/lib/supabase/schema";
 
 /** Mapped storefront product DTO (output of fetchLiveProducts, NOT a raw Supabase row).
  *  Field names here are local contract; actual Supabase column names are used in select() and mapping below.
@@ -22,7 +22,7 @@ export const fetchLiveProducts = async (): Promise<Product[]> => {
     const { data, error } = await supabase
       .from(TABLES.products)
       // Only actual Supabase columns are selected here, in sync with live schema.
-      .select("barcode, name, mrp, sale_rate, onlinerate, online_rate, retail_rate, restrate, selling_price, discount_percent, discount_pct, discperc, discount, category_name, item_group_name, item_group, item_category, image_url, picture, stock, opstock, opening_stock")
+      .select("barcode, name, mrp, sale_rate, onlinerate, online_rate, retail_rate, restrate, selling_price, discount_percent, discount_pct, discperc, discount, category_name, item_group_name, item_group, item_category, category_id, category_code, brand_name, brand_id, brand_code, subcategory_name, sub_category_name, subcategory_id, sub_category_code, image_url, picture, stock, is_active, is_deleted")
       .gt("stock", 0)
       .order("name", { ascending: true });
 
@@ -32,8 +32,8 @@ export const fetchLiveProducts = async (): Promise<Product[]> => {
     }
 
     return (data ?? [])
-      .filter((item: any) => isProductInStock(item))
-      .map((item: any) => ({
+      .filter(isCustomerVisibleProductRow)
+      .map((item) => ({
         barcode: String(item?.barcode ?? "").trim(),
         name: String(item?.name ?? "").trim(),
         mrp: Number(item?.mrp ?? 0),

@@ -57,7 +57,7 @@ const ShopPage = () => {
         ? { minDiscount: 33, maxDiscount: 50 }
         : {};
   const catalog = useProductCatalog({
-    pageSize: 20,
+    pageSize: 24,
     search: query,
     category: selectedCategory === "all" ? undefined : selectedCategory,
     subcategory: selectedSubcategory === "all" ? undefined : selectedSubcategory,
@@ -553,7 +553,7 @@ const ShopPage = () => {
                 ))}
               </div>
               <div ref={loadMoreRef} className="mt-7 flex min-h-12 items-center justify-center">
-                {loadingMore ? <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Loading more products...</span> : loadMoreError ? <button type="button" onClick={retryLoadMore} className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600 underline">Couldn't load more products. Try again.</button> : hasMore ? <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Loading more as you scroll</span> : <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">No more products</span>}
+                {loadingMore ? <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Loading more products...</span> : loadMoreError ? <button type="button" onClick={retryLoadMore} className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600 underline">Couldn't load more products. Try again.</button> : hasMore ? <button type="button" onClick={loadMore} className="rounded-full border border-[#BDD8FF] bg-[#EAF3FF] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0B3B78] transition hover:border-[#1D5FBF] hover:bg-[#D8EBFF]">Load More</button> : <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">No more products</span>}
               </div>
               </>
             )}
