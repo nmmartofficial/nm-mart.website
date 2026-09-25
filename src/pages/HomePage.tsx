@@ -180,11 +180,13 @@ export default function HomePage() {
         const top = fetchedBanners.filter((banner) => getBannerPlacementKey(banner) === "top");
         const middle = fetchedBanners.filter((banner) => getBannerPlacementKey(banner) === "middle");
         const bottom = fetchedBanners.filter((banner) => getBannerPlacementKey(banner) === "bottom");
+        const hasExplicitPlacement = top.length > 0 || middle.length > 0 || bottom.length > 0;
+        const fallbackTop = hasExplicitPlacement ? top : fetchedBanners;
 
         setBanners(fetchedBanners);
-        setTopBanners(top.length > 0 ? top : fetchedBanners.slice(0, 1));
-        setMiddleBanners(middle.length > 0 ? middle : fetchedBanners.filter((banner) => banner.id !== top[0]?.id).slice(0, 2));
-        setBottomBanners(bottom.length > 0 ? bottom : fetchedBanners.filter((banner) => banner.id !== top[0]?.id && !middle.some((item) => item.id === banner.id)).slice(0, 2));
+        setTopBanners(fallbackTop);
+        setMiddleBanners(middle);
+        setBottomBanners(bottom);
       } catch (error) {
         if (mounted) {
           setBanners([]);
@@ -572,7 +574,7 @@ export default function HomePage() {
                     type="button"
                     onClick={handleLoadMoreOffers}
                     disabled={offersLoading}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
+                    className="hidden min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60 md:inline-flex"
                   >
                     Load More Offers
                     <ChevronDown className="h-4 w-4" />

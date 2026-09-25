@@ -15,6 +15,7 @@ const BannerManager = () => {
   const [reordering, setReordering] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sessionActive, setSessionActive] = useState(true);
+  const [uploadPlacement, setUploadPlacement] = useState("top");
 
   useEffect(() => {
     fetchBanners();
@@ -86,6 +87,7 @@ const BannerManager = () => {
           title: file.name.split('.')[0],
           link_url: `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`I'm interested in this offer: ${publicUrl}`)}`,
           is_active: true,
+          banner_type: uploadPlacement,
           sort_order: banners.length
         }]);
 
@@ -188,6 +190,29 @@ const BannerManager = () => {
     }
   };
 
+  const updatePlacement = async (id: string, placement: string) => {
+    try {
+      const session = await getActiveSession();
+      if (!session) {
+        setSessionActive(false);
+        toast.error("Please login again.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from(TABLES.banners)
+        .update({ banner_type: placement })
+        .eq("id", id);
+
+      if (error) throw error;
+      setBanners(banners.map((banner) => banner.id === id ? { ...banner, banner_type: placement } : banner));
+      toast.success("Banner placement updated");
+    } catch (err: any) {
+      logSupabaseDebug("bannerPlacement:error", { id, placement }, err);
+      toast.error(getSupabaseErrorMessage(err, "Placement update failed"));
+    }
+  };
+
   const copyWhatsAppLink = (id: string, link: string) => {
     navigator.clipboard.writeText(link || "");
     setCopiedId(id);
@@ -215,11 +240,23 @@ const BannerManager = () => {
           </div>
         </div>
 
-        <label className="cursor-pointer bg-[#CC0000] text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-lg flex items-center gap-2">
-          {uploading ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
-          Upload Banner
-          <input type="file" className="hidden" onChange={handleUpload} accept="image/*" disabled={uploading || !sessionActive} />
-        </label>
+        <div className="flex items-center gap-3">
+          <select
+            value={uploadPlacement}
+            onChange={(event) => setUploadPlacement(event.target.value)}
+            className="rounded-2xl border border-gray-200 bg-white px-3 py-3 text-[10px] font-black uppercase tracking-widest text-gray-700 outline-none"
+            aria-label="Banner placement for new upload"
+          >
+            <option value="top">Top / Hero</option>
+            <option value="middle">Middle</option>
+            <option value="bottom">Bottom / Footer</option>
+          </select>
+          <label className="cursor-pointer bg-[#CC0000] text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all shadow-lg flex items-center gap-2">
+            {uploading ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
+            Upload Banner
+            <input type="file" className="hidden" onChange={handleUpload} accept="image/*" disabled={uploading || !sessionActive} />
+          </label>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -243,6 +280,16 @@ const BannerManager = () => {
                 <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
                   Preview #{index + 1}
                 </div>
+                <select
+                  value={banner.banner_type || "top"}
+                  onChange={(event) => updatePlacement(banner.id, event.target.value)}
+                  className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-600 outline-none"
+                  aria-label={`Placement for banner ${index + 1}`}
+                >
+                  <option value="top">Top / Hero</option>
+                  <option value="middle">Middle</option>
+                  <option value="bottom">Bottom / Footer</option>
+                </select>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => moveBanner(index, "up")}

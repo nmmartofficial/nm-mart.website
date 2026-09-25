@@ -18,6 +18,7 @@ export default function BottomNavigation() {
   const isActive = (to: string) => {
     if (to === "/") return pathname === "/";
     if (to.includes("sort=discount-desc")) return search.includes("sort=discount-desc");
+    if (to === "/shop?offers=25") return pathname === "/shop" && search.includes("offers=25");
     if (to === "/categories") return pathname === "/categories";
     return pathname === to;
   };
