@@ -309,44 +309,78 @@ export default function HomePage() {
     </div>
   );
 
-  const renderBannerPlacement = (
-    placement: "top" | "middle" | "bottom",
-    items: WebsiteBanner[],
+  const PlacementBannerCarousel = ({
+    placement,
+    items,
     compact = false,
-  ) => {
+  }: {
+    placement: "top" | "middle" | "bottom";
+    items: WebsiteBanner[];
+    compact?: boolean;
+  }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+      if (items.length <= 1) return;
+      const timer = window.setInterval(() => {
+        setCurrentIndex((previous) => (previous + 1) % items.length);
+      }, 5000);
+      return () => window.clearInterval(timer);
+    }, [items]);
+
     if (!items.length) return null;
 
     const bannerClass = compact
       ? "relative block aspect-[3/1] w-full overflow-hidden rounded-2xl border border-slate-200 shadow-sm"
       : "relative block aspect-[3.2/1] w-full overflow-hidden rounded-[22px] border border-slate-200 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)]";
 
+    const banner = items[currentIndex] ?? items[0];
+
     return (
       <section className="mb-3 w-full px-3 md:mb-6 md:px-6">
-        <div className="space-y-3">
-          {items.map((banner) => (
-            <a
-              key={`${placement}-${banner.id}`}
-              href={banner.link_url || banner.banner_link || banner.whatsapp_link || "#"}
-              target={banner.link_url || banner.banner_link ? "_blank" : undefined}
-              rel={banner.link_url || banner.banner_link ? "noreferrer" : undefined}
-              className={bannerClass}
-              aria-label={banner.title || "Promotional banner"}
-            >
-              <img
-                src={banner.image_url || ""}
-                alt={banner.title || "Promotional banner"}
-                className="h-full w-full object-cover object-center"
-                loading="lazy"
-              />
-              {banner.title && (
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent p-3 md:p-4">
-                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/80 md:text-[10px]">
-                    {banner.title}
-                  </p>
-                </div>
-              )}
-            </a>
-          ))}
+        <div className="relative">
+          <a
+            key={`${placement}-${banner.id}`}
+            href={banner.link_url || banner.banner_link || banner.whatsapp_link || "#"}
+            target={banner.link_url || banner.banner_link ? "_blank" : undefined}
+            rel={banner.link_url || banner.banner_link ? "noreferrer" : undefined}
+            className={bannerClass}
+            aria-label={banner.title || "Promotional banner"}
+          >
+            <img
+              src={banner.image_url || ""}
+              alt={banner.title || "Promotional banner"}
+              className="h-full w-full object-cover object-center"
+              loading="lazy"
+            />
+            {banner.title && (
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent p-3 md:p-4">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/80 md:text-[10px]">
+                  {banner.title}
+                </p>
+              </div>
+            )}
+          </a>
+
+          {items.length > 1 && (
+            <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-2 md:bottom-4">
+              {items.map((item, index) => (
+                <button
+                  key={`${placement}-dot-${item.id}`}
+                  type="button"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setCurrentIndex(index);
+                  }}
+                  className="flex h-3 w-3 items-center justify-center transition-all"
+                  aria-label={`Go to banner ${index + 1}`}
+                >
+                  <span className={`block h-1.5 rounded-full transition-all ${index === currentIndex ? "w-6 bg-white shadow-sm" : "w-1.5 bg-white/60"}`} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     );
@@ -360,7 +394,7 @@ export default function HomePage() {
         <HeroBanner banners={topBanners.length > 0 ? topBanners : banners} loading={loadingBanners} />
       </section>
 
-      {renderBannerPlacement("middle", middleBanners, false)}
+      <PlacementBannerCarousel placement="middle" items={middleBanners} compact={false} />
       <main className="w-full px-0 pt-0 pb-2 md:pb-8 lg:pt-0 lg:pb-8">
 
         <section id="categories" className="mb-3 w-full rounded-[18px] border border-[#d7ebff] bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
@@ -606,7 +640,7 @@ export default function HomePage() {
         )}
       </main>
 
-      {renderBannerPlacement("bottom", bottomBanners, true)}
+      <PlacementBannerCarousel placement="bottom" items={bottomBanners} compact />
       <Footer />
     </div>
   );
