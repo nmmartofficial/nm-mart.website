@@ -134,12 +134,14 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
   const nextOffset = useRef(0);
   const requestKey = useRef(queryKey);
   const activeRequest = useRef(false);
+  const retryCount = useRef(0);
 
   const fetchPage = useCallback(async (offset: number, replace: boolean) => {
     if (activeRequest.current) return;
     activeRequest.current = true;
     if (replace) setLoading(true); else { setLoadingMore(true); setLoadMoreError(null); }
     if (replace) setError(null);
+    let retryScheduled = false;
     try {
       let query = supabase.from(TABLES.products).select(PRODUCT_COLUMNS);
       query = query.eq("is_active", true).neq("is_deleted", true).gt("stock", 0);
@@ -190,7 +192,7 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
       setTotalCount(offset + mapped.length);
       setHasMore(mapped.length === pageSize);
       nextOffset.current = offset + mapped.length;
-
+      retryCount.current = 0;
       const { data: activeBrandRows, error: activeBrandError } = await supabase
         .from(TABLES.brands)
         .select("name, is_active")
@@ -212,14 +214,25 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
       }
     } catch (err) {
       if (requestKey.current === queryKey) {
-        if (replace) setError("Unable to load products right now.");
-        else setLoadMoreError("Couldn't load more products. Try again.");
+        if (replace && retryCount.current < 2) {
+          retryCount.current += 1;
+          retryScheduled = true;
+          window.setTimeout(() => {
+            if (requestKey.current === queryKey) void fetchPage(offset, replace);
+          }, retryCount.current * 700);
+        } else if (replace) {
+          setError("Unable to load products right now.");
+        } else {
+          setLoadMoreError("Couldn't load more products. Try again.");
+        }
       }
       console.error("Product catalog query failed:", err);
     } finally {
       activeRequest.current = false;
-      setLoading(false);
-      setLoadingMore(false);
+      if (!retryScheduled) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   }, [options.brand, options.category, options.featuredOnly, options.maxDiscount, options.maxPrice, options.minDiscount, options.minPrice, options.offersOnly, options.search, options.sort, options.subcategory, pageSize, queryKey]);
 
