@@ -94,7 +94,7 @@ const ProductCard = memo(function ProductCard({
         ? "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-white"
         : buttonStyle === "shadow"
           ? "bg-primary text-white shadow-[0_10px_18px_-14px_rgba(37,99,235,0.35)] hover:bg-primary-hover"
-          : "bg-slate-900 text-white hover:bg-primary"
+          : "bg-primary text-white hover:bg-primary-hover"
   }`;
 
   const imageHeightClass = productStyle === "premium" ? "h-[106px] md:h-[235px]" : productStyle === "offer" ? "h-[102px] md:h-[225px]" : "h-[106px] md:h-[235px]";
@@ -128,7 +128,7 @@ const productSubCategory = shouldDisplayLabel(rawSubCategory)
     : 0;
 
   const goToProduct = () => navigate(`/product/${productSlug(product)}`);
-  const isProductWishlisted = isWishlisted(product?.barcode ?? "");
+  const isProductWishlisted = isWishlisted(product);
   const showPen = isAdminEditor && typeof onAdminQuickEdit === "function";
 
   const handleCardKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -147,10 +147,10 @@ const productSubCategory = shouldDisplayLabel(rawSubCategory)
       aria-label={`View details for ${productName}`}
       onClick={goToProduct}
       onKeyDown={handleCardKeyDown}
-      className={`group/card bg-card ${cardClass} flex h-full min-h-[242px] w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 ${className}`}
+      className={`group/card bg-card ${cardClass} flex h-[296px] min-h-[296px] w-full cursor-pointer flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 md:h-[500px] md:min-h-[500px] ${className}`}
     >
       <div className={`relative isolate shrink-0 overflow-hidden ${imageHeightClass} bg-white`}>
-        <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="h-full w-full object-contain p-1 md:p-1.5" />
+        <ProductImageDisplay imageUrl={product.imageUrl} name={productName} className="aspect-[4/3] h-full w-full object-contain p-1 md:p-1.5" />
 
         {discountPercent > 0 && (
           <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-[#E11D48] px-2 py-1 text-[8px] font-[800] tracking-[0.08em] text-white shadow-md">
@@ -194,8 +194,8 @@ const productSubCategory = shouldDisplayLabel(rawSubCategory)
         ) : null}
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col p-1.5 md:p-5">
-        <h3 className="mb-1 min-h-[2.5em] text-[10px] font-[600] leading-tight text-slate-900 line-clamp-2 break-words md:mb-1.5 md:min-h-[2.7em] md:text-[16px] md:leading-snug">
+      <div className="flex min-h-0 flex-1 flex-col p-1.5 md:p-4">
+        <h3 className="mb-1 h-[3.75em] min-h-[3.75em] overflow-hidden text-[10px] font-[600] leading-tight text-slate-900 line-clamp-3 break-words md:mb-1.5 md:h-[4.125em] md:min-h-[4.125em] md:text-[16px] md:leading-snug">
           {productName}
         </h3>
 
@@ -203,7 +203,7 @@ const productSubCategory = shouldDisplayLabel(rawSubCategory)
 
         <p className="mb-1 min-h-[1.25em] text-[7px] font-[500] tracking-[0.08em] text-slate-500 md:mb-1.5 md:text-[10px] md:tracking-[0.12em] uppercase">{productUnit || "\u00a0"}</p>
 
-        <div className="mb-2 min-h-[2.5rem]">
+        <div className="mb-2 h-[3.75rem] shrink-0 md:h-[4.25rem]">
           <div className="flex items-end gap-2">
             {hasMrp && numericMrp > numericPrice && (
               <span className="pb-0.5 text-[10.5px] font-[500] text-slate-500 line-through decoration-slate-400">
@@ -212,7 +212,7 @@ const productSubCategory = shouldDisplayLabel(rawSubCategory)
             )}
 
             {hasPrice ? (
-                <span className="text-[15px] font-[800] leading-none tracking-[-0.05em] text-[#155EEF] md:text-[1.75rem]">
+                <span className="text-[15px] font-[800] leading-none tracking-[-0.05em] text-primary md:text-[1.75rem]">
                 ₹{numericPrice.toLocaleString("en-IN")}
               </span>
             ) : (
@@ -225,7 +225,7 @@ const productSubCategory = shouldDisplayLabel(rawSubCategory)
           </p>
         </div>
 
-        <div className="mt-1 md:mt-auto">
+        <div className="mt-auto shrink-0">
           <button
             type="button"
             onClick={(e) => {

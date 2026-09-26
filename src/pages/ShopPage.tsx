@@ -6,7 +6,7 @@ import Footer from "@/components/shop/Footer";
 import ProductCard from "@/components/shop/ProductCard";
 import { formatDisplayName } from "@/lib/store-utils";
 import { useCart } from "@/hooks/useCart";
-import { useProductCatalog } from "@/hooks/useProductCatalog";
+import { resolveCategoryOption, resolveSubcategoryOption, useProductCatalog } from "@/hooks/useProductCatalog";
 
 const sortOptions = [
   { value: "featured", label: "Featured" },
@@ -69,11 +69,15 @@ const ShopPage = () => {
     maxPrice: priceMax.trim() ? Number(priceMax) : undefined,
     ...collectionOptions,
   });
-  const { products: allProducts, loading, loadingMore, error, loadMoreError, categories, subcategories, brands, hasMore, loadMore, retry: refetchProducts, retryLoadMore } = catalog;
+  const { products: allProducts, loading, loadingMore, error, loadMoreError, categories, categoryOptions, subcategoryOptions, brands, hasMore, loadMore, retry: refetchProducts, retryLoadMore } = catalog;
   const validCategories = useMemo(() => (categories || []).filter((category): category is string => Boolean(category && typeof category === "string" && category.trim())), [categories]);
   const validBrands = useMemo(() => (brands || []).filter((brand): brand is string => Boolean(brand && typeof brand === "string" && brand.trim())), [brands]);
-  const validCategorySet = useMemo(() => new Set(validCategories), [validCategories]);
-  const validBrandSet = useMemo(() => new Set(validBrands), [validBrands]);
+  const selectedCategoryOption = resolveCategoryOption(categoryOptions, selectedCategory);
+  const selectedCategoryName = selectedCategoryOption?.name || selectedCategory;
+  const selectedSubcategoryOption = selectedCategoryOption
+    ? resolveSubcategoryOption(subcategoryOptions, selectedCategoryOption.id, selectedSubcategory)
+    : undefined;
+  const selectedSubcategoryName = selectedSubcategoryOption?.name || selectedSubcategory;
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -193,14 +197,15 @@ const ShopPage = () => {
             All categories
           </button>
           {validCategories.map((category) => {
-            const isSelected = selectedCategory === category;
+            const categoryOption = categoryOptions.find((option) => option.name.toLowerCase() === category.toLowerCase());
+            const isSelected = Boolean(categoryOption && selectedCategoryOption?.id === categoryOption.id);
             return (
               <div key={category} className="border-t border-slate-200/80">
                 <button
                   type="button"
                   aria-expanded={isSelected}
                   onClick={() => {
-                    setSelectedCategory(category);
+                    setSelectedCategory(categoryOption?.id || category);
                     setSelectedSubcategory("all");
                   }}
                   className={`flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm font-semibold transition ${isSelected ? "bg-white text-orange-700" : "text-slate-700 hover:bg-white"}`}
@@ -208,23 +213,23 @@ const ShopPage = () => {
                   <span className="truncate">{formatDisplayName(category)}</span>
                   <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isSelected ? "rotate-180 text-orange-500" : "text-slate-400"}`} />
                 </button>
-                {isSelected && subcategories.length > 0 && (
+                {isSelected && subcategoryOptions.length > 0 && (
                   <div className="grid grid-cols-2 gap-3 border-t border-slate-100 bg-white px-3 py-2 md:grid-cols-3 lg:grid-cols-5">
                     <button
                       type="button"
                       onClick={() => setSelectedSubcategory("all")}
-                      className={`min-w-0 rounded-lg px-2.5 py-1.5 text-left text-xs transition ${selectedSubcategory === "all" ? "bg-orange-50 font-bold text-orange-700" : "text-slate-500 hover:bg-slate-50"}`}
+                      className={`min-w-0 rounded-lg px-2.5 py-1.5 text-left text-xs transition ${!selectedSubcategoryOption ? "bg-orange-50 font-bold text-orange-700" : "text-slate-500 hover:bg-slate-50"}`}
                     >
                       All {formatDisplayName(category)}
                     </button>
-                    {subcategories.map((subcategory) => (
+                    {subcategoryOptions.map((subcategory) => (
                       <button
-                        key={subcategory}
+                        key={subcategory.id}
                         type="button"
-                        onClick={() => setSelectedSubcategory(subcategory)}
-                        className={`min-w-0 rounded-lg px-2.5 py-1.5 text-left text-xs transition ${selectedSubcategory === subcategory ? "bg-orange-50 font-bold text-orange-700" : "text-slate-500 hover:bg-slate-50"}`}
+                        onClick={() => setSelectedSubcategory(subcategory.id)}
+                        className={`min-w-0 rounded-lg px-2.5 py-1.5 text-left text-xs transition ${selectedSubcategoryOption?.id === subcategory.id ? "bg-orange-50 font-bold text-orange-700" : "text-slate-500 hover:bg-slate-50"}`}
                       >
-                        <span className="block break-words">{formatDisplayName(subcategory)}</span>
+                        <span className="block break-words">{formatDisplayName(subcategory.name)}</span>
                       </button>
                     ))}
                   </div>
@@ -242,22 +247,16 @@ const ShopPage = () => {
         <select
           id="shop-subcategory"
           value={selectedSubcategory}
+          disabled={selectedCategory === "all"}
           onChange={(event) => setSelectedSubcategory(event.target.value)}
           className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-orange-300"
         >
           <option value="all">All subcategories</option>
-          {(() => {
-            const subcats = new Set<string>();
-            for (const product of allProducts) {
-              const value = String(product.subCategory || "").trim();
-              if (value) subcats.add(value);
-            }
-            return [...subcats].sort().map((subcategory) => (
-              <option key={subcategory} value={subcategory}>
-                {formatDisplayName(subcategory)}
-              </option>
-            ));
-          })()}
+          {subcategoryOptions.map((subcategory) => (
+            <option key={subcategory.id} value={subcategory.id}>
+              {formatDisplayName(subcategory.name)}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -329,11 +328,95 @@ const ShopPage = () => {
     </div>
   );
 
+  const brandNavigation = (
+    <aside className="max-h-[calc(100vh-260px)] min-w-0 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <p className="mb-3 px-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Brands</p>
+      <button
+        type="button"
+        onClick={() => setSelectedBrand("all")}
+        className={`w-full rounded-lg px-2.5 py-2 text-left text-sm font-semibold transition ${selectedBrand === "all" ? "bg-orange-50 text-orange-700" : "text-slate-600 hover:bg-slate-50"}`}
+      >
+        All Brands
+      </button>
+      {validBrands.map((brand) => {
+        const isSelected = brand.toLowerCase() === selectedBrand.toLowerCase();
+        return (
+          <button
+            key={brand}
+            type="button"
+            onClick={() => setSelectedBrand(brand)}
+            aria-current={isSelected ? "page" : undefined}
+            className={`mt-1 w-full rounded-lg px-2.5 py-2 text-left text-sm transition ${isSelected ? "bg-[#eaf3ff] font-bold text-[#0b3b78]" : "text-slate-600 hover:bg-slate-50"}`}
+          >
+            {formatDisplayName(brand)}
+          </button>
+        );
+      })}
+    </aside>
+  );
+
+  const categoryNavigation = (
+    <aside className="max-h-[calc(100vh-260px)] min-w-0 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <p className="mb-3 px-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Categories</p>
+      <button
+        type="button"
+        onClick={() => {
+          setSelectedCategory("all");
+          setSelectedSubcategory("all");
+        }}
+        className={`w-full rounded-lg px-2.5 py-2 text-left text-sm font-semibold transition ${selectedCategory === "all" ? "bg-orange-50 text-orange-700" : "text-slate-600 hover:bg-slate-50"}`}
+      >
+        All Categories
+      </button>
+      {validCategories.map((category) => {
+        const categoryOption = categoryOptions.find((option) => option.name.toLowerCase() === category.toLowerCase());
+        const isSelected = Boolean(categoryOption && selectedCategoryOption?.id === categoryOption.id);
+        return (
+          <div key={category} className="mt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory(categoryOption?.id || category);
+                setSelectedSubcategory("all");
+              }}
+              aria-current={isSelected ? "page" : undefined}
+              className={`w-full rounded-lg px-2.5 py-2 text-left text-sm transition ${isSelected ? "bg-[#eaf3ff] font-bold text-[#0b3b78]" : "text-slate-600 hover:bg-slate-50"}`}
+            >
+              {formatDisplayName(category)}
+            </button>
+            {isSelected && subcategoryOptions.length > 0 && (
+              <div className="ml-2 mt-1 border-l border-slate-100 pl-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedSubcategory("all")}
+                  className={`w-full rounded-lg px-2 py-1.5 text-left text-xs transition ${!selectedSubcategoryOption ? "bg-orange-50 font-bold text-orange-700" : "text-slate-500 hover:bg-slate-50"}`}
+                >
+                  All {formatDisplayName(category)}
+                </button>
+                {subcategoryOptions.map((subcategory) => (
+                  <button
+                    key={subcategory.id}
+                    type="button"
+                    onClick={() => setSelectedSubcategory(subcategory.id)}
+                    className={`w-full rounded-lg px-2 py-1.5 text-left text-xs transition ${selectedSubcategoryOption?.id === subcategory.id ? "bg-orange-50 font-bold text-orange-700" : "text-slate-500 hover:bg-slate-50"}`}
+                  >
+                    {formatDisplayName(subcategory.name)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </aside>
+  );
+
+  const selectedBrandLabel = validBrands.find((brand) => brand.toLowerCase() === selectedBrand.toLowerCase());
   const activeFilterLabel =
-    selectedCategory !== "all" && validCategorySet.has(selectedCategory)
-      ? selectedCategory
-      : selectedBrand !== "all" && validBrandSet.has(selectedBrand)
-        ? selectedBrand
+    selectedCategory !== "all"
+      ? selectedCategoryName
+      : selectedBrand !== "all"
+        ? selectedBrandLabel || selectedBrand
         : null;
 
   const hasCatalogSelection = selectedCategory !== "all" || selectedBrand !== "all";
@@ -363,7 +446,7 @@ const ShopPage = () => {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header />
 
-      <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:py-8">
+      <main className="mx-auto w-full max-w-[1800px] px-4 py-6 md:px-6 lg:py-8">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.28em] text-orange-500">Store</p>
@@ -400,19 +483,19 @@ const ShopPage = () => {
             All
           </button>
 
-          {subcategories.map((subcategory) => (
+          {subcategoryOptions.map((subcategory) => (
             <button
-              key={subcategory}
+              key={subcategory.id}
               type="button"
-              onClick={() => setSelectedSubcategory(subcategory)}
+              onClick={() => setSelectedSubcategory(subcategory.id)}
               className={`w-full border-t border-slate-100 px-1.5 py-3 text-center text-[8px] font-semibold leading-tight transition ${
-                selectedSubcategory === subcategory
+                selectedSubcategoryOption?.id === subcategory.id
                   ? "bg-orange-50 text-orange-700"
                   : "text-slate-600 hover:bg-slate-50"
               }`}
             >
               <span className="block break-words">
-                {formatDisplayName(subcategory)}
+                {formatDisplayName(subcategory.name)}
               </span>
             </button>
           ))}
@@ -491,10 +574,12 @@ const ShopPage = () => {
   </>
 )}
 
-        <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:gap-10">
-          <div className="hidden lg:block">{filterPanel}</div>
+        <div className={`grid min-w-0 gap-6 lg:gap-8 ${selectedBrand !== "all" || selectedCategory !== "all" ? "md:grid-cols-[190px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(0,1fr)] 2xl:grid-cols-[260px_minmax(0,1fr)]" : "lg:grid-cols-[300px_minmax(0,1fr)] 2xl:grid-cols-[320px_minmax(0,1fr)]"}`}>
+          <div className={`hidden min-w-0 ${selectedBrand !== "all" || selectedCategory !== "all" ? "md:block" : "lg:block"}`}>
+            {selectedCategory !== "all" ? categoryNavigation : selectedBrand !== "all" ? brandNavigation : filterPanel}
+          </div>
 
-          <div>
+          <div className="min-w-0">
             {loading ? (
               <div className="grid grid-cols-2 gap-3 sm:gap-4 2xl:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, index) => (
@@ -544,7 +629,7 @@ const ShopPage = () => {
               </div>
             ) : (
               <>
-              <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 2xl:grid-cols-4">
+              <div className="grid min-w-0 grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 min-[1800px]:grid-cols-6">
                 {displayedProducts.map((product) => (
                   <ProductCard
                     key={product.id || product.barcode}

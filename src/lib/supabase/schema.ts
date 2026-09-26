@@ -35,6 +35,43 @@ export type DbProfileRow = Tables<"profiles">;
 /** Alias of Tables<"cart_items"> from types.ts. */
 export type DbCartItemRow = Tables<"cart_items">;
 
+type ProductTaxFields = {
+  hsn_code?: unknown;
+  hsncode?: unknown;
+  gst_percent?: unknown;
+  gst_pct?: unknown;
+  gst?: unknown;
+};
+
+function hasText(value: unknown): boolean {
+  return value !== null && value !== undefined && String(value).trim().length > 0;
+}
+
+export function getProductHsn(row: ProductTaxFields | null | undefined): string {
+  if (!row) return "";
+  const value = [row.hsn_code, row.hsncode].find(hasText);
+  return value === undefined ? "" : String(value).trim();
+}
+
+export function getProductGst(row: ProductTaxFields | null | undefined): number | undefined {
+  if (!row) return undefined;
+
+  for (const value of [row.gst_percent, row.gst_pct, row.gst]) {
+    if (value === null || value === undefined) continue;
+    if (typeof value === "string" && value.trim() === "") continue;
+    if (typeof value !== "number" && typeof value !== "string") continue;
+
+    const numericValue = typeof value === "string" ? Number(value.trim()) : value;
+    if (Number.isFinite(numericValue) && numericValue >= 0) return numericValue;
+  }
+
+  return undefined;
+}
+
+export function isProductEligible(row: ProductTaxFields | null | undefined): boolean {
+  return Boolean(getProductHsn(row)) && getProductGst(row) !== undefined;
+}
+
 
 export function getProductBarcode(row: Partial<DbProductRow> | null | undefined): string {
   return String(row?.barcode ?? "").trim();

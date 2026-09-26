@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { calculateSalePrice, isDisplayLabel, isProductStockAvailable, normalizeCategory, type Product } from "@/lib/store-utils";
+import { calculateSalePrice, isDisplayLabel, normalizeCategory, type Product } from "@/lib/store-utils";
 import { supabase } from "@/lib/supabase/client";
 import { subscribeToCatalogChanges } from "@/lib/supabase/realtime";
 import {
@@ -16,19 +16,50 @@ import {
   getProductStock,
   getProductSubcategory,
   getProductUnit,
+  isProductEligible,
   isProductActive,
   isProductFeatured,
   type DbProductRow,
 } from "@/lib/supabase/schema";
 
-const PRODUCT_COLUMNS = "barcode,name,mrp,sale_rate,retail_rate,restrate,onlinerate,online_rate,selling_price,stock,opstock,opening_stock,category_name,item_group_name,item_group,brand_name,subcategory_name,sub_category_name,discount_percent,discount_pct,discperc,discount,image_url,picture,is_active,is_deleted,is_favourite,isfav,unit_name,unitcode,description,item_description,itemdescription,id,created_at,updated_at";
+const PRODUCT_COLUMNS = "barcode,name,mrp,sale_rate,retail_rate,restrate,onlinerate,online_rate,selling_price,stock,opstock,opening_stock,category_name,item_group_name,item_group,item_category,category_id,brand_name,subcategory_name,sub_category_name,subcategory_id,hsn_code,hsncode,gst_percent,gst_pct,gst,discount_percent,discount_pct,discperc,discount,image_url,picture,is_active,is_deleted,is_favourite,isfav,unit_name,unitcode,description,item_description,itemdescription,id,created_at,updated_at";
 
-export function extractUniqueBrandNames(rows: Array<{ brand_name?: string | null } | { brand?: string | null } | { name?: string | null } | null | undefined>): string[] {
+export type CatalogCategoryOption = { id: string; name: string };
+export type CatalogSubcategoryOption = { id: string; categoryId: string; name: string };
+
+type SubcategoryRow = {
+  id: string;
+  category_id: string;
+  name: string;
+  is_active: boolean | null;
+  is_deleted: boolean | null;
+};
+
+type SubcategoryQueryResult = { data: SubcategoryRow[] | null; error: unknown };
+type SubcategoryQuery = PromiseLike<SubcategoryQueryResult> & {
+  eq: (column: string, value: string | boolean) => SubcategoryQuery;
+  neq: (column: string, value: string | boolean) => SubcategoryQuery;
+  order: (column: string) => SubcategoryQuery;
+};
+
+const subcategoryTableClient = supabase as unknown as {
+  from: (table: "subcategories") => { select: (columns: string) => SubcategoryQuery };
+};
+
+type StorefrontProductRow = Omit<Partial<DbProductRow>, "stock"> & { stock?: unknown };
+
+export function isStorefrontProductRow(item: StorefrontProductRow | null | undefined): boolean {
+  return Boolean(item && item.is_active === true && item.is_deleted !== true && isProductEligible(item));
+}
+
+type BrandNameRow = { brand_name?: unknown; brand?: unknown; name?: unknown } | null | undefined;
+
+export function extractUniqueBrandNames(rows: BrandNameRow[]): string[] {
   const seen = new Set<string>();
   const values: string[] = [];
 
   for (const row of rows) {
-    const raw = (row as any)?.brand_name ?? (row as any)?.brand ?? (row as any)?.name ?? "";
+    const raw = row?.brand_name ?? row?.brand ?? row?.name ?? "";
     const value = String(raw ?? "").trim();
     if (!isDisplayLabel(value)) continue;
     const normalized = value.replace(/\s+/g, " ").trim();
@@ -40,31 +71,92 @@ export function extractUniqueBrandNames(rows: Array<{ brand_name?: string | null
   return values;
 }
 
-let categoriesRequest: Promise<string[]> | null = null;
+let categoriesRequest: Promise<CatalogCategoryOption[]> | null = null;
 
-function loadActiveCategories(): Promise<string[]> {
+const subcategoryRequests = new Map<string, Promise<CatalogSubcategoryOption[]>>();
+
+function loadActiveCategories(): Promise<CatalogCategoryOption[]> {
   if (!categoriesRequest) {
-    categoriesRequest = supabase
-      .from(TABLES.categories)
-      .select("name, is_active")
-      .eq("is_active", true)
-      .order("name")
-      .then(({ data, error }) => {
-        if (error) throw error;
-        return (data || []).map((item) => String(item.name || "").trim()).filter(isDisplayLabel);
-      })
-      .catch((error) => {
-        categoriesRequest = null;
-        throw error;
-      });
+    categoriesRequest = (async () => {
+      const { data, error } = await supabase
+        .from(TABLES.categories)
+        .select("id, name, is_active, is_deleted")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return (data || [])
+        .filter((item) => item.is_deleted !== true)
+        .map((item) => ({ id: String(item.id ?? "").trim(), name: String(item.name ?? "").trim() }))
+        .filter((item) => item.id && isDisplayLabel(item.name));
+    })().catch((error) => {
+      categoriesRequest = null;
+      throw error;
+    });
   }
   return categoriesRequest;
+}
+
+function loadActiveSubcategories(categoryId?: string): Promise<CatalogSubcategoryOption[]> {
+  const cacheKey = categoryId || "all";
+  const cachedRequest = subcategoryRequests.get(cacheKey);
+  if (cachedRequest) return cachedRequest;
+
+  const request = (async () => {
+    let query = subcategoryTableClient
+      .from("subcategories")
+      .select("id, category_id, name, is_active, is_deleted")
+      .eq("is_active", true)
+      .order("name");
+    if (categoryId) query = query.eq("category_id", categoryId);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || [])
+      .filter((item) => item.is_active === true && item.is_deleted !== true)
+      .map((item) => ({
+        id: String(item.id ?? "").trim(),
+        categoryId: String(item.category_id ?? "").trim(),
+        name: String(item.name ?? "").trim(),
+      }))
+      .filter((item) => item.id && item.categoryId && isDisplayLabel(item.name));
+  })().catch((error) => {
+    subcategoryRequests.delete(cacheKey);
+    throw error;
+  });
+
+  subcategoryRequests.set(cacheKey, request);
+  return request;
+}
+
+export function resolveCategoryOption(
+  categories: CatalogCategoryOption[],
+  selectedCategory: string | null | undefined,
+): CatalogCategoryOption | undefined {
+  const selected = String(selectedCategory ?? "").trim();
+  if (!selected) return undefined;
+  return categories.find((category) => category.id === selected || category.name.toLowerCase() === selected.toLowerCase());
+}
+
+export function resolveSubcategoryOption(
+  subcategories: CatalogSubcategoryOption[],
+  categoryId: string,
+  selectedSubcategory: string | null | undefined,
+): CatalogSubcategoryOption | undefined {
+  const selected = String(selectedSubcategory ?? "").trim();
+  if (!selected) return undefined;
+  return subcategories.find((subcategory) =>
+    subcategory.categoryId === categoryId &&
+    (subcategory.id === selected || subcategory.name.toLowerCase() === selected.toLowerCase()),
+  );
 }
 
 export type ProductCatalogOptions = {
   pageSize?: number;
   category?: string;
+  categoryId?: string;
   subcategory?: string;
+  subcategoryId?: string;
+  includeAllSubcategories?: boolean;
   brand?: string;
   search?: string;
   offersOnly?: boolean;
@@ -123,7 +215,11 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
   const queryKey = JSON.stringify({ ...options, pageSize });
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<CatalogCategoryOption[]>([]);
   const [subcategories, setSubcategories] = useState<string[]>([]);
+  const [subcategoryOptions, setSubcategoryOptions] = useState<CatalogSubcategoryOption[]>([]);
+  const [subcategoriesLoading, setSubcategoriesLoading] = useState(Boolean(options.category || options.categoryId || options.includeAllSubcategories));
+  const [subcategoryError, setSubcategoryError] = useState<string | null>(null);
   const [brands, setBrands] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -141,55 +237,88 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
     if (replace) setLoading(true); else { setLoadingMore(true); setLoadMoreError(null); }
     if (replace) setError(null);
     try {
-      let query = supabase.from(TABLES.products).select(PRODUCT_COLUMNS);
-      query = query.eq("is_active", true).neq("is_deleted", true).gt("stock", 0);
-      if (options.category) query = query.ilike("category_name", options.category);
-      if (options.subcategory) {
-        const sub = options.subcategory.trim();
-        if (sub) {
-          query = query.or(`subcategory_name.ilike.%${sub}%,sub_category_name.ilike.%${sub}%`);
+      let categoryId = options.categoryId;
+      if (!categoryId && options.category) {
+        const categoryRows = await loadActiveCategories();
+        categoryId = resolveCategoryOption(categoryRows, options.category)?.id;
+      }
+
+      let subcategoryId = options.subcategoryId;
+      if (!subcategoryId && options.subcategory && categoryId) {
+        const subcategoryRows = await loadActiveSubcategories(categoryId);
+        subcategoryId = resolveSubcategoryOption(subcategoryRows, categoryId, options.subcategory)?.id;
+      }
+
+      const hasCategoryFilter = Boolean(options.category || options.categoryId);
+      const hasSubcategoryFilter = Boolean(options.subcategory || options.subcategoryId);
+      if ((hasCategoryFilter && !categoryId) || (hasSubcategoryFilter && (!categoryId || !subcategoryId))) {
+        if (requestKey.current === queryKey) {
+          setProducts([]);
+          setTotalCount(0);
+          setHasMore(false);
+          setError(hasCategoryFilter && !categoryId
+            ? "The selected category could not be matched to an existing category ID."
+            : "The selected subcategory could not be matched to this category.");
         }
+        return;
       }
-      if (options.brand) query = query.ilike("brand_name", options.brand);
-      if (options.search?.trim()) {
-        const search = options.search.trim().replace(/[,()]/g, " ");
-        query = query.or(`name.ilike.%${search}%,brand_name.ilike.%${search}%,category_name.ilike.%${search}%,barcode.ilike.%${search}%`);
-      }
-      if (options.featuredOnly) query = query.or("is_favourite.eq.true,isfav.eq.true");
-      if (options.offersOnly) query = query.gt("discount_percent", 25);
-      if (options.minDiscount !== undefined) query = query.gte("discount_percent", options.minDiscount);
-      if (options.maxDiscount !== undefined) query = query.lt("discount_percent", options.maxDiscount);
-      if (options.minPrice !== undefined && Number.isFinite(options.minPrice)) query = query.gte("sale_rate", options.minPrice);
-      if (options.maxPrice !== undefined && Number.isFinite(options.maxPrice)) query = query.lte("sale_rate", options.maxPrice);
 
-      if (options.sort === "price-asc") query = query.order("sale_rate", { ascending: true });
-      else if (options.sort === "price-desc") query = query.order("sale_rate", { ascending: false });
-      else if (options.sort === "name-asc") query = query.order("name", { ascending: true });
-      else if (options.sort === "name-desc") query = query.order("name", { ascending: false });
-      else if (options.sort === "newest") query = query.order("created_at", { ascending: false });
-      else query = query.order("is_favourite", { ascending: false }).order("updated_at", { ascending: false });
+      let rawOffset = offset;
+      let reachedEnd = false;
+      const validRows: DbProductRow[] = [];
 
-      const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 8000);
-      let data;
-      let queryError;
-      try {
-        ({ data, error: queryError } = await query
-          .abortSignal(controller.signal)
-          .range(offset, offset + pageSize - 1));
-      } finally {
-        window.clearTimeout(timeoutId);
+      while (validRows.length < pageSize && !reachedEnd) {
+        if (requestKey.current !== queryKey) return;
+
+        let query = supabase.from(TABLES.products).select(PRODUCT_COLUMNS);
+        query = query.eq("is_active", true).neq("is_deleted", true);
+        if (categoryId) query = query.eq("category_id", categoryId);
+        if (subcategoryId) query = query.eq("subcategory_id", subcategoryId);
+        if (options.brand) query = query.ilike("brand_name", options.brand);
+        if (options.search?.trim()) {
+          const search = options.search.trim().replace(/[,()]/g, " ");
+          query = query.or(`name.ilike.%${search}%,brand_name.ilike.%${search}%,category_name.ilike.%${search}%,barcode.ilike.%${search}%`);
+        }
+        if (options.featuredOnly) query = query.or("is_favourite.eq.true,isfav.eq.true");
+        if (options.offersOnly) query = query.gt("discount_percent", 25);
+        if (options.minDiscount !== undefined) query = query.gte("discount_percent", options.minDiscount);
+        if (options.maxDiscount !== undefined) query = query.lt("discount_percent", options.maxDiscount);
+        if (options.minPrice !== undefined && Number.isFinite(options.minPrice)) query = query.gte("sale_rate", options.minPrice);
+        if (options.maxPrice !== undefined && Number.isFinite(options.maxPrice)) query = query.lte("sale_rate", options.maxPrice);
+
+        if (options.sort === "price-asc") query = query.order("sale_rate", { ascending: true });
+        else if (options.sort === "price-desc") query = query.order("sale_rate", { ascending: false });
+        else if (options.sort === "name-asc") query = query.order("name", { ascending: true });
+        else if (options.sort === "name-desc") query = query.order("name", { ascending: false });
+        else if (options.sort === "newest") query = query.order("created_at", { ascending: false });
+        else query = query.order("is_favourite", { ascending: false }).order("updated_at", { ascending: false });
+
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+        let data;
+        let queryError;
+        try {
+          ({ data, error: queryError } = await query
+            .abortSignal(controller.signal)
+            .range(rawOffset, rawOffset + pageSize - 1));
+        } finally {
+          window.clearTimeout(timeoutId);
+        }
+        if (queryError) throw queryError;
+        if (requestKey.current !== queryKey) return;
+
+        const rawRows = (data || []) as DbProductRow[];
+        validRows.push(...rawRows.filter(isStorefrontProductRow));
+        rawOffset += rawRows.length;
+        reachedEnd = rawRows.length < pageSize;
       }
-      if (queryError) throw queryError;
       if (requestKey.current !== queryKey) return;
 
-      const mapped = ((data || []) as DbProductRow[])
-        .filter((item) => isProductActive(item) && isProductStockAvailable(getProductStock(item)))
-        .map(mapProduct);
+      const mapped = validRows.map(mapProduct);
       setProducts((current) => replace ? mapped : [...current, ...mapped.filter((item) => !current.some((existing) => existing.id === item.id))]);
-      setTotalCount(offset + mapped.length);
-      setHasMore(mapped.length === pageSize);
-      nextOffset.current = offset + mapped.length;
+      setTotalCount((current) => replace ? mapped.length : current + mapped.length);
+      setHasMore(!reachedEnd);
+      nextOffset.current = rawOffset;
 
       const { data: activeBrandRows, error: activeBrandError } = await supabase
         .from(TABLES.brands)
@@ -221,7 +350,7 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [options.brand, options.category, options.featuredOnly, options.maxDiscount, options.maxPrice, options.minDiscount, options.minPrice, options.offersOnly, options.search, options.sort, options.subcategory, pageSize, queryKey]);
+  }, [options.brand, options.category, options.categoryId, options.featuredOnly, options.maxDiscount, options.maxPrice, options.minDiscount, options.minPrice, options.offersOnly, options.search, options.sort, options.subcategory, options.subcategoryId, pageSize, queryKey]);
 
   useEffect(() => {
     requestKey.current = queryKey;
@@ -235,37 +364,51 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
   useEffect(() => {
     let mounted = true;
     setSubcategories([]);
-    if (!options.category) return () => { mounted = false; };
+    setSubcategoryOptions([]);
+    setSubcategoryError(null);
+    const shouldLoad = Boolean(options.category || options.categoryId || options.includeAllSubcategories);
+    if (!shouldLoad) {
+      setSubcategoriesLoading(false);
+      return () => { mounted = false; };
+    }
 
     const loadSubcategories = async () => {
-      const { data, error: subcategoryError } = await supabase
-        .from(TABLES.products)
-        .select("subcategory_name, sub_category_name")
-        .ilike("category_name", options.category)
-        .eq("is_active", true)
-        .neq("is_deleted", true)
-        .gt("stock", 0)
-        .limit(1000);
-      if (subcategoryError || !mounted) return;
+      setSubcategoriesLoading(true);
+      try {
+        let categoryId = options.categoryId;
+        if (!categoryId && options.category) {
+          const categoryRows = await loadActiveCategories();
+          categoryId = resolveCategoryOption(categoryRows, options.category)?.id;
+          if (!categoryId) throw new Error("Selected category could not be matched to an existing category ID.");
+        }
 
-      const unique = new Map<string, string>();
-      for (const row of data || []) {
-        const value = String(row.subcategory_name ?? row.sub_category_name ?? "").trim();
-        if (value) unique.set(value.toLowerCase(), value);
+        const rows = await loadActiveSubcategories(categoryId);
+        if (!mounted) return;
+        setSubcategoryOptions(rows);
+        setSubcategories(rows.map((item) => item.name));
+      } catch (error) {
+        if (mounted) setSubcategoryError(error instanceof Error ? error.message : "Unable to load subcategories.");
+      } finally {
+        if (mounted) setSubcategoriesLoading(false);
       }
-      setSubcategories(Array.from(unique.values()).sort((left, right) => left.localeCompare(right)));
     };
 
     void loadSubcategories();
     return () => { mounted = false; };
-  }, [options.category]);
+  }, [options.category, options.categoryId, options.includeAllSubcategories]);
 
   useEffect(() => {
     let mounted = true;
-    void loadActiveCategories().then((names) => {
-      if (mounted) setCategories(names);
+    void loadActiveCategories().then((rows) => {
+      if (mounted) {
+        setCategoryOptions(rows);
+        setCategories(rows.map((item) => item.name));
+      }
     }).catch(() => {
-      if (mounted) setCategories([]);
+      if (mounted) {
+        setCategories([]);
+        setCategoryOptions([]);
+      }
     });
     return () => { mounted = false; };
   }, []);
@@ -292,7 +435,11 @@ export function useProductCatalog(options: ProductCatalogOptions = {}) {
   return {
     products,
     categories,
+    categoryOptions,
     subcategories,
+    subcategoryOptions,
+    subcategoriesLoading,
+    subcategoryError,
     brands: useMemo(() => brands, [brands]),
     loading,
     loadingMore,

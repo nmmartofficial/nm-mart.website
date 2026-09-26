@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CartItem } from "./store-utils";
-import { buildServerOrderPayload, isServiceablePincode, isValidIndianPhone, isValidPincode, validateCheckoutForm } from "./orderPayload";
+import { buildServerOrderPayload, getCheckoutFieldErrors, isServiceablePincode, isValidIndianPhone, isValidPincode, validateCheckoutForm } from "./orderPayload";
 import { getOrderAddress, getOrderPaymentMethod, getOrderStatus, getOrderTotal } from "./orderDisplay";
 
 const makeCartItem = (overrides: Partial<CartItem> = {}): CartItem => ({
@@ -135,6 +135,24 @@ describe("buildServerOrderPayload", () => {
       paymentMethod: "wallet",
       serviceablePincodes: ["212207", "212201"],
     }).ok).toBe(false);
+  });
+
+  it("returns inline field errors using the existing checkout validation rules", () => {
+    expect(getCheckoutFieldErrors({
+      fullName: " ",
+      street: "",
+      phone: "123",
+      pincode: "999999",
+      paymentMethod: "cod",
+      serviceablePincodes: ["212207"],
+    })).toEqual({
+      fullName: "Please enter a valid full name.",
+      street: "Please enter your street or area.",
+      phone: "Please enter a valid 10-digit mobile number.",
+      pincode: "Delivery is not available for this pincode.",
+    });
+
+    expect(getCheckoutFieldErrors({ fullName: "A B", street: "Road", phone: "9876543210", pincode: "212207", paymentMethod: "cod" })).toEqual({});
   });
 
   it("reads alternate live order field names used across Supabase projects", () => {

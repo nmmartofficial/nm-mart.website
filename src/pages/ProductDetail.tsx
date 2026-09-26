@@ -59,6 +59,8 @@ const ProductDetail = () => {
             .from(TABLES.products)
             .select('*')
             .eq('barcode', barcode)
+            .eq('is_active', true)
+            .neq('is_deleted', true)
             .maybeSingle();
 
           if (error) {

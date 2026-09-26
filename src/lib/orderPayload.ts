@@ -29,6 +29,10 @@ export type CheckoutFormValues = {
   serviceablePincodes?: readonly string[];
 };
 
+export type CheckoutFieldErrors = Partial<
+  Record<"fullName" | "street" | "phone" | "pincode" | "paymentMethod", string>
+>;
+
 export function isValidIndianPhone(value: string | undefined | null): boolean {
   if (!value) return false;
   const digits = value.replace(/\D/g, "");
@@ -51,40 +55,45 @@ export function isServiceablePincode(
   return serviceablePincodes.some((code) => code.replace(/\D/g, "") === digits);
 }
 
-export function validateCheckoutForm(form: CheckoutFormValues): { ok: true } | { ok: false; message: string } {
+export function getCheckoutFieldErrors(form: CheckoutFormValues): CheckoutFieldErrors {
   const fullName = form.fullName?.trim() ?? "";
   const street = form.street?.trim() ?? "";
   const phone = form.phone ?? "";
   const pincode = form.pincode ?? "";
   const paymentMethod = form.paymentMethod ?? "";
   const serviceablePincodes = form.serviceablePincodes ?? ["212207", "212201", "212216"];
+  const errors: CheckoutFieldErrors = {};
 
   if (!fullName || fullName.length < 2) {
-    return { ok: false, message: "Please enter a valid full name." };
+    errors.fullName = "Please enter a valid full name.";
   }
 
   if (!street) {
-    return { ok: false, message: "Please enter your street or area." };
+    errors.street = "Please enter your street or area.";
   }
 
   if (!isValidIndianPhone(phone)) {
-    return { ok: false, message: "Please enter a valid 10-digit mobile number." };
+    errors.phone = "Please enter a valid 10-digit mobile number.";
   }
 
   if (!isValidPincode(pincode)) {
-    return { ok: false, message: "Please enter a valid 6-digit delivery pincode." };
-  }
-
-  if (!isServiceablePincode(pincode, serviceablePincodes)) {
-    return { ok: false, message: "Delivery is not available for this pincode." };
+    errors.pincode = "Please enter a valid 6-digit delivery pincode.";
+  } else if (!isServiceablePincode(pincode, serviceablePincodes)) {
+    errors.pincode = "Delivery is not available for this pincode.";
   }
 
   const validPaymentMethods = new Set(["cod", "upi", "card_at_home"]);
   if (!validPaymentMethods.has(paymentMethod)) {
-    return { ok: false, message: "Please select a valid payment method." };
+    errors.paymentMethod = "Please select a valid payment method.";
   }
 
-  return { ok: true };
+  return errors;
+}
+
+export function validateCheckoutForm(form: CheckoutFormValues): { ok: true } | { ok: false; message: string } {
+  const errors = getCheckoutFieldErrors(form);
+  const firstError = errors.fullName || errors.street || errors.phone || errors.pincode || errors.paymentMethod;
+  return firstError ? { ok: false, message: firstError } : { ok: true };
 }
 
 function requirePositiveInteger(value: unknown, label: string, index: number): number {

@@ -12,59 +12,60 @@ import { supabase } from "@/lib/supabase/client";
 import { subscribeToCatalogChanges } from "@/lib/supabase/realtime";
 import { TABLES } from "../lib/supabase/schema";
 import { resolveStorageImageUrl } from "@/lib/supabase/productImagesStorage";
-import type { Product } from "@/lib/store-utils";
+import { formatDisplayName, type Product } from "@/lib/store-utils";
 import type { WebsiteBanner } from "@/lib/supabase";
+
+function ProductRail({
+  products,
+  onAddToCart,
+}: {
+  products: Product[];
+  onAddToCart: (product: Product) => void;
+}) {
+  return (
+    <div className="hide-scrollbar flex snap-x snap-mandatory items-stretch gap-2 overflow-x-auto pb-2 md:grid md:grid-cols-4 md:overflow-visible md:pb-0 lg:grid-cols-5 xl:grid-cols-6">
+      {products.map((product) => (
+        <div key={product.id || product.barcode} className="flex w-[160px] shrink-0 snap-start sm:w-[180px] md:w-auto md:min-w-0">
+          <ProductCard product={product} onAddToCart={onAddToCart} />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const popularCatalog = useProductCatalog({ pageSize: 8 });
-  const offersCatalog = useProductCatalog({ pageSize: 8, offersOnly: true });
-  const featuredCatalog = useProductCatalog({ pageSize: 8, featuredOnly: true });
-  const flat50Catalog = useProductCatalog({ pageSize: 8, minDiscount: 50 });
-  const flat33Catalog = useProductCatalog({ pageSize: 8, minDiscount: 33, maxDiscount: 50 });
+  const popularCatalog = useProductCatalog({ pageSize: 6 });
+  const offersCatalog = useProductCatalog({ pageSize: 6, offersOnly: true });
+  const featuredCatalog = useProductCatalog({ pageSize: 6, featuredOnly: true });
+  const newArrivalsCatalog = useProductCatalog({ pageSize: 6, sort: "newest" });
   const allProducts = popularCatalog.products;
   const popularLoading = popularCatalog.loading;
   const offersLoading = offersCatalog.loading;
   const featuredLoading = featuredCatalog.loading;
-  const flat50Loading = flat50Catalog.loading;
-  const flat33Loading = flat33Catalog.loading;
+  const newArrivalsLoading = newArrivalsCatalog.loading;
   const categories = popularCatalog.categories;
   const brands = popularCatalog.brands;
-  const hasMore = popularCatalog.hasMore;
   const featuredProducts = featuredCatalog.products;
-  const flat50 = flat50Catalog.products;
-  const flat33 = flat33Catalog.products;
-  const hasMore50 = flat50Catalog.hasMore;
-  const hasMore33 = flat33Catalog.hasMore;
-  const hasMoreFeatured = featuredCatalog.hasMore;
+  const newArrivals = newArrivalsCatalog.products;
   const { addToCart } = useCart();
   const [banners, setBanners] = useState<WebsiteBanner[]>([]);
   const [topBanners, setTopBanners] = useState<WebsiteBanner[]>([]);
   const [middleBanners, setMiddleBanners] = useState<WebsiteBanner[]>([]);
   const [bottomBanners, setBottomBanners] = useState<WebsiteBanner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
-  const [visiblePopularCount, setVisiblePopularCount] = useState(8);
-  const [visibleOfferCount, setVisibleOfferCount] = useState(8);
-  const [visibleFeaturedCount, setVisibleFeaturedCount] = useState(8);
-  const [visibleFlat50Count, setVisibleFlat50Count] = useState(8);
-  const [visibleFlat33Count, setVisibleFlat33Count] = useState(8);
-  const [visibleCategoryCount] = useState(8);
-  const [visibleBrandCount] = useState(8);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [brandImages, setBrandImages] = useState<Record<string, string>>({});
   const [brandNames, setBrandNames] = useState<string[]>([]);
   const allLiveCategories = (categories || []).filter(Boolean);
-  const liveCategories = allLiveCategories.slice(0, visibleCategoryCount);
+  const liveCategories = allLiveCategories.slice(0, 8);
   const allLiveBrands = (brandNames.length > 0 ? brandNames : brands || []).filter(Boolean);
-  const liveBrands = allLiveBrands.slice(0, visibleBrandCount);
+  const liveBrands = allLiveBrands.slice(0, 8);
   const hasMoreCategories = allLiveCategories.length > 8;
   const hasMoreBrands = allLiveBrands.length > 8;
-  const allLiveFeatured = (featuredProducts || []).filter((p: Product) => Number(p.stock) > 0);
-  const allLiveFlat50 = (flat50 || []).filter((p: Product) => Number(p.stock) > 0);
-  const allLiveFlat33 = (flat33 || []).filter((p: Product) => Number(p.stock) > 0);
-  const liveFeatured = allLiveFeatured.slice(0, visibleFeaturedCount);
-  const liveFlat50 = allLiveFlat50.slice(0, visibleFlat50Count);
-  const liveFlat33 = allLiveFlat33.slice(0, visibleFlat33Count);
+  const allLiveFeatured = featuredProducts || [];
+  const liveFeatured = allLiveFeatured.slice(0, 6);
+  const liveNewArrivals = (newArrivals || []).slice(0, 6);
   const productImageByCategory = useMemo(() => {
     const images: Record<string, string> = {};
     for (const product of allProducts || []) {
@@ -81,10 +82,8 @@ export default function HomePage() {
     }
     return images;
   }, [allProducts]);
-  const popularProducts = (allProducts || []).filter((product) => Number(product.stock) > 0);
-  const visiblePopularProducts = popularProducts.slice(0, visiblePopularCount);
-  const allOfferProducts = offersCatalog.products;
-  const offerProducts = allOfferProducts.slice(0, visibleOfferCount);
+  const popularProducts = (allProducts || []).slice(0, 6);
+  const offerProducts = (offersCatalog.products || []).slice(0, 6);
 
   const handleCategoryClick = (category: string) => {
     navigate(`/categories?category=${encodeURIComponent(category)}`);
@@ -106,12 +105,8 @@ export default function HomePage() {
     navigate("/shop?collection=featured");
   };
 
-  const handleLoadMoreFlat50 = () => {
-    navigate("/shop?collection=flat50");
-  };
-
-  const handleLoadMoreFlat33 = () => {
-    navigate("/shop?collection=flat33");
+  const handleLoadMoreNewArrivals = () => {
+    navigate("/shop?sort=newest");
   };
 
   function shouldDisplayBrandLabel(text: string): boolean {
@@ -134,7 +129,7 @@ export default function HomePage() {
     alt: string;
     onClick: () => void;
   }) => {
-    const safeLabel = shouldDisplayBrandLabel(label) ? label : "";
+    const safeLabel = shouldDisplayBrandLabel(label) ? formatDisplayName(label) : "";
     return (
       <div className="flex min-w-0 flex-col items-center">
         <button
@@ -268,11 +263,11 @@ export default function HomePage() {
     };
   }, []);
 
-  const ProductSkeletonGrid = ({ count = 8 }: { count?: number }) => (
-    <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+  const ProductSkeletonGrid = ({ count = 6 }: { count?: number }) => (
+    <div className="hide-scrollbar flex gap-2 overflow-x-auto pb-2 md:grid md:grid-cols-4 md:overflow-visible md:pb-0 lg:grid-cols-5 xl:grid-cols-6">
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="animate-pulse rounded-[14px] border border-slate-200 bg-white p-2 shadow-sm">
-          <div className="mb-2 h-[138px] rounded-[12px] bg-slate-200" />
+        <div key={index} className="h-[290px] w-[160px] shrink-0 animate-pulse rounded-[14px] border border-slate-200 bg-white p-2 shadow-sm sm:w-[180px] md:h-[470px] md:w-auto">
+          <div className="mb-2 h-[106px] rounded-[12px] bg-slate-200 md:h-[235px]" />
           <div className="mb-1 h-2.5 w-16 rounded-full bg-slate-200" />
           <div className="mb-2 h-3.5 w-28 rounded-full bg-slate-200" />
           <div className="mb-2 h-2.5 w-10 rounded-full bg-orange-100" />
@@ -444,11 +439,10 @@ export default function HomePage() {
 
         </section>
 
-        {liveBrands.length > 0 && (
-          <section className="mb-3 w-full rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+        <section className="mb-3 w-full rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
             <div className="mb-2 flex items-end justify-between gap-3 md:mb-5">
               <div className="min-w-0 flex-1">
-                <SectionHeader eyebrow="TOP BRANDS" title="BRANDS " />
+                <SectionHeader eyebrow="TOP BRANDS" title="SHOP BY BRAND" />
               </div>
               {hasMoreBrands && (
                 <button
@@ -462,16 +456,18 @@ export default function HomePage() {
             </div>
 
             {popularLoading ? (
-              <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-3 md:gap-4 lg:grid-cols-6">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="flex w-[92px] shrink-0 flex-col items-center sm:w-[100px] md:w-auto md:flex-1 md:items-stretch md:rounded-[22px] md:border md:border-slate-200 md:bg-slate-50 md:p-4">
-                    <div className="animate-pulse h-[88px] w-[88px] rounded-full bg-slate-200 sm:h-[90px] sm:w-[90px] md:h-[110px] md:w-[110px] md:rounded-2xl" />
-                    <div className="mt-2 h-3 w-20 rounded-full bg-slate-200 animate-pulse" />
+              <div className="grid grid-cols-4 gap-x-2 gap-y-5 pb-1 md:grid-cols-4 md:gap-4 lg:grid-cols-6 xl:grid-cols-8">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div key={index} className="flex min-w-0 flex-col items-center">
+                    <div className="h-14 w-14 animate-pulse rounded-full bg-slate-200 sm:h-[68px] sm:w-[68px] md:h-[110px] md:w-[110px]" />
+                    <div className="mt-2 h-3 w-16 max-w-full animate-pulse rounded-full bg-slate-200" />
                   </div>
                 ))}
               </div>
+            ) : liveBrands.length === 0 ? (
+              <EmptySectionState text="No brands available right now" />
             ) : (
-           <div className="grid grid-cols-4 gap-x-2 gap-y-5 pb-1 md:grid-cols-4 md:gap-4 lg:grid-cols-6 xl:grid-cols-8">
+              <div className="grid grid-cols-4 gap-x-2 gap-y-5 pb-1 md:grid-cols-4 md:gap-4 lg:grid-cols-6 xl:grid-cols-8">
                 {liveBrands.map((brand) => (
                   <BrandCategoryCard
                     key={brand}
@@ -483,98 +479,25 @@ export default function HomePage() {
                 ))}
               </div>
             )}
-          </section>
-        )}
-
-        {liveFeatured.length > 0 && !featuredLoading && (
-          <section className="mb-4 rounded-[18px] border border-[#d7ebff] bg-gradient-to-r from-[#dfeefd] via-white to-[#edf6ff] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
-            <SectionHeader eyebrow="Editor's pick" title="TOP PICKS FOR YOU" />
-            <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-              {liveFeatured.map((product: Product) => (
-                <ProductCard
-                  key={product.id || product.barcode}
-                  product={product}
-                  onAddToCart={addToCart}
-                />
-              ))}
-            </div>
-            {(liveFeatured.length < allLiveFeatured.length || hasMoreFeatured) && (
-              <div className="mt-6 flex justify-center">
-                <button
-                  type="button"
-                  onClick={handleLoadMoreFeatured}
-                  disabled={featuredLoading}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
-                >
-                  Load More Top Picks For You
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </section>
-        )}
-
-        <section id="products" className="mb-4 rounded-[18px] border border-[#d7ebff] bg-gradient-to-r from-[#edf6ff] via-white to-[#dfeefd] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
-          <SectionHeader eyebrow="Popular picks" title="CUSTOMER FAVORITES" />
-
-          {popularLoading ? (
-            <ProductSkeletonGrid count={8} />
-          ) : popularProducts.length === 0 ? (
-            <EmptySectionState text="No products available right now" />
-          ) : (
-            <>
-              <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-                {visiblePopularProducts.map((product) => (
-                  <ProductCard
-                    key={product.id || product.barcode}
-                    product={product}
-                    onAddToCart={addToCart}
-                  />
-                ))}
-              </div>
-
-              {(visiblePopularCount < popularProducts.length || hasMore) && (
-                <div className="mt-6 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={handleLoadMorePopular}
-                    disabled={popularLoading}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#eaf3ff] hover:text-[#0b3b78] disabled:cursor-wait disabled:opacity-60"
-                  >
-                    {popularLoading ? "Loading Products" : "Load More Products"}
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-            </>
-          )}
         </section>
 
         <section className="mb-4 rounded-[28px] border border-[#d7ebff] bg-gradient-to-br from-[#edf6ff] via-white to-[#dfeefd] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
           <SectionHeader eyebrow="Special deals" title="HOT DEALS" />
 
           {offersLoading ? (
-            <ProductSkeletonGrid count={4} />
+            <ProductSkeletonGrid count={6} />
           ) : offerProducts.length === 0 ? (
             <EmptySectionState text="No active offers right now" />
           ) : (
             <>
-              <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-                {offerProducts.map((product) => (
-                  <ProductCard
-                    key={product.id || product.barcode}
-                    product={product}
-                    onAddToCart={addToCart}
-                  />
-                ))}
-              </div>
-              {(visibleOfferCount < allOfferProducts.length || hasMore) && (
+              <ProductRail products={offerProducts} onAddToCart={addToCart} />
+              {offersCatalog.hasMore && (
                 <div className="mt-6 flex justify-center">
                   <button
                     type="button"
                     onClick={handleLoadMoreOffers}
                     disabled={offersLoading}
-                    className="hidden min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60 md:inline-flex"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
                   >
                     Load More Offers
                     <ChevronDown className="h-4 w-4" />
@@ -583,63 +506,86 @@ export default function HomePage() {
               )}
             </>
           )}
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate("/shop?collection=flat50")}
+              className="rounded-full border border-[#bdd8ff] bg-white px-4 py-2 text-[10px] font-black uppercase text-[#0b3b78] transition hover:bg-[#eaf3ff]"
+            >
+              Shop 50%+ Deals
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/shop?collection=flat33")}
+              className="rounded-full border border-[#bdd8ff] bg-white px-4 py-2 text-[10px] font-black uppercase text-[#0b3b78] transition hover:bg-[#eaf3ff]"
+            >
+              Shop 33%+ Deals
+            </button>
+          </div>
         </section>
 
-        {liveFlat50.length > 0 && !flat50Loading && (
-          <section className="mb-4 rounded-[18px] border border-red-200 bg-gradient-to-r from-red-50 via-white to-rose-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
-            <SectionHeader eyebrow="Big Savings" title="FLAT 50% OFF" />
-            <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-              {liveFlat50.map((product: Product) => (
-                <ProductCard
-                  key={product.id || product.barcode}
-                  product={product}
-                  onAddToCart={addToCart}
-                />
-              ))}
-            </div>
-            {(liveFlat50.length < allLiveFlat50.length || hasMore50) && (
-              <div className="mt-6 flex justify-center">
-                <button
-                  type="button"
-                  onClick={handleLoadMoreFlat50}
-                  disabled={flat50Loading}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
-                >
-                  Load More 50% Deals
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </section>
-        )}
+        <section id="products" className="mb-4 rounded-[18px] border border-[#d7ebff] bg-gradient-to-r from-[#edf6ff] via-white to-[#dfeefd] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+          <SectionHeader eyebrow="Popular picks" title="CUSTOMER FAVORITES" />
 
-        {liveFlat33.length > 0 && !flat33Loading && (
-          <section className="mb-4 rounded-[18px] border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-yellow-50 p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
-            <SectionHeader eyebrow="Great Value" title="UP TO 33% OFF" />
-            <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
-              {liveFlat33.map((product: Product) => (
-                <ProductCard
-                  key={product.id || product.barcode}
-                  product={product}
-                  onAddToCart={addToCart}
-                />
-              ))}
+          {popularLoading ? (
+            <ProductSkeletonGrid count={6} />
+          ) : popularProducts.length === 0 ? (
+            <EmptySectionState text="No products available right now" />
+          ) : (
+            <>
+              <ProductRail products={popularProducts} onAddToCart={addToCart} />
+
+              {popularCatalog.hasMore && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleLoadMorePopular}
+                    disabled={popularLoading}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-white px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#eaf3ff] hover:text-[#0b3b78] disabled:cursor-wait disabled:opacity-60"
+                  >
+                    Load More Products
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+
+        <section className="mb-4 rounded-[18px] border border-[#d7ebff] bg-gradient-to-r from-[#dfeefd] via-white to-[#edf6ff] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+          <SectionHeader eyebrow="Editor's pick" title="TOP PICKS FOR YOU" />
+          {featuredLoading ? <ProductSkeletonGrid /> : liveFeatured.length === 0 ? <EmptySectionState text="No featured products right now" /> : <ProductRail products={liveFeatured} onAddToCart={addToCart} />}
+          {featuredCatalog.hasMore && (
+            <div className="mt-6 flex justify-center">
+              <button
+                type="button"
+                onClick={handleLoadMoreFeatured}
+                disabled={featuredLoading}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
+              >
+                Load More Top Picks For You
+                <ChevronDown className="h-4 w-4" />
+              </button>
             </div>
-            {(liveFlat33.length < allLiveFlat33.length || hasMore33) && (
-              <div className="mt-6 flex justify-center">
-                <button
-                  type="button"
-                  onClick={handleLoadMoreFlat33}
-                  disabled={flat33Loading}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff] disabled:cursor-wait disabled:opacity-60"
-                >
-                  Load More 33% Deals
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </section>
-        )}
+          )}
+        </section>
+
+        <section className="mb-4 rounded-[18px] border border-[#d7ebff] bg-gradient-to-r from-[#edf6ff] via-white to-[#dfeefd] p-3 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.35)] md:mb-8 md:p-6">
+          <SectionHeader eyebrow="Just landed" title="NEW ARRIVALS" />
+          {newArrivalsLoading ? <ProductSkeletonGrid /> : liveNewArrivals.length === 0 ? <EmptySectionState text="No new arrivals right now" /> : <ProductRail products={liveNewArrivals} onAddToCart={addToCart} />}
+          {newArrivalsCatalog.hasMore && (
+            <div className="mt-6 flex justify-center">
+              <button
+                type="button"
+                onClick={handleLoadMoreNewArrivals}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bdd8ff] bg-[#eaf3ff] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#0b3b78] shadow-sm transition hover:border-[#1677e8] hover:bg-[#d8ebff]"
+              >
+                View All New Arrivals
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </section>
       </main>
 
       <PlacementBannerCarousel placement="bottom" items={bottomBanners} compact />

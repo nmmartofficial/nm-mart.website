@@ -13,6 +13,7 @@ import {
   Map as MapIcon,
   CheckCircle2,
   Plus,
+  QrCode,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import {
@@ -28,9 +29,14 @@ import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 import {
   buildServerOrderPayload,
+  getCheckoutFieldErrors,
+  type CheckoutFieldErrors,
   validateCheckoutForm,
 } from "@/lib/orderPayload";
 import { useSavedAddresses } from "@/hooks/useSavedAddresses";
+
+const SERVICEABLE_PINCODES = ["212207", "212201", "212216"] as const;
+const UPI_ORDER_MESSAGE = "After placing your order, pay using UPI and submit your payment proof for NM Mart verification.";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -45,6 +51,8 @@ const Checkout = () => {
   );
 
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<CheckoutFieldErrors>({});
+  const [paymentMessage, setPaymentMessage] = useState("");
   const [sessionActive, setSessionActive] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [showAddressSelector, setShowAddressSelector] = useState(false);
@@ -213,14 +221,19 @@ const Checkout = () => {
 
     setSelectedAddressId(value);
 
-    setFormData((current) => ({
-      ...current,
+    const nextFormData = {
+      ...formData,
       street: address.address || "",
       landmark: address.landmark || "",
       city: address.city || "",
       state: address.state || "",
-      pincode: address.pincode || current.pincode,
-    }));
+      pincode: address.pincode || formData.pincode,
+    };
+
+    setFormData(nextFormData);
+    if (Object.keys(fieldErrors).length > 0) {
+      setFieldErrors(getCheckoutFieldErrors({ ...nextFormData, serviceablePincodes: SERVICEABLE_PINCODES }));
+    }
 
     setShowAddressSelector(false);
   };
@@ -234,11 +247,11 @@ const Checkout = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const nextFormData = { ...formData, [name]: value };
+    setFormData(nextFormData);
+    if (Object.keys(fieldErrors).length > 0) {
+      setFieldErrors(getCheckoutFieldErrors({ ...nextFormData, serviceablePincodes: SERVICEABLE_PINCODES }));
+    }
 
     /*
      * If customer manually edits delivery details,
@@ -274,24 +287,29 @@ const Checkout = () => {
      * 1. Saved address customer
      * 2. First-time customer
      */
-    const validation = validateCheckoutForm({
+    const checkoutValues = {
       fullName: formData.fullName,
       street: formData.street,
       phone: formData.phone,
       pincode: formData.pincode,
       paymentMethod: formData.paymentMethod,
-      serviceablePincodes: [
-        "212207",
-        "212201",
-        "212216",
-      ],
-    });
+      serviceablePincodes: SERVICEABLE_PINCODES,
+    };
+    const nextFieldErrors = getCheckoutFieldErrors(checkoutValues);
+    setFieldErrors(nextFieldErrors);
+
+    const validation = validateCheckoutForm(checkoutValues);
 
     if (!validation.ok) {
-      toast.error(validation.message);
+      const firstInvalidField = Object.keys(nextFieldErrors)[0];
+      if (firstInvalidField) {
+        const input = document.querySelector<HTMLElement>(`[name="${firstInvalidField}"]`);
+        input?.focus({ preventScroll: true });
+      }
       return;
     }
 
+    setPaymentMessage("");
     setLoading(true);
 
     try {
@@ -432,7 +450,7 @@ const Checkout = () => {
         shipping_address: fullAddress,
         landmark: formData.landmark.trim(),
         pincode: formData.pincode.trim(),
-        payment_method: "cod",
+        payment_method: formData.paymentMethod,
         idempotency_key: `${session.user.id}:${Date.now()}:${crypto.randomUUID()}`,
       });
 
@@ -523,13 +541,13 @@ const Checkout = () => {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <Header />
 
-      <main className="flex-1 py-12 px-4 md:px-6">
+      <main className="flex-1 px-4 py-6 md:px-6 md:py-12">
         <div className="max-w-6xl mx-auto">
 
           {/* ====================================================
               PAGE HEADER
           ==================================================== */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+          <div className="mb-6 flex flex-col items-start justify-between gap-4 md:mb-12 md:flex-row md:items-center md:gap-6">
 
             <div className="space-y-2">
 
@@ -559,7 +577,7 @@ const Checkout = () => {
 
             </div>
 
-            <div className="bg-white border border-gray-100 px-8 py-4 rounded-[30px] shadow-sm flex items-center gap-4">
+            <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm md:gap-4 md:rounded-[30px] md:px-8 md:py-4">
 
               <div className="text-right">
 
@@ -588,18 +606,19 @@ const Checkout = () => {
           ==================================================== */}
           <form
             onSubmit={handleSubmit}
-            className="grid lg:grid-cols-3 gap-10"
+            noValidate
+            className="grid gap-5 lg:grid-cols-3 md:gap-10"
           >
 
             {/* ==================================================
                 LEFT COLUMN
             ================================================== */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="space-y-5 md:space-y-8 lg:col-span-2">
 
               {/* =================================================
                   DELIVERY ADDRESS
               ================================================= */}
-              <div className="bg-white border border-gray-100 p-8 md:p-10 rounded-[40px] shadow-sm space-y-8">
+              <div className="space-y-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6 md:space-y-8 md:rounded-[40px] md:p-10">
 
                 <div className="flex items-center gap-4">
 
@@ -852,47 +871,53 @@ const Checkout = () => {
                       </div>
                     )}
 
-                    {/* CUSTOMER NAME + PHONE */}
-                    <div className="grid md:grid-cols-2 gap-4">
-
-                      <div className="bg-gray-50 rounded-2xl p-4">
-
-                        <p className="text-[8px] font-black uppercase tracking-widest text-gray-400">
-                          Customer Name
-                        </p>
-
-                        <p className="text-sm font-black text-slate-800 mt-1">
-                          {formData.fullName || "—"}
-                        </p>
-
-                      </div>
-
-                      <div className="bg-gray-50 rounded-2xl p-4">
-
-                        <p className="text-[8px] font-black uppercase tracking-widest text-gray-400">
-                          Mobile Number
-                        </p>
-
-                        <p className="text-sm font-black text-slate-800 mt-1 flex items-center gap-2">
-                          <Phone size={14} />
-                          {formData.phone || "—"}
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                    {/* PROFILE WARNING */}
-                    {(!formData.fullName ||
-                      !formData.phone) && (
-                      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-
-                        <p className="text-[10px] font-black uppercase tracking-wider text-amber-700">
-                          Please complete your name and mobile number in your profile before placing the order.
-                        </p>
-
+                    {(fieldErrors.street || fieldErrors.pincode) && (
+                      <div className="space-y-1" aria-live="polite">
+                        {fieldErrors.street && <p className="text-xs font-medium text-red-600">{fieldErrors.street}</p>}
+                        {fieldErrors.pincode && <p className="text-xs font-medium text-red-600">{fieldErrors.pincode}</p>}
                       </div>
                     )}
+
+                    {/* CUSTOMER NAME + PHONE */}
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label htmlFor="checkout-full-name-saved" className="ml-1 text-[10px] font-black uppercase tracking-[2px] text-gray-400">
+                          Full Name *
+                        </label>
+                        <input
+                          id="checkout-full-name-saved"
+                          type="text"
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleInputChange}
+                          placeholder="Enter your name"
+                          autoComplete="name"
+                          aria-invalid={Boolean(fieldErrors.fullName)}
+                          aria-describedby={fieldErrors.fullName ? "checkout-full-name-saved-error" : undefined}
+                          className={`w-full rounded-xl border bg-gray-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-primary ${fieldErrors.fullName ? "border-red-400" : "border-gray-100"}`}
+                        />
+                        {fieldErrors.fullName && <p id="checkout-full-name-saved-error" className="text-xs font-medium text-red-600">{fieldErrors.fullName}</p>}
+                      </div>
+
+                      <div className="space-y-2">
+                        <label htmlFor="checkout-phone-saved" className="ml-1 text-[10px] font-black uppercase tracking-[2px] text-gray-400">
+                          Mobile Number *
+                        </label>
+                        <input
+                          id="checkout-phone-saved"
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          placeholder="10-digit mobile"
+                          autoComplete="tel-national"
+                          aria-invalid={Boolean(fieldErrors.phone)}
+                          aria-describedby={fieldErrors.phone ? "checkout-phone-saved-error" : undefined}
+                          className={`w-full rounded-xl border bg-gray-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-primary ${fieldErrors.phone ? "border-red-400" : "border-gray-100"}`}
+                        />
+                        {fieldErrors.phone && <p id="checkout-phone-saved-error" className="text-xs font-medium text-red-600">{fieldErrors.phone}</p>}
+                      </div>
+                    </div>
 
                   </div>
 
@@ -911,14 +936,19 @@ const Checkout = () => {
                       </label>
 
                       <input
+                        id="checkout-full-name"
                         type="text"
                         name="fullName"
                         value={formData.fullName}
                         onChange={handleInputChange}
                         placeholder="ENTER YOUR NAME"
+                        autoComplete="name"
+                        aria-invalid={Boolean(fieldErrors.fullName)}
+                        aria-describedby={fieldErrors.fullName ? "checkout-full-name-error" : undefined}
                         required
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold uppercase text-sm"
+                        className={`w-full rounded-2xl border bg-gray-50 px-6 py-4 text-sm font-bold uppercase outline-none transition-all focus:border-primary ${fieldErrors.fullName ? "border-red-400" : "border-gray-100"}`}
                       />
+                      {fieldErrors.fullName && <p id="checkout-full-name-error" className="text-xs font-medium text-red-600">{fieldErrors.fullName}</p>}
 
                     </div>
 
@@ -937,16 +967,21 @@ const Checkout = () => {
                         />
 
                         <input
+                          id="checkout-phone"
                           type="tel"
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
                           placeholder="10-DIGIT MOBILE"
+                          autoComplete="tel-national"
+                          aria-invalid={Boolean(fieldErrors.phone)}
+                          aria-describedby={fieldErrors.phone ? "checkout-phone-error" : undefined}
                           required
-                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-primary transition-all font-bold text-sm"
+                          className={`w-full rounded-2xl border bg-gray-50 py-4 pl-12 pr-6 text-sm font-bold outline-none transition-all focus:border-primary ${fieldErrors.phone ? "border-red-400" : "border-gray-100"}`}
                         />
 
                       </div>
+                      {fieldErrors.phone && <p id="checkout-phone-error" className="text-xs font-medium text-red-600">{fieldErrors.phone}</p>}
 
                     </div>
 
@@ -965,16 +1000,21 @@ const Checkout = () => {
                         />
 
                         <input
+                          id="checkout-street"
                           type="text"
                           name="street"
                           value={formData.street}
                           onChange={handleInputChange}
                           placeholder="STREET NAME / COLONY"
+                          autoComplete="street-address"
+                          aria-invalid={Boolean(fieldErrors.street)}
+                          aria-describedby={fieldErrors.street ? "checkout-street-error" : undefined}
                           required
-                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-primary transition-all font-bold uppercase text-sm"
+                          className={`w-full rounded-2xl border bg-gray-50 py-4 pl-12 pr-6 text-sm font-bold uppercase outline-none transition-all focus:border-primary ${fieldErrors.street ? "border-red-400" : "border-gray-100"}`}
                         />
 
                       </div>
+                      {fieldErrors.street && <p id="checkout-street-error" className="text-xs font-medium text-red-600">{fieldErrors.street}</p>}
 
                     </div>
 
@@ -1051,14 +1091,20 @@ const Checkout = () => {
                       </label>
 
                       <input
+                        id="checkout-pincode"
                         type="text"
                         name="pincode"
                         value={formData.pincode}
                         onChange={handleInputChange}
                         placeholder="PINCODE"
+                        inputMode="numeric"
+                        autoComplete="postal-code"
+                        aria-invalid={Boolean(fieldErrors.pincode)}
+                        aria-describedby={fieldErrors.pincode ? "checkout-pincode-error" : undefined}
                         required
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 px-6 outline-none focus:border-primary transition-all font-bold text-sm"
+                        className={`w-full rounded-2xl border bg-gray-50 px-6 py-4 text-sm font-bold outline-none transition-all focus:border-primary ${fieldErrors.pincode ? "border-red-400" : "border-gray-100"}`}
                       />
+                      {fieldErrors.pincode && <p id="checkout-pincode-error" className="text-xs font-medium text-red-600">{fieldErrors.pincode}</p>}
 
                     </div>
 
@@ -1084,12 +1130,12 @@ const Checkout = () => {
               {/* =================================================
                   PAYMENT METHODS
               ================================================= */}
-              <fieldset className="bg-white border border-gray-100 p-8 md:p-10 rounded-[40px] shadow-sm space-y-8">
+              <fieldset className="space-y-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6 md:space-y-8 md:rounded-[40px] md:p-10">
 
-                <legend className="flex items-center gap-4 text-2xl font-black italic uppercase text-black">
+                <legend className="flex items-center gap-3 text-lg font-black italic uppercase text-black md:gap-4 md:text-2xl">
 
-                  <span className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary">
-                    <CreditCard size={24} />
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/5 text-primary md:h-12 md:w-12 md:rounded-2xl">
+                    <CreditCard size={20} />
                   </span>
 
                   <span>
@@ -1098,10 +1144,10 @@ const Checkout = () => {
 
                 </legend>
 
-                <div className="grid gap-6 md:max-w-sm">
+                <div className="grid gap-3 md:max-w-2xl md:grid-cols-2">
 
                   <label
-                    className={`relative cursor-pointer p-6 rounded-[30px] border-2 transition-all flex flex-col items-center text-center gap-4 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 ${
+                    className={`relative flex cursor-pointer flex-col items-center gap-4 rounded-2xl border-2 p-4 text-center transition-all focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 md:rounded-[30px] md:p-6 ${
                       formData.paymentMethod === "cod"
                         ? "border-primary bg-primary/5 shadow-inner"
                         : "border-gray-50 bg-gray-50/50 hover:border-primary/20"
@@ -1116,10 +1162,11 @@ const Checkout = () => {
                         formData.paymentMethod === "cod"
                       }
                       onChange={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          paymentMethod: "cod",
-                        }))
+                        {
+                          setFormData((prev) => ({ ...prev, paymentMethod: "cod" }));
+                          setPaymentMessage("");
+                          setFieldErrors((current) => ({ ...current, paymentMethod: undefined }));
+                        }
                       }
                       className="sr-only"
                     />
@@ -1154,11 +1201,45 @@ const Checkout = () => {
 
                   </label>
 
+                  <label
+                    className={`relative flex cursor-pointer flex-col items-center gap-4 rounded-2xl border-2 p-4 text-center transition-all focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 md:rounded-[30px] md:p-6 ${
+                      formData.paymentMethod === "upi"
+                        ? "border-primary bg-primary/5 shadow-inner"
+                        : "border-gray-100 bg-gray-50/50 hover:border-primary/20"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="upi"
+                      checked={formData.paymentMethod === "upi"}
+                      onChange={() => {
+                        setFormData((prev) => ({ ...prev, paymentMethod: "upi" }));
+                        setPaymentMessage(UPI_UNAVAILABLE_MESSAGE);
+                        setFieldErrors((current) => ({ ...current, paymentMethod: undefined }));
+                      }}
+                      className="sr-only"
+                    />
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl md:h-12 md:w-12 md:rounded-2xl ${formData.paymentMethod === "upi" ? "bg-primary text-white" : "bg-white text-gray-300"}`}>
+                      <QrCode size={22} />
+                    </div>
+                    <div>
+                      <p className={`text-xs font-black uppercase tracking-wider ${formData.paymentMethod === "upi" ? "text-primary" : "text-gray-500"}`}>UPI</p>
+                      <p className="mt-1 text-[9px] font-bold uppercase italic text-gray-400">Pay manually; verification follows</p>
+                    </div>
+                  </label>
+
                 </div>
 
-                <p className="text-[10px] font-semibold leading-5 text-gray-400">
-                  Cash on delivery is currently the only supported payment method.
-                </p>
+                {formData.paymentMethod === "upi" && (
+                  <p role="status" aria-live="polite" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-medium leading-5 text-amber-800">
+                    {paymentMessage || UPI_ORDER_MESSAGE}
+                  </p>
+                )}
+                {fieldErrors.paymentMethod && <p className="text-xs font-medium text-red-600">{fieldErrors.paymentMethod}</p>}
+                {formData.paymentMethod === "cod" && (
+                  <p className="text-[10px] font-semibold leading-5 text-gray-400">Cash on delivery is available. Online UPI payment is not connected yet.</p>
+                )}
 
               </fieldset>
 
@@ -1169,9 +1250,9 @@ const Checkout = () => {
             ================================================== */}
             <div className="lg:col-span-1 space-y-8">
 
-              <div className="bg-white border border-gray-100 rounded-[40px] shadow-sm overflow-hidden sticky top-28">
+              <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm lg:sticky lg:top-28 lg:rounded-[40px]">
 
-                <div className="p-8 border-b border-gray-50 bg-gray-50/30">
+                <div className="border-b border-gray-50 bg-gray-50/30 p-4 sm:p-6 md:p-8">
 
                   <h3 className="text-xl font-black italic uppercase text-black">
                     Order Summary
@@ -1179,7 +1260,7 @@ const Checkout = () => {
 
                 </div>
 
-                <div className="p-8 space-y-6">
+                <div className="space-y-4 p-4 sm:p-6 md:space-y-6 md:p-8">
 
                   {/* CART ITEMS */}
                   <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
@@ -1263,7 +1344,7 @@ const Checkout = () => {
                     type="submit"
                     disabled={loading}
                     aria-busy={loading}
-                    className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[2px] hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 italic mt-8 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="mt-6 flex w-full items-center justify-center gap-3 rounded-2xl bg-primary py-4 font-black uppercase italic tracking-[2px] text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 md:mt-8 md:py-5"
                   >
 
                     {loading ? (
@@ -1280,7 +1361,7 @@ const Checkout = () => {
                     ) : (
 
                       <>
-                        Place Order
+                        {formData.paymentMethod === "upi" ? "Place Order & Continue to UPI" : "Place Order"}
                         <ChevronRight size={20} />
                       </>
 
@@ -1290,8 +1371,8 @@ const Checkout = () => {
 
                   <div className="flex items-center justify-center gap-2 mt-6">
 
-                    <span className="text-center text-[9px] font-black text-gray-400 uppercase tracking-widest italic">
-                      Your selected payment method will be recorded with this order.
+                    <span className="text-center text-[9px] font-semibold uppercase tracking-wider text-gray-400">
+                      {formData.paymentMethod === "upi" ? "Payment remains pending until NM Mart verifies your proof." : "Cash on delivery is recorded with this order."}
                     </span>
 
                   </div>
