@@ -56,10 +56,6 @@ export function getProductStock(row: Partial<DbProductRow> | null | undefined): 
   return Number(row?.stock ?? row?.opstock ?? row?.opening_stock ?? 0);
 }
 
-export function getCurrentProductStock(row: Partial<DbProductRow> | null | undefined): number {
-  return Number(row?.stock);
-}
-
 export function isProductInStock(row: Partial<DbProductRow> | null | undefined): boolean {
   return getProductStock(row) > 0;
 }
@@ -78,19 +74,6 @@ export function getProductImageUrl(row: Partial<DbProductRow> | null | undefined
 
 export function isProductActive(row: Partial<DbProductRow> | null | undefined): boolean {
   return row?.is_active !== false && row?.is_deleted !== true;
-}
-
-function hasRelationshipValue(...values: unknown[]): boolean {
-  return values.some((value) => value !== null && value !== undefined && String(value).trim() !== "");
-}
-
-export function isCustomerVisibleProductRow(row: Partial<DbProductRow> | null | undefined): boolean {
-  if (!row || !isProductActive(row) || !Number.isFinite(getCurrentProductStock(row)) || getCurrentProductStock(row) <= 0) return false;
-
-  const hasBrand = hasRelationshipValue(row.brand_name, row.brand_id, row.brand_code);
-  const hasCategory = hasRelationshipValue(row.category_name, row.item_group_name, row.item_group, row.item_category, row.category_id, row.category_code);
-  const hasSubcategory = hasRelationshipValue(row.subcategory_name, row.sub_category_name, row.subcategory_id, row.sub_category_code);
-  return hasBrand && hasCategory && hasSubcategory;
 }
 
 export function isProductFeatured(row: Partial<DbProductRow> | null | undefined): boolean {

@@ -13,11 +13,11 @@ import {
   getProductName,
   getProductSaleRate,
   getProductStock,
-  isCustomerVisibleProductRow,
   getProductBrand,
   getProductSubcategory,
   getProductUnit,
   getProductDescription,
+  isProductActive,
   isProductFeatured,
   type DbProductRow,
 } from "@/lib/supabase/schema";
@@ -46,7 +46,7 @@ export function useProducts() {
   const [allCategories, setAllCategories] = useState<string[]>([]);
 
   const getProductRows = async (range?: { from: number; to: number }) => {
-    const productColumns = "barcode,name,mrp,sale_rate,retail_rate,restrate,onlinerate,online_rate,selling_price,stock,opstock,opening_stock,category_name,item_group_name,item_group,item_category,category_id,category_code,brand_name,brand_id,brand_code,subcategory_name,sub_category_name,subcategory_id,sub_category_code,discount_percent,discount_pct,discperc,discount,image_url,picture,is_active,is_deleted,is_favourite,isfav,unit_name,unitcode,description,item_description,itemdescription,id";
+    const productColumns = "barcode,name,mrp,sale_rate,retail_rate,restrate,onlinerate,online_rate,selling_price,stock,opstock,opening_stock,category_name,item_group_name,item_group,brand_name,subcategory_name,sub_category_name,discount_percent,discount_pct,discperc,discount,image_url,picture,is_active,is_deleted,is_favourite,isfav,unit_name,unitcode,description,item_description,itemdescription,id";
     let query = supabase.from(TABLES.products).select(productColumns, range ? { count: "exact" } : undefined);
     if (range) query = query.range(range.from, range.to);
     const { data, error, count } = await query;
@@ -96,7 +96,7 @@ export function useProducts() {
 
       const uniqueCats = [
         ...new Set(
-            data.filter(isCustomerVisibleProductRow)
+          data
             .map((item) => normalizeCategory(getProductCategory(item)))
             .filter((c) => c && c.length > 1 && isDisplayLabel(c))
         ),
@@ -114,7 +114,7 @@ export function useProducts() {
       const { data, error } = await getProductRows({ from: 0, to: 49 });
       if (error) throw error;
 
-      const liveRows = data.filter(isCustomerVisibleProductRow);
+      const liveRows = data.filter((item) => getProductStock(item) > 0 && isProductActive(item));
       const mappedProducts = liveRows.map(mapProduct);
       const categories = [...new Set(liveRows.map((item) => normalizeCategory(getProductCategory(item))).filter((category) => category.length > 1 && isDisplayLabel(category)))];
       const featured = mappedProducts.filter((product) => product.isFeatured);
@@ -143,7 +143,7 @@ export function useProducts() {
 
       const filtered = data.filter((item) => {
         const stock = getProductStock(item);
-        return isCustomerVisibleProductRow(item) && stock > 0 && isProductFeatured(item);
+        return stock > 0 && isProductFeatured(item) && isProductActive(item);
       });
 
       const mapped = filtered.slice(offset, offset + 12).map(mapProduct);
@@ -167,7 +167,11 @@ export function useProducts() {
       const filtered = data.filter((item) => {
         const stock = getProductStock(item);
         const discount = getProductDiscount(item);
-        return isCustomerVisibleProductRow(item) && stock > 0 && (type === 50 ? discount >= 50 : discount >= 33 && discount < 50);
+        return (
+          stock > 0 &&
+          isProductActive(item) &&
+          (type === 50 ? discount >= 50 : discount >= 33 && discount < 50)
+        );
       });
 
       const mapped = filtered.slice(offset, offset + 12).map(mapProduct);
@@ -206,7 +210,7 @@ export function useProducts() {
 
       const filtered = data.filter((item) => {
         const stock = getProductStock(item);
-        return isCustomerVisibleProductRow(item) && stock > 0;
+        return stock > 0 && isProductActive(item);
       });
 
       setAllBrands(getUniqueBrandNames(filtered.map((item) => ({ brand: getProductBrand(item) }))));

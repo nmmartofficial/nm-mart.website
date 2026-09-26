@@ -10,7 +10,7 @@ import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
-import { isCustomerVisibleProductRow, TABLES } from "@/lib/supabase/schema";
+import { TABLES } from "@/lib/supabase/schema";
 import { getProductImageUrl } from "@/lib/supabase/schema";
 
 const SLOGAN = "Shop More, Save More";
@@ -65,7 +65,7 @@ const ProductDetail = () => {
             console.error("Error fetching product:", error);
           }
 
-          if (data && isCustomerVisibleProductRow(data)) {
+          if (data) {
             const mrp = Number(data.mrp ?? 0);
             const unitRate = Number(data.sale_rate ?? data.onlinerate ?? data.retail_rate ?? data.restrate ?? 0);
             const disc = Number(data.discount_percent ?? data.discperc ?? data.discount ?? 0);

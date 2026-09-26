@@ -6,10 +6,10 @@
 
 @layer base {
   :root {
-    --nm-primary: #1D5FBF;
-    --nm-primary-dark: #0B3B78;
-    --nm-primary-light: #EAF3FF;
-    --nm-primary-border: #BDD8FF;
+    --nm-primary: #155EEF;
+    --nm-primary-dark: #0B1F3A;
+    --nm-primary-light: #EFF6FF;
+    --nm-primary-border: #DBEAFE;
     --nm-background: #F8FAFC;
     --nm-text: #111827;
     --nm-text-secondary: #64748B;
@@ -28,23 +28,23 @@
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 214 74% 43%;
-    --primary-hover: 214 83% 26%;
-    --primary-active: 214 83% 22%;
-    --primary-soft: 214 100% 95%;
+    --primary: 220 89% 53%;
+    --primary-hover: 223 82% 38%;
+    --primary-active: 223 82% 33%;
+    --primary-soft: 214 100% 97%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 35% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 38%;
-    --accent: 214 74% 43%;
+    --accent: 220 89% 53%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 74% 46%;
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 90%;
     --border-strong: 214 26% 78%;
     --input: 214 32% 90%;
-    --ring: 214 74% 43%;
+    --ring: 220 89% 53%;
     --radius: 1.1rem;
     --surface: 0 0% 100%;
     --surface-muted: 210 40% 98%;

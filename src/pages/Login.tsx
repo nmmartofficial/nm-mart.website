@@ -431,7 +431,7 @@ const switchAuthMode = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F4F7FB] font-sans text-[#0B3B78]">
+    <div className="min-h-screen bg-[#F5F9FF] text-[#0B1F3A] flex flex-col font-sans">
 
       {/* Login page header - website search/header intentionally removed */}
       <header className="w-full border-b border-[#E4ECF7] bg-white">
@@ -443,19 +443,31 @@ const switchAuthMode = () => {
             className="flex flex-col items-start leading-none"
             aria-label="NM Mart Home"
           >
-            <div className="relative h-14 w-40 overflow-hidden md:h-16 md:w-48">
-              <img
-                src="/logo.jpeg"
-                alt="NM Mart"
-                className="absolute left-[-20px] top-[-82px] h-[220px] w-[220px] max-w-none object-cover md:left-[-24px] md:top-[-88px] md:h-[250px] md:w-[250px]"
+            <div className="flex items-center">
+              <span className="text-[34px] font-[900] tracking-[-0.07em] text-[#155EEF] md:text-[42px]">
+                NM
+              </span>
+
+              <span className="text-[34px] font-[900] tracking-[-0.07em] text-[#0B1F3A] md:text-[42px]">
+                Mart
+              </span>
+
+              <ShoppingCart
+                size={25}
+                strokeWidth={2.5}
+                className="ml-1 text-[#155EEF] md:h-8 md:w-8"
               />
             </div>
+
+            <span className="mt-1 text-[7px] font-bold tracking-[0.18em] text-[#0B1F3A]/60 uppercase md:text-[9px]">
+              SHOP MORE, SAVE MORE
+            </span>
           </button>
 
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 rounded-full border border-[#BDD8FF] bg-white px-3 py-2 text-[11px] font-bold text-[#0B3B78] transition hover:bg-[#EAF3FF] md:px-4 md:text-xs"
+            className="flex items-center gap-2 rounded-full border border-[#DCE7FA] bg-[#F5F9FF] px-3 py-2 text-[11px] font-bold text-[#155EEF] transition hover:bg-[#EAF2FF] md:px-4 md:text-xs"
           >
             <ArrowLeft size={15} />
             <span>Back to Home</span>
@@ -471,7 +483,7 @@ const switchAuthMode = () => {
           <div className="overflow-hidden rounded-[24px] border border-[#DDE7F5] bg-white shadow-[0_18px_60px_rgba(21,94,239,0.10)]">
 
             {/* Blue title area */}
-            <div className="bg-[#1D5FBF] px-5 py-6 text-center text-white md:px-8 md:py-7">
+            <div className="bg-[#155EEF] px-5 py-6 text-center text-white md:px-8 md:py-7">
 
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
                 {isSignUp ? (
@@ -481,7 +493,7 @@ const switchAuthMode = () => {
                 )}
               </div>
 
-              <h1 className="!text-white text-[27px] font-[900] tracking-[-0.03em] md:text-[31px]">
+              <h1 className="text-[27px] font-[900] tracking-[-0.03em] md:text-[31px]">
                 {forgotPasswordMode
                   ? "Reset Password"
                   : isSignUp
@@ -503,7 +515,7 @@ const switchAuthMode = () => {
 
               {/* Sign In / Sign Up tabs */}
               {!forgotPasswordMode && (
-                <div className="mb-6 rounded-xl bg-[#F1F4F8] p-1">
+                <div className="mb-6 rounded-xl bg-[#F1F5FB] p-1">
                   <div className="grid grid-cols-2 gap-1">
 
                     <button
@@ -515,7 +527,7 @@ const switchAuthMode = () => {
                       }}
                       className={`rounded-lg py-2.5 text-sm font-extrabold transition-all ${
                         !isSignUp
-                          ? "bg-[#1D5FBF] text-white shadow-sm"
+                          ? "bg-white text-[#155EEF] shadow-sm"
                           : "text-[#68778C]"
                       }`}
                     >
@@ -531,7 +543,7 @@ const switchAuthMode = () => {
                       }}
                       className={`rounded-lg py-2.5 text-sm font-extrabold transition-all ${
                         isSignUp
-                          ? "bg-[#1D5FBF] text-white shadow-sm"
+                          ? "bg-white text-[#155EEF] shadow-sm"
                           : "text-[#68778C]"
                       }`}
                     >
@@ -552,7 +564,7 @@ const switchAuthMode = () => {
                       setForgotPasswordMode(false);
                       setResetEmailSent(false);
                     }}
-                    className="flex items-center gap-2 text-xs font-bold text-[#718096] hover:text-[#0B3B78]"
+                    className="flex items-center gap-2 text-xs font-bold text-[#718096] hover:text-[#155EEF]"
                   >
                     <ArrowLeft size={15} />
                     Back to Sign In
@@ -580,7 +592,7 @@ const switchAuthMode = () => {
                           setForgotPasswordMode(false);
                           setResetEmailSent(false);
                         }}
-                        className="w-full rounded-xl bg-[#1D5FBF] py-3 text-sm font-extrabold text-white transition hover:bg-[#0B3B78]"
+                        className="w-full rounded-xl bg-[#155EEF] py-3 text-sm font-extrabold text-white transition hover:bg-[#0E4CC7]"
                       >
                         Return to Sign In
                       </button>
@@ -596,7 +608,7 @@ const switchAuthMode = () => {
                         <div className="relative">
                           <Mail
                             size={18}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8290A3]"
                           />
 
                           <input
@@ -606,7 +618,7 @@ const switchAuthMode = () => {
                             onChange={(event) =>
                               setEmail(event.target.value)
                             }
-                            className="h-12 w-full rounded-xl border border-[#D6DFEC] bg-white pl-11 pr-4 text-sm outline-none transition focus:border-[#1D5FBF] focus:ring-4 focus:ring-[#1D5FBF]/10"
+                            className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-4 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
                             autoComplete="username"
                           />
                         </div>
@@ -616,7 +628,7 @@ const switchAuthMode = () => {
                         type="button"
                         onClick={handleForgotPassword}
                         disabled={loading}
-                        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#1D5FBF] text-sm font-extrabold text-white transition hover:bg-[#0B3B78] disabled:opacity-60"
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#155EEF] text-sm font-extrabold text-white transition hover:bg-[#0E4CC7] disabled:opacity-60"
                       >
                         {loading ? (
                           <Loader2
@@ -645,7 +657,7 @@ const switchAuthMode = () => {
                         <div className="relative">
                           <UserRound
                             size={18}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8290A3]"
                           />
 
                           <input
@@ -655,7 +667,7 @@ const switchAuthMode = () => {
                             onChange={(event) =>
                               setFullName(event.target.value)
                             }
-                            className="h-12 w-full rounded-xl border border-[#D6DFEC] bg-white pl-11 pr-4 text-sm outline-none transition focus:border-[#1D5FBF] focus:ring-4 focus:ring-[#1D5FBF]/10"
+                            className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-4 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
                             autoComplete="name"
                           />
                         </div>
@@ -671,7 +683,7 @@ const switchAuthMode = () => {
                       <div className="relative">
                         <Mail
                           size={18}
-                          className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]"
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8290A3]"
                         />
 
                         <input
@@ -681,7 +693,7 @@ const switchAuthMode = () => {
                           onChange={(event) =>
                             setEmail(event.target.value)
                           }
-                          className="h-12 w-full rounded-xl border border-[#D6DFEC] bg-white pl-11 pr-4 text-sm outline-none transition focus:border-[#1D5FBF] focus:ring-4 focus:ring-[#1D5FBF]/10"
+                          className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-4 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
                           autoComplete="username"
                         />
                       </div>
@@ -696,7 +708,7 @@ const switchAuthMode = () => {
                       <div className="relative">
                         <LockKeyhole
                           size={18}
-                          className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]"
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8290A3]"
                         />
 
                         <input
@@ -706,7 +718,7 @@ const switchAuthMode = () => {
                           onChange={(event) =>
                             setPassword(event.target.value)
                           }
-                          className="h-12 w-full rounded-xl border border-[#D6DFEC] bg-white pl-11 pr-12 text-sm outline-none transition focus:border-[#1D5FBF] focus:ring-4 focus:ring-[#1D5FBF]/10"
+                          className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-12 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
                           autoComplete={
                             isSignUp
                               ? "new-password"
@@ -719,7 +731,7 @@ const switchAuthMode = () => {
                           onClick={() =>
                             setShowPassword((current) => !current)
                           }
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#1D5FBF]"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8290A3] hover:text-[#155EEF]"
                           aria-label={
                             showPassword
                               ? "Hide password"
@@ -745,7 +757,7 @@ const switchAuthMode = () => {
                         <div className="relative">
                           <LockKeyhole
                             size={18}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B]"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8290A3]"
                           />
 
                           <input
@@ -759,7 +771,7 @@ const switchAuthMode = () => {
                             onChange={(event) =>
                               setConfirmPassword(event.target.value)
                             }
-                            className="h-12 w-full rounded-xl border border-[#D6DFEC] bg-white pl-11 pr-12 text-sm outline-none transition focus:border-[#1D5FBF] focus:ring-4 focus:ring-[#1D5FBF]/10"
+                            className="h-12 w-full rounded-xl border border-[#CBD5E1] bg-white pl-11 pr-12 text-sm outline-none transition focus:border-[#155EEF] focus:ring-4 focus:ring-[#155EEF]/10"
                             autoComplete="new-password"
                           />
 
@@ -770,7 +782,7 @@ const switchAuthMode = () => {
                                 (current) => !current
                               )
                             }
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#1D5FBF]"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8290A3] hover:text-[#155EEF]"
                             aria-label={
                               showConfirmPassword
                                 ? "Hide confirm password"
@@ -795,7 +807,7 @@ const switchAuthMode = () => {
                           onClick={() =>
                             setForgotPasswordMode(true)
                           }
-                          className="text-xs font-bold text-[#1D5FBF] hover:underline"
+                          className="text-xs font-bold text-[#155EEF] hover:underline"
                         >
                           Forgot your password?
                         </button>
@@ -807,7 +819,7 @@ const switchAuthMode = () => {
                       type="button"
                       onClick={handleAuth}
                       disabled={loading}
-                      className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#1D5FBF] text-sm font-extrabold text-white shadow-[0_7px_20px_rgba(29,95,191,0.18)] transition hover:bg-[#0B3B78] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#155EEF] text-sm font-extrabold text-white shadow-[0_7px_20px_rgba(21,94,239,0.18)] transition hover:bg-[#0E4CC7] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? (
                         <Loader2
@@ -843,7 +855,7 @@ const switchAuthMode = () => {
                       type="button"
                       onClick={handleGoogleLogin}
                       disabled={loading}
-                      className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-[#D6DFEC] bg-white text-sm font-extrabold text-[#0B3B78] transition hover:border-[#1D5FBF] hover:bg-[#F4F7FB] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-[#CBD5E1] bg-white text-sm font-extrabold text-[#0B1F3A] transition hover:border-[#155EEF] hover:bg-[#F8FBFF] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white">
                         <img
@@ -859,11 +871,11 @@ const switchAuthMode = () => {
                     {/* Terms */}
                     <p className="px-2 text-center text-[9px] leading-5 text-[#7A879A]">
                       By continuing, you agree to NM Mart's{" "}
-                      <span className="font-bold text-[#0B3B78]">
+                      <span className="font-bold text-[#0B1F3A]">
                         Conditions of Use
                       </span>{" "}
                       and{" "}
-                      <span className="font-bold text-[#0B3B78]">
+                      <span className="font-bold text-[#0B1F3A]">
                         Privacy Notice
                       </span>
                       .
